@@ -3,3 +3,9 @@ vendor/
 
 package.json
 .idea/
+.osp/
+
+.devin/
+.gemini/
+.opencode/
+.agents/

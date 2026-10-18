@@ -1,0 +1,8 @@
+{
+  "name": "acme/app", "type": "project",
+  "require": { "php": "^8.2", "yiisoft/config": "^1.0", "yiisoft/di": "^1.2", "yiisoft/router": "^3.0", "yiisoft/yii-http": "^1.0" },
+  "require-dev": { "phpunit/phpunit": "^10" },
+  "autoload": { "psr-4": { "App\\": "src/" } },
+  "extra": { "config-plugin": { "common": "common/*.php" } },
+  "scripts": { "test": "phpunit" }
+}

@@ -1,0 +1,7 @@
+{ "packages": [
+  { "name": "yiisoft/config", "version": "1.5.0", "autoload": { "psr-4": { "Yiisoft\\Config\\": "src" } } },
+  { "name": "yiisoft/di", "version": "1.3.0", "autoload": { "psr-4": { "Yiisoft\\Di\\": "src" } } },
+  { "name": "yiisoft/router", "version": "3.0.0", "autoload": { "psr-4": { "Yiisoft\\Router\\": "src" } } },
+  { "name": "yiisoft/yii-http", "version": "1.0.0", "autoload": { "psr-4": { "Yiisoft\\Yii\\Http\\": "src" } } },
+  { "name": "yiisoft/definitions", "version": "3.0.0", "autoload": { "psr-4": { "Yiisoft\\Definitions\\": "src" } } }
+], "packages-dev": [] }

@@ -1,15 +1,26 @@
 
 ## Yii3 support (from aif-ext-yii3)
 
-Run the `yii3` skill's `scripts/yii3-context.mjs --scan-git <git.base_branch>`; if it reports `"yii3": false`, ignore this block
-(no-git repos: pass the changed files via `--scan <files>`). Treat `scan.findings` as evidence, then judge:
+If the project does not use Yii3 (no `yiisoft/*` in `composer.json`), ignore this block.
 
-1. `unknown-yiisoft-namespace` → **blocking** (code uses a package that is not installed).
-   `transitive-dependency` → WARN (add it to `composer.json`). `yii2-api` → **blocking**. `missing-strict-types` → WARN.
-2. **Config wiring** (judgment): new services autowirable or defined in DI; routes registered; params present; console commands
-   registered; migrations exist for new tables; nothing edited in `vendor/` or `config/.merge-plan.php`.
-3. **Architecture** (complements the built-in architecture gate; do not duplicate its findings): new/changed files sit where the
-   `/aif-architecture` artifact — or, if `architecture.source` is `inferred`, the existing structure — says; dependency-rule
-   violation → blocking, other mismatch → `WARN [architecture-drift]`.
-4. Run the project's tests/static analysis (`tooling` in the script output).
+1. **Project static analysis & linters:** run Psalm/PHPStan, Rector, PHP-CS-Fixer/ECS per the project's setup.
+   - Any unknown classes, missing `declare(strict_types=1);`, or leftover Yii2 APIs (`Yii::$app`, `yii\...`) are blocking.
+   - Packages used in code must be declared in `composer.json` (no unlisted transitive dependencies).
+2. **Config wiring & Chain Integrity** (judgment):
+   - Every newly created interface (`*Interface`) MUST be bound in DI (`config/**/di/*.php`) — missing binding is blocking.
+   - Every newly created Action MUST have an active Route registered in `config/**/routes.php` — missing route is blocking.
+   - Every newly created Console Command MUST be registered in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]` — missing command wiring is blocking.
+   - Every custom RBAC Rule (`RuleInterface`) MUST be registered in `config/common/params.php` under `'yiisoft/rbac-rules-container'` — missing rule wiring is blocking.
+   - Migrations MUST exist in `yiisoft/db-migration` for any newly introduced tables or altered columns.
+   - Any side-effects (e.g. notifications/emails) must be wired to events in `config/**/events.php`.
+   - Nothing edited in `vendor/` or `config/.merge-plan.php`.
+3. **Architecture & Decomposition** (complements the built-in architecture gate; do not duplicate its findings):
+   - New/changed files sit where the `/aif-architecture` artifact — or, if absent, the existing structure — says;
+     dependency-rule violation → blocking, other mismatch → `WARN [architecture-drift]`.
+   - **Thin Actions:** Action classes must not contain direct database queries (SQL/ActiveRecord), password hashing, or notification logic;
+     such logic must live in Use Cases / Repositories / Listeners (`references/feature-recipes.md`).
+   - **PSR-7 Response Type:** Action classes MUST strictly declare and return `Psr\Http\Message\ResponseInterface` (never array, string, or void).
+   - **Input Validation:** User input must pass through an Input DTO with `yiisoft/validator` attributes (no unvalidated `$request->getParsedBody()`).
+   - **Reversible Migrations:** Every migration must implement a working, reversible `down()` method.
+4. **Tests:** Run the project's tests (PHPUnit / Pest).
 Merge these into `aif-gate-result` (`blockers`, `affected_files`) like any other finding.

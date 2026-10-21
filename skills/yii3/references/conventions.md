@@ -38,12 +38,21 @@ Autoload: PSR-4 from `composer.json`. Config groups are declared in `composer.js
 - **Events/logging:** PSR-14 `EventDispatcherInterface`, PSR-3 `LoggerInterface`.
 - **Console commands:** Symfony Console commands registered through params of `yiisoft/yii-console`.
 
-## Anti-patterns (reject during implement and review)
-- `Yii::$app`, `Yii::createObject`, `yii\...` classes, `Yii2`-style `rules()`/`behaviors()`/`init()`
-- Editing `vendor/` or `config/.merge-plan.php`
-- Using a package in code that is not in `composer.json`
-- Guessing method names without opening the installed package source
-- Creating a second competing mechanism (second ORM, second router, second DI config style) next to the existing one
+## Anti-Patterns & Yii2 Migration Matrix (STRICTLY PROHIBITED)
+
+| Forbidden Yii2 Anti-Pattern | Required Yii3 Idiom |
+|---|---|
+| ❌ `Yii::$app->...` | ✅ Constructor injection of PSR/Yiisoft interfaces via DI. |
+| ❌ `class SiteController extends Controller` with `actionX()` | ✅ Single-Action invokable classes: `__invoke(ServerRequestInterface $request): ResponseInterface`. |
+| ❌ `$this->render('index', [...])` | ✅ Inject `Yiisoft\Yii\View\Renderer\ViewRenderer` and call `$this->viewRenderer->render(...)`. |
+| ❌ `$request->post('name')` / `$request->get('id')` | ✅ PSR-7 `$request->getParsedBody()`, `$request->getQueryParams()`, or `CurrentRoute::getArgument('id')`. |
+| ❌ `ActiveForm::begin()` in templates | ✅ `Yiisoft\Form\Widget\Form::widget()->action(...)->open()` and `Yiisoft\Form\Widget\Field`. |
+| ❌ `rules()` and `behaviors()` on ActiveRecord models | ✅ Validation attributes `#[Rule]` on DTOs via `yiisoft/validator`; behaviors replaced by PSR-14 events. |
+| ❌ `Url::to(['/route', 'id' => 1])` | ✅ Inject `Yiisoft\Router\UrlGeneratorInterface` and `$urlGenerator->generate('route', ['id' => 1])`. |
+| ❌ `Yii::$app->user->identity` / `id` | ✅ Inject `Yiisoft\User\CurrentUser` and call `$currentUser->getIdentity()`. |
+| ❌ Editing `vendor/` or `config/.merge-plan.php` | ✅ Always configure via `config/**/params.php` or `config/**/di/*.php`. |
+| ❌ Guessing method signatures | ✅ Always inspect `vendor/yiisoft/<pkg>/src/` or `references/<pkg>/src/` first. |
+| ❌ Creating a second competing mechanism (second ORM, router, DI style) | ✅ Adhere strictly to the detected project stack. |
 
 ## Verification
 Use the project's commands (composer scripts / Makefile / Docker): phpunit, psalm/phpstan, php-cs-fixer/ecs, rector (if configured).

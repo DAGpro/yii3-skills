@@ -51,7 +51,7 @@ Autoload: PSR-4 from `composer.json`. Config groups are declared in `composer.js
 | ❌ `Url::to(['/route', 'id' => 1])` | ✅ Inject `Yiisoft\Router\UrlGeneratorInterface` and `$urlGenerator->generate('route', ['id' => 1])`. |
 | ❌ `Yii::$app->user->identity` / `id` | ✅ Inject `Yiisoft\User\CurrentUser` and call `$currentUser->getIdentity()`. |
 | ❌ Editing `vendor/` or `config/.merge-plan.php` | ✅ Always configure via `config/**/params.php` or `config/**/di/*.php`. |
-| ❌ Guessing method signatures | ✅ Always inspect `vendor/yiisoft/<pkg>/src/` or `references/<pkg>/src/` first. |
+| ❌ Guessing method signatures | ✅ Always inspect `vendor/yiisoft/<pkg>/src/` first. |
 | ❌ Creating a second competing mechanism (second ORM, router, DI style) | ✅ Adhere strictly to the detected project stack. |
 
 ## Verification

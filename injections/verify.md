@@ -20,7 +20,9 @@ If the project does not use Yii3 (no `yiisoft/*` in `composer.json`), ignore thi
    - **Thin Actions:** Action classes must not contain direct database queries (SQL/ActiveRecord), password hashing, or notification logic;
      such logic must live in Use Cases / Repositories / Listeners (`references/feature-recipes.md`).
    - **PSR-7 Response Type:** Action classes MUST strictly declare and return `Psr\Http\Message\ResponseInterface` (never array, string, or void).
-   - **Input Validation:** User input must pass through an Input DTO with `yiisoft/validator` attributes (no unvalidated `$request->getParsedBody()`).
+   - **Input Validation:** User input must pass through an Input DTO with `yiisoft/validator` attributes (no unvalidated `$request->getParsedBody()`); rule class names must exist in the installed `yiisoft/validator` (`Length`, `StringValue`, `Integer` — not Yii2-style `HasLength`/`IsString`) — see `references/validation-and-forms.md`.
+   - **PSR-3 Logging:** Application code must inject `Psr\Log\LoggerInterface` (never the concrete `Yiisoft\Log\Logger`, no static `Yii::getLogger()`/`Yii::error()`), and `LoggerInterface::class` must be bound in DI with explicit targets — see `references/logging.md`.
+   - **CSRF Protection:** Any state-changing form/endpoint must be protected by `CsrfTokenMiddleware` (or `CsrfHeaderMiddleware`/`CsrfTokenCookieMiddleware` for SPA), registered **after** `SessionMiddleware` and **before** `Router`; forms must render the `_csrf` hidden field from `CsrfTokenInterface` — see `references/http-state.md`.
    - **Reversible Migrations:** Every migration must implement a working, reversible `down()` method.
 4. **Tests:** Run the project's tests (PHPUnit / Pest).
 Merge these into `aif-gate-result` (`blockers`, `affected_files`) like any other finding.

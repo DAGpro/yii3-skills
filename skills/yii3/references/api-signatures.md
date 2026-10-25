@@ -1,6 +1,6 @@
 # Yii3 API Signatures Cheat-Sheet
 
-> **Source of Truth:** Verified against official `yiisoft/*` source code in `references/`.
+> **Source of Truth:** Verified against official `yiisoft/*` package sources. In target projects, always verify installed signatures in `vendor/yiisoft/<package>/src/`.
 > Use these exact FQCNs, constructor parameters, and method signatures to avoid hallucinations and version drift.
 
 ---

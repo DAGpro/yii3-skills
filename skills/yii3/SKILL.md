@@ -4,7 +4,9 @@ description: >-
   Use when planning, implementing, fixing, reviewing or verifying code in a Yii3 project (composer.json requires yiisoft/* packages
   with yiisoft/config or config-plugin; no yiisoft/yii2). Provides Yii3 conventions, package catalog, architecture-aware feature
   decomposition into actions/use-cases/repositories, and DI/routing wiring rules. Use when user says "Yii3", "Yii 3", "yiisoft",
-  "create feature", "add action", "new endpoint", "add repository", "add use case", or "Yii migration". Not for Yii2.
+  "create feature", "add action", "new endpoint", "add repository", "add use case", "add event", "add listener", "add middleware", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "asset bundle", "validate input", "validation rules", "custom validator", "form model",
+  "log message", "log target", "PSR-3 logging", "translate messages", "i18n", "locale", "session", "cookie",
+  "flash message", "CSRF", "file upload", "download file". Not for Yii2.
 ---
 
 # Yii3 development
@@ -32,4 +34,23 @@ description: >-
 - `references/package-catalog.md` — packages, capability keys, driver choices
 - `references/api-signatures.md` — exact signatures for top 15 Yii3 interfaces and classes
 - `references/actions-and-controllers.md` — package usage recommendations in actions/controllers, HTTP request parsing, DTO hydration, validation, security, data-response, and view rendering
+- `references/validation-and-forms.md` — built-in and custom validator rules, skipOnEmpty/when modifiers, message translation, FormModel + FormHydrator, validating hydrator DTOs, and input-http request inputs
+- `references/di-and-config.md` — PSR-11 container, config directory separation, definition syntax recipes, parameter inheritance, and environment overrides
+- `references/repositories-and-persistence.md` — repository pattern, Query Builder, Active Record, Cycle ORM, transaction boundaries, and paginated data readers
+- `references/events-and-listeners.md` — PSR-14 event architecture, immutable domain event DTOs, listener design, event mapping configuration, and post-commit dispatching
+- `references/commands.md` — thin console commands with Symfony Console, input arguments/options, interactive SymfonyStyle, ExitCode constants, and command registration
+- `references/routes.md` — FastRoute route syntax, regex parameter constraints, nested groups, middleware ordering, URL generation, and attribute routes
+- `references/middlewares.md` — PSR-15 HTTP middleware pipeline, request pre-processing, security post-processing, auth short-circuiting, and official middleware catalog
+- `references/http-state.md` — sessions and session middleware, flash messages, cookie handling with signing/encryption, and CSRF token implementations with middleware wiring
+- `references/migrations.md` — database schema DDL migrations, typed column definitions, foreign keys, indexes, reversible migrations, and data seeding
+- `references/views-and-widgets.md` — PHP view templates, mandatory XSS escaping, layouts, asset bundles, custom widgets, HTML forms, and DataView/GridView
+- `references/file-handling.md` — FileHelper filesystem utilities, download responses (sendFile, x-sendfile, byte ranges), and the PSR-7 upload flow with file validation rules
+- `references/queue-jobs.md` — asynchronous queue jobs, serializable message DTOs, worker handlers, distributed mutex locks, and worker CLI management
+- `references/auth-and-rbac.md` — user identity, session/JWT auth, password hashing, RBAC manager, custom rules, and route protection
+- `references/mailer.md` — email composition, Symfony Mailer DSN transport, HTML view templating, file attachments, inline CID embeddings, and async queue sending
+- `references/i18n-translation.md` — translator API and category sources, message formatters, PHP/DB/gettext message storage, message extraction, and locale routing middleware
+- `references/error-handling.md` — ErrorCatcher middleware, custom HTML/JSON Problem Details renderers, Friendly Exceptions, and Sentry logging
+- `references/logging.md` — PSR-3 logger injection, DI binding for LoggerInterface, categories, placeholders, target catalog (file/db/email/syslog/stream), context providers, and flushing
+- `references/caching.md` — PSR-16 drivers, getOrSet stampede prevention, TagDependency invalidation, and HTTP/view fragment caching
+- `references/testing.md` — testing pyramid, exclusive runner rule (PHPUnit vs Testo), PSR test doubles, functional HTTP testing, and ephemeral SQLite setup
 - `references/conventions.md` — layout, config, DI, actions, routes, anti-patterns

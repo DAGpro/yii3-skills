@@ -1,0 +1,702 @@
+# Yii3 PSR-15 Middlewares Guide
+
+> Practical guide for implementing, configuring, and testing PSR-15 HTTP middleware pipelines using `yiisoft/middleware-dispatcher`, `yiisoft/http-middleware`, `yiisoft/router`, and official Yii3 components.
+>
+> **Source of Truth & Verification Rule for AI Models:**
+> In projects using this extension, always verify exact method signatures, constructor arguments, and options directly in `vendor/yiisoft/<package>/src/` for installed packages.
+> When generating code, if an installed package's method signature or property is unfamiliar or in doubt, **read its source files in `vendor/yiisoft/<package>/src/`** rather than guessing or relying on Yii2 habits.
+
+---
+
+## Table of Contents
+- [1. PSR-15 Specification & Pipeline Architecture](#1-psr-15-specification--pipeline-architecture)
+  - [1.1. Pipeline Flow (The Onion Model)](#11-pipeline-flow-the-onion-model)
+- [2. Implementation Recipes](#2-implementation-recipes)
+  - [2.1. Request Pre-Processing (Correlation ID / Attribute Enrichment)](#21-request-pre-processing-correlation-id--attribute-enrichment)
+  - [2.2. Short-Circuiting Guard (Custom API Key Authentication)](#22-short-circuiting-guard-custom-api-key-authentication)
+  - [2.3. Idiomatic Authentication via yiisoft/auth](#23-idiomatic-authentication-via-yiisoftauth)
+  - [2.4. Response Post-Processing (Security Headers)](#24-response-post-processing-security-headers)
+  - [2.5. Exception Mapping Responder via yiisoft/error-handler](#25-exception-mapping-responder-via-yiisofterror-handler)
+- [3. Official Yii3 Middlewares Catalog](#3-official-yii3-middlewares-catalog)
+- [4. Registration Scopes & Pipelines](#4-registration-scopes--pipelines)
+  - [4.1. Global Application Pipeline (config/web/di/application.php)](#41-global-application-pipeline-configwebdiapplicationphp)
+  - [4.2. Route Group Pipeline (config/web/routes.php)](#42-route-group-pipeline-configwebroutesphp)
+  - [4.3. Single Route Pipeline (config/web/routes.php)](#43-single-route-pipeline-configwebroutesphp)
+- [5. Supported Middleware Definition Formats](#5-supported-middleware-definition-formats)
+- [6. Hidden Pitfalls & Critical Gotchas](#6-hidden-pitfalls--critical-gotchas)
+- [7. Anti-Pattern Matrix](#7-anti-pattern-matrix)
+
+---
+
+## 1. PSR-15 Specification & Pipeline Architecture
+
+All Yii3 middlewares implement the standard `Psr\Http\Server\MiddlewareInterface`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Psr\Http\Server;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Standard PSR-15 HTTP server middleware contract implemented by all Yii3 middlewares.
+ */
+interface MiddlewareInterface
+{
+    /**
+     * Process an incoming server request and return a response, optionally delegating
+     * response creation to a downstream handler.
+     */
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler,
+    ): ResponseInterface;
+}
+```
+
+### 1.1. Pipeline Flow (The Onion Model)
+
+Yii3 executes middlewares using `Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher` and `Yiisoft\Middleware\Dispatcher\MiddlewareStack`. 
+Middlewares wrap around each other in concentric layers:
+
+```
+ Incoming Request
+        │
+        ▼
+┌────────────────────────────────────────────────────────┐
+│ [Ingress] Middleware 1 (e.g. ErrorCatcher)             │
+│   ┌──────────────────────────────────────────────────┐ │
+│   │ [Ingress] Middleware 2 (e.g. SessionMiddleware)  │ │
+│   │   ┌────────────────────────────────────────────┐ │ │
+│   │   │ [Ingress] Middleware 3 (e.g. Auth/Guard)   │ │ │
+│   │   │   ┌──────────────────────────────────────┐ │ │ │
+│   │   │   │ Action Handler (Terminal Middleware) │ │ │ │
+│   │   │   │ Produces ResponseInterface           │ │ │ │
+│   │   │   └──────────────────────────────────────┘ │ │ │
+│   │   │ [Egress] Middleware 3 (Post-processing)    │ │ │
+│   │   └────────────────────────────────────────────┘ │ │
+│   │ [Egress] Middleware 2 (Session Cookie Commit)    │ │
+│   └──────────────────────────────────────────────────┘ │
+│ [Egress] Middleware 1 (Catch Throwables)               │
+└────────────────────────────────────────────────────────┘
+        │
+        ▼
+ Emitted Response
+```
+
+Middlewares serve one of three functional roles:
+1. **Request Pre-processing:** Enriches, authenticates, or sanitizes the request before passing it downstream (`$handler->handle($modifiedRequest)`).
+2. **Response Post-processing:** Alters, buffers, or enriches the returned response on egress (e.g. adding security headers, calculating `Content-Length`, committing cookies).
+3. **Short-Circuiting:** Halts downstream execution immediately and returns a new response without calling `$handler->handle($request)` (e.g. 401 Unauthorized, 403 Forbidden, 429 Too Many Requests, or 204 No Content for CORS preflight).
+
+---
+
+## 2. Implementation Recipes
+
+### 2.1. Request Pre-Processing (Correlation ID / Attribute Enrichment)
+
+Demonstrates reading an existing header or generating a unique ID, attaching it immutably to request attributes for downstream handlers, and echoing it back on the egress response.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Presentation\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+use function bin2hex;
+use function random_bytes;
+
+/**
+ * Attaches a correlation/trace Request-ID to request attributes and response headers.
+ */
+final class RequestIdMiddleware implements MiddlewareInterface
+{
+    public const ATTRIBUTE_NAME = 'requestId';
+    public const HEADER_NAME = 'X-Request-Id';
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        // 1. Read existing header or generate a cryptographically secure 128-bit hex token
+        $requestId = $request->getHeaderLine(self::HEADER_NAME);
+        if ($requestId === '') {
+            $requestId = bin2hex(random_bytes(16));
+        }
+
+        // 2. PSR-7 Immutability: withAttribute returns a new instance; MUST reassign!
+        $request = $request->withAttribute(self::ATTRIBUTE_NAME, $requestId);
+
+        // 3. Delegate to downstream handler
+        $response = $handler->handle($request);
+
+        // 4. Attach header to outgoing response
+        return $response->withHeader(self::HEADER_NAME, $requestId);
+    }
+}
+```
+
+> [!IMPORTANT]
+> **PSR-7 Immutability Rule:**
+> PSR-7 request and response objects are strictly immutable. Calling `$request->withAttribute(...)` or `$response->withHeader(...)` never modifies the current object in-place; it returns a new clone. You **must** reassign the return value: `$request = $request->withAttribute(...);`.
+
+---
+
+### 2.2. Short-Circuiting Guard (Custom API Key Authentication)
+
+When validation fails, a guard middleware short-circuits execution by generating and returning a `ResponseInterface` directly without calling `$handler->handle($request)`.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Presentation\Middleware;
+
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+
+use function json_encode;
+
+use const JSON_THROW_ON_ERROR;
+
+/**
+ * Contract for verifying API keys.
+ */
+interface ApiKeyRepositoryInterface
+{
+    public function isValid(string $apiKey): bool;
+}
+
+/**
+ * Short-circuiting authentication guard middleware.
+ */
+final readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
+{
+    public const HEADER_NAME = 'X-API-KEY';
+
+    public function __construct(
+        private ApiKeyRepositoryInterface $apiKeys,
+        private ResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        $apiKey = $request->getHeaderLine(self::HEADER_NAME);
+
+        if ($apiKey === '' || !$this->apiKeys->isValid($apiKey)) {
+            // Short-circuit: do NOT call $handler->handle($request)
+            $response = $this->responseFactory->createResponse(Status::UNAUTHORIZED);
+            $response->getBody()->write(
+                json_encode(['error' => 'Unauthorized: Invalid or missing API key.'], JSON_THROW_ON_ERROR),
+            );
+
+            return $response->withHeader(Header::CONTENT_TYPE, 'application/json');
+        }
+
+        return $handler->handle($request);
+    }
+}
+```
+
+---
+
+### 2.3. Idiomatic Authentication via `yiisoft/auth`
+
+Yii3 provides the official `Yiisoft\Auth\Middleware\Authentication` middleware. It delegates identity verification to standard authenticators (such as `HttpBearer` or `HttpHeader`) and automatically binds the authenticated identity to `$request->getAttribute(Authentication::class)`.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Controller;
+
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\Auth\IdentityInterface;
+use Yiisoft\Auth\Middleware\Authentication;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+
+use function json_encode;
+
+use const JSON_THROW_ON_ERROR;
+
+final readonly class ProfileController
+{
+    public function __construct(
+        private ResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function index(ServerRequestInterface $request): ResponseInterface
+    {
+        // Identity was verified and attached by Yiisoft\Auth\Middleware\Authentication
+        /** @var IdentityInterface|null $identity */
+        $identity = $request->getAttribute(Authentication::class);
+
+        $response = $this->responseFactory->createResponse(Status::OK);
+        $response->getBody()->write(
+            json_encode([
+                'id' => $identity?->getId(),
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        return $response->withHeader(Header::CONTENT_TYPE, 'application/json');
+    }
+}
+```
+
+---
+
+### 2.4. Response Post-Processing (Security Headers)
+
+Enriches outgoing HTTP responses with standard security headers using typed constants from `Yiisoft\Http\Header`.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Presentation\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Yiisoft\Http\Header;
+
+final class SecurityHeadersMiddleware implements MiddlewareInterface
+{
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        // Process downstream pipeline first to receive generated response
+        $response = $handler->handle($request);
+
+        return $response
+            ->withHeader(Header::X_CONTENT_TYPE_OPTIONS, 'nosniff')
+            ->withHeader(Header::X_FRAME_OPTIONS, 'DENY')
+            ->withHeader(Header::X_XSS_PROTECTION, '1; mode=block')
+            ->withHeader(Header::REFERRER_POLICY, 'strict-origin-when-cross-origin');
+    }
+}
+```
+
+---
+
+### 2.5. Exception Mapping Responder via `yiisoft/error-handler`
+
+Yii3 provides `Yiisoft\ErrorHandler\Middleware\ExceptionResponder`, which intercepts domain exceptions and maps them directly to HTTP status codes or custom response-generating callables resolved by `Yiisoft\Injector\Injector`.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Configuration;
+
+use DomainException;
+use InvalidArgumentException;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
+use Yiisoft\ErrorHandler\Middleware\ExceptionResponder;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+use Yiisoft\Injector\Injector;
+
+use function json_encode;
+
+use const JSON_THROW_ON_ERROR;
+
+final class ExceptionResponderFactory
+{
+    public function create(ResponseFactoryInterface $responseFactory, Injector $injector): ExceptionResponder
+    {
+        return new ExceptionResponder(
+            exceptionMap: [
+                // 1. Integer format: maps exception to HTTP status code directly
+                DomainException::class => Status::NOT_FOUND,
+
+                // 2. Callable format: receives injected dependencies and builds custom response
+                InvalidArgumentException::class => static function (
+                    InvalidArgumentException $exception,
+                    ResponseFactoryInterface $factory,
+                ): ResponseInterface {
+                    $response = $factory->createResponse(Status::BAD_REQUEST);
+                    $response->getBody()->write(
+                        json_encode([
+                            'error' => 'Invalid Request',
+                            'message' => $exception->getMessage(),
+                        ], JSON_THROW_ON_ERROR),
+                    );
+
+                    return $response->withHeader(Header::CONTENT_TYPE, 'application/json');
+                },
+            ],
+            responseFactory: $responseFactory,
+            injector: $injector,
+            checkResponseBody: false,
+        );
+    }
+}
+```
+
+---
+
+## 3. Official Yii3 Middlewares Catalog
+
+The following table documents verified PSR-15 middlewares across official `yiisoft/*` packages:
+
+| Middleware Class (FQCN) | Official Package | Pipeline Role | Purpose & Constructor Dependencies |
+|---|---|---|---|
+| `Yiisoft\ErrorHandler\Middleware\ErrorCatcher` | `yiisoft/error-handler` | Ingress / Egress | Catches all downstream throwables, dispatches `ApplicationError` event, and renders error responses using `ThrowableResponseFactoryInterface`. Dependencies: `ThrowableResponseFactoryInterface $throwableResponseFactory`, `?EventDispatcherInterface $eventDispatcher = null`. |
+| `Yiisoft\ErrorHandler\Middleware\ExceptionResponder` | `yiisoft/error-handler` | Ingress / Egress | Maps specific exceptions to status codes or custom responses. Dependencies: `array $exceptionMap`, `ResponseFactoryInterface $responseFactory`, `Injector $injector`, `bool $checkResponseBody = false`. |
+| `Yiisoft\Session\SessionMiddleware` | `yiisoft/session` | Ingress / Egress | Manages session lifecycle. Restores session ID from request cookies, commits session on egress, and discards state if downstream throws. Dependencies: `SessionInterface $session`. *(Note: namespace is `Yiisoft\Session`, NOT `Yiisoft\Session\Middleware`)*. |
+| `Yiisoft\Csrf\CsrfTokenMiddleware` | `yiisoft/csrf` | Ingress / Guard | Validates CSRF tokens (`_csrf` param or `X-CSRF-Token` header) for unsafe methods (`POST`, `PUT`, `DELETE`, `PATCH`). Dependencies: `ResponseFactoryInterface $responseFactory`, `CsrfTokenInterface $token`, `?RequestHandlerInterface $failureHandler = null`. *(Replaces deprecated `CsrfMiddleware`)*. |
+| `Yiisoft\Csrf\CsrfTokenCookieMiddleware` | `yiisoft/csrf` | Egress | Publishes current CSRF token into client-readable `XSRF-TOKEN` response cookie with `Cache-Control: no-store` for SPA/Axios clients. Place before `CsrfTokenMiddleware`. Dependencies: `CsrfTokenInterface $token`, `string $cookieName = self::COOKIE_NAME`, `string $path = '/'`, `?string $domain = null`, `?bool $secure = null`, `?string $sameSite = self::SAME_SITE_LAX`, `$cacheControl = true`. |
+| `Yiisoft\Csrf\CsrfHeaderMiddleware` | `yiisoft/csrf` | Ingress / Guard | Validates custom HTTP header CSRF (`X-CSRF-Header`) for AJAX/SPA requests. Dependencies: `ResponseFactoryInterface $responseFactory`, `?RequestHandlerInterface $failureHandler = null`. |
+
+> [!TIP]
+> For session API, flash messages, cookie signing/encryption, CSRF token implementations, and the required
+> middleware ordering (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → Router`), see `references/http-state.md`.
+| `Yiisoft\RequestProvider\RequestCatcherMiddleware` | `yiisoft/request-provider` | Ingress | Captures current `$request` into `RequestProviderInterface $provider` so DI-resolved domain services can access request context. Dependencies: `RequestProviderInterface $provider`. |
+| `Yiisoft\Request\Body\RequestBodyParser` | `yiisoft/request-body-parser` | Ingress | Parses raw HTTP body (`application/json` via `JsonParser`) into `$request->withParsedBody()`. Returns HTTP 400 on malformed payloads. Dependencies: `ResponseFactoryInterface $responseFactory`, `ContainerInterface $container`, `?BadRequestHandlerInterface $badRequestHandler = null`. |
+| `Yiisoft\Router\Middleware\Router` | `yiisoft/router` | Ingress / Terminal | Matches route via `UrlMatcherInterface`. Sets `CurrentRoute`. Dispatches route-level middleware stack. Returns HTTP 405 with `Allow` header on method mismatch. Dependencies: `UrlMatcherInterface $matcher`, `ResponseFactoryInterface $responseFactory`, `MiddlewareFactory $middlewareFactory`, `CurrentRoute $currentRoute`, `?EventDispatcherInterface $eventDispatcher = null`. |
+| `Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware` | `yiisoft/data-response` | Egress | Negotiates `Accept` header and formats `DataStream` responses using formatters (`JsonFormatter`, `XmlFormatter`). Dependencies: `array $formatters = []`, `FormatterInterface\|RequestHandlerInterface\|null $fallback = null`. *(Replaces deprecated `FormatDataResponse`)*. |
+| `Yiisoft\DataResponse\Middleware\JsonDataResponseMiddleware` | `yiisoft/data-response` | Egress | Enforces JSON formatting on `DataStream` responses via `JsonFormatter`. Dependencies: `JsonFormatter $formatter = new JsonFormatter()`. *(Replaces deprecated `FormatDataResponseAsJson`)*. |
+| `Yiisoft\DataResponse\Middleware\XmlDataResponseMiddleware` | `yiisoft/data-response` | Egress | Enforces XML formatting on `DataStream` responses via `XmlFormatter`. Dependencies: `XmlFormatter $formatter = new XmlFormatter()`. |
+| `Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware` | `yiisoft/rate-limiter` | Ingress / Guard | Enforces rate limits using `CounterInterface` and `LimitPolicyInterface`. Returns HTTP 429 and adds `X-Rate-Limit-*` headers. Dependencies: `CounterInterface $counter`, `ResponseFactoryInterface $responseFactory`, `?LimitPolicyInterface $limitingPolicy = null`, `?MiddlewareInterface $failStoreUpdatedDataMiddleware = null`. *(Note: Class is `LimitRequestsMiddleware`, NOT `RateLimiterMiddleware`)*. |
+| `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware` | `yiisoft/http-middleware` | Ingress / Guard | Handles CORS headers and short-circuits preflight `OPTIONS` requests with HTTP 204. Dependencies: `?ResponseFactoryInterface $responseFactory = null`. *(Replaces deprecated `Yiisoft\Yii\Middleware\CorsAllowAll`)*. |
+| `Yiisoft\HttpMiddleware\ContentLengthMiddleware` | `yiisoft/http-middleware` | Egress | Adds or removes `Content-Length` header according to HTTP specifications. Dependencies: `bool $removeOnTransferEncoding = true`, `bool $add = true`, `array $doNotAddOnStatusCode = [...]`, `array $removeOnStatusCode = [...]`. |
+| `Yiisoft\HttpMiddleware\ForceSecureConnection\ForceSecureConnectionMiddleware` | `yiisoft/http-middleware` | Ingress / Egress | Redirects insecure HTTP requests to HTTPS and attaches HSTS / CSP headers. Dependencies: `ResponseFactoryInterface $responseFactory`, `RedirectOptions $redirectOptions = new RedirectOptions()`, `?string $cspHeader = self::DEFAULT_CSP_HEADER`, `?HstsHeader $hstsHeader = new HstsHeader()`. *(Replaces deprecated `Yiisoft\Yii\Middleware\ForceSecureConnection`)*. |
+| `Yiisoft\HttpMiddleware\HttpCache\HttpCacheMiddleware` | `yiisoft/http-middleware` | Ingress / Egress | Client-side HTTP caching with `Last-Modified` and `ETag`. Dependencies: `ResponseFactoryInterface $responseFactory`, `CacheControlProviderInterface $cacheControlProvider = new NullCacheControlProvider()`, `LastModifiedProviderInterface $lastModifiedProvider = new NullLastModifiedProvider()`, `ETagProviderInterface $eTagProvider = new NullETagProvider()`, `ETagGeneratorInterface $eTagGenerator = new DefaultETagGenerator()`, `ETagValueNormalizerInterface $eTagValueNormalizer = new NoopETagValueNormalizer()`. *(Replaces deprecated `Yiisoft\Yii\Middleware\HttpCache`)*. |
+| `Yiisoft\HttpMiddleware\HeadRequestMiddleware` | `yiisoft/http-middleware` | Egress | Removes body from response for `HEAD` requests. Dependencies: `StreamFactoryInterface $streamFactory`. |
+| `Yiisoft\HttpMiddleware\RedirectMiddleware` | `yiisoft/http-middleware` | Ingress / Guard | Responds with a redirect to the specified URL when a condition callable is met. Dependencies: `ResponseFactoryInterface $responseFactory`, `string $url`, `int $statusCode = 301`, `?callable $condition = null`. |
+| `Yiisoft\HttpMiddleware\TagRequest\TagRequestMiddleware` | `yiisoft/http-middleware` | Ingress | Attaches an identification tag to request attributes. Dependencies: `string $attributeName = 'requestTag'`, `TagProviderInterface $tagProvider = new TimeBasedTagProvider()`. *(Replaces deprecated `Yiisoft\Yii\Middleware\TagRequest`)*. |
+| `Yiisoft\Auth\Middleware\Authentication` | `yiisoft/auth` | Ingress / Guard | Authenticates request using `AuthenticatorInterface` (`HttpBearer`, `HttpHeader`). Binds identity to `$request->getAttribute(Authentication::class)`. Dependencies: `AuthenticatorInterface\|AuthenticationMethodInterface $authenticationMethod`, `ResponseFactoryInterface $responseFactory`, `?RequestHandlerInterface $authenticationFailureHandler = null`. |
+| `Yiisoft\Cookies\CookieMiddleware` | `yiisoft/cookies` | Ingress / Egress | Decrypts and validates request cookies; encrypts and signs outgoing response `Set-Cookie` headers based on `CookieEncryptor` and `CookieSigner`. Dependencies: `LoggerInterface $logger`, `CookieEncryptor $encryptor`, `CookieSigner $signer`, `array $cookiesSettings = []`. |
+| `Yiisoft\Yii\Middleware\Locale` | `yiisoft/yii-middleware` | Ingress | Detects and sets request locale from URL prefix, query param, or cookies. Dispatches `SetLocaleEvent` and configures `UrlGeneratorInterface`. Dependencies: `EventDispatcherInterface $eventDispatcher`, `UrlGeneratorInterface $urlGenerator`, `LoggerInterface $logger`, `ResponseFactoryInterface $responseFactory`, `array $supportedLocales = []`, `array $ignoredRequestUrlPatterns = []`, `bool $secureCookie = false`, `?DateInterval $cookieDuration = null`, `?ClockInterface $clock = null`. |
+| `Yiisoft\Yii\Middleware\IpFilter` | `yiisoft/yii-middleware` | Ingress / Guard | Restricts incoming requests to specified IPv4/IPv6 ranges using `IpRanges`. Responds with HTTP 403 Forbidden for disallowed clients. Dependencies: `ValidatorInterface $validator`, `ResponseFactoryInterface $responseFactory`, `?string $clientIpAttribute = null`, `array $ipRanges = []`. |
+| `Yiisoft\Yii\Middleware\Subfolder` | `yiisoft/yii-middleware` | Ingress | Adjusts URI path and sets `@baseUrl` alias when Yii3 application is served from a subfolder rather than root domain. Must precede `Router`. Dependencies: `UrlGeneratorInterface $uriGenerator`, `Aliases $aliases`, `?string $prefix = null`, `?string $baseUrlAlias = '@baseUrl'`. |
+| `Yiisoft\ProxyMiddleware\TrustedHostsNetworkResolver` | `yiisoft/proxy-middleware` | Ingress | Resolves client IP, protocol, host, and port behind reverse proxies using `X-Forwarded-*` or RFC 7239 `Forwarded` headers. Configured via `withTrustedIps(array $trustedIps)`. Stores client IP in attribute `TrustedHostsNetworkResolver::ATTRIBUTE_REQUEST_CLIENT_IP`. |
+
+---
+
+## 4. Registration Scopes & Pipelines
+
+Yii3 provides three scopes for attaching middlewares:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ 1. Global Application Pipeline                         │
+│    Configured in DI container: Application::class      │
+│    Executes for every incoming HTTP request.           │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ 2. Route Group Pipeline                                │
+│    Configured via new Group('/api/v1')->middleware(...)│
+│    Executes for all routes in that group.              │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ 3. Single Route Pipeline                               │
+│    Configured via (new Post(...))->middleware(...)     │
+│    Executes exclusively for that single endpoint.      │
+└────────────────────────────────────────────────────────┘
+```
+
+### 4.1. Global Application Pipeline (`config/web/di/application.php`)
+
+The global middleware pipeline executes for every incoming HTTP request before routing. In Yii3, this is configured in DI container definitions for `Yiisoft\Yii\Http\Application`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Presentation\Middleware\SecurityHeadersMiddleware;
+use App\Web\NotFound\NotFoundHandler;
+use Yiisoft\Csrf\CsrfTokenCookieMiddleware;
+use Yiisoft\Csrf\CsrfTokenMiddleware;
+use Yiisoft\Definitions\DynamicReference;
+use Yiisoft\Definitions\Reference;
+use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
+use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
+use Yiisoft\RequestProvider\RequestCatcherMiddleware;
+use Yiisoft\Router\Middleware\Router;
+use Yiisoft\Session\SessionMiddleware;
+use Yiisoft\Yii\Http\Application;
+
+/** @var array $params */
+
+return [
+    Application::class => [
+        '__construct()' => [
+            'dispatcher' => DynamicReference::to([
+                'class' => MiddlewareDispatcher::class,
+                '__construct()' => [
+                    'middlewareDefinitions' => [
+                        // 1. Outermost: Catch any uncaught Throwable and render error response
+                        ErrorCatcher::class,
+
+                        // 2. Security headers applied to all outgoing responses
+                        SecurityHeadersMiddleware::class,
+
+                        // 3. Session lifecycle management (start/commit/discard)
+                        SessionMiddleware::class,
+
+                        // 4. Publish XSRF-TOKEN cookie for JavaScript clients (must precede CsrfTokenMiddleware)
+                        CsrfTokenCookieMiddleware::class,
+
+                        // 5. CSRF protection for mutating requests (POST, PUT, DELETE, PATCH)
+                        CsrfTokenMiddleware::class,
+
+                        // 6. Store current request into RequestProviderInterface for DI services
+                        RequestCatcherMiddleware::class,
+
+                        // 7. Router matches route, dispatches group/route middleware stack, and invokes action
+                        Router::class,
+                    ],
+                ],
+            ]),
+            'fallbackHandler' => Reference::to(NotFoundHandler::class),
+        ],
+    ],
+];
+```
+
+> [!NOTE]
+> In `yiisoft/middleware-dispatcher >= 5.5.0`, `MiddlewareDispatcher::withMiddlewares()` is deprecated in favor of passing middleware definitions directly to `__construct(['middlewareDefinitions' => [...]])`.
+
+---
+
+### 4.2. Route Group Pipeline (`config/web/routes.php`)
+
+Executes for all routes inside a specific route group (e.g. `/api/v1`).
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Presentation\Action\User\ListUsersAction;
+use App\Presentation\Action\User\ViewUserAction;
+use App\Presentation\Middleware\ApiKeyAuthMiddleware;
+use Yiisoft\DataResponse\Formatter\JsonFormatter;
+use Yiisoft\DataResponse\Formatter\XmlFormatter;
+use Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware;
+use Yiisoft\HttpMiddleware\CorsAllowAllMiddleware;
+use Yiisoft\Request\Body\RequestBodyParser;
+use Yiisoft\Router\Group;
+use Yiisoft\Router\Route\Get;
+
+return [
+    // Instantiated via new Group() (Group::create() is deprecated)
+    (new Group('/api/v1'))
+        ->middleware(
+            // 1. CORS headers and OPTIONS preflight handling (MUST precede auth)
+            CorsAllowAllMiddleware::class,
+
+            // 2. Content negotiation for DataStream responses
+            static fn() => new ContentNegotiatorDataResponseMiddleware(
+                formatters: [
+                    'application/json' => new JsonFormatter(),
+                    'application/xml' => new XmlFormatter(),
+                ],
+                fallback: new JsonFormatter(),
+            ),
+
+            // 3. Parse incoming JSON body into $request->getParsedBody()
+            RequestBodyParser::class,
+
+            // 4. Guard all routes in this group
+            ApiKeyAuthMiddleware::class,
+        )
+        ->routes(
+            // Instantiated via new Get() (Route::get() is deprecated)
+            (new Get('/users'))
+                ->action(ListUsersAction::class)
+                ->name('api.users.list'),
+
+            (new Get('/users/{id:\d+}'))
+                ->action(ViewUserAction::class)
+                ->name('api.users.view'),
+        ),
+];
+```
+
+---
+
+### 4.3. Single Route Pipeline (`config/web/routes.php`)
+
+Executes for a specific endpoint. Routes can append middlewares, prepend middlewares, and explicitly **disable** inherited group middlewares.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Presentation\Action\Auth\LoginAction;
+use App\Presentation\Action\Billing\ChargeInvoiceAction;
+use App\Presentation\Action\HealthCheckAction;
+use App\Presentation\Middleware\ApiKeyAuthMiddleware;
+use App\Presentation\Middleware\RequireIdempotencyKeyMiddleware;
+use Yiisoft\Router\Group;
+use Yiisoft\Router\Route\Get;
+use Yiisoft\Router\Route\Post;
+use Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware;
+
+return [
+    (new Group('/api/v1'))
+        ->middleware(ApiKeyAuthMiddleware::class)
+        ->routes(
+            // 1. Endpoint-specific rate limiting
+            (new Post('/auth/login'))
+                ->middleware(LimitRequestsMiddleware::class)
+                ->action(LoginAction::class)
+                ->name('auth.login'),
+
+            // 2. Extra safety guard: Idempotency Key requirement
+            (new Post('/billing/invoices/{id:\d+}/charge'))
+                ->middleware(RequireIdempotencyKeyMiddleware::class)
+                ->action(ChargeInvoiceAction::class)
+                ->name('billing.charge'),
+
+            // 3. Disabling inherited middleware: Public Health Check
+            (new Get('/health'))
+                ->disableMiddleware(ApiKeyAuthMiddleware::class)
+                ->action(HealthCheckAction::class)
+                ->name('api.health'),
+        ),
+];
+```
+
+> [!NOTE]
+> In Yii3 routing, `Route::action()` is the terminal middleware of that route's pipeline. When `->middleware(...)` is called after `->action(...)`, `Route` automatically inserts the new middleware **before** the action in the execution list.
+
+---
+
+## 5. Supported Middleware Definition Formats
+
+`Yiisoft\Middleware\Dispatcher\MiddlewareFactory` supports multiple definition formats when registering middlewares in routes, groups, or dispatchers:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Route;
+
+use App\Presentation\Action\User\IndexAction;
+use App\Presentation\Middleware\ApiKeyAuthMiddleware;
+use App\Presentation\Middleware\SecurityHeadersMiddleware;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerInterface;
+use Yiisoft\Router\Route\Get;
+
+// Supported middleware definition formats in Yiisoft\Middleware\Dispatcher\MiddlewareFactory:
+
+// 1. PSR-15 MiddlewareInterface class string (resolved via PSR-11 container)
+$route1 = (new Get('/api/v1/resource'))->middleware(ApiKeyAuthMiddleware::class);
+
+// 2. PSR-15 RequestHandlerInterface class string (invokes ->handle())
+$route2 = (new Get('/api/v1/handler'))->middleware(IndexAction::class);
+
+// 3. Array definition for DI container (instantiated via Yiisoft\Definitions\ArrayDefinition)
+$route3 = (new Get('/api/v1/custom'))->middleware([
+    'class' => SecurityHeadersMiddleware::class,
+]);
+
+// 4. Controller action pair [ControllerClass, 'methodName']
+$route4 = (new Get('/api/v1/users'))->action([IndexAction::class, 'handle']);
+
+// 5. Invokable class (class with __invoke method)
+$route5 = (new Get('/api/v1/invoke'))->middleware(IndexAction::class);
+
+// 6. Anonymous closure / callable with automatic DI parameter injection
+$route6 = (new Get('/api/v1/inline'))->middleware(
+    static function (
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler,
+        LoggerInterface $logger,
+    ): ResponseInterface {
+        $logger->info('Processing inline request');
+        return $handler->handle($request);
+    }
+);
+```
+
+---
+
+## 6. Hidden Pitfalls & Critical Gotchas
+
+1. **PSR-7 Immutability Trap:**
+   Calling `$request->withAttribute('key', $value)` without reassigning it discards the new request instance. Downstream handlers will receive the unmodified `$request`. Always write `$request = $request->withAttribute(...);`.
+
+2. **Session Discard on Exception:**
+   `Yiisoft\Session\SessionMiddleware` wraps downstream handling in `try ... catch (Throwable $e)`. If an unhandled exception is thrown, it executes `$this->session->discard()` to prevent saving corrupted session states. If you swallow exceptions in custom middleware without re-throwing, uncommitted session changes may be committed unintentionally.
+
+3. **Missing `RequestBodyParser` Before JSON Actions:**
+   PSR-7 server request implementations (e.g. `httpsoft/http-message`) only parse standard `application/x-www-form-urlencoded` and `multipart/form-data` bodies natively. For `application/json` or XML requests, `$request->getParsedBody()` will return `null` unless `Yiisoft\Request\Body\RequestBodyParser` is registered in the pipeline.
+
+4. **Correct Pipeline Ordering (Outer to Inner):**
+   - `ErrorCatcher` must be the outermost middleware to catch errors from all downstream layers.
+   - `Subfolder` and `Locale` must precede `Router` so URL matching operates on the cleaned URI path.
+   - `SessionMiddleware` must precede `CsrfTokenMiddleware` if CSRF tokens depend on session storage.
+   - `CsrfTokenCookieMiddleware` must precede `CsrfTokenMiddleware` so the `XSRF-TOKEN` cookie is sent even if validation fails.
+   - `CorsAllowAllMiddleware` must precede authentication and body parser middlewares in API route groups so browser `OPTIONS` preflight requests are answered with 204 without requiring auth credentials.
+   - `RequestBodyParser` must precede any middleware or action that inspects parsed body data.
+
+5. **Short-Circuiting vs Handler Delegation:**
+   In short-circuiting guards (e.g. auth failures, rate limits), **never** call `$handler->handle($request)`. Return the error `ResponseInterface` directly. Calling `$handler->handle($request)` and then returning your own response causes downstream actions and database mutations to execute anyway.
+
+6. **Never Use `exit()` or `die()`:**
+   Terminating the script with `die()` or `exit()` crashes the PHP process immediately, bypassing response post-processing, session commit (`SessionMiddleware::commitSession()`), logging, and PSR-7 SAPI response emitters. Always return a PSR-7 `ResponseInterface`.
+
+7. **`withMiddlewares()` Deprecation in MiddlewareDispatcher:**
+   In `yiisoft/middleware-dispatcher >= 5.5.0`, `withMiddlewares()` is deprecated. Do not configure dispatcher instances with `withMiddlewares()` in application DI definitions; pass definitions directly to `__construct(['middlewareDefinitions' => [...]])`.
+
+---
+
+## 7. Anti-Pattern Matrix
+
+| Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
+|---|---|---|
+| **Ignoring PSR-7 immutability (`$request->withAttribute(...)`)** | Method returns a clone. The return value is discarded, and downstream handlers receive unmodified `$request`. | Reassign explicitly: `$request = $request->withAttribute('key', $value);`. |
+| **Using deprecated `Yiisoft\Csrf\CsrfMiddleware`** | `CsrfMiddleware` is deprecated and slated for removal. | Use `Yiisoft\Csrf\CsrfTokenMiddleware` for validation and `Yiisoft\Csrf\CsrfTokenCookieMiddleware` for cookie emission. |
+| **Hallucinating `Yiisoft\Yii\Http\Middleware\CorsMiddleware`** | Class does not exist; triggers fatal `ClassNotFoundError`. `yiisoft/yii-http` only provides application runners and events. | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware` from `yiisoft/http-middleware` or `Group::withCors()`. |
+| **Using deprecated `Yiisoft\Yii\Middleware\CorsAllowAll`** | Class is deprecated in favor of `yiisoft/http-middleware`. | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware`. |
+| **Using deprecated `Yiisoft\Yii\Middleware\ForceSecureConnection`, `HttpCache`, or `TagRequest`** | Classes are deprecated in `yiisoft/yii-middleware` in favor of `yiisoft/http-middleware`. | Use `ForceSecureConnectionMiddleware`, `HttpCacheMiddleware`, and `TagRequestMiddleware` from `yiisoft/http-middleware`. |
+| **Hallucinating `Yiisoft\Yii\RateLimiter\RateLimiterMiddleware`** | Class does not exist in `yiisoft/rate-limiter`. | Use `Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware`. |
+| **Wrong session middleware namespace: `Yiisoft\Session\Middleware\SessionMiddleware`** | Triggers fatal `ClassNotFoundError`. The class resides directly in root `Yiisoft\Session`. | Use `Yiisoft\Session\SessionMiddleware`. |
+| **Using deprecated `FormatDataResponse` or `FormatDataResponseAsJson`** | Legacy formatters deprecated in `yiisoft/data-response`. | Use `ContentNegotiatorDataResponseMiddleware` or `JsonDataResponseMiddleware`. |
+| **Using deprecated `Group::create('/prefix')`** | `Group::create()` is marked `@deprecated Use new Group() instead`. | Use `new Group('/prefix')`. |
+| **Using deprecated `Route::get()`, `Route::post()`, `Route::put()`, `Route::delete()`** | Static factory methods are deprecated in `yiisoft/router`. | Use `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Route\Post('/path')`, or `Route::methods([Method::...], ...)`. |
+| **Placing `Authentication` before `CorsAllowAllMiddleware` in API groups** | Browser preflight `OPTIONS` requests do not send authorization headers and fail with 401 Unauthorized before CORS headers are attached. | Place `CorsAllowAllMiddleware` first in the group middleware stack before any authentication guards. |
+| **Placing `CsrfTokenMiddleware` before `CsrfTokenCookieMiddleware`** | If CSRF validation fails, execution terminates before `CsrfTokenCookieMiddleware` can attach the `XSRF-TOKEN` cookie, locking client out. | Register `CsrfTokenCookieMiddleware` before `CsrfTokenMiddleware` in the global pipeline. |
+| **Calling deprecated `MiddlewareDispatcher::withMiddlewares()` in DI definitions** | `withMiddlewares()` is deprecated since 5.5.0 and re-instantiates internal stack closures unnecessarily. | Pass definitions to constructor: `'dispatcher' => DynamicReference::to(['class' => MiddlewareDispatcher::class, '__construct()' => ['middlewareDefinitions' => [...]]])`. |
+| **Configuring global middlewares under `params.php` `'yiisoft/yii-runner-http'`** | `yii-runner-http` does not read middlewares from params. Global pipeline is defined in DI. | Configure pipeline in `config/web/di/application.php` under `Application::class => ['__construct()' => ['dispatcher' => DynamicReference::to([...])]]`. |
+| **Calling `die()` or `exit()` inside middleware** | Crashes worker/process; bypasses response emitters, session cookie commitment, and log flushing. | Return a PSR-7 `ResponseInterface` with error status (e.g. 401/403/422). |
+| **Reading `$request->getParsedBody()` without `RequestBodyParser`** | `$request->getParsedBody()` returns `null` for `application/json` payloads. | Add `Yiisoft\Request\Body\RequestBodyParser` to group or global pipeline. |
+| **Placing heavy business or DB logic inside global middlewares** | Slows down every incoming request, including health checks and static file serving. | Keep middlewares lightweight; scope auth/rate-limiting to specific route groups or routes. |
+| **Calling `$handler->handle($request)` inside short-circuit guard** | Downstream action still executes, causing unintended state changes before returning error response. | Return error `ResponseInterface` immediately without delegating to `$handler->handle($request)`. |
+| **Calling `$handler->handle()` multiple times in one middleware** | Causes downstream middlewares and controller actions to execute multiple times. | Call `$handler->handle($request)` exactly once per request. |

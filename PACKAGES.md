@@ -2,9 +2,8 @@
 
 > Source: [yiisoft.github.io](https://yiisoft.github.io) · [Packagist](https://packagist.org/packages/yiisoft/) · [API 3.0](https://www.yiiframework.com/doc/api/3.0)
 >
-> **Source code:** The `references/` directory contains 127 cloned `yiisoft/*` repositories. Study
-> `references/<package>/src/` and `references/<package>/docs/` for class interfaces, method signatures,
-> and usage patterns before generating code.
+> **Source code:** In target projects, inspect `vendor/yiisoft/<package>/src/` for class interfaces, method signatures,
+> and usage patterns before generating code (in authoring context, use `references/<package>/src/`).
 
 
 ## Use this catalog to:
@@ -530,7 +529,7 @@ composer require --dev yiisoft/<package>
 Rules:
 - Install only what the generated artifact actually uses — never the whole stack.
 - Do not pin versions; let Composer resolve compatible ones.
-- Check `references/<package>/composer.json` to confirm the package has no extra undeclared
+- Check `vendor/yiisoft/<package>/composer.json` to confirm the package has no extra undeclared
   dependencies beyond those in the category tables above.
 - If Composer reports a conflict, show the conflict and re-resolve with a minimal set.
 

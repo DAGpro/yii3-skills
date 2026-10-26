@@ -10,3 +10,6 @@ package.json
 .opencode/
 .agents/
 .ai-factory/
+
+references/
+anthropic-skills-guide*.md

@@ -57,7 +57,7 @@ Deferred execution via queue.
 **Required Artifact Graph:**
 1. **Message / Job DTO:** Serializable data payload for queue (`yiisoft/queue`).
 2. **Job Handler:** Worker consuming message and calling the corresponding Use Case.
-3. **Producer Action / Command:** Pushes message to `QueueInterface`.
+3. **Producer Action / Command:** Pushes message to `QueueProducerInterface`.
 4. **Wiring:** Register queue adapter (`yiisoft/queue-amqp`, `yiisoft/queue-db`, etc.) and handler mapping in DI/queue config.
 
 ---
@@ -121,15 +121,23 @@ Exposes complete collection and resource management with standard HTTP semantics
 4. **Wiring:**
    - Route group in `config/web/routes.php`:
      ```php
-     Group::create('/api/products')
+     use Yiisoft\Router\Group;
+     use Yiisoft\Router\Route\Delete;
+     use Yiisoft\Router\Route\Get;
+     use Yiisoft\Router\Route\Post;
+     use Yiisoft\Router\Route\Put;
+
+     new Group('/api/products')
          ->routes(
-             Route::get('')->action(ListProductsAction::class)->name('api.products.list'),
-             Route::post('')->action(CreateProductAction::class)->name('api.products.create'),
-             Route::get('/{id:\d+}')->action(ViewProductAction::class)->name('api.products.view'),
-             Route::put('/{id:\d+}')->action(UpdateProductAction::class)->name('api.products.update'),
-             Route::delete('/{id:\d+}')->action(DeleteProductAction::class)->name('api.products.delete'),
+             (new Get(''))->action(ListProductsAction::class)->name('api.products.list'),
+             (new Post(''))->action(CreateProductAction::class)->name('api.products.create'),
+             (new Get('/{id:\d+}'))->action(ViewProductAction::class)->name('api.products.view'),
+             (new Put('/{id:\d+}'))->action(UpdateProductAction::class)->name('api.products.update'),
+             (new Delete('/{id:\d+}'))->action(DeleteProductAction::class)->name('api.products.delete'),
          );
      ```
+     > Note: static factories `Route::get()`/`Route::post()` and `Group::create()` are deprecated in current
+     > `yiisoft/router` (in older installed versions they are equivalent) — see `references/routes.md`.
 
 ---
 
@@ -138,7 +146,7 @@ Processes multipart form-data uploads securely.
 
 **Required Artifact Graph:**
 1. **Input DTO:**
-   - Uses PHP attribute `Yiisoft\Validator\Rule\File\File` or `Image`:
+   - Uses PHP attribute `Yiisoft\Validator\Rule\File` or `Yiisoft\Validator\Rule\Image\Image`:
      ```php
      final readonly class UploadAvatarRequest
      {
@@ -165,14 +173,14 @@ Translate business terms in user requirements to corresponding Yii3 capabilities
 | Passwords, hashing, tokens | `security` | `yiisoft/security` | `PasswordHasher`, `Random` |
 | Email notifications, confirmation | `mail`, `events` | `yiisoft/mailer`, `yiisoft/yii-event` | `MailerInterface`, `MessageInterface`, `EventDispatcherInterface` |
 | Tables, schema, DB storage | `db`, `migrations` | `yiisoft/db`, `yiisoft/db-migration`, driver | `ConnectionInterface`, `MigrationBuilder` |
-| Form validation, payload validation | `validation`, `hydrator` | `yiisoft/validator`, `yiisoft/hydrator` | `ValidatorInterface`, `HydratorInterface`, `#[Rule]` attributes |
+| Form validation, payload validation | `validation`, `hydrator` | `yiisoft/validator`, `yiisoft/hydrator` | `ValidatorInterface`, `HydratorInterface`, rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`) |
 | REST API, JSON output | `response` | `yiisoft/data-response` | `ResponseFactory\DataResponseFactoryInterface`, `DataResponse` |
 | Data grids, pagination, sorting | `dataview`, `data` | `yiisoft/data`, `yiisoft/yii-dataview` | `OffsetPaginator`, `Sort`, `DataReaderInterface` |
-| Background tasks, deferred jobs | `queue` | `yiisoft/queue`, adapter (`queue-db` / `queue-redis`) | `QueueInterface`, `MessageInterface` |
+| Background tasks, deferred jobs | `queue` | `yiisoft/queue`, adapter (`queue-db` / `queue-redis`) | `QueueProducerInterface`, `MessageInterface` |
 | Access control, permissions | `rbac`, `access` | `yiisoft/rbac`, `yiisoft/user` | `ManagerInterface`, `CurrentUser` |
 | Console commands, CLI imports | `console` | `yiisoft/yii-console` | `Symfony\Component\Console\Command\Command`, `ExitCode` |
 | Session, flash messages | `session` | `yiisoft/session` | `SessionInterface`, `FlashInterface` |
-| File download / export | `response-download` | `yiisoft/response-download` | `ResponseDownloadFactoryInterface` |
+| File download / export | `response-download` | `yiisoft/response-download` | `DownloadResponseFactory` |
 | File uploads & images | `validation`, `http` | `yiisoft/validator`, `yiisoft/http` | `UploadedFileInterface`, `#[File]`, `#[Image]` |
 
 ---
@@ -249,7 +257,7 @@ src/
   Order/
     Checkout/
       CheckoutAction.php       # Presentation / HTTP
-      CheckoutRequest.php      # Input DTO with #[Rule]
+      CheckoutRequest.php      # Input DTO with rule attributes (#[Required], #[Length], ...)
       CheckoutHandler.php      # Application Use Case
       OrderCreatedEvent.php    # Domain Event
       SendReceiptListener.php  # Event Listener

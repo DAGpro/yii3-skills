@@ -4,9 +4,9 @@ description: >-
   Use when planning, implementing, fixing, reviewing or verifying code in a Yii3 project (composer.json requires yiisoft/* packages
   with yiisoft/config or config-plugin; no yiisoft/yii2). Provides Yii3 conventions, package catalog, architecture-aware feature
   decomposition into actions/use-cases/repositories, and DI/routing wiring rules. Use when user says "Yii3", "Yii 3", "yiisoft",
-  "create feature", "add action", "new endpoint", "add repository", "add use case", "add event", "add listener", "add middleware", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "asset bundle", "validate input", "validation rules", "custom validator", "form model",
+  "create feature", "add action", "new endpoint", "add repository", "add use case", "add event", "add listener", "add middleware", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "list view", "detail view", "asset bundle", "validate input", "validation rules", "custom validator", "form model",
   "log message", "log target", "PSR-3 logging", "translate messages", "i18n", "locale", "session", "cookie",
-  "flash message", "CSRF", "file upload", "download file". Not for Yii2.
+  "flash message", "CSRF", "file upload", "download file", "layered architecture", "vertical slices", "hexagonal". Not for Yii2.
 ---
 
 # Yii3 development
@@ -28,7 +28,7 @@ description: >-
 5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Report added packages and changed config files.
 
 ## References (read on demand)
-- `references/architecture-alignment.md` — where code goes
+- `references/architecture-alignment.md` — where code goes + per-pattern placement tables and dependency rules
 - `references/feature-recipes.md` — feature archetypes, decomposition into layers, capability inference, wiring checklist
 - `references/dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
@@ -43,7 +43,7 @@ description: >-
 - `references/middlewares.md` — PSR-15 HTTP middleware pipeline, request pre-processing, security post-processing, auth short-circuiting, and official middleware catalog
 - `references/http-state.md` — sessions and session middleware, flash messages, cookie handling with signing/encryption, and CSRF token implementations with middleware wiring
 - `references/migrations.md` — database schema DDL migrations, typed column definitions, foreign keys, indexes, reversible migrations, and data seeding
-- `references/views-and-widgets.md` — PHP view templates, mandatory XSS escaping, layouts, asset bundles, custom widgets, HTML forms, and DataView/GridView
+- `references/views-and-widgets.md` — view placement (colocated action templates or central views directory), PHP view templates, mandatory XSS escaping, layouts, asset bundles, custom widgets, HTML forms, and DataView widgets (GridView, ListView, DetailView)
 - `references/file-handling.md` — FileHelper filesystem utilities, download responses (sendFile, x-sendfile, byte ranges), and the PSR-7 upload flow with file validation rules
 - `references/queue-jobs.md` — asynchronous queue jobs, serializable message DTOs, worker handlers, distributed mutex locks, and worker CLI management
 - `references/auth-and-rbac.md` — user identity, session/JWT auth, password hashing, RBAC manager, custom rules, and route protection

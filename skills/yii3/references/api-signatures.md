@@ -162,7 +162,7 @@ final class CurrentUser
     public function getIdentity(): IdentityInterface;
     public function getId(): ?string;
     public function isGuest(): bool;
-    public function can(string|BackedEnum $permissionName, array $parameters = []): bool;
+    public function can(string|BackedEnum $permissionName, array $params = []): bool;
     public function login(IdentityInterface $identity): bool;
     public function logout(): bool;
 }
@@ -193,9 +193,9 @@ interface UrlGeneratorInterface
         string $name,
         array $arguments = [],
         array $queryParameters = [],
+        ?string $hash = null,
         ?string $scheme = null,
         ?string $host = null,
-        ?string $hash = null,
     ): string;
 }
 ```
@@ -212,11 +212,17 @@ namespace Yiisoft\Router;
 
 final class Route
 {
+    /** @deprecated Use `new \Yiisoft\Router\Route\Get($pattern)` instead. */
     public static function get(string $pattern): self;
+    /** @deprecated Use `new \Yiisoft\Router\Route\Post($pattern)` instead. */
     public static function post(string $pattern): self;
+    /** @deprecated Use `new \Yiisoft\Router\Route\Put($pattern)` instead. */
     public static function put(string $pattern): self;
+    /** @deprecated Use `new \Yiisoft\Router\Route\Delete($pattern)` instead. */
     public static function delete(string $pattern): self;
+    /** @deprecated Use `new \Yiisoft\Router\Route\Patch($pattern)` instead. */
     public static function patch(string $pattern): self;
+    /** @deprecated Use `new Route(pattern: $pattern, methods: $methods)` instead. */
     public static function methods(array $methods, string $pattern): self;
 
     public function action(array|callable|string $action): self;
@@ -226,11 +232,25 @@ final class Route
 
 final class Group
 {
+    public function __construct(
+        ?string $prefix = null,
+        array $routes = [],
+        array $middlewares = [],
+        // ... $hosts, $namePrefix, $disabledMiddlewares, $corsMiddleware
+    );
+    /** @deprecated Use `new Group($prefix)` instead. */
     public static function create(?string $prefix = null): self;
     public function routes(Group|Route ...$routes): self;
     public function middleware(array|callable|string ...$middleware): self;
     public function namePrefix(string $namePrefix): self;
 }
+```
+**Modern route declaration** (static factories above are deprecated in current `yiisoft/router`; in older
+installed versions they are equivalent):
+```php
+use Yiisoft\Router\Route\Get;
+
+(new Get('/users/{id:\d+}'))->action(ViewUserAction::class)->name('user.view');
 ```
 
 ---
@@ -260,15 +280,17 @@ public function __invoke(CurrentRoute $currentRoute): ResponseInterface
 ```php
 namespace Yiisoft\Yii\View\Renderer;
 
-use Psr\Http\Message\ResponseInterface;
+use Yiisoft\DataResponse\DataResponse;
 
 final class ViewRenderer implements ViewContextInterface
 {
-    public function render(string $view, array $parameters = []): ResponseInterface;
-    public function renderPartial(string $view, array $parameters = []): ResponseInterface;
+    public function render(string $view, array $parameters = []): DataResponse;
+    public function renderPartial(string $view, array $parameters = []): DataResponse;
     public function withViewPath(string $viewPath): self;
 }
 ```
+`DataResponse` implements `Psr\Http\Message\ResponseInterface`, so Actions may still declare
+`ResponseInterface` as their return type.
 **Usage:**
 ```php
 return $this->viewRenderer->render('index', ['products' => $products]);

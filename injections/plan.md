@@ -13,7 +13,7 @@ When planning in a Yii3 project:
     2. **Domain Layer:** Pure Entity/Aggregate, Value Objects, Domain Events (PSR-14), Repository Interface.
     3. **Persistence Layer:** Repository Implementation (`yiisoft/db`, Active Record, or Cycle) + Transaction wrapper.
     4. **Application Layer:** Use Case Command & Handler with post-commit event dispatching, Event Listeners.
-    5. **Presentation Layer:** Input DTO with `#[Rule]` validation attributes + Single Action Handler (or Console Command).
+    5. **Presentation Layer:** Input DTO with rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`, …) + Single Action Handler (or Console Command).
     6. **Wiring & Tests:** DI bindings (`config/**/di/*.php`), Routes (`config/**/routes.php`), Events (`config/**/events.php`), Unit & HTTP Tests.
     *Reject any plan that attempts to collapse this graph into 1-2 generic "create controller" tasks.*
   * Keep Actions thin: never plan database queries, password hashing, or notification sending directly in Actions. For console commands, delegate business execution to Use Cases.

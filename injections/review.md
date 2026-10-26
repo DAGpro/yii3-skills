@@ -4,7 +4,7 @@
 In a Yii3 project (`yiisoft/*` in `composer.json`, no `yiisoft/yii2`) additionally flag:
 - **Yii2 APIs & Anti-patterns:** `Yii::$app`, `yii\...` namespace, `actionX()` methods, `rules()` / `behaviors()` in models, services built with `new` instead of DI, missing `declare(strict_types=1);`.
 - **Fat Action:** Action containing SQL queries, ActiveRecord persistence, password hashing, or notification sending (must be extracted to Use Case / Domain / Event Listener).
-- **Unvalidated Input:** reading raw `$request->getParsedBody()['field']` without strongly-typed DTO validated by `yiisoft/validator` `#[Rule]` attributes.
+- **Unvalidated Input:** reading raw `$request->getParsedBody()['field']` without strongly-typed DTO validated by `yiisoft/validator` rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`, …).
 - **Missing DI bindings & Wiring:** any newly introduced interface (`*Interface`) without a mapping in `config/**/di/*.php`, any Action without a Route, or any Console Command without registration in `config/console/params.php`.
 - **Missing Transactions:** multiple state-modifying database operations without `$db->transaction()`.
 - **API Response:** returning raw PHP arrays or `json_encode` instead of using `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` with proper HTTP status codes.

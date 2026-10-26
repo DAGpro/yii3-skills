@@ -46,8 +46,8 @@ Autoload: PSR-4 from `composer.json`. Config groups are declared in `composer.js
 | ❌ `class SiteController extends Controller` with `actionX()` | ✅ Single-Action invokable classes: `__invoke(ServerRequestInterface $request): ResponseInterface`. |
 | ❌ `$this->render('index', [...])` | ✅ Inject `Yiisoft\Yii\View\Renderer\ViewRenderer` and call `$this->viewRenderer->render(...)`. |
 | ❌ `$request->post('name')` / `$request->get('id')` | ✅ PSR-7 `$request->getParsedBody()`, `$request->getQueryParams()`, or `CurrentRoute::getArgument('id')`. |
-| ❌ `ActiveForm::begin()` in templates | ✅ `Yiisoft\Form\Widget\Form::widget()->action(...)->open()` and `Yiisoft\Form\Widget\Field`. |
-| ❌ `rules()` and `behaviors()` on ActiveRecord models | ✅ Validation attributes `#[Rule]` on DTOs via `yiisoft/validator`; behaviors replaced by PSR-14 events. |
+| ❌ `ActiveForm::begin()` in templates | ✅ `Html::form('/action')->post()->csrf($csrf)->open()` + `Html::form()->close()`, with `Yiisoft\FormModel\Field::text($formModel, 'prop')` fields. |
+| ❌ `rules()` and `behaviors()` on ActiveRecord models | ✅ Rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`, …) on DTOs via `yiisoft/validator`; behaviors replaced by PSR-14 events. |
 | ❌ `Url::to(['/route', 'id' => 1])` | ✅ Inject `Yiisoft\Router\UrlGeneratorInterface` and `$urlGenerator->generate('route', ['id' => 1])`. |
 | ❌ `Yii::$app->user->identity` / `id` | ✅ Inject `Yiisoft\User\CurrentUser` and call `$currentUser->getIdentity()`. |
 | ❌ Editing `vendor/` or `config/.merge-plan.php` | ✅ Always configure via `config/**/params.php` or `config/**/di/*.php`. |

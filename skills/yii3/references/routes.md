@@ -585,13 +585,13 @@ Outgoing Response
 
 When attaching middlewares to groups and routes, declare them in this canonical order:
 
-1. **CORS / Preflight Handling:** `CorsMiddleware` (processes `OPTIONS` before authentication).
+1. **CORS / Preflight Handling:** `CorsAllowAllMiddleware` from `yiisoft/http-middleware` (processes `OPTIONS` before authentication).
 2. **Response Formatting:** `DataResponseMiddleware` (intercepts `DataResponse` on the way out and serializes to JSON/XML).
 3. **Request Body Parsing:** `RequestBodyParser` (deserializes JSON/XML payload before guards inspect it).
 4. **Session / Cookies:** `SessionMiddleware` (restores session state and user identity).
-5. **CSRF Protection:** `CsrfMiddleware` (validates CSRF token for web state-changing verbs).
-6. **Authentication & Authorization:** `AuthenticationMiddleware`, `AccessChecker`.
-7. **Rate Limiting:** `RateLimiter` (throttles requests per authenticated identity).
+5. **CSRF Protection:** `CsrfTokenMiddleware` (validates CSRF token for web state-changing verbs).
+6. **Authentication & Authorization:** `Authentication` (`Yiisoft\Auth\Middleware\Authentication`, no `Middleware` suffix in the class name), `AccessCheckerInterface` (`yiisoft/access`).
+7. **Rate Limiting:** `LimitRequestsMiddleware` (`yiisoft/rate-limiter`) throttles requests per authenticated identity.
 8. **Action Handler:** Presentation Action.
 
 ```php

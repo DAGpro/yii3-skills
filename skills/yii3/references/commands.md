@@ -424,7 +424,12 @@ public function complete(CompletionInput $input, CompletionSuggestions $suggesti
 
 Yii3 avoids instantiating all command classes on every CLI launch. Commands are registered in configuration parameters and loaded on demand by `Yiisoft\Yii\Console\CommandLoader`.
 
-### 4.1. Configuration Syntax (`config/params-console.php` or `config/params.php`)
+### 4.1. Configuration Syntax (`config/console/params.php`)
+
+In the official application templates, commands are registered in `config/console/params.php`. The
+`yiisoft/yii-console` package itself ships its defaults in a `params-console.php` config group
+(merged automatically by `yiisoft/config`) — override in the application's `config/console/params.php`,
+not in `vendor/`.
 
 Commands are configured under the `'yiisoft/yii-console' => ['commands' => [...]]` key:
 
@@ -868,7 +873,7 @@ Packaged inside `yiisoft/yii-console`, `Yiisoft\Yii\Console\Command\Serve` start
 ./yii serve --workers=4 --xdebug
 ```
 
-Configuration in `config/params-console.php`:
+Configuration in `config/console/params.php`:
 ```php
 'yiisoft/yii-console' => [
     'serve' => [
@@ -910,7 +915,7 @@ Configuration in `config/params-console.php`:
 | **Raw `echo "text\n"` or `print()` output** | Bypasses output buffering, breaks CI runner formatting, and corrupts headless tests. | Wrap `$input` and `$output` into `SymfonyStyle` and use `$io->text()`, `$io->table()`, etc. |
 | **Unconditional interactive prompts in automated runs** | Blocks indefinitely in automated background jobs, Docker containers, Cron, and CI/CD pipelines. | Check `$input->isInteractive()` or provide default values for non-interactive invocations. |
 | **Returning magic numeric integers (e.g. `return 0;`, `return 1;`)** | Obscures failure root causes across shell scripts, Kubernetes probes, and monitoring tools. | Return explicit semantic constants from `Yiisoft\Yii\Console\ExitCode`. |
-| **Hardcoding command name exclusively in `#[AsCommand]` while omitting configuration** | Command won't be registered in `CommandLoader` and won't appear in `./yii list`. | Register the command in `config/params-console.php` under `'yiisoft/yii-console' => ['commands' => [...]]`. |
+| **Hardcoding command name exclusively in `#[AsCommand]` while omitting configuration** | Command won't be registered in `CommandLoader` and won't appear in `./yii list`. | Register the command in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`. |
 | **Omitting `description` from `#[AsCommand]`** | Forces `CommandLoader` to eagerly instantiate the command class during `./yii list`, loading heavy DI dependencies prematurely. | Always provide `description` in `#[AsCommand(description: '...')]` to allow `CommandLoader` to use `LazyCommand`. |
 | **Empty aliases or names in pipe config (e.g. `'user:list\|\|ul'` or `'\|'`)** | Throws `RuntimeException('Do not allow empty command name or alias.')` during container bootstrap. | Use single pipes to separate valid non-empty alias tokens (e.g. `'user:list\|ul\|u:l'`). |
 | **Reading `$_SERVER['argv']` or `$_GET` directly** | Couples command to global state; breaks in test environments (`CommandTester`) and sub-process runners. | Access inputs strictly through `$input->getArgument('name')` and `$input->getOption('name')`. |

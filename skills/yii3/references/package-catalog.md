@@ -16,11 +16,11 @@
 | `config` | Configuration Plugin | `yiisoft/config` | — | `Config`, `ConfigInterface`, `extra.config-plugin` |
 | `request` | Request parsing & context | `yiisoft/request-provider`, `yiisoft/request-body-parser` | — | `RequestProviderInterface`, `RequestBodyParser` middleware |
 | `input` | Request -> DTO Mapping | `yiisoft/input-http` | — | `RequestInputInterface`, `#[Body]`, `#[Query]`, `#[Request]`, `#[UploadedFiles]` |
-| `validation` | Validation & Rules | `yiisoft/validator` | — | `ValidatorInterface`, `Result`, `RuleInterface`, `#[Rule]` attributes |
+| `validation` | Validation & Rules | `yiisoft/validator` | — | `ValidatorInterface`, `Result`, `RuleInterface`, rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`) |
 | `hydrator` | Object Hydration | `yiisoft/hydrator`, `yiisoft/hydrator-validator` | — | `HydratorInterface`, `TypeCasterInterface` |
 | `response` | Data / JSON Responses | `yiisoft/data-response` | — | `ResponseFactory\DataResponseFactoryInterface`, `DataResponse` |
 | `forms` | HTML Forms & Widgets | `yiisoft/form`, `yiisoft/form-model`, `yiisoft/html` | — | `FormModel`, `Form`, `Field`, `Html` |
-| `view` | Templates & Rendering | `yiisoft/view`, `yiisoft/yii-view-renderer` | `yiisoft/bootstrap5` \| `yiisoft/yii-bulma` \| `yiisoft/view-twig` | `ViewRenderer`, `WebView`, `ViewInterface` |
+| `view` | Templates & Rendering | `yiisoft/view`, `yiisoft/yii-view-renderer` | native PHP templates (default) \| `yiisoft/view-twig` + `yiisoft/yii-twig` (Twig templates) | `ViewRenderer`, `WebView`, `ViewInterface` |
 | `widgets` | UI Components | `yiisoft/widget`, `yiisoft/yii-widgets` | — | `Widget`, `Block` |
 | `assets` | Asset Bundles (CSS/JS) | `yiisoft/assets` | — | `AssetManager`, `AssetBundle` |
 | `dataview` | Grids, Lists, Paging UI | `yiisoft/yii-dataview`, `yiisoft/data` | — | `GridView`, `ListView`, `DetailView` |
@@ -29,10 +29,10 @@
 | `migrations` | DB Schema Migrations | `yiisoft/db-migration` | (uses DB driver above) | `MigrationBuilder`, `./yii migrate` commands |
 | `active-record` | Active Record ORM | `yiisoft/active-record` | (requires `yiisoft/db` + driver) | `ActiveRecord`, `ActiveQuery` |
 | `cycle` | Cycle ORM (alternative) | `yiisoft/yii-cycle`, `cycle/orm` | (pairs with `yiisoft/data-cycle`) | `EntityManagerInterface`, `Select\Repository`, `#[Entity]` |
-| `cache` | Caching (PSR-16) | `yiisoft/cache` | `yiisoft/cache-file` \| `yiisoft/cache-redis` \| `yiisoft/cache-db` \| `yiisoft/cache-apcu` \| `yiisoft/cache-memcached` | `CacheInterface` |
+| `cache` | Caching (PSR-16) | `yiisoft/cache` | `yiisoft/cache-file` \| `yiisoft/cache-redis` \| `yiisoft/cache-db` \| `yiisoft/cache-apcu` \| `yiisoft/cache-memcached` \| `yiisoft/cache-wincache` | `CacheInterface` |
 | `session` | Session Handling | `yiisoft/session` | — | `SessionInterface`, `SessionMiddleware`, `FlashInterface` |
 | `cookies` | Cookie Management | `yiisoft/cookies` | — | `Cookie`, `CookieCollection` |
-| `csrf` | CSRF Protection | `yiisoft/csrf` | — | `CsrfMiddleware`, `CsrfTokenInterface` |
+| `csrf` | CSRF Protection | `yiisoft/csrf` | — | `CsrfTokenMiddleware`, `CsrfHeaderMiddleware`, `CsrfTokenCookieMiddleware`, `CsrfTokenInterface` |
 | `auth` | Authentication Core | `yiisoft/auth`, `yiisoft/user` | `yiisoft/auth-jwt` (API tokens) \| session auth | `IdentityInterface`, `IdentityRepositoryInterface`, `CurrentUser` |
 | `rbac` | Role-Based Access | `yiisoft/rbac` | `yiisoft/rbac-db` \| `yiisoft/rbac-php` \| `yiisoft/rbac-cycle-db` | `ManagerInterface`, `Permission`, `Role`, `RuleInterface` |
 | `access` | Access Checking | `yiisoft/access` | — | `AccessCheckerInterface` |
@@ -41,16 +41,16 @@
 | `logging` | Logging (PSR-3) | `yiisoft/log` | `yiisoft/log-target-file` \| `yiisoft/log-target-db` \| `yiisoft/log-target-email` \| `yiisoft/log-target-syslog` | `LoggerInterface`, `Target` |
 | `events` | Event Dispatching (PSR-14) | `yiisoft/event-dispatcher`, `yiisoft/yii-event` | — | `EventDispatcherInterface`, `ListenerProviderInterface` |
 | `console` | CLI Application | `yiisoft/yii-console`, `yiisoft/yii-runner-console` | (Symfony Console bridge) | `Application`, `ExitCode`, `config/console/params.php` |
-| `queue` | Background Queue | `yiisoft/queue` | `yiisoft/queue-db` \| `yiisoft/queue-redis` \| `yiisoft/queue-amqp` | `QueueInterface`, `MessageInterface`, `JobInterface` |
-| `mutex` | Distributed Locks | `yiisoft/mutex` | `yiisoft/mutex-file` \| `yiisoft/mutex-pdo-mysql` \| `yiisoft/mutex-pdo-pgsql` \| `yiisoft/mutex-redis` | `MutexInterface`, `MutexFactoryInterface` |
+| `queue` | Background Queue | `yiisoft/queue` | `yiisoft/queue-db` \| `yiisoft/queue-redis` \| `yiisoft/queue-amqp` | `QueueProducerInterface`, `QueueConsumerInterface`, `MessageInterface`, `HandlerInterface` |
+| `mutex` | Distributed Locks | `yiisoft/mutex` | `yiisoft/mutex-file` \| `yiisoft/mutex-pdo-mysql` \| `yiisoft/mutex-pdo-pgsql` \| `yiisoft/mutex-pdo-oracle` \| `yiisoft/mutex-redis` | `MutexInterface`, `MutexFactoryInterface` |
 | `mail` | Email Sending | `yiisoft/mailer` | `yiisoft/mailer-symfony` (Symfony transport) | `MailerInterface`, `MessageInterface` |
 | `rate-limit` | Rate Limiting | `yiisoft/rate-limiter` | (uses cache backend) | `CounterInterface`, `LimitRequestsMiddleware` |
-| `middleware` | Ready-Made Middleware | `yiisoft/yii-middleware`, `yiisoft/http-middleware` | — | `CorsAllowAllMiddleware`, `RedirectMiddleware`, `SubFolderMiddleware` |
+| `middleware` | Ready-Made Middleware | `yiisoft/http-middleware`, `yiisoft/yii-middleware` | — | `CorsAllowAllMiddleware`, `RedirectMiddleware`, `HeadRequestMiddleware` (`http-middleware`); `Subfolder`, `Locale` (`yii-middleware`) |
 | `errors` | Error Handling & Pages | `yiisoft/error-handler`, `yiisoft/friendly-exception` | `yiisoft/yii-sentry` (monitoring) | `ErrorHandler`, `FriendlyExceptionInterface` |
 | `debug` | Debug Toolbar & API | `yiisoft/yii-debug`, `yiisoft/yii-debug-api`, `yiisoft/yii-debug-viewer` | — | install via `require-dev` |
 | `openapi` | Swagger / OpenAPI Docs | `yiisoft/yii-swagger` | — | `SwaggerService`, `SwaggerUi` |
 | `codegen` | Code Generator Gii | `yiisoft/yii-gii` | — | install via `require-dev` |
-| `testing` | Test Helpers | `yiisoft/test-support`, `yiisoft/yii-testing` | `phpunit/phpunit` (standard) \| `testo/testo` (exclusive) | PSR doubles, test cases |
+| `testing` | Test Helpers | `yiisoft/test-support`, `yiisoft/yii-testing` | `phpunit/phpunit` (+ Codeception suites) \| `testo/testo` — mutually exclusive runners | PSR doubles, test cases |
 | `code-style` | CS-Fixer Rules | `yiisoft/code-style` | — | install via `require-dev` |
 | `utilities` | Common String/File/JSON | `yiisoft/arrays`, `yiisoft/files`, `yiisoft/json`, `yiisoft/strings`, `yiisoft/aliases` | — | Static helper classes with strict types |
 
@@ -64,12 +64,12 @@ Every target application must pick a consistent storage driver for each infrastr
 |---|---|---|
 | **Database Driver** | `yiisoft/db-mysql`<br>`yiisoft/db-pgsql`<br>`yiisoft/db-sqlite`<br>`yiisoft/db-mssql`<br>`yiisoft/db-oracle` | Check `.env`, `docker-compose.yml`, or existing connection config. In CI/testing, `yiisoft/db-sqlite` is preferred. |
 | **Persistence Paradigm** | `yiisoft/db` + `yiisoft/active-record`<br>OR `yiisoft/yii-cycle` + `cycle/orm` | Check existing repositories: if `ActiveRecord` is used, stay with Active Record. If Cycle entities are present, stay with Cycle. Never mix for the same entities. |
-| **Cache Storage** | `yiisoft/cache-file`<br>`yiisoft/cache-redis`<br>`yiisoft/cache-db`<br>`yiisoft/cache-apcu`<br>`yiisoft/cache-memcached` | Default for simple web apps is `yiisoft/cache-file`. For distributed/cloud, use `yiisoft/cache-redis`. |
+| **Cache Storage** | `yiisoft/cache-file`<br>`yiisoft/cache-redis`<br>`yiisoft/cache-db`<br>`yiisoft/cache-apcu`<br>`yiisoft/cache-memcached`<br>`yiisoft/cache-wincache` | Default for simple web apps is `yiisoft/cache-file`. For distributed/cloud, use `yiisoft/cache-redis`. |
 | **Queue Transport** | `yiisoft/queue-db`<br>`yiisoft/queue-redis`<br>`yiisoft/queue-amqp` | If project already has DB without extra infra, use `queue-db`. For high-throughput async, use `queue-redis` or `queue-amqp`. |
-| **Mutex Driver** | `yiisoft/mutex-file`<br>`yiisoft/mutex-pdo-mysql`<br>`yiisoft/mutex-pdo-pgsql`<br>`yiisoft/mutex-redis` | Match the project's primary database or Redis instance. |
+| **Mutex Driver** | `yiisoft/mutex-file`<br>`yiisoft/mutex-pdo-mysql`<br>`yiisoft/mutex-pdo-pgsql`<br>`yiisoft/mutex-pdo-oracle`<br>`yiisoft/mutex-redis` | Match the project's primary database or Redis instance. |
 | **RBAC Storage** | `yiisoft/rbac-db`<br>`yiisoft/rbac-php`<br>`yiisoft/rbac-cycle-db` | Use `rbac-php` for static roles/permissions checked in version control; use `rbac-db` if roles/assignments are managed via admin panel in DB. |
 | **Log Targets** | `yiisoft/log-target-file`<br>`yiisoft/log-target-db`<br>`yiisoft/log-target-email`<br>`yiisoft/log-target-syslog` | One or more targets may be enabled simultaneously in `config/**/params.php`. |
-| **Test Runner** | `phpunit/phpunit` (+ `yiisoft/yii-testing`)<br>OR `testo/testo` | **Mutually exclusive.** If `phpunit/phpunit` is in `composer.json`, do NOT install `testo/testo`. If `testo/testo` is used, do not install `phpunit/phpunit`. |
+| **Test Runner** | `phpunit/phpunit` (+ `yiisoft/yii-testing`, Codeception suites)<br>OR `testo/testo` | **Mutually exclusive.** If `phpunit/phpunit` is in `composer.json`, do NOT install `testo/testo`. If `testo/testo` is used, do not install `phpunit/phpunit`. |
 
 ---
 

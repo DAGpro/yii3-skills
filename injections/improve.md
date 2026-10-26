@@ -14,7 +14,7 @@ While refining the plan also check, and report in the usual findings groups:
   * Input: any user input must have an Input DTO with `yiisoft/validator` attributes instead of raw request access.
   * Auth / Middleware / RBAC: mutating or protected routes must have authentication/authorization checks (`CurrentUser::can()`, `yiisoft/user` / `yiisoft/rbac`), and custom `RuleInterface` classes must be registered in `'yiisoft/rbac-rules-container'`.
 - **Missing pagination limit** — ensure all query/listing tasks enforce an `OffsetPaginator` or explicit SQL `limit` to prevent denial-of-service on large tables.
-- **Missing CSRF / CORS** — ensure HTML form routes include `CsrfMiddleware` (`yiisoft/csrf`), and API route groups include `CorsAllowAllMiddleware` (`yiisoft/yii-middleware`) or appropriate CORS handling.
+- **Missing CSRF / CORS** — ensure HTML form routes include `CsrfTokenMiddleware` (`yiisoft/csrf`), and API route groups include `CorsAllowAllMiddleware` (`yiisoft/http-middleware`) or appropriate CORS handling.
 - **Post-Commit Event Dispatching** — verify that side-effects (emails, queue jobs) are dispatched outside/after the DB transaction to avoid ghost notifications on rollback.
 - **DTO Mass-Assignment & Typecasting** — verify separate DTOs exist for Create vs Update (avoiding ID overwrite), and numeric/boolean query parameters are typecasted properly.
 - **Missing transaction boundary** — if a Use Case / Service performs multiple state-modifying database operations,

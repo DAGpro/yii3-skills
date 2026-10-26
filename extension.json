@@ -33,6 +33,16 @@
       "target": "aif-review",
       "position": "append",
       "file": "./injections/review.md"
+    },
+    {
+      "target": "aif-roadmap",
+      "position": "append",
+      "file": "./injections/roadmap.md"
+    },
+    {
+      "target": "aif-architecture",
+      "position": "append",
+      "file": "./injections/architecture.md"
     }
   ],
   "skills": [

@@ -16,6 +16,6 @@ Run this block right after Step 0 (pre) Handoff detection.
 6. **Thin Actions & Focused Commands:** Action classes must only coordinate HTTP (extract/hydrate DTO, validate via `yiisoft/validator`, call Use Case, return `ResponseInterface` via `ResponseFactory\DataResponseFactoryInterface`). Console Commands must only configure CLI input/output (`SymfonyStyle`, `ExitCode`) and delegate processing to Use Cases. Never put SQL queries, password hashing, or email sending directly inside an Action or Command.
 7. **Per task (Source of Truth):** check `composer.json` against `references/package-catalog.md`; install missing packages per `references/dependency-protocol.md` BEFORE writing code that uses them. Inspect `vendor/yiisoft/<pkg>/src/` for real signatures and methods. Never write Yii2 APIs.
 8. **Wiring immediately:** when introducing an interface, immediately add its DI binding in `config/**/di/*.php`. When introducing an Action, immediately register its route in `config/**/routes.php`. When introducing a Console Command, immediately register it in `config/console/params.php`.
-8. **Autonomous mode (`HANDOFF_MODE=1`):** never ask the user. Where the protocol says "ask", use what the project already uses,
+9. **Autonomous mode (`HANDOFF_MODE=1`):** never ask the user. Where the protocol says "ask", use what the project already uses,
    otherwise the `yiisoft/*` default, and record the decision in the task summary; if that is impossible, report the task as blocked.
-9. Use the project's own commands for composer/tests/linters (Makefile, composer scripts, Docker, Psalm/PHPStan, Rector, PHPUnit).
+10. Use the project's own commands for composer/tests/linters (Makefile, composer scripts, Docker, Psalm/PHPStan, Rector, PHPUnit).

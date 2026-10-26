@@ -35,3 +35,77 @@ events/listeners, console commands, migrations, views/layouts, tests, and the co
 - Never create a new top-level folder or a second structure style silently. If the task truly needs one, stop and ask,
   or propose an `/aif-architecture` update.
 - Do not edit the architecture artifact from these skills; suggest `/aif-architecture` if it must change.
+
+## 4. Pattern placement tables (aif-architecture)
+
+Generic mapping for every pattern `/aif-architecture` can generate: folder structures, where each package
+category lands, and the dependency rules per pattern. Use it when the resolved architecture artifact
+(`.ai-factory/ARCHITECTURE.md`) has no package mapping of its own, or as the fallback when the artifact
+is absent. The resolved artifact always wins — never impose a pattern of your own.
+
+### 4.1. Pattern → folder structure
+
+All patterns separate the same responsibilities into different folders. Resolve the pattern from the
+resolved architecture artifact (or the pattern name passed by the caller) and use its folder structure
+and dependency rules below.
+
+| Pattern (aif-architecture option) | Folder structure (Yii3) |
+|---|---|
+| **Layered** | `src/Controllers/`, `src/Services/`, `src/Models/`, `src/Repositories/`, `src/Routes/`, `src/Middleware/`, `src/Utils/` |
+| **Structured Modules (Technical Layer)** | `src/[ModuleName]/{Controllers,Services,Repositories,Models}/`, `src/Infrastructure/{Types,Utils,Middleware,Config}/` |
+| **Structured Modules (Vertical Slices By Entity)** | `src/[ModuleName]/Slices/{[EntityName]/, [ProcessName]/}` each with `{Controller,Service,Repository}`, `src/[ModuleName]/Models/`, `src/Infrastructure/` |
+| **Explicit Architecture (Technical Layer)** | `src/[ContextName]/{Domain,Application,Infrastructure,Presentation}/`, `src/Infrastructure/` |
+| **Explicit Architecture (Vertical Slice By Entity)** | `src/[ContextName]/{Domain, Slices/{[EntityName]/{Application,Infrastructure,Presentation}}}/`, `src/Infrastructure/` |
+| **Explicit Architecture (Flat Vertical Slice)** | `src/[ContextName]/{Domain, Slices/{[EntityName]/{Controller,Service,Repository}}}/`, `src/Infrastructure/` |
+| **Microservices** | per service `src/{Api,Application,Domain,Infrastructure,Config}/`; monorepo `Libs/Contracts/`, `Libs/Common/`, `Infra/` |
+
+Placeholders per aif-architecture: `[ModuleName]` feature module, `[ContextName]` bounded context,
+`[EntityName]` core entity, `[ProcessName]` cross-entity process, `[ServiceName]` microservice.
+
+### 4.2. Package categories → placement per pattern
+
+The same `yiisoft/*` packages land in different folders depending on the pattern:
+
+| Package category | Layered | Structured Modules | Explicit Architecture | Microservices |
+|---|---|---|---|---|
+| DI & config (`di`, `config`, `aliases`, `definitions`) | root `Config/` + `Routes/` | `Infrastructure/Config/` | Composition Root (global `config/`, DI container, entry points) | per service `Config/` |
+| HTTP routing & middleware (`router`, `router-fastroute`, `middleware-dispatcher`, `http-middleware`, `session`, `cookies`, `csrf`, `request-body-parser`; CORS via `http-middleware`/`yii-middleware`) | `Routes/`, `Middleware/`, `Controllers/` | `[Module]/Controllers/`, `Infrastructure/Middleware/` | `Presentation/` | `Api/` + service boundary |
+| Forms, input, validation (`form-model`, `input-http`, `validator`, `hydrator`), rendering (`view`, `html`, `yii-dataview`, `bootstrap5`) | `Controllers/`, `Services/` | `[Module]/Controllers/`, `[Module]/Services/` | `Presentation/`, `Application/` | `Api/`, `Application/` |
+| Use cases, DTOs, events (`data`, `data-response`, `event-dispatcher`, `yii-event`, `queue`, `mailer`, `translator`, `log`) | `Services/` | `[Module]/Services/` | `Application/` | `Application/` |
+| Persistence & outbound adapters (`db`, `active-record`, `db-migration`, `db-*`, `data-db`, cache stores, log targets, `mailer-symfony`, PSR-18 client) | `Repositories/` (+ `Models/` data) | `[Module]/Repositories/`, `[Module]/Infrastructure/`; vertical slice: `Slices/[Entity]/Repository` | `[Context]/Infrastructure/` implementing Domain Ports | `Infrastructure/{Persistence,External,Messaging}/` |
+| Domain & business rules (`friendly-exception`, port interfaces, PSR-14 events) | `Models/` (rich, logic in models) | `[Module]/Models/` (rich) | `[Context]/Domain/` (pure, zero deps) | `Domain/` (pure) |
+| App runners & event map (`yii-runner-*`, `yii-event`) | entry points at root | `Infrastructure/Config/` | Composition Root | `Config/` |
+| Auth & RBAC boundary (`user`, `auth`, `security`, `rbac-*`, `auth-jwt`) | `Middleware/`, `Controllers/` | `[Module]/Controllers/`, `Infrastructure/Middleware/` | `Presentation/` (boundary) + `Application/` (ports) | `Api/` (boundary) + `Domain/` (ports) |
+
+### 4.3. Dependency rules per pattern
+
+| Pattern | Dependency rule | Notes |
+|---|---|---|
+| **Layered** | `Routes → Controllers → Services → Repositories → Database` | Strict downward; no layer skipping; `Models/` are shared rich data structures; `Middleware/`/`Utils/` cross-cutting |
+| **Structured Modules** | `Controllers → Services → Repositories`; modules depend only on root `Infrastructure/` and each other's public API | Rich `Models/` own business rules; services orchestrate (Application Services); no layer skipping |
+| **Explicit Architecture** | `Presentation → Application → Domain ← Infrastructure`; Composition Root wires ports to adapters | Bounded contexts; Domain purity enforced; Ports/Adapters (hexagonal) |
+| **Microservices** | contract-first; per-service internal pattern (Layered/Structured/Explicit); no shared database | Each service: `Api/` (inbound), `Domain/` (core), `Infrastructure/` (outbound), `Config/` (wiring) |
+
+### 4.4. Universal rules that hold in every pattern
+
+- Business rules never import `db`, `active-record`, `yii-http`, `view`, `html`, `yii-view-renderer`.
+  (Layered/Structured: keep logic in rich `Models/`; Explicit/Microservices: pure `Domain/`.)
+- Use-case code uses ports — connections, cache, mailer, logger abstractions — never concrete transports.
+- Presentation (controllers/actions/middleware/views) never talks to the database or query layer directly —
+  only through service/repository ports.
+- Composition/DI registration lands where the pattern's config folder is (see placement table).
+- ❌ Outbound ↔ outbound without a port: `queue-redis` must not talk to `db` directly.
+
+### 4.5. Reference: responsibility → package categories
+
+Pattern-agnostic catalogue of which packages serve each responsibility. Where these files land in the
+folder tree depends on the chosen pattern (see 4.2).
+
+| Responsibility | Package categories |
+|---|---|
+| **Domain / business rules** | No yiisoft implementations. Only port interfaces: `psr/event-dispatcher`, `yiisoft/friendly-exception`, `yiisoft/access`, `yiisoft/rbac`, `yiisoft/validator` |
+| **Application / use cases** | Use-case orchestration (`data`, `data-db`, `data-cycle`), DTO validation/hydration (`validator`, `hydrator`, `hydrator-validator`), auth ports (`auth`, `user`, `access`, `rbac`, `security`), async (`queue`), notifications (`mailer`, `translator`, `i18n`), observability (`log`, `event-dispatcher`, `yii-event`), sync (`cache`, `mutex`) |
+| **Infrastructure / outbound** | Persistence (`db`, `active-record`, `db-migration`, `db-*`), Cycle (`data-cycle`, `yii-cycle`), RBAC storage (`rbac-db/php/cycle-db`), cache stores (`cache-*`), mutex drivers (`mutex-*`), queue transports (`queue-*`), mail transport (`mailer-symfony`), log targets (`log-target-*`), external API (`yii-auth-client`, `network-utilities`, `json`), FS utils (`files`, `arrays`, `strings`, `var-dumper`, `classifier`, `aliases`), profiling (`profiler`) |
+| **Presentation / inbound** | HTTP routing (`router`, `router-fastroute`, `router-composer-attribute-collector`, `file-router`, `yii-http`), middleware (`middleware-dispatcher`, `http-middleware`, `yii-middleware`, `request-body-parser`, `request-provider`, `response-download`, `psr-emitter`; CORS via `http-middleware`/`yii-middleware`), HTTP state (`cookies`, `session`, `rate-limiter`, `proxy-middleware`), input/forms (`input-http`, `form-model`, `form`, `hydrator`, `hydrator-validator`, `validator`), entry protection (`csrf`, `security`, `auth-jwt`), auth boundary (`auth`, `user`, `yii-auth-client`), rendering (`view`, `yii-view-renderer`, `html`, `widget`, `yii-widgets`, `assets`, `bootstrap5`, `yii-bulma`, `view-twig`, `yii-twig`), data display (`yii-dataview`, `data-response`), CLI (`yii-console`), API docs (`yii-swagger`), errors (`error-handler`, `friendly-exception`), localization output (`translator`, `i18n`, `translator-extractor`) |
+| **Composition Root / wiring** | DI core (`di`, `factory`, `definitions`, `injector`, `proxy`), configuration (`config`, `aliases`, `requirements`), entry points (`yii-runner`, `yii-runner-http`, `yii-runner-console`, `yii-runner-frankenphp`, `yii-runner-roadrunner`), event map (`yii-event`) |
+| **Dev / QA** (require-dev only) | Debug (`yii-debug`, `yii-debug-api`, `yii-debug-viewer`, `profiler`), code gen (`yii-gii`, `yii-dev-tool`, `code-style`), monitoring (`yii-sentry`), testing (`test-support`, `yii-testing`) |

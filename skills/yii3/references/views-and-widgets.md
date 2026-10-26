@@ -16,7 +16,7 @@
 - [5. Asset Bundles (Yiisoft\Assets\AssetBundle)](#5-asset-bundles-yiisoftassetsassetbundle)
 - [6. Custom Widgets & Built-in Widgets](#6-custom-widgets--built-in-widgets)
 - [7. HTML Form Rendering (yiisoft/html, yiisoft/form-model, yiisoft/form)](#7-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform)
-- [8. DataView & GridView (yiisoft/yii-dataview)](#8-dataview--gridview-yiisoftyii-dataview)
+- [8. DataView Widgets: GridView, ListView & DetailView (yiisoft/yii-dataview)](#8-dataview-widgets-gridview-listview--detailview-yiisoftyii-dataview)
 - [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
 
 ---
@@ -86,6 +86,53 @@ final readonly class ViewUserAction
 > ```php
 > return $this->viewRenderer->render('not-found')->withStatus(Status::NOT_FOUND);
 > ```
+
+### View Placement: Colocated With the Action vs Central `views/` Directory
+
+Two valid placement styles exist. Resolve which one the project uses from the architecture artifact (or the existing `src/` tree) and stay consistent — never mix styles within one project.
+
+**Style A — views colocated with their action (current official `yiisoft/app` template).**
+Each page folder contains the action class and its `template.php`. `render()` receives an **absolute path**, and `params['yiisoft/yii-view-renderer']['viewPath']` stays `null` (with `viewPath = null`, relative view paths in `render()` are not available):
+
+```php
+// src/Product/Web/Index/Action.php
+final readonly class Action
+{
+    public function __construct(
+        private WebViewRenderer $viewRenderer,
+        private ProductRepositoryInterface $repository,
+    ) {}
+
+    public function __invoke(): ResponseInterface
+    {
+        return $this->viewRenderer->render(
+            __DIR__ . '/template',
+            ['products' => $this->repository->findAll(20, 0)],
+        );
+    }
+}
+```
+
+```
+src/Product/Web/Index/
+├── Action.php
+└── template.php      ← the rendered view
+```
+
+**Style B — central views directory (classic).** `viewPath` is configured once; `render()` receives a path relative to it:
+
+```php
+// config/common/params.php
+'yiisoft/yii-view-renderer' => [
+    'viewPath' => '@views',
+    // ...
+],
+
+// In the Action:
+return $this->viewRenderer->render('product/index', ['products' => $products]); // → <viewPath>/product/index.php
+```
+
+The layout is independent of both styles and shared by them: configure it once in `params['yiisoft/yii-view-renderer']['layout']` (for example `'@src/Web/Shared/Layout/Main/layout.php'`).
 
 ---
 
@@ -199,10 +246,12 @@ use App\Presentation\Asset\AppAsset;
 use Yiisoft\Assets\AssetManager;
 use Yiisoft\Html\Html;
 use Yiisoft\View\WebView;
+use Yiisoft\Yii\View\Renderer\Csrf;
 
 /**
  * @var WebView $this
  * @var AssetManager $assetManager
+ * @var Csrf|null $csrf
  * @var string $content
  */
 
@@ -256,7 +305,7 @@ $this->beginPage();
 
 > 💡 **Where Layout and View Parameters Come From:**
 > In Yii3 with `yiisoft/yii-view-renderer`, common parameters and security tokens are injected via View Injections rather than global state:
-> - `$csrf` is injected automatically into all views by `Yiisoft\Yii\View\Renderer\CsrfViewInjection` (implements `CommonParametersInjectionInterface`). It supplies a `Yiisoft\Yii\View\Renderer\Csrf` object implementing `Stringable`.
+> - `$csrf` is injected automatically into all views by `Yiisoft\Yii\View\Renderer\CsrfViewInjection` (implements `CommonParametersInjectionInterface`). Its value is a `Yiisoft\Yii\View\Renderer\Csrf` object implementing `Stringable` — **not** a plain string (a `@var string|null $csrf` docblock seen in older layouts is stale; type it as `@var Csrf $csrf`). The object carries the token and its transport names: `getToken()`, `getParameterName()` (body parameter, default `_csrf`), `getHeaderName()` (for AJAX headers), plus the ready-made tag builder `$csrf->hiddenInput()` which renders the hidden input with the correct parameter name.
 > - Custom global parameters and layout parameters are injected by implementing `CommonParametersInjectionInterface` or `LayoutParametersInjectionInterface` registered in `params['yiisoft/yii-view-renderer']['injections']`.
 > - Template-level parameters can also be stored and shared across views and layouts using `$this->setParameter('key', $value)` and `$this->getParameter('key', $defaultValue)`.
 
@@ -560,6 +609,8 @@ $this->setTitle('Sign In');
 </div>
 ```
 
+> **CSRF details:** `Form::csrf(string|Stringable|null $token, string $name = '_csrf')` accepts the `Csrf` object injected by `CsrfViewInjection` directly (it is `Stringable`) and renders the hidden input automatically. The default input name `_csrf` matches the body parameter expected by `CsrfMiddleware`. For plain HTML forms not built with `Html::form()`, render the hidden input via the shortcut `<?= $csrf->hiddenInput() ?>` — never hand-write the input with a guessed parameter name.
+
 ### Pure Fields (Without a FormModel)
 For ad-hoc search boxes or filters not bound to a `FormModel`, use `Yiisoft\Form\PureField\Field`:
 
@@ -607,10 +658,13 @@ With `ThemeContainer` initialized, `Field::text($formModel, 'login')` automatica
 
 ---
 
-## 8. DataView & GridView (`yiisoft/yii-dataview`)
+## 8. DataView Widgets: GridView, ListView & DetailView (`yiisoft/yii-dataview`)
 
-`GridView` renders tabular data from a `ReadableDataInterface` (such as `OffsetPaginator` or `KeysetPaginator`).
-Columns are passed as variadic `ColumnInterface` instances (`DataColumn`, `ActionColumn`, `CheckboxColumn`, etc.).
+The package provides three output widgets: `GridView` (table) and `ListView` (item list) render **many items** from a `ReadableDataInterface` (such as `OffsetPaginator` or `KeysetPaginator`) via the shared `dataReader()` method; `DetailView` renders a **single record** passed as a plain array or object.
+
+### GridView
+
+`GridView` renders tabular data. Columns are passed as variadic `ColumnInterface` instances (`DataColumn`, `ActionColumn`, `CheckboxColumn`, etc.).
 
 ```php
 <?php
@@ -744,6 +798,96 @@ $roleColumn = new DataColumn(
 );
 ```
 
+### 8.2. ListView (`Yiisoft\Yii\DataView\ListView\ListView`)
+
+`ListView` renders each item from a `ReadableDataInterface` through a per-item view file or closure. It shares `dataReader()`, `noResultsText()`, and the pagination URL options with `GridView` (both extend `BaseListView`).
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Product\Domain\Product;
+use Stringable;
+use Yiisoft\Data\Paginator\OffsetPaginator;
+use Yiisoft\Html\Html;
+use Yiisoft\View\WebView;
+use Yiisoft\Yii\DataView\ListView\ListItemContext;
+use Yiisoft\Yii\DataView\ListView\ListView;
+
+/**
+ * @var WebView $this
+ * @var OffsetPaginator $paginator
+ */
+
+$this->setTitle('Products');
+?>
+
+<?= ListView::widget()
+    ->dataReader($paginator)
+    ->listTag('ul')
+    ->itemTag('li')
+    ->itemAttributes(['class' => 'product-card'])
+    ->itemView(static fn (Product $data, ListItemContext $context): string|Stringable => Html::a(
+        content: $data->getTitle(),
+        url: '/products/' . $data->getId(),
+    ) . ' — ' . Html::encode(number_format($data->getPrice(), 2)))
+    ->separator(PHP_EOL)
+    ->noResultsText('No products found.') ?>
+```
+
+- **`itemView(string|Closure $value)`** — the per-item renderer (its default is `null`, so set it explicitly):
+  - a **string** is a view file path; that view receives `$data` (the current item), `$context` (`ListItemContext`), and any extra parameters from `itemViewParameters()`;
+  - a **closure** must have the signature `fn (array|object $data, ListItemContext $context): string|Stringable`.
+- **`ListItemContext`** exposes `->data`, `->key`, `->index`, and `->widget` (the rendering `ListView` instance).
+- Layout options: `listTag()` / `listAttributes()`, `itemTag()` / `itemAttributes()` (attributes accept a closure), `beforeItem()` / `afterItem()`, `separator()`, plus `noResultsTag()` / `noResultsAttributes()`.
+
+### 8.3. DetailView (`Yiisoft\Yii\DataView\DetailView\DetailView`)
+
+`DetailView` renders a **single record** (an object or associative array) as a label/value field list. It takes no `dataReader()` and no paginator — pass the item itself via `data()` and describe the output as `DataField` objects:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Product\Domain\Product;
+use Yiisoft\View\WebView;
+use Yiisoft\Yii\DataView\DetailView\DataField;
+use Yiisoft\Yii\DataView\DetailView\DetailView;
+use Yiisoft\Yii\DataView\DetailView\GetValueContext;
+
+/**
+ * @var WebView $this
+ * @var Product $product
+ */
+
+$this->setTitle('Product: ' . $product->getTitle());
+?>
+
+<?= DetailView::widget()
+    ->data($product)
+    ->containerTag('dl')
+    ->fields(
+        // ⚠️ property reads PUBLIC properties or explicit 'getter()' keys only — see the trap below
+        new DataField(property: 'getTitle()', label: 'Title'),
+        new DataField(
+            label: 'Price',
+            value: static fn (GetValueContext $context): string
+                => number_format($context->data->getPrice(), 2),
+        ),
+    ) ?>
+```
+
+- **`DataField`** named constructor parameters: `property`, `label`, `labelEncode`, `labelAttributes`, `value`, `valueEncode`, `valueAttributes`, `fieldAttributes`, `visible`. Exactly one of `property` / `value` must be set — the constructor throws `InvalidArgumentException` otherwise.
+- **Value resolution order** (`DetailView::getValue()`):
+  1. `value` is a `Closure` → invoked with a `GetValueContext` object (`->field`, `->data`);
+  2. `value` is a literal → used as-is;
+  3. `value === null` → `ArrayHelper::getValue($data, $property)`.
+- ⚠️ **HIDDEN TRAP — `property` on entities with private properties:** for objects, `ArrayHelper::getValue()` reads **public properties only**, or calls a method when the key ends with `()`; there is **no automatic getter fallback**. On a domain entity with `private string $title` + `getTitle()`, `property: 'title'` silently resolves to `null`. Use `property: 'getTitle()'` or a `value:` closure instead.
+- **Encoding:** by default (`valueEncode: null`) values are HTML-encoded unless they implement `NoEncodeStringableInterface` — return `Html` tag objects from closures when trusted HTML output is intended.
+- Structure customization: `containerTag()` / `containerAttributes()`, `listTag()` / `listAttributes()`, `fieldTag()` / `fieldAttributes()`, `labelTag()`, `valueTag()`, `fieldTemplate('{label} {value}')`, `prepend()` / `append()`.
+
 ---
 
 ## 9. Anti-Pattern Matrix
@@ -772,4 +916,6 @@ $roleColumn = new DataColumn(
 | **`content: fn (...) => Html::a(...)->render()` in `DataColumn`** | Plain `string` values returned by `content` callables are HTML-encoded by default (`encodeContent: null`); raw HTML renders as escaped text. | Return the tag object directly (`Html::a(...)` — it implements `NoEncodeStringableInterface`) or add `encodeContent: false`. |
 | **`content: fn (...) => Html::encode($data->getX())` in `DataColumn`** | Double encoding: GridView already encodes plain-string content itself. | Return the raw string (auto-encoded), or a tag object when trusted HTML is intended. |
 | **Manually adding Bootstrap CSS to every field** | Tedious, error-prone, violates DRY. | Initialize `ThemeContainer::initialize(configs: ['vertical' => require ThemePath::BOOTSTRAP5_VERTICAL])`. |
+| **`ListView::widget(['itemView' => '_item', 'dataProvider' => $dp])`** | Yii2 array-config and `dataProvider`; Yii3 widgets use fluent methods and take a `ReadableDataInterface`. | Use `ListView::widget()->dataReader($paginator)->itemView(fn ($data, $context) => ...)` (closure or view path). |
+| **`new DataField('title')` on an entity with private properties** | `property` resolves public properties / `'getter()'` keys only — no getter fallback; private-prop entities silently get `null`. | Use `new DataField(property: 'getTitle()', ...)` or a `value:` closure receiving `GetValueContext`. |
 | **Calling repositories or SQL inside Views** | Breaks MVC, makes templates non-cacheable and side-effectful. | Prepare all domain data in Action/Handler and pass into view parameters. |

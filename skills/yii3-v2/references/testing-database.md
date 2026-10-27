@@ -226,10 +226,10 @@ trait UserFixtureTrait
 {
     protected function loadStandardUsers(): void
     {
-        $this->db->createCommand()->batchInsert('user', ['id', 'name', 'email', 'created_at'], [
+        $this->db->createCommand()->insertBatch(table: 'user', rows: [
             [1, 'Alice Smith', 'alice@example.com', 1700000000],
             [2, 'Bob Jones', 'bob@example.com', 1700000100],
-        ])->execute();
+        ], columns: ['id', 'name', 'email', 'created_at'])->execute();
     }
 }
 ```
@@ -369,7 +369,7 @@ final class SqliteUserRepositoryTest extends DatabaseTestCase
 | `Yiisoft\Db\Sqlite\Driver::__construct` | `__construct(string\|Stringable $dsn, string $username = '', string $password = '', array $attributes = [])` |
 | `Yiisoft\Db\Sqlite\Connection::__construct` | `__construct(PdoDriverInterface $driver, SchemaCache $schemaCache = new SchemaCache(), ?ColumnFactoryInterface $columnFactory = null)` |
 | `Yiisoft\Db\Command::insert` | `insert(string $table, array\|QueryInterface $columns): static` |
-| `Yiisoft\Db\Command::batchInsert` | `batchInsert(string $table, array $columns, iterable $rows): static` |
+| `Yiisoft\Db\Command::insertBatch` | `insertBatch(string $table, iterable $rows, array $columns = []): static` |
 | `Yiisoft\Db\Query\Query::from` | `from(array\|string $tables): static` |
 | `Yiisoft\Db\Query\Query::where` | `where(array\|string\|ExpressionInterface $condition, array $params = []): static` |
 

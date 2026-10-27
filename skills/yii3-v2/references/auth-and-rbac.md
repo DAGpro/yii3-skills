@@ -513,7 +513,7 @@ final readonly class TokenIssueAction
             'exp' => time() + 3600,
         ];
 
-        $token = $this->tokenFactory->create($payload);
+        $token = $this->tokenFactory->create($payload, 'jws_compact');
 
         return $this->responseFactory->createResponse([
             'token' => $token,
@@ -522,6 +522,9 @@ final readonly class TokenIssueAction
     }
 }
 ```
+
+> [!NOTE]
+> `create()` requires the JWS serialization format as its second argument (omitting it throws a runtime `ArgumentCountError`); the package default config registers `Jose\Component\Signature\Serializer\CompactSerializer`, whose format name is `'jws_compact'` — pass that unless you register other serializers.
 
 ---
 

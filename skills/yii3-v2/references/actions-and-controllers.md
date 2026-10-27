@@ -941,4 +941,5 @@ Yii3 executes actions through `Yiisoft\Middleware\Dispatcher\MiddlewareFactory`.
 - [Views, Layouts & Widgets Guide](views-and-widgets.md) — HTML view templates, layouts, asset bundles, and DataView widgets.
 - [Error Handling Guide](error-handling.md) — Exception catching, status code responders, and RFC 7807 error formats.
 - [Validation & Forms Guide](validation-and-forms.md) — Input validation, FormModel hydration, and DTO rules.
+- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API action endpoints, request bodies, and schemas with PHP 8 attributes.
 

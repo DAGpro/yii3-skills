@@ -5,10 +5,10 @@ description: >-
   yiisoft/config; no yii2). Provides conventions, package catalog, architecture decomposition, and DI/routing.
   Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "yii3 endpoint", "add repository", "add
   use case", "add event", "add listener", "add middleware", "send email", "queue job", "worker command", "mutex
-  lock", "Yii migration", "render view", "custom widget", "gridview", "list view", "detail view", "asset
-  bundle", "validate yii3 form", "validation rules", "custom validator", "form model", "log target", "PSR-3
-  logging", "translate messages", "i18n", "flash message", "CSRF", "file upload", "download file", "layered
-  architecture", "vertical slices". Not for Yii2.
+  lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3
+  form", "validation rules", "form model", "log target", "PSR-3 logging", "translate messages", "i18n", "flash
+  message", "CSRF", "file upload", "download file", "swagger", "openapi", "RoadRunner", "FrankenPHP", "worker
+  runner", "layered architecture", "vertical slices". Not for Yii2.
 ---
 
 # Yii3 development
@@ -48,6 +48,7 @@ description: >-
 - `references/routes.md` — FastRoute route syntax, regex parameter constraints, nested groups, middleware ordering, URL generation, and attribute routes
 - `references/middlewares.md` — PSR-15 HTTP middleware pipeline, request pre-processing, security post-processing, auth short-circuiting, and official middleware catalog
 - `references/actions-and-controllers.md` — package usage recommendations in actions/controllers, HTTP request parsing, DTO hydration, validation, security, data-response, and view rendering
+- `references/openapi-swagger.md` — OpenAPI specification generation with yiisoft/yii-swagger, PHP 8 attributes (OA), Swagger UI asset rendering, and route integration
 - `references/validation-and-forms.md` — built-in and custom validator rules, skipOnEmpty/when modifiers, message translation, FormModel + FormHydrator, validating hydrator DTOs, and input-http request inputs
 - `references/views-and-widgets.md` — view placement (colocated action templates or central views directory), PHP view templates, mandatory XSS escaping, layouts, asset bundles, custom widgets, HTML forms, and DataView widgets (GridView, ListView, DetailView)
 - `references/http-state.md` — sessions and session middleware, flash messages, cookie handling with signing/encryption, and CSRF token implementations with middleware wiring
@@ -62,12 +63,40 @@ description: >-
 - `references/caching.md` — PSR-16 drivers, getOrSet stampede prevention, TagDependency invalidation, and HTTP/view fragment caching
 
 ### Infrastructure, Async & Operations
+- `references/runners-and-runtimes.md` — entry point architecture, HttpApplicationRunner (public/index.php), ConsoleApplicationRunner (yii CLI), RoadRunner & FrankenPHP workers, and StateResetter
 - `references/commands.md` — thin console commands with Symfony Console, input arguments/options, interactive SymfonyStyle, ExitCode constants, and command registration
 - `references/queue-jobs.md` — asynchronous queue jobs, serializable message DTOs, worker handlers, distributed mutex locks, and worker CLI management
-- `references/auth-and-rbac.md` — user identity, session/JWT auth, password hashing, RBAC manager, custom rules, and route protection
+- `references/auth-and-rbac.md` — user identity, session lifecycle (login/logout anti-fixation), remember-me cookies, user events, JWT auth, RBAC manager, and route protection
 - `references/mailer.md` — email composition, Symfony Mailer DSN transport, HTML view templating, file attachments, inline CID embeddings, and async queue sending
 - `references/logging.md` — PSR-3 logger injection, DI binding for LoggerInterface, categories, placeholders, target catalog (file/db/email/syslog/stream), context providers, and flushing
 - `references/error-handling.md` — ErrorCatcher middleware, custom HTML/JSON Problem Details renderers, Friendly Exceptions, and Sentry logging
 - `references/testing-core.md` — test architecture, testing pyramid, exclusive runner rule (PHPUnit vs Testo), PSR test doubles (yiisoft/test-support), modern mocking rules, and console command testing
 - `references/testing-http.md` — functional HTTP testing with yiisoft/yii-testing, HttpApplicationRunner, isolated PSR-15 middleware testing, session/cookie validation, and ResponseAccessor API
 - `references/testing-database.md` — transactional database testing, ephemeral in-memory SQLite (yiisoft/db-sqlite), migration fixtures with MigrationBuilder, and repository integration tests
+
+## Deterministic tooling & validation scripts
+
+- `scripts/check-di-syntax.php` — static AST/token validation for DI files (`config/**/di/*.php`) and `params.php`:
+  - Catches typos in configuration keys (`'__construct()'`, `'class'`, missing `()` on methods, missing `$` on properties).
+  - Detects legacy Yii 2 constructs (`'__class'`).
+  - Detects self-binding and unmapped interface bindings (`Reference::to(Interface)`).
+  - Flags closures in `params.php` (enforces primitives-only rule).
+  - Run: `php scripts/check-di-syntax.php [project-path] [--format=text|json]`
+- `scripts/verify-actions.php` — static AST/token audit for Actions & Controllers:
+  - Enforces `declare(strict_types=1);` as the first statement in action files.
+  - Verifies strict `Psr\Http\Message\ResponseInterface` return type declaration on action methods.
+  - Enforces Thin Action principle (prohibits direct SQL, ActiveRecord, and DB/ORM injection in presentation layer).
+  - Blocks legacy Yii 2 constructs (`Yii::$app`, `yii\*` namespaces, superglobals, `$model->load()`).
+  - Run: `php scripts/verify-actions.php [project-path] [--format=text|json] [--quiet]`
+
+## Canonical examples & templates
+
+- `examples/crud-slice/README.md` — minimal canonical vertical slice for generating new Yii 3 features:
+  - `Migration/` — schema table creation with `ColumnBuilder` (`M261026120000CreatePostTable.php`).
+  - `Domain/` — pure entity (`Post.php`) and repository contract (`PostRepositoryInterface.php`).
+  - `Persistence/` — repository implementation using `ConnectionInterface` and `Query` (`DbPostRepository.php`).
+  - `Presentation/` — invokable thin actions (`CreatePostAction.php`, `ViewPostAction.php`) and input DTO with validation attributes `#[Required]`, `#[Length]` (`CreatePostDto.php`).
+  - `Config/` — DI container mapping (`di.php`) and modern HTTP routing (`routes.php`).
+
+
+

@@ -1008,4 +1008,5 @@ return [
 - [Actions & Controllers Guide](actions-and-controllers.md) — Single-action controllers, PSR-7 response factories, and input DTO hydration.
 - [PSR-15 Middlewares Guide](middlewares.md) — Middleware pipeline flow, official middlewares catalog, and custom guards.
 - [Authentication & RBAC Guide](auth-and-rbac.md) — Route access control, authentication middlewares, and RBAC permission checks.
+- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting routes, endpoints, and schemas with PHP 8 attributes.
 

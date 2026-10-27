@@ -18,6 +18,7 @@
   - [4.1. Global Application Pipeline (config/web/di/application.php)](#41-global-application-pipeline-configwebdiapplicationphp)
   - [4.2. Route Group Pipeline (config/web/routes.php)](#42-route-group-pipeline-configwebroutesphp)
   - [4.3. Single Route Pipeline (config/web/routes.php)](#43-single-route-pipeline-configwebroutesphp)
+  - [4.4. Rate Limiting Recipes (yiisoft/rate-limiter)](#44-rate-limiting-recipes-yiisoftrate-limiter)
 - [5. Supported Middleware Definition Formats](#5-supported-middleware-definition-formats)
 - [6. Hidden Pitfalls & Critical Gotchas](#6-hidden-pitfalls--critical-gotchas)
 - [7. Anti-Pattern Matrix](#7-anti-pattern-matrix)
@@ -591,6 +592,78 @@ return [
 
 ---
 
+### 4.4. Rate Limiting Recipes (`yiisoft/rate-limiter`)
+
+`Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware` enforces rate limits using sliding windows, protecting APIs and login endpoints from abusive traffic.
+
+#### 1. DI Configuration (`config/web/di/rate-limiter.php`)
+
+```php
+declare(strict_types=1);
+
+use Psr\SimpleCache\CacheInterface;
+use Yiisoft\Definitions\Reference;
+use Yiisoft\Yii\RateLimiter\Counter;
+use Yiisoft\Yii\RateLimiter\CounterInterface;
+use Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware;
+use Yiisoft\Yii\RateLimiter\Policy\LimitPerIp;
+use Yiisoft\Yii\RateLimiter\Policy\LimitPolicyInterface;
+use Yiisoft\Yii\RateLimiter\Storage\SimpleCacheStorage;
+use Yiisoft\Yii\RateLimiter\Storage\StorageInterface;
+
+return [
+    // Storage backend: SimpleCacheStorage (PSR-16) or ApcuStorage (high-speed APCu)
+    StorageInterface::class => static fn (CacheInterface $cache): StorageInterface => new SimpleCacheStorage($cache),
+
+    // Counter sliding window: 100 requests per 60 seconds
+    CounterInterface::class => [
+        'class' => Counter::class,
+        '__construct()' => [
+            'limit' => 100,
+            'periodInSeconds' => 60,
+        ],
+    ],
+
+    // Default policy: fingerprint by client remote IP
+    LimitPolicyInterface::class => LimitPerIp::class,
+
+    LimitRequestsMiddleware::class => [
+        '__construct()' => [
+            'limitingPolicy' => Reference::to(LimitPolicyInterface::class),
+        ],
+    ],
+];
+```
+
+#### 2. Custom Rate-Limiting Policy (e.g. per-user or API token)
+
+```php
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\Auth\Middleware\Authentication;
+use Yiisoft\Yii\RateLimiter\Policy\LimitCallback;
+
+// Rate limit by authenticated user ID, falling back to client IP
+$policy = new LimitCallback(
+    static function (ServerRequestInterface $request): string {
+        $identity = $request->getAttribute(Authentication::class);
+        return $identity?->getId() ?? $request->getServerParams()['REMOTE_ADDR'] ?? 'anonymous';
+    }
+);
+```
+
+#### 3. Automatic Response Headers & Status Mapping
+
+`LimitRequestsMiddleware` automatically maps headers to all responses and blocks requests when the limit is exceeded:
+
+| Header / Status | Value | Description |
+|---|---|---|
+| `X-Rate-Limit-Limit` | `(string) $result->getLimit()` | Maximum request limit in current window (e.g. `100`). |
+| `X-Rate-Limit-Remaining` | `(string) $result->getRemaining()` | Remaining request quota in current window. |
+| `X-Rate-Limit-Reset` | `(string) $result->getResetTime()` | Unix timestamp when request quota resets. |
+| **HTTP 429** | `Too Many Requests` | Returned automatically when `$state->isLimitReached() === true`. |
+
+---
+
 ## 5. Supported Middleware Definition Formats
 
 `Yiisoft\Middleware\Dispatcher\MiddlewareFactory` supports multiple definition formats when registering middlewares in routes, groups, or dispatchers:
@@ -707,4 +780,6 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 - [Actions & Controllers Guide](actions-and-controllers.md) — Single-action invokable controllers, parameter resolution, and response factories.
 - [Authentication & RBAC Guide](auth-and-rbac.md) — Authentication middleware methods, identity repositories, and RBAC rules.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and headers.
+- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
+- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
 

@@ -15,6 +15,7 @@
 - [8. Testing Console Commands (CommandTester)](#8-testing-console-commands-commandtester)
 - [9. Built-in Ecosystem Commands](#9-built-in-ecosystem-commands)
 - [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
+- [11. Related Topic Guides](#11-related-topic-guides)
 
 ---
 
@@ -916,3 +917,12 @@ Configuration in `config/console/params.php`:
 | **Empty aliases or names in pipe config (e.g. `'user:list\|\|ul'` or `'\|'`)** | Throws `RuntimeException('Do not allow empty command name or alias.')` during container bootstrap. | Use single pipes to separate valid non-empty alias tokens (e.g. `'user:list\|ul\|u:l'`). |
 | **Reading `$_SERVER['argv']` or `$_GET` directly** | Couples command to global state; breaks in test environments (`CommandTester`) and sub-process runners. | Access inputs strictly through `$input->getArgument('name')` and `$input->getOption('name')`. |
 | **Catching `\Throwable` and silently returning `ExitCode::OK`** | Hides critical system failures; shell pipelines believe the job succeeded when data was not processed. | Log the error, output an explanation via `$io->error()`, and return `ExitCode::UNSPECIFIED_ERROR` or specific BSD code. |
+
+---
+
+## 11. Related Topic Guides
+
+- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runner architecture, `ConsoleApplicationRunner`, and entry points.
+- [DI & Configuration Guide](di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
+- [Queue & Asynchronous Jobs Guide](queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
+- [Error Handling Guide](error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.

@@ -13,6 +13,8 @@
 - [6. Dynamic Invocation & Factories (yiisoft/injector & yiisoft/factory)](#6-dynamic-invocation--factories-yiisoftinjector--yiisoftfactory)
 - [7. Hidden Pitfalls & Execution Realities](#7-hidden-pitfalls--execution-realities)
 - [8. Anti-Pattern Matrix: DI & Configuration](#8-anti-pattern-matrix-di--configuration)
+  - [8.1. Automated Verification with check-di-syntax.php](#81-automated-verification-with-check-di-syntaxphp)
+- [9. Related Topic Guides](#9-related-topic-guides)
 
 ---
 
@@ -931,3 +933,22 @@ Signature: `StrictFactory::__construct(array $definitions, ?ContainerInterface $
 | ❌ **Hardcoding credentials in DI definition files** | Leaks secrets into version control and breaks multi-environment deployments. | ✅ Put secrets in `.env`, read via `params.php` (`$_ENV['SECRET']`), and inject via `$params['key']`. |
 | ❌ **Using `$_GET` or `$_POST` inside DI definitions** | Superglobals break CLI runners, queue workers, tests, and persistent HTTP runtimes. | ✅ Read parameters from `$params` or inject PSR-7 `ServerRequestInterface` / `CurrentRoute` at the presentation layer. |
 | ❌ **Specifying `environment` as `?environments/{$environment}/di.php`** | `yiisoft/config` does not evaluate `{$environment}` strings in group paths. | ✅ Use `config-plugin-environments` in `composer.json` or `config/configuration.php`. |
+
+### 8.1. Automated Verification with `check-di-syntax.php`
+
+To catch configuration typos, invalid keys, unmapped interface bindings, and closure violations before booting the application or running tests, execute the deterministic static checker:
+
+```bash
+php skills/yii3-v2/scripts/check-di-syntax.php [path-to-project]
+```
+
+- **Checks:** syntax errors in `config/**/di/*.php` and `params.php`, Yii 2 legacy keys (`'__class'`), constructor typos (`'__construct'`), missing `()` on method calls, missing `$` on properties, self-referencing and unbound interfaces.
+- **CI / Agent Automation:** Use `--format=json` for machine-readable JSON output and automated quality gates in AI Factory verification loops.
+
+---
+
+## 9. Related Topic Guides
+
+- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and RoadRunner/FrankenPHP workers with `StateResetter`.
+- [Events & Listeners Guide](events-and-listeners.md) — PSR-14 event mapping and listener registration in config groups.
+- [Conventions Guide](conventions.md) — Architectural invariants, configuration directories, and SSOT verification rule.

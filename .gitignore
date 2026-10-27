@@ -3,6 +3,7 @@ vendor/
 
 package.json
 .idea/
+.vscode/
 .osp/
 
 .devin/

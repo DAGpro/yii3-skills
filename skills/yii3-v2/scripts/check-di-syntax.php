@@ -187,7 +187,7 @@ HELP;
                 try {
                     require_once $path;
                     $this->autoloadLoaded = true;
-                    if ($this->verbose && $this->format === 'text') {
+                    if ($this->verbose && !$this->quiet && $this->format === 'text') {
                         echo "[INFO] Registered autoloader: $path\n";
                     }
                     break;
@@ -208,9 +208,9 @@ HELP;
         }
 
         $discovered = [];
-        $configDir = $this->basePath . '/config';
+        $configDir = $this->resolveCaseInsensitiveDir($this->basePath, 'config');
 
-        if (is_dir($configDir)) {
+        if ($configDir !== null) {
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($configDir, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS)
             );
@@ -243,6 +243,30 @@ HELP;
 
         sort($discovered);
         return $discovered;
+    }
+
+    /**
+     * Resolve a well-known directory under basePath, tolerating case
+     * differences (e.g. 'Config/' on case-sensitive filesystems):
+     * prefer the exact lowercase name, else take the first case-insensitive
+     * directory-name match in sorted order for deterministic discovery.
+     */
+    private function resolveCaseInsensitiveDir(string $basePath, string $name): ?string
+    {
+        $exact = $basePath . '/' . $name;
+        if (is_dir($exact)) {
+            return $exact;
+        }
+
+        $candidates = glob($basePath . '/*', GLOB_ONLYDIR) ?: [];
+        sort($candidates);
+        foreach ($candidates as $candidate) {
+            if (strcasecmp(basename(str_replace('\\', '/', $candidate)), $name) === 0) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     private function validateFile(string $filePath): void
@@ -636,15 +660,19 @@ HELP;
         }
 
         // Text format
-        echo "============================================================\n";
-        echo " Yii 3 DI & Configuration Syntax Checker (check-di-syntax)  \n";
-        echo "============================================================\n";
-        echo "Base path: {$this->basePath}\n";
-        echo "Autoloader: " . ($this->autoloadLoaded ? "Active (vendor/autoload.php)" : "Static Mode (Zero Vendor)") . "\n\n";
+        if (!$this->quiet) {
+            echo "============================================================\n";
+            echo " Yii 3 DI & Configuration Syntax Checker (check-di-syntax)  \n";
+            echo "============================================================\n";
+            echo "Base path: {$this->basePath}\n";
+            echo "Autoloader: " . ($this->autoloadLoaded ? "Active (vendor/autoload.php)" : "Static Mode (Zero Vendor)") . "\n\n";
+        }
 
         if (empty($this->issues)) {
-            echo "[OK] All {$this->filesScannedCount} configuration file(s) and {$this->definitionsCount} definition(s) passed validation.\n";
-            echo "Zero errors, zero warnings found.\n";
+            if (!$this->quiet) {
+                echo "[OK] All {$this->filesScannedCount} configuration file(s) and {$this->definitionsCount} definition(s) passed validation.\n";
+                echo "Zero errors, zero warnings found.\n";
+            }
             return;
         }
 
@@ -662,10 +690,12 @@ HELP;
             }
         }
 
-        echo "\n------------------------------------------------------------\n";
-        echo "Summary: Scanned {$this->filesScannedCount} file(s), {$this->definitionsCount} definition(s).\n";
-        echo "Errors: $errorCount | Warnings: $warningCount\n";
-        echo "Result: " . ($errorCount === 0 ? "PASSED" : "FAILED") . "\n";
+        if (!$this->quiet) {
+            echo "\n------------------------------------------------------------\n";
+            echo "Summary: Scanned {$this->filesScannedCount} file(s), {$this->definitionsCount} definition(s).\n";
+            echo "Errors: $errorCount | Warnings: $warningCount\n";
+            echo "Result: " . ($errorCount === 0 ? "PASSED" : "FAILED") . "\n";
+        }
     }
 
     private function outputError(string $message): void

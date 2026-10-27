@@ -54,11 +54,8 @@ final class ActionVerifier
                 return 2;
             }
 
-            if (!$this->quiet && $this->format === 'text') {
-                echo "[INFO] No Action or Controller files found in '{$this->basePath}'.\n";
-                echo "Tip: Place action files in 'src/.../Action/*.php' or pass --file=<path>.\n";
-            }
-            return 0;
+            $this->outputError("No Action or Controller files found in '{$this->basePath}'. Place action files in 'src/**/Action/*.php' or pass --file=<path>.");
+            return 2;
         }
 
         foreach ($files as $file) {
@@ -172,7 +169,7 @@ HELP;
         }
 
         $discovered = [];
-        $searchDir = is_dir($this->basePath . '/src') ? $this->basePath . '/src' : $this->basePath;
+        $searchDir = $this->resolveCaseInsensitiveDir($this->basePath, 'src') ?? $this->basePath;
 
         if (!is_dir($searchDir)) {
             return [];
@@ -229,6 +226,30 @@ HELP;
 
         sort($discovered);
         return $discovered;
+    }
+
+    /**
+     * Resolve a well-known directory under basePath, tolerating case
+     * differences (e.g. 'Src/' on case-sensitive filesystems):
+     * prefer the exact lowercase name, else take the first case-insensitive
+     * directory-name match in sorted order for deterministic discovery.
+     */
+    private function resolveCaseInsensitiveDir(string $basePath, string $name): ?string
+    {
+        $exact = $basePath . '/' . $name;
+        if (is_dir($exact)) {
+            return $exact;
+        }
+
+        $candidates = glob($basePath . '/*', GLOB_ONLYDIR) ?: [];
+        sort($candidates);
+        foreach ($candidates as $candidate) {
+            if (strcasecmp(basename(str_replace('\\', '/', $candidate)), $name) === 0) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     private function verifyFile(string $filePath): void

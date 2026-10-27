@@ -121,21 +121,28 @@ namespace Yiisoft\Db\Command;
 interface CommandInterface
 {
     public function insert(string $table, array|QueryInterface $columns): static;
-    public function batchInsert(string $table, array $columns, iterable $rows): static;
-    public function update(string $table, array $columns, array|string $condition = '', array $params = []): static;
+    public function insertBatch(string $table, iterable $rows, array $columns = []): static;
+    public function update(
+        string $table,
+        array $columns,
+        array|ExpressionInterface|string $condition = '',
+        array|ExpressionInterface|string|null $from = null,
+        array $params = [],
+    ): static;
     public function delete(string $table, array|string $condition = '', array $params = []): static;
     public function execute(): int;
     public function queryAll(): array;
-    public function queryOne(): array|false;
-    public function queryScalar(): mixed;
+    public function queryOne(): ?array;
+    public function queryScalar(): bool|string|int|float|null;
 }
 ```
 **Usage:**
 ```php
 $db->createCommand()
-   ->batchInsert('product', ['title', 'price'], [['Widget A', 100], ['Widget B', 200]])
+   ->insertBatch(table: 'product', rows: [['Widget A', 100], ['Widget B', 200]], columns: ['title', 'price'])
    ->execute();
 ```
+> Note: `insertBatch()` takes `rows` before `columns`; the legacy insert-many command method (columns before rows) known from Yii 2 does not exist in `yiisoft/db`, and the same-named `MigrationBuilder` method is deprecated — use `insertBatch()`.
 
 ---
 
@@ -152,9 +159,9 @@ final class MigrationBuilder
     public function dropTable(string $table): void;
     public function addColumn(string $table, string $column, ColumnInterface|string $type): void;
     public function dropColumn(string $table, string $column): void;
-    public function createIndex(string $table, string $name, array|string $columns, ?string $indexType = null): void;
+    public function createIndex(string $table, string $name, array|string $columns, ?string $indexType = null, ?string $indexMethod = null): void;
     public function dropIndex(string $table, string $name): void;
-    public function addForeignKey(string $table, string $name, array|string $columns, string $refTable, array|string $refColumns, ?string $delete = null, ?string $update = null): void;
+    public function addForeignKey(string $table, string $name, array|string $columns, string $referenceTable, array|string $referenceColumns, ?string $delete = null, ?string $update = null): void;
     public function dropForeignKey(string $table, string $name): void;
 }
 ```

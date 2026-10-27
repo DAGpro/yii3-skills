@@ -107,7 +107,7 @@ Processes background or maintenance tasks via command line interface (`yiisoft/y
    - For batch/bulk processing:
      * Stream or chunk data (generators / `iterable`) to avoid out-of-memory.
      * Use `Symfony\Component\Console\Helper\ProgressBar` for terminal feedback.
-     * Execute bulk database writes via `$db->createCommand()->batchInsert($table, $columns, $batchRows)->execute()`.
+     * Execute bulk database writes via `$db->createCommand()->insertBatch(table: $table, rows: $batchRows, columns: $columns)->execute()`.
    - Strictly returns `Yiisoft\Yii\Console\ExitCode::OK` or `ExitCode::UNSPECIFIED_ERROR`.
    - *Anti-pattern:* Never put raw SQL queries or business algorithms directly inside the command; delegate to Use Cases.
 2. **Wiring (Mandatory):**

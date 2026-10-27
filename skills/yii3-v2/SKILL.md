@@ -30,7 +30,19 @@ description: >-
 2. For business feature requests, decompose into full artifact graph (Domain, Persistence, Use Case, Presentation, Wiring) via `references/feature-recipes.md`.
 3. Install/wire missing packages per `references/dependency-protocol.md`.
 4. Place and write code: architecture source first, then `references/conventions.md`.
-5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Report added packages and changed config files.
+5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Then run the deterministic gate — both validation scripts (see "Deterministic tooling & validation scripts" below) against the changed scope (project root by default): fix every reported error and rerun both until both exit 0. Exit 2 means a misconfigured invocation (wrong path or PHP guard) — fix the invocation, never treat it as a pass. Warnings exit 0 — report them separately, do not block. Report added packages and changed config files.
+
+   Step-5 verification report (compact template):
+
+   ```
+   check-di-syntax.php <scope> -> exit 0
+   verify-actions.php <scope>  -> exit 1 (1 error)
+   issues:
+   - config/common/di/db.php:5 — typo_class_key — invalid class key 'classname'
+   fixes applied: renamed 'classname' to 'class'
+   rerun: check-di-syntax.php -> 0; verify-actions.php -> 0
+   warnings (exit 0, non-blocking): params.php:4 — closure_in_params — closure in parameters file
+   ```
 
 ## References (read on demand)
 
@@ -76,17 +88,22 @@ description: >-
 
 ## Deterministic tooling & validation scripts
 
+Both scripts are dependency-free token-level analyzers, run from this skill package directory. They require **PHP 8.1+** — on older versions they print `[FATAL]` to STDERR and exit 2 before any output (including JSON).
+
+Exit codes (both scripts): **0** = pass or warnings only · **1** = at least one error (blocking) · **2** = fatal invocation error (PHP guard, wrong scan path / nothing to scan, `--file` not found). Warnings never block: they exit 0 and are reported separately from errors.
+
 - `scripts/check-di-syntax.php` — static AST/token validation for DI files (`config/**/di/*.php`) and `params.php`:
-  - Catches typos in configuration keys (`'__construct()'`, `'class'`, missing `()` on methods, missing `$` on properties).
+  - Catches typos in configuration keys (`'__construct()'`, `'class'`, missing `()` on methods, missing `$` on properties) and PHP syntax errors; requires a returned array (`return [...]`).
   - Detects legacy Yii 2 constructs (`'__class'`).
-  - Detects self-binding and unmapped interface bindings (`Reference::to(Interface)`).
-  - Flags closures in `params.php` (enforces primitives-only rule).
-  - Run: `php scripts/check-di-syntax.php [project-path] [--format=text|json]`
+  - Self-binding (`Interface => Interface`) is an error. Unmapped `Reference::to(Interface)` bindings and closures in `params.php` are warnings (cross-file unbound interface targets remain errors).
+  - With `vendor/autoload.php` present: reflection-verifies targets (class not found, abstract target, unimplemented interface) and resolves interfaces beyond the `*Interface` name suffix.
+  - Run: `php scripts/check-di-syntax.php [project-path] [--format=text|json] [--quiet]`
 - `scripts/verify-actions.php` — static AST/token audit for Actions & Controllers:
-  - Enforces `declare(strict_types=1);` as the first statement in action files.
-  - Verifies strict `Psr\Http\Message\ResponseInterface` return type declaration on action methods.
-  - Enforces Thin Action principle (prohibits direct SQL, ActiveRecord, and DB/ORM injection in presentation layer).
-  - Blocks legacy Yii 2 constructs (`Yii::$app`, `yii\*` namespaces, superglobals, `$model->load()`).
+  - Enforces `declare(strict_types=1);` as the first statement in action files and strict non-nullable `Psr\Http\Message\ResponseInterface` return types (rejects missing, nullable, primitive, and non-response types).
+  - Enforces Thin Action principle (prohibits direct SQL, query builders, transactions, and DB/ORM injection in presentation layer).
+  - Blocks legacy Yii 2 constructs (`Yii::$app`, `yii\*` namespaces incl. `extends yii\web\Controller` via import, superglobals, `$model->load()`) and PHP syntax errors.
+  - Catches high-frequency Yii 3 traps: `Cookie::create()`, `Yiisoft\Cookies\SameSite` import, `->createToken()` on token factories, `->send()`/`->sendStream()` on download responses, `->withStatus()` on a view renderer.
+  - Warning rule: importing the deprecated `Yiisoft\DataResponse\DataResponseFactoryInterface` (use `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` instead); everything else is a blocking error.
   - Run: `php scripts/verify-actions.php [project-path] [--format=text|json] [--quiet]`
 
 ## Canonical examples & templates

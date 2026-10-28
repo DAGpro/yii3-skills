@@ -936,10 +936,10 @@ Signature: `StrictFactory::__construct(array $definitions, ?ContainerInterface $
 
 ### 8.1. Automated Verification with `check-di-syntax.php`
 
-To catch configuration typos, invalid keys, unmapped interface bindings, and closure violations before booting the application or running tests, execute the deterministic static checker:
+To catch configuration typos, invalid keys, unmapped interface bindings, and closure violations before booting the application or running tests, execute the deterministic static checker from the skill package directory:
 
 ```bash
-php skills/yii3-v2/scripts/check-di-syntax.php [path-to-project]
+php scripts/check-di-syntax.php [path-to-project]
 ```
 
 - **Checks:** syntax errors in `config/**/di/*.php` and `params.php`, Yii 2 legacy keys (`'__class'`), constructor typos (`'__construct'`), missing `()` on method calls, missing `$` on properties, self-referencing and unbound interfaces.

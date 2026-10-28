@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/lee-to/ai-factory/2.x/schemas/extension.schema.json",
   "name": "yii3-skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "AI Factory extension with skills for generating Yii3 (yiisoft) PHP code: actions, forms, CRUD modules, REST API endpoints, DI configuration and DB migrations. Based on the official Yii3 guide.",
   "injections": [
     {
@@ -46,6 +46,7 @@
     }
   ],
   "skills": [
-    "skills/yii3"
+    "skills/yii3",
+    "skills/yii3-v2"
   ]
 }

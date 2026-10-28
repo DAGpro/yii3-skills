@@ -32,7 +32,7 @@ This slice demonstrates the **Explicit Architecture / Vertical Slice** pattern a
 ## 2. Directory Layout
 
 ```text
-skills/yii3-v2/examples/crud-slice/
+examples/crud-slice/
 ├── README.md                                 # This reference guide & replication protocol
 ├── Migration/
 │   └── M261026120000CreatePostTable.php      # Reversible DDL migration with ColumnBuilder

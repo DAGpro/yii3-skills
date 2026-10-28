@@ -228,7 +228,7 @@ No `yiisoft/*` package wraps the upload flow. The idiomatic pipeline:
 1. **Extract** — uploaded files arrive as `Psr\Http\Message\UploadedFileInterface` from
    `$request->getUploadedFiles()` (or via the `#[UploadedFiles]` parameter attribute from `yiisoft/input-http`).
 2. **Validate** — apply `Yiisoft\Validator\Rule\File\File` / `Rule\Image\Image` rules
-   (constructor verified in `references/validator/src/Rule/File.php`):
+   (exact constructor: verify in `vendor/yiisoft/validator/src/Rule/File.php` of the installed project):
    `__construct(array|string|null $extensions = null, array|string|null $mimeTypes = null, ?int $size = null, ?int $minSize = null, ?int $maxSize = null, bool $trustClientMediaType = false, /* messages */, bool|callable|null $skipOnEmpty = null, /* ... */)` —
    the `File` rule reads `UploadedFileInterface` error codes (`uploadFailedMessage`, `uploadRequiredMessage`).
 3. **Move** — persist with `$uploadedFile->moveTo($destination)`; build the destination with

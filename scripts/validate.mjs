@@ -1,0 +1,271 @@
+#!/usr/bin/env node
+// Dependency-free AI Factory extension validator (Node >= 18, ESM, node:* stdlib only).
+// Validates extension.json, registered SKILL.md frontmatter, reference links,
+// deliverable purity, and per-skill package-catalog consistency.
+// Output: error lines, WARN [validate] lines, one summary line. Exit 0/1.
+
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+const errors = [];
+const warnings = [];
+
+function err(file, line, check, detail) {
+  errors.push(`${file}:${line} — ${check} — ${detail}`);
+}
+
+function warn(file, line, check, detail) {
+  warnings.push(`${file}:${line} — ${check} — ${detail}`);
+}
+
+// git core.autocrlf=true may produce CRLF working copies; normalize before
+// scanning and measuring so line numbers and character counts stay stable.
+function readText(absPath) {
+  return readFileSync(absPath, 'utf8').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+}
+
+function lineOf(text, index) {
+  return text.slice(0, index).split('\n').length;
+}
+
+function displayPath(absPath) {
+  return relative(root, absPath).replace(/\\/g, '/');
+}
+
+function manifestLine(raw, value) {
+  const idx = raw.indexOf(`"${value}"`);
+  return idx === -1 ? 0 : lineOf(raw, idx);
+}
+
+// Minimal frontmatter reader for the fields this validator checks.
+// Implements `>-` block-scalar folding: strip the indicator, trim each
+// continuation line, join with single spaces.
+function parseFrontmatter(text) {
+  const block = text.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+  if (block === null) return null;
+  const lines = block[1].split('\n');
+  const fields = {};
+  for (let i = 0; i < lines.length; i++) {
+    const keyMatch = lines[i].match(/^([A-Za-z][A-Za-z0-9_-]*):(?:\s+(.*))?$/);
+    if (keyMatch === null) continue;
+    const key = keyMatch[1];
+    let value = keyMatch[2] ?? '';
+    if (/^[>|][>|+-]*\s*$/.test(value)) {
+      const continuation = [];
+      let j = i + 1;
+      while (j < lines.length && (lines[j] === '' || /^\s/.test(lines[j]))) {
+        if (lines[j].trim() !== '') continuation.push(lines[j].trim());
+        j++;
+      }
+      value = continuation.join(' ');
+      i = j - 1;
+    } else {
+      value = value.replace(/^["']|["']$/g, '').trim();
+    }
+    fields[key] = value;
+  }
+  return fields;
+}
+
+function walkMarkdownFiles(dir) {
+  const found = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const abs = join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...walkMarkdownFiles(abs));
+    else if (entry.isFile() && entry.name.endsWith('.md')) found.push(abs);
+  }
+  return found;
+}
+
+// Each distinct violation is reported once per file, at its first occurrence.
+function scanPurity(absPath, text, selfPrefix) {
+  const checks = [
+    {
+      check: 'purity-self-path',
+      pattern: null,
+      literal: selfPrefix,
+      detail: (m) => `self-referential install path "${m}" — use skill-relative wording`,
+    },
+    {
+      check: 'purity-authoring-path',
+      pattern: /references\/[A-Za-z0-9._-]+\/src\b/g,
+      detail: (m) => `authoring-library source path "${m}" — use vendor/yiisoft/... of the installed project`,
+    },
+    {
+      check: 'purity-windows-path',
+      pattern: /[A-Za-z]:\\[^\s`'"]*\\/g,
+      detail: (m) => `Windows drive path "${m}" — not portable across agent environments`,
+    },
+  ];
+  for (const { check, pattern, literal, detail } of checks) {
+    const seen = new Set();
+    if (pattern === null) {
+      const idx = text.indexOf(literal);
+      if (idx !== -1) err(displayPath(absPath), lineOf(text, idx), check, detail(literal));
+      continue;
+    }
+    for (const match of text.matchAll(pattern)) {
+      if (seen.has(match[0])) continue;
+      seen.add(match[0]);
+      err(displayPath(absPath), lineOf(text, match.index), check, detail(match[0]));
+    }
+  }
+}
+
+// Allowlist: backticked yiisoft/... tokens that directly follow an ❌ marker
+// in the catalog's phantom-guard table (multi-token rows supported).
+function collectPhantomAllowlist(catalogText) {
+  const allow = new Set();
+  for (const line of catalogText.split('\n')) {
+    if (!line.includes('❌')) continue;
+    for (const segment of line.split('❌').slice(1)) {
+      const cell = segment.split('|')[0];
+      for (const token of cell.matchAll(/`(yiisoft\/[a-z0-9][a-z0-9._-]*)`/g)) {
+        allow.add(token[1]);
+      }
+    }
+  }
+  return allow;
+}
+
+function checkCatalogConsistency(skillDir) {
+  const catalogPath = join(skillDir, 'references', 'package-catalog.md');
+  const guidesDir = join(skillDir, 'references');
+  if (!existsSync(catalogPath)) {
+    warn(displayPath(catalogPath), 0, 'catalog-consistency', 'package-catalog.md not found; consistency check skipped');
+    return;
+  }
+  const catalogText = readText(catalogPath);
+  const allow = collectPhantomAllowlist(catalogText);
+  const reported = new Set();
+  for (const guidePath of walkMarkdownFiles(guidesDir)) {
+    const text = readText(guidePath);
+    for (const token of text.matchAll(/`(yiisoft\/([a-z0-9][a-z0-9._-]*))`/g)) {
+      const name = token[1];
+      const pkg = token[2];
+      if (pkg.includes('*') || pkg.endsWith('-')) continue; // wildcard / truncated artifacts
+      if (catalogText.includes(name) || allow.has(name)) continue;
+      const key = `${displayPath(guidePath)}:${name}`;
+      if (reported.has(key)) continue;
+      reported.add(key);
+      warn(displayPath(guidePath), lineOf(text, token.index), 'catalog-consistency', `\`${name}\` is referenced but missing from package-catalog.md`);
+    }
+  }
+}
+
+function checkSkill(skillEntry) {
+  const skillDir = join(root, skillEntry);
+  const skillMdPath = join(skillDir, 'SKILL.md');
+  const text = readText(skillMdPath);
+
+  const fields = parseFrontmatter(text);
+  if (fields === null) {
+    err(displayPath(skillMdPath), 1, 'frontmatter', 'no --- frontmatter block');
+  } else {
+    if (!fields.name || fields.name.trim() === '') {
+      err(displayPath(skillMdPath), 1, 'frontmatter', 'frontmatter "name" is missing or empty');
+    }
+    if (!fields.description || fields.description.trim() === '') {
+      err(displayPath(skillMdPath), 1, 'frontmatter', 'frontmatter "description" is missing or empty');
+    } else if (fields.description.length > 1024) {
+      err(displayPath(skillMdPath), 1, 'frontmatter', `folded description is ${fields.description.length} characters (max 1024)`);
+    }
+  }
+
+  const mentioned = new Set();
+  for (const match of text.matchAll(/references\/([A-Za-z0-9][A-Za-z0-9._-]*\.md)/g)) {
+    const name = match[1];
+    if (mentioned.has(name)) continue;
+    mentioned.add(name);
+    if (!existsSync(join(skillDir, 'references', name))) {
+      err(displayPath(skillMdPath), lineOf(text, match.index), 'reference-link', `references/${name} does not exist`);
+    }
+  }
+
+  for (const mdPath of walkMarkdownFiles(skillDir)) {
+    scanPurity(mdPath, readText(mdPath), `${skillEntry.replace(/\\/g, '/')}/`);
+  }
+
+  checkCatalogConsistency(skillDir);
+}
+
+function main() {
+  const manifestPath = join(root, 'extension.json');
+  let manifest = null;
+  if (!existsSync(manifestPath)) {
+    err('extension.json', 0, 'manifest', 'file not found');
+  } else {
+    const raw = readText(manifestPath);
+    try {
+      manifest = JSON.parse(raw);
+    } catch (parseError) {
+      err('extension.json', 0, 'manifest', `JSON parse error: ${parseError.message}`);
+    }
+    if (manifest !== null) {
+      if (typeof manifest.name !== 'string' || manifest.name.trim() === '') {
+        err('extension.json', 0, 'manifest', '"name" must be a non-empty string');
+      }
+      if (typeof manifest.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(manifest.version)) {
+        err('extension.json', manifestLine(raw, manifest?.version ?? ''), 'manifest', `"version" must match ^\\d+\\.\\d+\\.\\d+$ (got ${JSON.stringify(manifest?.version ?? undefined)})`);
+      }
+      if (typeof manifest.description !== 'string' || manifest.description.trim() === '') {
+        err('extension.json', 0, 'manifest', '"description" must be a non-empty string');
+      }
+      if (!Array.isArray(manifest.injections) || manifest.injections.length === 0) {
+        err('extension.json', 0, 'manifest', '"injections" must be a non-empty array');
+      } else {
+        for (const injection of manifest.injections) {
+          const line = manifestLine(raw, injection?.file ?? '');
+          if (injection === null || typeof injection !== 'object') {
+            err('extension.json', line, 'manifest', 'injection entry must be an object');
+            continue;
+          }
+          for (const field of ['target', 'position', 'file']) {
+            if (typeof injection[field] !== 'string' || injection[field].trim() === '') {
+              err('extension.json', line, 'manifest', `injection "${injection.target ?? '?'}" field "${field}" must be a non-empty string`);
+            }
+          }
+          if (typeof injection.file === 'string' && injection.file.trim() !== '' && !existsSync(join(root, injection.file))) {
+            err('extension.json', line, 'manifest', `injection file "${injection.file}" does not resolve`);
+          }
+        }
+      }
+      if (!Array.isArray(manifest.skills) || manifest.skills.length === 0) {
+        err('extension.json', 0, 'manifest', '"skills" must be a non-empty array');
+      } else {
+        for (const skillEntry of manifest.skills) {
+          if (typeof skillEntry !== 'string' || skillEntry.trim() === '') {
+            err('extension.json', 0, 'manifest', 'skill entry must be a non-empty string');
+            continue;
+          }
+          const skillDir = join(root, skillEntry);
+          if (!existsSync(skillDir) || !statSync(skillDir).isDirectory()) {
+            err('extension.json', manifestLine(raw, skillEntry), 'manifest', `skill directory "${skillEntry}" does not exist`);
+          } else if (!existsSync(join(skillDir, 'SKILL.md'))) {
+            err('extension.json', manifestLine(raw, skillEntry), 'manifest', `skill "${skillEntry}" has no SKILL.md`);
+          } else {
+            checkSkill(skillEntry);
+          }
+        }
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    for (const line of errors) console.log(line);
+    for (const line of warnings) console.log(`WARN [validate] ${line}`);
+    console.log(`validate: FAILED (${errors.length} errors, ${warnings.length} warnings)`);
+    process.exit(1);
+  }
+
+  for (const line of warnings) console.log(`WARN [validate] ${line}`);
+  const skillCount = Array.isArray(manifest?.skills) ? manifest.skills.length : 0;
+  const injectionCount = Array.isArray(manifest?.injections) ? manifest.injections.length : 0;
+  console.log(`validate: ok (${skillCount} skills, ${injectionCount} injections, ${warnings.length} warnings)`);
+  process.exit(0);
+}
+
+main();

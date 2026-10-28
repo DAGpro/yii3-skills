@@ -70,11 +70,17 @@ yii3-skills/ (Current baseline structure — subject to evolution)
 ├── .agent/               # [Internal Dev Tooling] Workflows (aif-plan, aif-commit...)
 ├── .agents/              # [Internal Dev Tooling] Local agent skills
 ├── skills/               # [DELIVERABLE] Agent skills directory (entry points & topic guides)
-│   └── yii3/             # Master or modular skill package
+│   ├── yii3/             # Production v1 skill package
+│   │   ├── SKILL.md      # Entry point (YAML frontmatter + routing)
+│   │   └── references/   # Specialized topic guides and recipes (incl. runtime package-catalog.md)
+│   └── yii3-v2/          # Remediation-target v2 skill package (canonical after roadmap M6)
 │       ├── SKILL.md      # Entry point (YAML frontmatter + routing)
-│       └── references/   # Specialized topic guides and recipes (incl. runtime package-catalog.md)
+│       ├── references/   # Expanded topic guides (incl. runtime package-catalog.md)
+│       ├── examples/     # Canonical vertical-slice example (crud-slice/)
+│       └── scripts/      # Deterministic PHP verification scripts (check-di-syntax, verify-actions)
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
 ├── references/           # [Authoring Only] Offline clones of yiisoft/* packages
+├── scripts/              # [Internal Dev Tooling] Extension quality gate (validate.mjs, per quality_gates.validate_command)
 ├── AGENTS.md             # [Internal Dev Tooling, tracked] This constitution
 ├── extension.json        # [DELIVERABLE] Extension manifest registering skills & injections
 └── PACKAGES.md           # [Authoring Tooling] Package navigation index over references/

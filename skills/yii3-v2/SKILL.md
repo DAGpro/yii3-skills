@@ -6,7 +6,9 @@ description: >-
   Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "yii3 endpoint", "add repository", "add
   use case", "add event", "add listener", "add middleware", "send email", "queue job", "worker command", "mutex
   lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3
-  form", "validation rules", "form model", "log target", "PSR-3 logging", "translate messages", "i18n", "flash
+  form", "validation rules", "form model", "unit test", "PHPUnit", "functional test", "database test",
+  "cache", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC",
+  "error handling", "log target", "PSR-3 logging", "translate messages", "i18n", "flash
   message", "CSRF", "file upload", "download file", "swagger", "openapi", "RoadRunner", "FrankenPHP", "worker
   runner", "layered architecture", "vertical slices". Not for Yii2.
 ---
@@ -27,9 +29,9 @@ description: >-
 ## Workflow per task
 0. Resolve architecture: check `.ai-factory/ARCHITECTURE.md` (or configured path), otherwise inspect existing `src/` and `config/`.
 1. Check `composer.json` for installed packages; consult `references/package-catalog.md` and `references/feature-recipes.md` for required packages and drivers.
-2. For business feature requests, decompose into full artifact graph (Domain, Persistence, Use Case, Presentation, Wiring) via `references/feature-recipes.md`.
+2. For business feature requests, decompose into full artifact graph (Domain, Persistence, Use Case, Presentation, Wiring) via `references/feature-recipes.md`; check the Chain Integrity Checklist (§6) there before writing code, and use the canonical slice `examples/crud-slice/README.md` as the decomposition reference.
 3. Install/wire missing packages per `references/dependency-protocol.md`.
-4. Place and write code: architecture source first, then `references/conventions.md`.
+4. Place and write code: architecture source first, then `references/conventions.md`; for file placement and format follow the canonical example `examples/crud-slice/README.md`.
 5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Then run the deterministic gate — both validation scripts (see "Deterministic tooling & validation scripts" below) against the changed scope (project root by default): fix every reported error and rerun both until both exit 0. Exit 2 means a misconfigured invocation (wrong path or PHP guard) — fix the invocation, never treat it as a pass. Warnings exit 0 — report them separately, do not block. Report added packages and changed config files.
 
    Step-5 verification report (compact template):
@@ -52,7 +54,7 @@ description: >-
 - `references/feature-recipes.md` — feature archetypes, decomposition into layers, capability inference, wiring checklist
 - `references/dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
-- `references/api-signatures.md` — exact signatures for top 15 Yii3 interfaces and classes
+- `references/api-signatures.md` — exact signatures for the most-used Yii3 interfaces and classes
 - `references/di-and-config.md` — PSR-11 container, config directory separation, definition syntax recipes, parameter inheritance, and environment overrides
 - `references/events-and-listeners.md` — PSR-14 event architecture, immutable domain event DTOs, listener design, event mapping configuration, and post-commit dispatching
 

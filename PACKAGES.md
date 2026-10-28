@@ -93,6 +93,7 @@
 | `yiisoft/db-mssql` | Microsoft SQL Server driver |
 | `yiisoft/db-oracle` | Oracle driver |
 | `yiisoft/yii-cycle` | Cycle ORM integration (alternative to Active Record) |
+| `cycle/annotated` | Annotated-entity mapping attributes (`#[Entity]`, `#[Column]`, relations) for Cycle ORM — config layer over `cycle/orm` (no clone in `references/`; grounded on the persistence-cycle-orm guide) |
 
 **Key concepts:**
 - Database connection and SQL execution — `yiisoft/db`
@@ -300,6 +301,7 @@ Non-yiisoft test runners and harnesses (require-dev):
 | `infection/infection` | Mutation testing on top of the chosen runner (not a runner itself); measures how well the suite kills mutants; require-dev, needs Xdebug/phpdbg/pcov; many `yiisoft/*` packages ship `infection.json.dist` |
 | `roave/infection-static-analysis-plugin` | Infection + static analysis wrapper used as the `mutation` script across most `yiisoft/*` packages |
 | `testo/bridge-infection` | Adapter that wires Infection to the Testo runner — only on the Testo path (PHPUnit/Codeception need no bridge) |
+| `php-testo/bridge-mockery` | Adapter that wires Mockery to the Testo runner — registers `MockeryPlugin` in `testo.php` for automated teardown (PHPUnit/Codeception need no bridge; no clone in `references/`, grounded on the testing-core guide) |
 
 **Key concepts:**
 - **Runner choice is exclusive:** `testo/testo` **or** `phpunit/phpunit` — installing both as the primary runner is forbidden; choose one per project and keep every suite on it.
@@ -443,6 +445,20 @@ phantom list in `skills/yii3/references/package-catalog.md` §3 before adding th
 
 ---
 
+## 18. Application Templates
+
+Installable application templates (clones exist in `references/`; the guides treat them as the
+canonical project layouts when resolving placement and config structure):
+
+| Package | Description |
+|---|---|
+| `yiisoft/app` | Yii3 web application template — the official skeleton the guides use as the canonical config/layout example |
+| `yiisoft/app-api` | Yii3 API project template |
+| `yiisoft/app-console` | Template for console application |
+| `yiisoft/requirements` | PHP system requirements checker (see §15) |
+
+---
+
 ## Configuring Packages in the Target Application
 
 The skill generates Yii3 code that may depend on `yiisoft/*` packages. Before generating an artifact,
@@ -483,4 +499,4 @@ Rules:
 
 ---
 
-*Updated: 2026-09-23*
+*Updated: 2026-10-28*

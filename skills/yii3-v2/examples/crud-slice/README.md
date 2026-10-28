@@ -9,11 +9,11 @@
 - [1. Overview & Architecture](#1-overview--architecture)
 - [2. Directory Layout](#2-directory-layout)
 - [3. Layer Contracts & Responsibilities](#3-layer-contracts--responsibilities)
-  - [3.1. Migration Layer](#31-migration-layer)
-  - [3.2. Domain Layer](#32-domain-layer)
-  - [3.3. Persistence Layer](#33-persistence-layer)
-  - [3.4. Presentation Layer](#34-presentation-layer)
-  - [3.5. Configuration Layer](#35-configuration-layer)
+  - [3.1. Migration Layer](#31-migration-layer-migration)
+  - [3.2. Domain Layer](#32-domain-layer-domain)
+  - [3.3. Persistence Layer](#33-persistence-layer-persistence)
+  - [3.4. Presentation Layer](#34-presentation-layer-presentation)
+  - [3.5. Configuration Layer](#35-configuration-layer-config)
 - [4. Replication Protocol for AI Agents](#4-replication-protocol-for-ai-agents)
 
 ---

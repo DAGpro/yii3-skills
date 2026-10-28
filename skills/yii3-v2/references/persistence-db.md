@@ -8,10 +8,10 @@
 
 ## Table of Contents
 - [1. Clean Architecture Persistence with `yiisoft/db`](#1-clean-architecture-persistence-with-yiisoftdb)
-  - [1.1. Domain Value Object (`UserId.php`)](#11-domain-value-object-useridphp)
-  - [1.2. Pure Domain Entity (`User.php`)](#12-pure-domain-entity-userphp)
-  - [1.3. Domain Repository Contract (`UserRepositoryInterface.php`)](#13-domain-repository-contract-userrepositoryinterfacephp)
-  - [1.4. Low-Level Database Repository (`DbUserRepository.php`)](#14-low-level-database-repository-dbuserrepositoryphp)
+  - [1.1. Domain Value Object (`UserId.php`)](#11-domain-value-object-srcdomainmodeluseridphp)
+  - [1.2. Pure Domain Entity (`User.php`)](#12-pure-domain-entity-srcdomainmodeluserphp)
+  - [1.3. Domain Repository Contract (`UserRepositoryInterface.php`)](#13-domain-repository-contract-srcdomainrepositoryuserrepositoryinterfacephp)
+  - [1.4. Low-Level Database Repository (`DbUserRepository.php`)](#14-low-level-database-repository-srcinfrastructurepersistencedbdbuserrepositoryphp)
   - [1.5. Optional Hydration via `yiisoft/hydrator`](#15-optional-hydration-via-yiisofthydrator)
 - [2. Connection, Commands & Mutations (`CommandInterface`)](#2-connection-commands--mutations-commandinterface)
   - [2.1. Parameterized Queries & Table Prefix Syntax](#21-parameterized-queries--table-prefix-syntax)

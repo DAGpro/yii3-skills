@@ -49,7 +49,7 @@
 | `assets` | Asset Bundles (CSS/JS) | `yiisoft/assets` | — | `AssetManager`, `AssetBundle` |
 | `dataview` | Grids, Lists, Paging UI | `yiisoft/yii-dataview`, `yiisoft/data` | — | `GridView`, `ListView`, `DetailView` |
 | `data` | Data Readers & Pagination | `yiisoft/data` | `yiisoft/data-db` (plain DB/AR) \| `yiisoft/data-cycle` (Cycle) | `OffsetPaginator`, `Sort`, `DataReaderInterface`, `CountableDataInterface` |
-| `db` | Database Abstraction | `yiisoft/db` | `yiisoft/db-mysql` \| `yiisoft/db-pgsql` \| `yiisoft/db-sqlite` \| `yiisoft/db-mssql` \| `yiisoft/db-oracle` | `ConnectionInterface`, `Query`, `CommandInterface`, `TransactionInterface` |
+| `db` | Database Abstraction | `yiisoft/db` (requires the virtual `yiisoft/db-implementation`, *provided* by every driver package — install exactly one) | `yiisoft/db-mysql` \| `yiisoft/db-pgsql` \| `yiisoft/db-sqlite` \| `yiisoft/db-mssql` \| `yiisoft/db-oracle` | `ConnectionInterface`, `Query`, `CommandInterface`, `TransactionInterface` |
 | `migrations` | DB Schema Migrations | `yiisoft/db-migration` | (uses DB driver above) | `MigrationBuilder`, `./yii migrate` commands |
 | `active-record` | Active Record ORM | `yiisoft/active-record` | (requires `yiisoft/db` + driver) | `ActiveRecord`, `ActiveQuery` |
 | `cycle` | Cycle ORM (alternative) | `yiisoft/yii-cycle`, `cycle/orm` | (pairs with `yiisoft/data-cycle`) \| `cycle/annotated` (annotated-entity mapping attributes for `cycle/orm`) | `EntityManagerInterface`, `Select\Repository`, `#[Entity]` |

@@ -11,6 +11,7 @@ package.json
 .opencode/
 .agents/
 .ai-factory/
+.zcode/
 
 /references/
 anthropic-skills-guide*.md

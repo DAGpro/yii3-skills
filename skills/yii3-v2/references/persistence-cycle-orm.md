@@ -19,7 +19,7 @@
   - [3.2. Concrete Cycle Repository Implementation (`CycleUserRepository.php`)](#32-concrete-cycle-repository-implementation-cycleuserrepositoryphp)
   - [3.3. Eager Loading Relational Data with `load()`](#33-eager-loading-relational-data-with-load)
   - [3.4. Atomic Transactions & Unit of Work](#34-atomic-transactions--unit-of-work)
-  - [3.5. Long-Running Worker Reset (`$entityManager->clean()`) in RoadRunner & FrankenPHP](#35-long-running-worker-reset-entitymanagerclean-in-roadrunner--frankenphp)
+  - [3.5. Long-Running Worker Reset (`$entityManager->clean()`) in RoadRunner & FrankenPHP](#35-long-running-worker-reset-entitymanager-clean-in-roadrunner--frankenphp)
 - [4. Yii3 Integration, Configuration & CLI (`yiisoft/yii-cycle`)](#4-yii3-integration-configuration--cli-yiisoftyii-cycle)
   - [4.1. DBAL & Connection Configuration in `config/params.php`](#41-dbal--connection-configuration-in-configparamsphp)
   - [4.2. Schema Provider Pipeline & Production Caching](#42-schema-provider-pipeline--production-caching)

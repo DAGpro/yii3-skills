@@ -56,7 +56,7 @@ Yii3 decomposes monolithic framework helpers into focused, independent packages.
 | `yiisoft/var-dumper` | `composer require yiisoft/var-dumper` | `VarDumper`, `ClosureExporter`, `EchoHandler`, `StreamHandler`, `CompositeHandler`, `d()`, `dd()`, `dump()` | Dual role: developer debugging (console/web/socket) and runtime code generation (short `[]` export and token-based closure extraction used by `yiisoft/rbac-php`). |
 | `yiisoft/classifier` | `composer require yiisoft/classifier` | `Classifier` | Scans directories for user-defined classes by interface, parent, or attribute using `symfony/finder`. For console/build steps only. |
 | `yiisoft/network-utilities` | `composer require yiisoft/network-utilities` | `IpHelper`, `DnsHelper`, `IpRanges` | Zero-dependency IP/CIDR math, RFC 5321 DNS email verification, first-match IP firewall rules with RFC 5735 network aliases. |
-| `yiisoft/requirements` | `composer require --dev yiisoft/requirements` | `RequirementsChecker` | Pre-flight system capability verification. Structured rule evaluation, `'eval:'` expressions, automated CLI (ANSI) / Web (HTML) rendering. |
+| `yiisoft/requirements` | `composer require [--dev] yiisoft/requirements` — typically `--dev`; require as a regular dependency if used in production startup/deployment checks | `RequirementsChecker` | Pre-flight system capability verification. Structured rule evaluation, `'eval:'` expressions, automated CLI (ANSI) / Web (HTML) rendering. |
 | `yiisoft/friendly-exception` | `composer require yiisoft/friendly-exception` | `FriendlyExceptionInterface` | Cross-cutting contract defining `getName()` and `getSolution()`. Rendered automatically by `yiisoft/error-handler` and `yiisoft/yii-console`. |
 
 Two closely related packages are documented in dedicated guides:
@@ -790,7 +790,7 @@ $firewall->isAllowed('8.8.8.8');      // false (matches '!' . IpRanges::ANY)
 
 ## 8. `yiisoft/requirements` — Deployment & Environment Verification
 
-`yiisoft/requirements` (`Yiisoft\Requirements\RequirementsChecker`) is a framework-independent pre-flight diagnostic utility designed for Docker container startup, CI/CD validation pipelines, and application deployment scripts.
+`yiisoft/requirements` (`Yiisoft\Requirements\RequirementsChecker`) is a framework-independent pre-flight diagnostic utility designed for Docker container startup, CI/CD validation pipelines, and application deployment scripts. Install it as a dev dependency (`composer require --dev`) when it is only used in development/CI tooling; require it as a regular dependency if production startup or deployment checks invoke it (e.g., Docker container entrypoints).
 
 ### 8.1. RequirementsChecker Architecture & Rule Schema
 
@@ -806,10 +806,10 @@ The checker accepts an array of requirement specifications (or a filepath return
 
 #### Built-in Environment Evaluators
 The class provides built-in helper methods that can be referenced in `'eval:'` expressions or executed directly:
-- `checkPhpExtensionVersion(string $extension, string $version, string $operator = '>='): bool`
-- `checkPhpIniOn(string $setting): bool` (verifies setting is `'1'` or `'on'`)
-- `checkPhpIniOff(string $setting): bool` (verifies setting is `'0'`, `''`, or `'off'`)
-- `compareByteSize(string $sizeA, string $sizeB, string $operator = '>='): bool`
+- `checkPhpExtensionVersion(string $extensionName, string $version, string $compare = '>='): bool`
+- `checkPhpIniOn(string $name): bool` (verifies setting is `'1'` or `'on'`)
+- `checkPhpIniOff(string $name): bool` (verifies setting is `'0'`, `''`, or `'off'`)
+- `compareByteSize(string $a, string $b, string $compare = '>='): bool`
 - `checkUploadMaxFileSize(?string $min = null, ?string $max = null): bool`
 
 ### 8.2. CLI Pre-Flight Check & CI/CD Docker Integration

@@ -293,7 +293,7 @@ declare(strict_types=1);
 
 use Yiisoft\Translator\TranslatorInterface;
 
-final class OrderService
+final readonly class OrderService
 {
     public function __construct(private TranslatorInterface $translator) {}
 
@@ -929,7 +929,7 @@ declare(strict_types=1);
 use Yiisoft\Translator\TranslatorInterface;
 use Yiisoft\Yii\Middleware\Event\SetLocaleEvent;
 
-final class SetLocaleEventHandler
+final readonly class SetLocaleEventHandler
 {
     public function __construct(private TranslatorInterface $translator) {}
 

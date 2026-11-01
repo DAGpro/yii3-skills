@@ -381,7 +381,7 @@ $this->emit($emitter, $request, $response);
 5. `$application->handle()` finishes and returns `$response` to `HttpApplicationRunner`.
 6. `HttpApplicationRunner` invokes its own response emission: `$this->emit($emitter, $request, $response)`.
 7. `SapiEmitter::emitHeaders()` checks `headers_sent()`. Because `EmitterMiddleware` already sent the headers in step 3, `headers_sent()` evaluates to `true`.
-8. `SapiEmitter` throws `Yiisoft\PsrEmitter\HeadersHaveBeenSentException`, **crashing the application on every request**!
+8. `SapiEmitter` throws `Yiisoft\PsrEmitter\HeadersHaveBeenSentException`; `HttpApplicationRunner::emit()` catches it and rethrows its own `Yiisoft\Yii\Runner\Http\Exception\HeadersHaveBeenSentException` — the exception application code (and error logs) actually observes — **crashing the application on every request**!
 
 #### The Canonical Rule:
 - In applications orchestrated by `HttpApplicationRunner` (or `FrankenPHPApplicationRunner`), the **runner is the sole owner of response emission**.
@@ -449,7 +449,7 @@ final class SiteControllerTest extends TestCase
 
 `HttpApplicationRunner` incorporates built-in response compatibility filters:
 1. **`removeBodyByStatusMiddleware`:** Clears response body stream for HTTP statuses `100 Continue`, `101 Switching Protocols`, `102 Processing`, `204 No Content`, `205 Reset Content`, and `304 Not Modified`.
-2. **`contentLengthMiddleware`:** Calculates and sets `Content-Length` header if missing and body size is determinable (skips if `Transfer-Encoding` is present or status is `1xx`, `204`, `304`).
+2. **`contentLengthMiddleware`:** Calculates and sets `Content-Length` header if missing and body size is determinable (skips if `Transfer-Encoding` is present or status is `1xx`, `204`, `205`, `304`).
 3. **`headRequestMiddleware`:** Empties body stream for `HEAD` requests while preserving headers.
 
 > [!NOTE]
@@ -775,7 +775,7 @@ $runner->run();
 ### 4.4. Temporary Error Handling with `FileTarget`
 
 In `RoadRunnerHttpApplicationRunner`, the temporary error handler must **never** write to `stdout`:
-- Standard `HttpApplicationRunner` uses `StreamTarget` writing to `php://stdout`.
+- Standard `HttpApplicationRunner`, out of the box, builds its temporary error handler with a `Psr\Log\NullLogger` — startup logs are discarded. Log targets such as `Yiisoft\Log\StreamTarget` (writing to `php://stdout`) are wired in the application template's DI configuration (`config/common/di/logger.php`), not by the runner itself.
 - In RoadRunner, `stdout` is the binary communication pipe between Go and PHP. Writing unformatted text to `stdout` breaks payload framing and crashes the worker.
 - For this reason, `RoadRunnerHttpApplicationRunner::createTemporaryErrorHandler()` defaults to `Yiisoft\Log\Target\File\FileTarget("$this->rootPath/runtime/logs/app.log")` and `HtmlRenderer`, writing startup errors safely to disk.
 
@@ -1114,6 +1114,7 @@ To register state cleanup for custom stateful application services, declare the 
 
 declare(strict_types=1);
 
+use App\Infrastructure\CacheParams;
 use App\Infrastructure\IdentityMap;
 use App\Infrastructure\MemoryCache;
 use Psr\Container\ContainerInterface;
@@ -1145,11 +1146,33 @@ return [
         'reset' => function (ContainerInterface $container): void {
             /** @var MemoryCache $this */
             $this->clear();
-            $this->defaultTtl = $container->get('params')['cache']['ttl'];
+            // Restore the configured TTL from a constructor-injected params DTO.
+            // 'params' is a configuration group name, NOT a container service:
+            // $container->get('params') would throw NotFoundException.
+            $this->defaultTtl = $container->get(CacheParams::class)->defaultTtl;
         },
     ],
 ];
 ```
+
+The `CacheParams` DTO above is a constructor-injected service registered in the DI container — its constructor arguments are mapped from the `'params'` configuration group:
+
+```php
+// src/Infrastructure/CacheParams.php
+declare(strict_types=1);
+
+namespace App\Infrastructure;
+
+final readonly class CacheParams
+{
+    public function __construct(
+        public readonly int $defaultTtl = 3600,
+    ) {}
+}
+```
+
+> [!NOTE]
+> `'params'` (and `params-web`, `params-console`, ...) is a configuration **group** name, not a container service. Calling `$container->get('params')` throws `Yiisoft\Di\NotFoundException`. Access parameters through typed, constructor-injected params DTOs instead.
 
 #### Container Lazy Reset Invariant:
 In `Container.php:235`, the container verifies `isset($this->instances[$serviceId])`. If a service with a `'reset'` closure was never requested during a request cycle, its resetter is not invoked, avoiding unwanted instantiation overhead during cleanup.

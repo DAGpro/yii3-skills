@@ -719,10 +719,10 @@ Under high concurrency, operations modifying overlapping rows may encounter data
 
 #### 1. Command-Level Retry Handler (`setRetryHandler`)
 
-`CommandInterface::setRetryHandler(?Closure $handler)` allows registering an automated retry callback:
+`CommandInterface::setRetryHandler(?Closure $handler)` allows registering an automated retry callback. The documented handler contract is `function (Yiisoft\Db\Exception\Exception $e, int $attempt): bool`: the closure receives the `Yiisoft\Db\Exception\Exception` converted from the thrown database exception (not the raw driver exception or an arbitrary `Throwable`) and the current execution attempt, starting from `1`. Returning `true` retries the statement; returning `false` re-throws the exception.
 
 ```php
-use Throwable;
+use Yiisoft\Db\Exception\Exception;
 use Yiisoft\Db\Exception\SerializationFailureException;
 
 $command = $db->createCommand(
@@ -731,7 +731,7 @@ $command = $db->createCommand(
 );
 
 // Retry up to 3 times with exponential backoff on serialization failures
-$command->setRetryHandler(function (Throwable $e, int $attempt): bool {
+$command->setRetryHandler(function (Exception $e, int $attempt): bool {
     if ($e instanceof SerializationFailureException && $attempt < 3) {
         usleep(50000 * (2 ** $attempt)); // Backoff: 50ms, 100ms, 200ms
         return true; // Return true to retry statement execution
@@ -1038,7 +1038,8 @@ use Yiisoft\Db\Sqlite\Dsn as SqliteDsn;
 ],
 
 // SQLite: File-Based (renders: sqlite:/path/to/database.sq3)
-'yiisoft/db-sqlite-file' => [
+// Same 'yiisoft/db-sqlite' params group as in-memory (pick one per project) — the DSN alone distinguishes memory vs file storage.
+'yiisoft/db-sqlite' => [
     'dsn' => new SqliteDsn('sqlite', '/var/data/app.sq3'),
 ],
 
@@ -1086,6 +1087,7 @@ use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Data\Paginator\PageToken;
 use Yiisoft\Data\Reader\Sort;
 use Yiisoft\Db\Connection\ConnectionInterface;
+use Yiisoft\Db\Exception\Exception;
 use Yiisoft\Db\Query\Query;
 use Yiisoft\Db\Transaction\TransactionInterface;
 use Yiisoft\Hydrator\ArrayData;
@@ -1118,7 +1120,7 @@ $command->upsert(table: '{{%user}}', insertColumns: $insertData, updateColumns: 
 $command->insertBatch(table: '{{%user}}', rows: [['1', 'Alice'], ['2', 'Bob']], columns: ['id', 'name']);
 $command->insertReturningPks(table: '{{%user}}', columns: ['name' => 'Alice']);
 $command->upsertReturningPks(table: '{{%user}}', insertColumns: $insertData, updateColumns: $updateData);
-$command->setRetryHandler(handler: function (Throwable $e, int $attempt): bool { return false; });
+$command->setRetryHandler(handler: function (Exception $e, int $attempt): bool { return false; });
 
 // 3. Query (Yiisoft\Db\Query\Query)
 $query = (new Query($db))

@@ -355,8 +355,10 @@ Codeception 5 is supported in official Yii3 application templates (`yiisoft/app`
 
 #### Installation
 ```bash
-composer require --dev codeception/codeception:^5.3.5 codeception/module-asserts codeception/module-cli
+composer require --dev codeception/codeception:^5.3.5 codeception/module-asserts codeception/module-cli codeception/module-rest codeception/module-phpbrowser codeception/lib-innerbrowser
 ```
+
+The REST module used by the `ApiTester` examples (`sendGET()`, `seeResponseCodeIs()`, `seeResponseIsJson()`) additionally requires `codeception/module-phpbrowser` and `codeception/lib-innerbrowser` (the same dev requirements provisioned by `yiisoft/app-api`).
 
 #### Root Configuration (`codeception.yml`)
 ```yaml
@@ -572,7 +574,7 @@ Mutation testing operates as an **orthogonal quality gate** on top of the test r
 
 #### Installation
 ```bash
-composer require --dev infection/infection:^0.29 roave/infection-static-analysis-plugin:^1.35
+composer require --dev infection/infection roave/infection-static-analysis-plugin
 ```
 
 Enable `infection/extension-installer` in `composer.json`:

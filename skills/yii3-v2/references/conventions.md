@@ -149,6 +149,9 @@ return [
 ];
 ```
 
+> [!NOTE]
+> The official `yiisoft/app` template ships only `environments/dev/params.php` for the dev environment (see its `config/configuration.php`). The untracked `'?params-local.php'` override shown above is an optional local-development addition, not a template default.
+
 ### 3.2. Four-Layer Merge Hierarchy
 The configuration files are merged deterministically in four progressive layers:
 1. **Layer 1 (Vendor Defaults):** Packages register their own default `params.php` and `di.php` via their `composer.json` `extra.config-plugin` section.
@@ -301,8 +304,8 @@ require_once $root . '/src/bootstrap.php';
 
 // Route static assets for PHP built-in web server
 if (PHP_SAPI === 'cli-server') {
-    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    if (is_file(__DIR__ . $path)) {
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if ($path !== false && is_file(__DIR__ . $path)) {
         return false;
     }
     $_SERVER['SCRIPT_NAME'] = '/index.php';
@@ -443,17 +446,18 @@ $url = $this->urlGenerator->generate(
 ```
 
 ### 6.4. Canonical Middleware Pipeline Order
-The standard PSR-15 middleware execution stack in Yii 3 must be ordered logically to ensure error handling, session persistence, and CSRF protection function correctly:
+The standard PSR-15 middleware execution stack in Yii 3 must be ordered logically to ensure error handling, session persistence, and CSRF protection function correctly. The canonical core order (as wired in the official `yiisoft/app` template, `config/web/di/application.php`) is `ErrorCatcher` → `SessionMiddleware` → `CsrfTokenMiddleware` → `RequestCatcherMiddleware` → `Router`:
 
 ```
-1. ErrorCatcher            (Catches unhandled throwables, logs errors, renders error response)
-2. CorsMiddleware          (Handles preflight OPTIONS and adds CORS headers)
-3. RequestBodyParser       (Parses incoming JSON or URL-encoded request bodies into parsedBody)
-4. RouterMiddleware        (Matches the request URI to routes and populates CurrentRoute)
-5. SessionMiddleware       (Starts session before action and commits Set-Cookie on response)
-6. CsrfTokenMiddleware     (Validates CSRF token on mutating POST/PUT/DELETE requests)
-7. Authentication          (Authenticates user identity for protected routes)
-8. Action / Handler        (Executes application business logic)
+1. ErrorCatcher             (Catches unhandled throwables, logs errors, renders error response)
+2. CorsMiddleware           (Handles preflight OPTIONS and adds CORS headers; API applications)
+3. RequestBodyParser        (Parses incoming JSON or URL-encoded request bodies into parsedBody)
+4. SessionMiddleware        (Starts session before routing and commits Set-Cookie on response)
+5. CsrfTokenMiddleware      (Validates CSRF token on mutating POST/PUT/DELETE requests)
+6. RequestCatcherMiddleware (Captures the current PSR-7 request for later retrieval — yiisoft/request-provider)
+7. Router                   (Yiisoft\Router\Middleware\Router — matches the request URI to routes and populates CurrentRoute)
+8. Authentication           (Authenticates user identity for protected routes)
+9. Action / Handler         (Executes application business logic)
 ```
 
 ---

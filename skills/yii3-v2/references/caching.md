@@ -62,7 +62,8 @@ Yii3 clearly separates the low-level PSR-16 key-value store from the high-level 
 `Yiisoft\Cache\CacheKeyNormalizer::normalize()` is applied automatically to every key passed to `getOrSet()` and `remove()`:
 
 - A **string or int** key is used as-is if it is 1–64 characters long and contains none of the PSR-16 reserved characters `{ } ( ) / \ @ :` (integers are cast to strings).
-- Any key exceeding 64 characters, containing reserved characters, or provided as an **array** (e.g. `['catalog.featured', $limit]`) is deterministically normalized to `md5(json_encode($key))`.
+- Any **string** key exceeding 64 characters or containing reserved characters is deterministically normalized to `md5($key)` — a plain MD5 hash of the key string itself.
+- Only non-string keys (e.g. an **array** such as `['catalog.featured', $limit]`) are serialized and normalized to `md5(json_encode($key))`.
 - **Consequence:** Array keys are collision-safe across diverse data types but stored as 32-character hexadecimal MD5 hashes. They are **not human-readable** in Redis keyspaces or filesystem listings. Use flat string keys (e.g. `catalog.featured.10`) if manual cache inspection is required.
 - Direct driver calls (`$cache->psr()->get()`, `$cache->psr()->set()`) do **not** run `CacheKeyNormalizer`. Passing empty strings or keys with reserved characters `{ } ( ) / \ @ :` directly to PSR-16 drivers throws an `InvalidArgumentException`.
 
@@ -691,6 +692,9 @@ final class WorkerStateResetMiddleware implements MiddlewareInterface
 
 ### 5.1. ViewRenderer Trap: Fatal Closure Serialization
 
+> [!NOTE]
+> **Deprecation:** `Yiisoft\Yii\View\Renderer\ViewRenderer` is `@deprecated` since `yiisoft/yii-view-renderer` 7.4.0 — use `WebViewRenderer` instead. The closure-serialization trap applies equally to `WebViewRenderer`: its `render()` / `renderPartial()` methods return a deferred `ViewResponse` object, so caching the returned response instance triggers the same fatal error. Always use `renderAsString()` / `renderPartialAsString()` regardless of which renderer is installed.
+
 In `yiisoft/yii-view-renderer`, methods `render()` and `renderPartial()` return a `Yiisoft\DataResponse\DataResponse` object that wraps an unexecuted closure:
 
 ```php
@@ -876,11 +880,11 @@ use Yiisoft\HttpMiddleware\HttpCache\CacheControlProvider\ConstantCacheControlPr
 use Yiisoft\HttpMiddleware\HttpCache\ETagValueNormalizer\SuffixETagValueNormalizer;
 use Yiisoft\HttpMiddleware\HttpCache\HttpCacheMiddleware;
 use Yiisoft\Router\Group;
-use Yiisoft\Router\Route;
+use Yiisoft\Router\Route\Get;
 
 return [
-    Group::create('/blog')->routes(
-        Route::get('/post/{id:\d+}')
+    (new Group('/blog'))->routes(
+        (new Get('/post/{id:\d+}'))
             ->middleware(static fn (
                 ResponseFactoryInterface $responseFactory,
                 BlogPostETagProvider $eTagProvider,
@@ -911,7 +915,6 @@ use App\Blog\Domain\BlogPostRepositoryInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\DataResponse\DataResponseFactoryInterface;
 use Yiisoft\Http\Header;
 use Yiisoft\Http\Status;
 
@@ -919,7 +922,9 @@ final readonly class ViewPostAction
 {
     public function __construct(
         private BlogPostRepositoryInterface $repository,
-        private DataResponseFactoryInterface $dataResponseFactory,
+        // Canonical factory from the ResponseFactory sub-namespace (wraps the payload
+        // into a DataStream body). The deprecated root-namespace twin must not be used.
+        private \Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface $dataResponseFactory,
         private ResponseFactoryInterface $responseFactory,
     ) {}
 

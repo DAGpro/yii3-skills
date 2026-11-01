@@ -242,7 +242,7 @@ Yii 3 packages fall into two distinct structural categories:
            [ Category A ]              [ Category B ]
            Auto-Configured             Pure Library
            Merged into .merge-plan     NEVER in .merge-plan
-           (router, view, di...)       (db-mysql, cache-redis...)
+           (router, view, db...)       (db-mysql, cache-redis...)
                     |                         |
                     v                         v
            Verify in .merge-plan       Write manual DI definition
@@ -250,9 +250,12 @@ Yii 3 packages fall into two distinct structural categories:
 ```
 
 #### Category A: Auto-Configured Packages (With `extra.config-plugin`)
-- **Packages:** `yiisoft/router`, `yiisoft/view`, `yiisoft/di`, `yiisoft/db`, `yiisoft/active-record`, `yiisoft/yii-cycle`, `yiisoft/cache-file`, `yiisoft/log-target-file`, `yiisoft/rbac-rules-container`, `yiisoft/yii-console`.
+- **Packages:** `yiisoft/router`, `yiisoft/view`, `yiisoft/db`, `yiisoft/active-record`, `yiisoft/yii-cycle`, `yiisoft/cache-file`, `yiisoft/log-target-file`, `yiisoft/rbac-rules-container`, `yiisoft/yii-console`.
 - **Behavior:** These packages declare their configuration files in `composer.json` under `extra.config-plugin`. The `yiisoft/config` plugin automatically scans them and merges them into `config/.merge-plan.php`.
 - **Verification:** Inspect `config/.merge-plan.php` and verify the package name is present in the respective configuration group (e.g. `params`, `di-web`, `di-console`).
+
+> [!NOTE]
+> **`yiisoft/di` itself is NOT a Category A package:** its `composer.json` has no `extra.config-plugin` key. It is a pure library — the PSR-11 container implementation that **consumes** the configuration merged by `yiisoft/config` — and therefore never appears in `config/.merge-plan.php` under its own name.
 
 #### Category B: Pure Libraries (WITHOUT `extra.config-plugin`)
 - **Packages:** Database drivers (`yiisoft/db-mysql`, `yiisoft/db-pgsql`, `yiisoft/db-sqlite`, `yiisoft/db-mssql`, `yiisoft/db-oracle`), cache backends (`yiisoft/cache-redis`, `yiisoft/cache-db`), log targets (`yiisoft/log-target-db`), RBAC storages (`yiisoft/rbac-php`, `yiisoft/rbac-db`).

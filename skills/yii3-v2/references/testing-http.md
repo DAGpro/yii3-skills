@@ -18,7 +18,7 @@
   - [4.2. Testing Cookies and Flash Messages](#42-testing-cookies-and-flash-messages)
 - [5. In-Memory HTTP Testing via `HttpApplicationRunner`](#5-in-memory-http-testing-via-httpapplicationrunner)
 - [6. PSR-7 Stream Testing with `StringStream`](#6-psr-7-stream-testing-with-stringstream)
-- [7. Actor-Driven Functional Testing in Codeception](#7-actor-driven-functional-testing-in-codeception)
+- [7. Actor-Driven REST API Testing in Codeception](#7-actor-driven-rest-api-testing-in-codeception)
 - [8. HTTP Testing Named Arguments & Signatures Reference](#8-http-testing-named-arguments--signatures-reference)
 - [9. HTTP Anti-Pattern Matrix](#9-http-anti-pattern-matrix)
 - [10. Related Guides](#10-related-guides)
@@ -427,7 +427,7 @@ final class DirectRunnerHttpTest extends TestCase
             rootPath: dirname(__DIR__, 2),
             debug: false,
             checkEvents: false,
-            environment: 'tests',
+            environment: 'test',
         );
     }
 
@@ -459,52 +459,46 @@ final class DirectRunnerHttpTest extends TestCase
 
 ## 6. PSR-7 Stream Testing with `StringStream`
 
-`Yiisoft\Test\Support\HttpMessage\StringStream` implements `Psr\Http\Message\StreamInterface` with string content. Use it to mock or supply request bodies and verify streaming:
+`Yiisoft\Test\Support\HttpMessage\StringStream` implements `Psr\Http\Message\StreamInterface` with string content. In HTTP tests, use it to mock or supply request bodies and verify streaming behavior, including rewinding and the custom `readable`/`writable`/`seekable` constructor flags for error-path testing.
 
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Unit;
-
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Test\Support\HttpMessage\StringStream;
-
-final class StringStreamTest extends TestCase
-{
-    public function testStreamInspectionAndRewind(): void
-    {
-        $stream = new StringStream('{"status":"active"}');
-
-        $this->assertSame(19, $stream->getSize());
-        $this->assertSame('{"status":"active"}', $stream->getContents());
-        $this->assertTrue($stream->isSeekable());
-
-        // Stream reading advances pointer; rewinding resets it
-        $this->assertSame('', $stream->getContents());
-        $stream->rewind();
-        $this->assertSame('{"status":"active"}', $stream->getContents());
-    }
-}
-```
+The full test-double example — stream inspection, pointer/rewind semantics, and edge-case testing with configurable flags — lives in [`testing-core.md`, §3.6](testing-core.md#36-psr-7-stream-stringstream); its constructor signature is listed in §8 below.
 
 ---
 
-## 7. Actor-Driven Functional Testing in Codeception
+## 7. Actor-Driven REST API Testing in Codeception
 
-In Codeception suites (`tests/functional`), requests route in-memory through `HttpApplicationRunner`:
+Codeception integration follows the official `yiisoft/app-api` template. JSON API assertion testing uses the `Api` suite with the REST module; since no Yii3 framework module exists for Codeception, the REST module depends on `PhpBrowser` and drives a live served application instead of in-memory dispatch.
+
+#### Suite Configuration (`tests/Api.suite.yml`)
+
+```yaml
+actor: ApiTester
+extensions:
+  enabled:
+    - Codeception\Extension\RunProcess:
+        0: composer serve
+        sleep: 5
+modules:
+  enabled:
+    - REST:
+        url: http://127.0.0.1:8080
+        depends: PhpBrowser
+```
+
+The `composer serve` script (`@php ./yii serve`) from the template's `composer.json` starts the application server on `127.0.0.1:8080` before the suite runs.
+
+#### REST Cest Example (`tests/Api/UserApiCest.php`)
 
 ```php
 declare(strict_types=1);
 
-namespace App\Tests\Functional;
+namespace App\Tests\Api;
 
-use App\Tests\Support\FunctionalTester;
-use Codeception\Attribute\Actor;
+use App\Tests\Support\ApiTester;
 
-final class UserApiCest
+final readonly class UserApiCest
 {
-    #[Actor(FunctionalTester::class)]
-    public function tryToCreateUser(FunctionalTester $I): void
+    public function tryToCreateUser(ApiTester $I): void
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Accept', 'application/json');
@@ -524,6 +518,9 @@ final class UserApiCest
     }
 }
 ```
+
+> [!NOTE]
+> For in-memory functional smoke tests (status code and body assertions without REST-module actions), do not enable the REST module: reuse the `FunctionalTester::sendRequest()` actor action defined in [`testing-core.md`, §2.3](testing-core.md#23-codeception-codeceptioncodeception-5), which dispatches through `HttpApplicationRunner::runAndGetResponse()`.
 
 > [!CAUTION]
 > In Codeception Cests, inject actors (e.g. `FunctionalTester $I`); never extend `FunctionalTestCase` inside a Cest class. `FunctionalTestCase` is strictly a PHPUnit `TestCase`.

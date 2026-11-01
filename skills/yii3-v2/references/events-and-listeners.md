@@ -14,9 +14,10 @@
 - [3. Designing Event Listeners](#3-designing-event-listeners)
   - [3.1. Invokable Class Listener](#31-invokable-class-listener)
   - [3.2. Listener Dependency Injection Rules](#32-listener-dependency-injection-rules)
+  - [3.3. Listener Ordering (No Priority Mechanism)](#33-listener-ordering-no-priority-mechanism)
 - [4. Event Configuration (yiisoft/config & yiisoft/yii-event)](#4-event-configuration-yiisoftconfig--yiisoftyii-event)
   - [4.1. Configuration Architecture & Scopes](#41-configuration-architecture--scopes)
-  - [4.2. Declarative Event Mapping (config/common/events.php)](#42-declarative-event-mapping-configcommoneventsphp)
+  - [4.2. Declarative Event Mapping & Supported Listener Formats](#42-declarative-event-mapping--supported-listener-formats)
   - [4.3. Verifying Event Configurations Ahead-of-Time](#43-verifying-event-configurations-ahead-of-time)
 - [5. Mandatory Post-Commit Event Dispatching Rule](#5-mandatory-post-commit-event-dispatching-rule)
 - [6. Official Yii3 Framework Events Reference](#6-official-yii3-framework-events-reference)
@@ -26,9 +27,11 @@
   - [6.4. Middleware Dispatcher Lifecycle (yiisoft/middleware-dispatcher)](#64-middleware-dispatcher-lifecycle-yiisoftmiddleware-dispatcher)
   - [6.5. Mailer Lifecycle (yiisoft/mailer)](#65-mailer-lifecycle-yiisoftmailer)
   - [6.6. Active Record Lifecycle (yiisoft/active-record)](#66-active-record-lifecycle-yiisoftactive-record)
-  - [6.7. View Template Lifecycle (yiisoft/view)](#67-view-template-lifecycle-yiisoftview)
+  - [6.7. View Template Lifecycle (yiisoft/view, View)](#67-view-template-lifecycle-yiisoftview-view)
+  - [6.8. Web View Lifecycle (yiisoft/view, WebView)](#68-web-view-lifecycle-yiisoftview-webview)
 - [7. PHP 8 Named Arguments & Signatures Reference](#7-php-8-named-arguments--signatures-reference)
-- [8. Anti-Pattern Matrix: Events & Listeners](#8-anti-pattern-matrix-events--listeners)
+- [8. Testing Events & Listeners](#8-testing-events--listeners)
+- [9. Anti-Pattern Matrix: Events & Listeners](#9-anti-pattern-matrix-events--listeners)
 
 ---
 
@@ -37,15 +40,22 @@
 Yii3 completely replaces the legacy Yii2 `Component::trigger()` mechanism with the standard **PSR-14 Event Dispatcher**:
 
 1. **Pure PHP Objects (DTOs):**
-   - Events are plain PHP classes (typically `final readonly class`).
-   - Events do NOT extend any framework base class.
+   - Application-defined domain events are plain PHP classes; `final readonly class` is the recommended shape for these DTOs.
+   - Official framework events are `final class` (never `final readonly class`) with package-dependent property visibility: public readonly properties in `yiisoft/yii-http` and `yiisoft/mailer`, private readonly properties with getters in `yiisoft/middleware-dispatcher`, private properties with accessors and mutation methods in `yiisoft/user`.
+   - Some framework event groups extend package-local base classes: Active Record events extend `Yiisoft\ActiveRecord\Event\AbstractEvent`, view events extend `Yiisoft\View\Event\View\ViewEvent` / `Yiisoft\View\Event\WebView\WebViewEvent`. There is no shared Yii2-style global `Event` base class.
 2. **Three Core PSR-14 Contracts:**
-   - **`Psr\EventDispatcher\EventDispatcherInterface`**: Primary service injected into use cases and services to dispatch events (`dispatch(object $event): object`).
+   - **`Psr\EventDispatcher\EventDispatcherInterface`**: Primary service injected into use cases and services to dispatch events. The PSR interface declares `dispatch(object $event)` with no native return type; yiisoft's `Dispatcher` implementation guarantees the `: object` return.
    - **`Psr\EventDispatcher\ListenerProviderInterface`**: Resolves which callables should execute for a given event object (`getListenersForEvent(object $event): iterable`).
    - **`Psr\EventDispatcher\StoppableEventInterface`** *(optional)*: Allows an event to halt further propagation via `isPropagationStopped(): bool`.
 3. **Official Implementation Packages:**
-   - **`yiisoft/event-dispatcher`**: Implements `Dispatcher` (`EventDispatcherInterface`) and `Provider` (`ListenerProviderInterface`), plus `ListenerCollection`, `CompositeDispatcher`, and `CompositeProvider`.
+   - **`yiisoft/event-dispatcher`**: Implements `Dispatcher` (`EventDispatcherInterface`) and `Provider` (`ListenerProviderInterface`), plus `ListenerCollection`, `CompositeDispatcher`, and `CompositeProvider` — exactly five classes (`vendor/yiisoft/event-dispatcher/src/`). The package ships no `config/` — zero DI definitions of its own.
    - **`yiisoft/yii-event`**: Bridge package connecting event configuration files (`config/**/events*.php`) to the DI container via `ListenerCollectionFactory`, `CallableFactory`, and `ListenerConfigurationChecker`.
+4. **Default DI Wiring (shipped by `yiisoft/yii-event`):**
+   - `Psr\EventDispatcher\EventDispatcherInterface::class => Dispatcher::class`
+   - `Psr\EventDispatcher\ListenerProviderInterface::class => Provider::class`
+
+   Source: `vendor/yiisoft/yii-event/config/di.php`. The `ListenerCollection` service is built per environment from the config group named by the `eventsConfigGroup` parameter (`vendor/yiisoft/yii-event/config/di-web.php`, `config/di-console.php`; see [Section 4.1](#41-configuration-architecture--scopes)).
+5. **Listener Lookup Order:** for each event, the default `Provider` looks up listeners registered for the exact event class name first, then for its parent classes, then for its interfaces (`vendor/yiisoft/event-dispatcher/src/Provider/Provider.php`). A listener registered for a parent class or an interface therefore fires for every subclass or implementation.
 
 ---
 
@@ -112,6 +122,10 @@ final class BeforeUserRegistrationEvent implements StoppableEventInterface
 }
 ```
 
+> [!NOTE]
+> The dispatcher checks `isPropagationStopped()` **before** invoking each listener (`vendor/yiisoft/event-dispatcher/src/Dispatcher/Dispatcher.php`). A listener that stops propagation still completes its own execution — only the remaining listeners are skipped.
+> `dispatch()` returns the same event object that was passed in. Listeners communicate by mutating the event's properties, not by replacing the object — a listener taking `$event` by reference cannot swap the instance.
+
 ### 2.3. Context-Enriching Event (Mutable State Pattern)
 
 Used when listeners are explicitly intended to modify or enrich an in-flight context before proceeding:
@@ -149,6 +163,9 @@ final class BeforeLoginEvent
 }
 ```
 
+> [!IMPORTANT]
+> **Disambiguation from the framework event:** `yiisoft/user` ships its own `Yiisoft\User\Event\BeforeLogin` (`vendor/yiisoft/user/src/Event/BeforeLogin.php`) whose `invalidate(): void` takes **no arguments** and whose payload is private (`getIdentity(): IdentityInterface`, `isValid(): bool`). The example above is an *application-level* event with a reason argument — it is not interchangeable with the framework class. To avoid near-collisions, keep the `Event` suffix on application-defined events: the framework drops the suffix (`BeforeLogin`, `BeforeRequest`, `BeforeSend`), so `BeforeLoginEvent` (app) and `Yiisoft\User\Event\BeforeLogin` (framework) never clash.
+
 ### 2.4. What Belongs in Events vs What is Forbidden
 
 | Allowed in Event DTO | Forbidden in Event DTO |
@@ -166,7 +183,10 @@ A listener is a single-purpose class focused on one specific side-effect (e.g., 
 
 ### 3.1. Invokable Class Listener
 
-Listeners should implement `__invoke(EventClass $event): void`. The event argument type-hint is automatically inspected by `ListenerCollection` and `ListenerCollectionFactory`:
+Listeners should implement `__invoke(EventClass $event): void`.
+
+- When registering **programmatically** via `ListenerCollection::add()`, the event argument type-hint is auto-inferred from the listener's first parameter when no event class names are passed (see [Section 7](#7-php-8-named-arguments--signatures-reference)).
+- When registering **declaratively** in config arrays, `ListenerCollectionFactory::create()` always registers each listener under the **explicit event class name used as the config array key** — no inference happens in the factory (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`).
 
 ```php
 declare(strict_types=1);
@@ -212,6 +232,9 @@ final readonly class SendOrderConfirmationEmailListener
 }
 ```
 
+> [!NOTE]
+> Injecting `Yiisoft\Mailer\MailerInterface` requires a production interface-to-implementation binding. `yiisoft/mailer` itself ships only a `FileMailer` definition (`vendor/yiisoft/mailer/config/di.php`); the standard web-app binding `MailerInterface::class => Mailer::class` comes from `yiisoft/mailer-symfony` (`vendor/yiisoft/mailer-symfony/config/di.php`).
+
 ```php
 declare(strict_types=1);
 
@@ -240,9 +263,17 @@ final readonly class LogOrderPlacementListener
 ### 3.2. Listener Dependency Injection Rules
 
 `yiisoft/yii-event` coordinates `CallableFactory` and `Yiisoft\Injector\Injector` to resolve listener dependencies:
+
 1. **Constructor Injection (Recommended):** Inject services, mailers, and repositories via `__construct()`. Listeners are resolved from the PSR-11 container.
-2. **Method Invocation:** In `ListenerCollectionFactory`, listeners are executed via `$injector->invoke($callable, [$event])`. The event instance is passed as positional argument `0`.
+2. **Method Invocation:** In `ListenerCollectionFactory`, each configured listener is wrapped as `fn(object $event): mixed => $this->injector->invoke($this->callableFactory->create($callable), [$event])` (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`). The event instance is passed in the **positional arguments array**, and the `Injector` binds it to a parameter **by type** (`instanceof` check), **not by positional index** (`vendor/yiisoft/injector/src/ResolvingState.php`). Remaining parameters resolve in order: named argument → positional object match → container lookup for class types → default value → `null` for nullable types → `MissingRequiredArgumentException`. `Injector::invoke()` returns `mixed` (docblock only; no native return type is declared).
 3. **Statelessness Invariant:** In worker-based runtimes (RoadRunner, FrankenPHP, Swoole), listener instances may persist across multiple requests. Listeners must remain strictly stateless and never store request-specific state in class properties.
+
+### 3.3. Listener Ordering (No Priority Mechanism)
+
+- Listeners execute in **registration order**. `ListenerCollection::add()` appends the listener to the collection, and iteration yields listeners in insertion order (`vendor/yiisoft/event-dispatcher/src/Provider/ListenerCollection.php`).
+- Config-driven listeners execute in **config-array order**: `ListenerCollectionFactory::create()` registers definitions in the order they appear in the group array (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`).
+- **There is no priority mechanism** — none of `Dispatcher`, `Provider`, `ListenerCollection`, `CompositeDispatcher`, or `CompositeProvider` supports priorities, weights, or sorted execution.
+- When ordering matters, encode it explicitly: list listeners in the required sequence inside the config array (see [Section 4.2](#42-declarative-event-mapping--supported-listener-formats)), or split an event into ordered sub-events. Never rely on undocumented priority behavior.
 
 ---
 
@@ -252,14 +283,10 @@ Yii3 wires events declaratively using PHP configuration arrays compiled into `Yi
 
 ### 4.1. Configuration Architecture & Scopes
 
-Event configurations are organized by environment scope:
-- **`config/common/events.php`**: Shared domain and application events (order placed, user registered).
-- **`config/web/events.php`**: Web-specific events (`BeforeRequest`, `AfterEmit`).
-- **`config/console/events.php`**: Console-specific events (`ApplicationStartup`).
+**Parameter defaults.** `yiisoft/yii-event` ships the following defaults and reads which config group to load from them:
 
-In `config/params-web.php` and `config/params-console.php`, `yiisoft/yii-event` reads which group to load:
 ```php
-// config/params-web.php
+// vendor/yiisoft/yii-event/config/params-web.php
 return [
     'yiisoft/yii-event' => [
         'eventsConfigGroup' => 'events-web',
@@ -267,9 +294,8 @@ return [
 ];
 ```
 
-In `config/params-console.php`:
 ```php
-// config/params-console.php
+// vendor/yiisoft/yii-event/config/params-console.php
 return [
     'yiisoft/yii-event' => [
         'eventsConfigGroup' => 'events-console',
@@ -277,16 +303,71 @@ return [
 ];
 ```
 
-### 4.2. Declarative Event Mapping (`config/common/events.php`)
+**App template group declaration.** The Yii app template declares the event groups in `config/configuration.php`:
+
+```php
+// config/configuration.php (app template fragment)
+'events' => [],
+'events-web' => ['$events'],
+'events-console' => ['$events'],
+```
+
+The group names `events`, `events-web`, and `events-console` are official, **but the template does not pre-create `config/common/events.php`**. To use the shared group, create the file and map it into the merge plan:
+
+```php
+// config/configuration.php — after adding config/common/events.php
+'events' => 'common/events.php',
+'events-web' => ['$events'],
+'events-console' => ['$events'],
+```
+
+After editing `config/configuration.php`, rebuild the merge plan with `composer yii-config-rebuild`. The shared file's content then reaches **both** environment groups via the `$events` reference.
+
+**Merge modifiers (official recipe for events).** By default, arrays in configuration files are **not merged recursively** — later files overwrite whole array keys instead of merging. For events, enable both modifiers in the application's `Config` definition:
+
+```php
+declare(strict_types=1);
+
+use Yiisoft\Config\Config;
+use Yiisoft\Config\ConfigPaths;
+use Yiisoft\Config\Modifier\RecursiveMerge;
+use Yiisoft\Config\Modifier\ReverseMerge;
+
+$config = new Config(
+    new ConfigPaths(dirname(__DIR__)),
+    'dev',
+    [
+        RecursiveMerge::groups('params', 'events', 'events-web', 'events-console'),
+        ReverseMerge::groups('events', 'events-web', 'events-console'),
+    ],
+);
+```
+
+Source: `vendor/yiisoft/config/README.md` (Configuration modifiers). Reverse merge gives module-level event configs higher priority than the base config.
+
+**Custom group.** To isolate a module's events, redefine the parameter:
+
+```php
+// config/params.php
+return [
+    'yiisoft/yii-event' => [
+        'eventsConfigGroup' => 'events-api',
+    ],
+];
+```
+
+**Availability guarantees.** `yiisoft/event-dispatcher` ships no config at all. `yiisoft/yii-event` declares `events-web` and `events-console` as empty groups, so `$config->get('events-web')` and `$config->get('events-console')` always work once the package is installed (`vendor/yiisoft/yii-event/composer.json`, `config-plugin` section).
+
+### 4.2. Declarative Event Mapping & Supported Listener Formats
 
 The array format maps an event class name to an iterable list of listener definitions:
 
 ```php
 declare(strict_types=1);
 
-use App\Domain\Order\Event\OrderPlacedEvent;
-use App\Application\Order\Listener\SendOrderConfirmationEmailListener;
 use App\Application\Order\Listener\LogOrderPlacementListener;
+use App\Application\Order\Listener\SendOrderConfirmationEmailListener;
+use App\Domain\Order\Event\OrderPlacedEvent;
 
 return [
     OrderPlacedEvent::class => [
@@ -305,7 +386,24 @@ return [
 ];
 ```
 
+`CallableFactory` (`vendor/yiisoft/yii-event/src/CallableFactory.php`, marked `@internal`) accepts all of the following definition forms:
+
+| # | Definition Form | Resolution Behavior |
+|---|---|---|
+| 1 | `InvokableListener::class` (class-string with `__invoke`) | Instantiated and autowired via the DI container |
+| 2 | `[ServiceClass::class, 'methodName']` | Instance resolved from the PSR-11 container, method invoked |
+| 3 | `[ServiceClass::class, 'staticMethodName']` | Static method call |
+| 4 | Inline closure | Invoked directly |
+| 5 | Closure with extra type-hinted parameters (e.g. `Psr\Log\LoggerInterface $logger`) | Extra parameters resolved per-call by the `Injector` from the container |
+| 6 | Pre-built invokable object | Used as-is |
+| 7 | Any other container id/alias (string) | Resolved from the PSR-11 container and invoked |
+
+Each listener is registered under the **explicit event class name used as the config key** — the config pipeline never infers event names from listener signatures.
+
 ### 4.3. Verifying Event Configurations Ahead-of-Time
+
+> [!WARNING]
+> **Lazy resolution pitfall:** listener definitions are resolved at **dispatch time**, not at wiring time. An invalid definition (missing class, non-callable) fails only when the event actually fires (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`). Run the configuration checker in development environments and tests to catch broken definitions before production.
 
 `Yiisoft\Yii\Event\ListenerConfigurationChecker` validates that all configured listeners are valid callables and their target classes exist:
 
@@ -326,6 +424,13 @@ $checker->check($config->get('events-web'));
 $checker->check($config->get('events-console'));
 ```
 
+Details:
+
+- Validation rules: every event key must be a string naming an existing class, every value must be iterable, and every listener definition must resolve to a callable (`vendor/yiisoft/yii-event/src/ListenerConfigurationChecker.php`).
+- Exceptions: `Yiisoft\Yii\Event\InvalidEventConfigurationFormatException` and `Yiisoft\Yii\Event\InvalidListenerConfigurationException` (both implement `FriendlyExceptionInterface`).
+- Container retrieval of the checker works via DI autowiring of unregistered class names (yiisoft/di's default **non-strict mode**). Under `useStrictMode(true)` the lookup would fail — register the checker explicitly if you enable strict mode.
+- The checker is documented as resource-greedy and is intended for development environments and test runs, not production request handling.
+
 ---
 
 ## 5. Mandatory Post-Commit Event Dispatching Rule
@@ -333,6 +438,25 @@ $checker->check($config->get('events-console'));
 > ⚠️ **CRITICAL ARCHITECTURAL RULE:**
 > Never dispatch external side-effects (emails, SMS, webhooks, queue messages) **inside** an active database transaction.
 > If the transaction rolls back due to a subsequent query error or lock timeout, the email or queue job has already been sent!
+
+### Why the Rule Holds: the `transaction()` API
+
+`Yiisoft\Db\Connection\ConnectionInterface::transaction` has the signature:
+
+```php
+public function transaction(Closure $closure, ?string $isolationLevel = null): mixed
+```
+
+Semantics (`vendor/yiisoft/db/src/Connection/AbstractConnection.php`, `vendor/yiisoft/db/src/Connection/ConnectionInterface.php`):
+
+1. Begins a transaction and invokes `$closure($this)` — zero-argument closures are accepted.
+2. Commits when the callback returns and the isolation level is unchanged.
+3. On any `Throwable`, rolls back and **re-throws** — the callback result never escapes a failed transaction.
+4. Returns the callback result only **after** COMMIT.
+
+Therefore any code executed after `transaction()` returns is guaranteed to run strictly after a successful commit — the post-commit dispatch rule is enforced by the API itself. The second argument is forwarded to `beginTransaction()`; use the string constants declared on `Yiisoft\Db\Transaction\TransactionInterface`: `READ_UNCOMMITTED`, `READ_COMMITTED`, `REPEATABLE_READ`, `SERIALIZABLE`.
+
+Note: `dispatch()` returns the same (possibly mutated) event object that was passed in.
 
 ### Recommended Aggregate Event-Recording Pattern
 
@@ -456,25 +580,40 @@ final readonly class PlaceOrderUseCase
 
 ## 6. Official Yii3 Framework Events Reference
 
-Official packages emit standard PSR-14 events. Listeners can be attached in `config/common/events.php`, `config/web/events.php`, or `config/console/events.php`:
+Official packages emit standard PSR-14 events. Listeners can be attached in the event configuration groups described in [Section 4.1](#41-configuration-architecture--scopes).
+
+> [!IMPORTANT]
+> **Optional dispatcher pitfall:** every official emitter accepts `?EventDispatcherInterface $eventDispatcher = null` and dispatches null-safe — when no dispatcher is wired, events are **silently skipped** (no error, no log). Verify the dispatcher is actually injected (via the `yiisoft/yii-event` wiring from [Section 1](#1-psr-14-event-architecture-in-yii3)) before debugging "missing" events.
 
 ### 6.1. HTTP Application Lifecycle (`yiisoft/yii-http`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
 |---|---|---|---|
-| `ApplicationStartup` | `Yiisoft\Yii\Http\Event\ApplicationStartup` | Application starts before handling any requests | Empty marker class |
-| `BeforeRequest` | `Yiisoft\Yii\Http\Event\BeforeRequest` | Before processing an incoming PSR-7 request | `public readonly ServerRequestInterface $request` |
-| `AfterRequest` | `Yiisoft\Yii\Http\Event\AfterRequest` | After request has been handled by middleware stack | `public readonly ?ResponseInterface $response` |
-| `AfterEmit` | `Yiisoft\Yii\Http\Event\AfterEmit` | After the PSR-7 response is emitted to the client | `public readonly ?ResponseInterface $response` |
-| `ApplicationShutdown` | `Yiisoft\Yii\Http\Event\ApplicationShutdown` | When the application runtime terminates | Empty marker class |
+| `ApplicationStartup` | `Yiisoft\Yii\Http\Event\ApplicationStartup` | Application starts before handling any requests (dispatched by `Application::start()`) | Empty marker class |
+| `BeforeRequest` | `Yiisoft\Yii\Http\Event\BeforeRequest` | Before processing an incoming PSR-7 request (dispatched at the top of `Application::handle()`) | `public readonly ServerRequestInterface $request` |
+| `AfterRequest` | `Yiisoft\Yii\Http\Event\AfterRequest` | After request has been handled by middleware stack (dispatched in a `finally` block — fires even when middleware throws; `$response` is `null` if response generation failed) | `public readonly ?ResponseInterface $response` |
+| `AfterEmit` | `Yiisoft\Yii\Http\Event\AfterEmit` | After the PSR-7 response is emitted to the client (dispatched by `Application::afterEmit()`) | `public readonly ?ResponseInterface $response` |
+| `ApplicationShutdown` | `Yiisoft\Yii\Http\Event\ApplicationShutdown` | When the application runtime terminates (dispatched by `Application::shutdown()`) | Empty marker class |
 
 > [!NOTE]
 > In `BeforeRequest`, `AfterRequest`, and `AfterEmit`, direct property access (`$event->request`, `$event->response`) is preferred. The legacy getters `getRequest()` and `getResponse()` are deprecated.
 
+Lifecycle order in the HTTP runner: `Application::start()` → `Application::handle()` → response emit → `finally { afterEmit(); shutdown(); }` (`vendor/yii-runner-http/src/HttpApplicationRunner.php`, `vendor/yiisoft/yii-http/src/Application.php`).
+
 ### 6.2. Console Application Lifecycle (`yiisoft/yii-console`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
 |---|---|---|---|
-| `ApplicationStartup` | `Yiisoft\Yii\Console\Event\ApplicationStartup` | Before console command execution starts | `public ?string $commandName = null` |
-| `ApplicationShutdown` | `Yiisoft\Yii\Console\Event\ApplicationShutdown` | After console command execution finishes | `$event->getExitCode(): int` |
+| `ApplicationStartup` | `Yiisoft\Yii\Console\Event\ApplicationStartup` | Before console command execution starts (dispatched by `Application::start()` with the first CLI argument) | `public ?string $commandName = null` |
+| `ApplicationShutdown` | `Yiisoft\Yii\Console\Event\ApplicationShutdown` | After console command execution finishes (dispatched by `Application::shutdown(int $exitCode)`) | `$event->getExitCode(): int` |
+
+> [!NOTE]
+> Property visibility is asymmetric between the two events: `ApplicationStartup` exposes a **public** `$commandName`, while `ApplicationShutdown` keeps `$exitCode` **private** and exposes it only through the `getExitCode(): int` accessor. The exit code is a mandatory constructor argument.
+
+**Symfony Console bridge.** `Yiisoft\Yii\Console\Application` extends `\Symfony\Component\Console\Application` (`vendor/yiisoft/yii-console/src/Application.php`), so Symfony Console events flow through the same pipeline:
+
+- `Yiisoft\Yii\Console\SymfonyEventDispatcher` adapts Symfony's event dispatcher contract to PSR-14 (`vendor/yiisoft/yii-console/src/SymfonyEventDispatcher.php`). It **ignores the legacy string `$eventName`** argument — Symfony listeners must be subscribed **by event class name**.
+- The bridge is wired by default: the console DI configuration sets the application's dispatcher to `SymfonyEventDispatcher` (`vendor/yiisoft/yii-console/config/di-console.php`).
+- The package ships an `events-console` group subscribing `Symfony\Component\Console\Event\ConsoleErrorEvent` to `[ErrorListener::class, 'onError']` (`vendor/yiisoft/yii-console/config/events-console.php`).
+- `ConsoleErrorEvent` is the only Symfony event class wired by default in the package sources. Before subscribing to other Symfony Console event classes, verify them against the installed `symfony/console` version in `vendor/symfony/console/`.
 
 ### 6.3. User Authentication Lifecycle (`yiisoft/user`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
@@ -484,11 +623,23 @@ Official packages emit standard PSR-14 events. Listeners can be attached in `con
 | `BeforeLogout` | `Yiisoft\User\Event\BeforeLogout` | Before identity logout is completed | `$event->getIdentity(): IdentityInterface`<br>`$event->invalidate(): void`<br>`$event->isValid(): bool` |
 | `AfterLogout` | `Yiisoft\User\Event\AfterLogout` | After identity logout is completed | `$event->getIdentity(): IdentityInterface` |
 
+Notes:
+
+- All four events are dispatched by `Yiisoft\User\CurrentUser::login()` / `logout()` (`vendor/yiisoft/user/src/CurrentUser.php`).
+- `invalidate()` takes **no arguments**. The veto is read off the event returned by `dispatch()` — the emitter re-checks `isValid()` after dispatch, so listeners must mutate the dispatched instance.
+- `IdentityInterface` is `Yiisoft\Auth\IdentityInterface` (`vendor/yiisoft/auth/src/IdentityInterface.php`) — import it from `Yiisoft\Auth`, not `Yiisoft\User`.
+
 ### 6.4. Middleware Dispatcher Lifecycle (`yiisoft/middleware-dispatcher`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
 |---|---|---|---|
 | `BeforeMiddleware` | `Yiisoft\Middleware\Dispatcher\Event\BeforeMiddleware` | Before executing an individual PSR-15 middleware | `$event->getMiddleware(): MiddlewareInterface`<br>`$event->getRequest(): ServerRequestInterface` |
-| `AfterMiddleware` | `Yiisoft\Middleware\Dispatcher\Event\AfterMiddleware` | After executing an individual PSR-15 middleware | `$event->getMiddleware(): MiddlewareInterface`<br>`$event->getResponse(): ?ResponseInterface` |
+| `AfterMiddleware` | `Yiisoft\Middleware\Dispatcher\Event\AfterMiddleware` | After executing an individual PSR-15 middleware (dispatched inside a `finally` block — fires with a `null` response when the middleware throws) | `$event->getMiddleware(): MiddlewareInterface`<br>`$event->getResponse(): ?ResponseInterface` |
+
+Notes:
+
+- Event payloads are **private readonly** properties exposed through getters.
+- Events fire only when a dispatcher was injected into `MiddlewareDispatcher` (constructor parameter `?EventDispatcherInterface $eventDispatcher = null`; dispatches are null-safe in `MiddlewareStack`) — otherwise they are silently skipped.
+- Nested middleware pipelines emit onion-ordered event streams: `BeforeMiddleware` fires on ingress, `AfterMiddleware` on egress, in reverse order.
 
 ### 6.5. Mailer Lifecycle (`yiisoft/mailer`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
@@ -496,26 +647,144 @@ Official packages emit standard PSR-14 events. Listeners can be attached in `con
 | `BeforeSend` | `Yiisoft\Mailer\Event\BeforeSend` | Before message is dispatched by mailer | `public readonly MessageInterface $message`<br>`public bool $preventSendingMessage = false` |
 | `AfterSend` | `Yiisoft\Mailer\Event\AfterSend` | After message has been dispatched | `public readonly MessageInterface $message` |
 
-### 6.6. Active Record Lifecycle (`yiisoft/active-record`)
-| Event Class | Namespace | When Triggered | Public Properties & Accessors |
-|---|---|---|---|
-| `BeforeSave` | `Yiisoft\ActiveRecord\Event\BeforeSave` | Before record is saved (inserted or updated) | `public readonly ActiveRecordInterface $model`<br>`public ?array &$properties`<br>`$event->preventDefault(): void`<br>`$event->stopPropagation(): void`<br>`$event->isPropagationStopped(): bool`<br>`$event->isDefaultPrevented(): bool` |
-| `AfterSave` | `Yiisoft\ActiveRecord\Event\AfterSave` | After record has been saved | `public readonly ActiveRecordInterface $model` |
-| `BeforeInsert` | `Yiisoft\ActiveRecord\Event\BeforeInsert` | Before record is inserted | `public readonly ActiveRecordInterface $model`<br>`public ?array &$properties`<br>`$event->preventDefault(): void` |
-| `AfterInsert` | `Yiisoft\ActiveRecord\Event\AfterInsert` | After record has been inserted | `public readonly ActiveRecordInterface $model` |
-| `BeforeUpdate` | `Yiisoft\ActiveRecord\Event\BeforeUpdate` | Before record is updated | `public readonly ActiveRecordInterface $model`<br>`public ?array &$properties`<br>`$event->preventDefault(): void` |
-| `AfterUpdate` | `Yiisoft\ActiveRecord\Event\AfterUpdate` | After record has been updated | `public readonly ActiveRecordInterface $model`<br>`public int &$count` |
-| `BeforeDelete` | `Yiisoft\ActiveRecord\Event\BeforeDelete` | Before record is deleted | `public readonly ActiveRecordInterface $model`<br>`$event->preventDefault(): void` |
-| `AfterDelete` | `Yiisoft\ActiveRecord\Event\AfterDelete` | After record has been deleted | `public readonly ActiveRecordInterface $model` |
-| `AfterPopulate` | `Yiisoft\ActiveRecord\Event\AfterPopulate` | After record attributes are populated | `public readonly ActiveRecordInterface $model` |
+Notes:
 
-### 6.7. View Template Lifecycle (`yiisoft/view`)
+- Events fire only from `BaseMailer::send()` (`vendor/yiisoft/mailer/src/BaseMailer.php`) — only `BaseMailer` descendants emit them. `NullMailer` and `StubMailer` bypass events entirely.
+- Events fire only when a dispatcher was injected into the mailer's constructor (optional `?EventDispatcherInterface` parameter) — otherwise they are silently skipped.
+- **Veto pattern:** set the public mutable flag `$event->preventSendingMessage = true` in a `BeforeSend` listener; the mailer checks it after dispatch and skips sending.
+- **Mutation trap:** mutating the `$message` object inside `BeforeSend` has **no effect** on what is sent — `send()` transmits its local `$message` variable, not the event payload.
+
+### 6.6. Active Record Lifecycle (`yiisoft/active-record`)
+
+`yiisoft/active-record` defines **14 events** in `Yiisoft\ActiveRecord\Event`. All extend `AbstractEvent implements StoppableEventInterface` (`vendor/yiisoft/active-record/src/Event/AbstractEvent.php`), and every event carries `public readonly ActiveRecordInterface $model`.
+
+**Inherited API on every event** (`vendor/yiisoft/active-record/src/Event/AbstractEvent.php`):
+
+| Method | Semantics |
+|---|---|
+| `preventDefault(): void` | Marks the operation as cancelled |
+| `isDefaultPrevented(): bool` | Whether the operation was cancelled |
+| `stopPropagation(): void` | Halts remaining listeners for this event (does **not** cancel the operation) |
+| `isPropagationStopped(): bool` | Whether propagation was stopped |
+| `returnValue(mixed $returnValue): void` | Supplies a custom return value for the cancelled operation |
+| `getReturnValue(): mixed` | The custom return value, if set |
+
+**Event reference** (`vendor/yiisoft/active-record/src/Event/`):
+
+| Event Class | When Triggered | Constructor Payload |
+|---|---|---|
+| `BeforeSave` | Before record is saved (inserted or updated) | `public ?array &$properties` (by reference) |
+| `AfterSave` | After record has been saved | `$model` only |
+| `BeforeInsert` | Before record is inserted | `public ?array &$properties` (by reference) |
+| `AfterInsert` | After record has been inserted | `$model` only |
+| `BeforeUpdate` | Before record is updated | `public ?array &$properties` (by reference) |
+| `AfterUpdate` | After record has been updated | `public int &$count` (by reference; number of updated rows) |
+| `BeforeDelete` | Before record is deleted | `$model` only |
+| `AfterDelete` | After record has been deleted | `public int &$count` (by reference; number of deleted rows) |
+| `BeforePopulate` | Before the model is populated with data | `public array &$data` (by reference) |
+| `AfterPopulate` | After record attributes are populated | `public readonly array $data` |
+| `BeforeUpsert` | Before record is upserted (inserted or updated) | `public ?array &$insertProperties`, `public array\|bool &$updateProperties` (by reference) |
+| `AfterUpsert` | After record has been upserted | `$model` only |
+| `BeforeCreateQuery` | Before the query for the model is created | `$model` only |
+| `AfterCreateQuery` | After the query for the model has been created | `public readonly ActiveQueryInterface $query` |
+
+> [!NOTE]
+> The `&$properties`, `&$count`, `&$data`, `&$insertProperties`, `&$updateProperties` arguments are **by-reference** — listener mutations write back to the Active Record method's local variables and change the actual operation. `AfterDelete` also carries `&$count`, and `AfterPopulate` also carries `readonly $data` — these are not `$model`-only events.
+
+**Emission mechanics** (`vendor/yiisoft/active-record/src/Trait/EventsTrait.php`):
+
+- `EventsTrait` overrides `delete()`, `insert()`, `populateRecord()`, `query()`, `save()`, `update()`, and `upsert()`, and for each executes: dispatch **Before** → if `isDefaultPrevented()`, early-return (**After is NOT dispatched**) → run the actual operation → dispatch **After**.
+- `save()` internally cascades into `insert()` / `update()`, so one `save()` call emits a **4-event sequence**: `BeforeSave` → `BeforeInsert`/`BeforeUpdate` → `AfterInsert`/`AfterUpdate` → `AfterSave`.
+- `preventDefault()` skips the operation and suppresses the corresponding After event. A cancelled `delete()` or `update()` returns `getReturnValue() ?? 0`; a cancelled `insert()`/`save()`/`upsert()` returns nothing.
+- `stopPropagation()` never cancels the AR operation — the trait never checks `isPropagationStopped()`; it only affects remaining listeners via the dispatcher.
+- **Bulk operations `deleteAll()` / `updateAll()` bypass events entirely** (no trait overrides).
+
+**Registration is opt-in.** The base `ActiveRecord` / `AbstractActiveRecord` classes do **not** include `EventsTrait` — a model must opt in explicitly:
+
+```php
+declare(strict_types=1);
+
+namespace App\Model;
+
+use Yiisoft\ActiveRecord\ActiveRecord;
+use Yiisoft\ActiveRecord\Trait\EventsTrait;
+
+final class Post extends ActiveRecord
+{
+    use EventsTrait;
+
+    // ...properties and rules
+}
+```
+
+Two wiring paths exist (`vendor/yiisoft/active-record/src/Event/EventDispatcherProvider.php`):
+
+1. **Per-model attribute handlers.** `EventDispatcherProvider::get(static::class)` builds a dispatcher from PHP attributes on the model class and its properties (classes extending `Yiisoft\ActiveRecord\Event\Handler\AttributeHandlerProvider`). Built-in handlers: `SoftDelete`, `DefaultValue`, `DefaultValueOnInsert`, `DefaultDateTimeOnInsert`, `SetDateTimeOnUpdate`, `SetValueOnUpdate`.
+2. **External dispatcher.** Attach any PSR-14 dispatcher for a target model class:
+
+```php
+declare(strict_types=1);
+
+use App\Model\Post;
+use Yiisoft\ActiveRecord\Event\AfterSave;
+use Yiisoft\ActiveRecord\Event\BeforeSave;
+use Yiisoft\ActiveRecord\Event\EventDispatcherProvider;
+use Yiisoft\EventDispatcher\Dispatcher\Dispatcher;
+use Yiisoft\EventDispatcher\Provider\ListenerCollection;
+use Yiisoft\EventDispatcher\Provider\Provider;
+
+$collection = (new ListenerCollection())
+    ->add(
+        static function (BeforeSave $event): void {
+            // inspect / mutate $event->properties
+        },
+        BeforeSave::class,
+    )
+    ->add(
+        static function (AfterSave $event): void {
+            // post-persist side effects
+        },
+        AfterSave::class,
+    );
+
+EventDispatcherProvider::set(Post::class, new Dispatcher(new Provider($collection)));
+// EventDispatcherProvider::reset(); removes all registered dispatchers
+```
+
+### 6.7. View Template Lifecycle (`yiisoft/view`, `View`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
 |---|---|---|---|
 | `BeforeRender` | `Yiisoft\View\Event\View\BeforeRender` | Before rendering a view file | `$event->getView(): View`<br>`$event->getFile(): string`<br>`$event->getParameters(): array`<br>`$event->stopPropagation(): void`<br>`$event->isPropagationStopped(): bool` |
 | `AfterRender` | `Yiisoft\View\Event\View\AfterRender` | After rendering a view file | `$event->getView(): View`<br>`$event->getFile(): string`<br>`$event->getParameters(): array`<br>`$event->getResult(): string` |
-| `PageBegin` | `Yiisoft\View\Event\View\PageBegin` | At beginning of page layout rendering | Empty marker class |
-| `PageEnd` | `Yiisoft\View\Event\View\PageEnd` | At end of page layout rendering | Empty marker class |
+| `PageBegin` | `Yiisoft\View\Event\View\PageBegin` | At beginning of page layout rendering | Empty body; extends `ViewEvent`, inherits `getView(): View` |
+| `PageEnd` | `Yiisoft\View\Event\View\PageEnd` | At end of page layout rendering | Empty body; extends `ViewEvent`, inherits `getView(): View` |
+
+Notes:
+
+- `BeforeRender` implements `StoppableEventInterface`; payload properties are private readonly and exposed through getters. Calling `stopPropagation()` **cancels rendering**: the view returns `false` from its pre-render check and `render()` then returns an empty string (`vendor/yiisoft/view/src/ViewTrait.php`).
+- `AfterRender` implements `AfterRenderEventInterface` and is **not stoppable** — it has no propagation methods. Never describe or use it as a guard point.
+- Events fire only when a dispatcher was injected into the view constructor (`new View(?string $basePath = null, ?EventDispatcherInterface $eventDispatcher = null)`; null-safe dispatch in `vendor/yiisoft/view/src/View.php`) — otherwise they are silently skipped.
+
+### 6.8. Web View Lifecycle (`yiisoft/view`, `WebView`)
+
+`Yiisoft\View\WebView` — the common web-application view class — emits a **separate, parallel event group** `Yiisoft\View\Event\WebView\*`. A listener registered for the `Yiisoft\View\Event\View\*` group **never fires** for `WebView` rendering, and vice versa: subscribing to the wrong group silently misses events.
+
+Source: `vendor/yiisoft/view/src/Event/WebView/`, dispatch sites in `vendor/yiisoft/view/src/WebView.php`.
+
+| Event Class | Namespace | When Triggered | Public Properties & Accessors |
+|---|---|---|---|
+| `BeforeRender` | `Yiisoft\View\Event\WebView\BeforeRender` | Before `WebView::render()` renders a view file | `$event->getView(): WebView`<br>`$event->getFile(): string`<br>`$event->getParameters(): array`<br>`$event->stopPropagation(): void`<br>`$event->isPropagationStopped(): bool` |
+| `AfterRender` | `Yiisoft\View\Event\WebView\AfterRender` | After `WebView::render()` renders a view file | `$event->getView(): WebView`<br>`$event->getFile(): string`<br>`$event->getParameters(): array`<br>`$event->getResult(): string` |
+| `PageBegin` | `Yiisoft\View\Event\WebView\PageBegin` | Emitted by `WebView::beginPage()` | Empty body; extends `WebViewEvent`, inherits `getView(): WebView` |
+| `PageEnd` | `Yiisoft\View\Event\WebView\PageEnd` | Emitted by `WebView::endPage()` | Empty body; extends `WebViewEvent`, inherits `getView(): WebView` |
+| `Head` | `Yiisoft\View\Event\WebView\Head` | Emitted by `WebView::head()` | Empty body; extends `WebViewEvent`, inherits `getView(): WebView` |
+| `BodyBegin` | `Yiisoft\View\Event\WebView\BodyBegin` | Emitted by `WebView::beginBody()` | Empty body; extends `WebViewEvent`, inherits `getView(): WebView` |
+| `BodyEnd` | `Yiisoft\View\Event\WebView\BodyEnd` | Emitted by `WebView::endBody()` | Empty body; extends `WebViewEvent`, inherits `getView(): WebView` |
+
+Notes:
+
+- `WebView\BeforeRender` implements `StoppableEventInterface` (payload private readonly, getters exposed); `WebView\AfterRender` implements `AfterRenderEventInterface` and is not stoppable — mirroring the `View` group semantics from [Section 6.7](#67-view-template-lifecycle-yiisoftview-view).
+- `WebViewEvent` is an `@internal` abstract base class — do not extend it in application code; subscribe to the concrete event classes instead.
 
 ---
 
@@ -562,13 +831,14 @@ $provider->getListenersForEvent(
 
 // 3. Yiisoft\EventDispatcher\Provider\ListenerCollection::add
 // Signature: add(callable $listener, string ...$eventClassNames): self
-// Note: $eventClassNames is variadic; pass event classes positionally, or omit to auto-infer from listener type-hint
+// Note: $eventClassNames is variadic; pass event classes positionally, or omit to
+// auto-infer from the listener's first parameter type-hint
 $collection = $collection->add(
     $myListener,
     OrderPlacedEvent::class,
 );
 
-// Or auto-infer event class from listener __invoke parameter type:
+// Or auto-infer event class(es) from the listener's first parameter:
 $collection = $collection->add(
     listener: $myListener,
 );
@@ -584,48 +854,174 @@ $provider = new Provider(
 );
 
 // 6. Yiisoft\EventDispatcher\Dispatcher\CompositeDispatcher::attach
+// Signature: attach(EventDispatcherInterface $dispatcher): void
 $compositeDispatcher->attach(
     dispatcher: $dispatcher,
 );
 
 // 7. Yiisoft\EventDispatcher\Provider\CompositeProvider::attach
+// Signature: attach(ListenerProviderInterface $provider): void
 $compositeProvider->attach(
     provider: $provider,
 );
 
 // 8. Yiisoft\Yii\Event\CallableFactory::create
+// Signature: create(mixed $definition): callable (class is @internal)
 $callable = $callableFactory->create(
     definition: $myListener,
 );
 
 // 9. Yiisoft\Yii\Event\ListenerCollectionFactory::create
+// Signature: create(array $eventListeners): ListenerCollection
 $collection = $factory->create(
     eventListeners: $eventsArray,
 );
 
 // 10. Yiisoft\Yii\Event\ListenerConfigurationChecker::check
+// Signature: check(array $configuration): void
 $checker->check(
     configuration: $eventsArray,
 );
 ```
 
+**Auto-inference rules for `ListenerCollection::add(listener: ...)`:**
+
+- Inference triggers only when the variadic `$eventClassNames` is empty; the **first parameter of the callable** (any callable type, not strictly `__invoke`) is reflected and used as the event name (`vendor/yiisoft/event-dispatcher/src/Provider/ListenerCollection.php`).
+- Union type-hints register the listener under **all** member class names.
+- Callables with no parameters or an untyped first parameter throw `InvalidArgumentException`.
+- Inference is a `ListenerCollection::add()` feature **only** — `ListenerCollectionFactory::create()` (the config pipeline) always uses the explicit config key.
+
+> [!WARNING]
+> **Official documentation drift:** some published `yiisoft/event-dispatcher` README examples call a nonexistent `$compositeProvider->add(...)`. The real API on `CompositeProvider` / `CompositeDispatcher` is `attach()`. There is no `ListenerProvider` class (the interface implementation is named `Provider`), and neither `Provider` nor `ListenerCollection` has `attach()`. Always trust `vendor/yiisoft/*/src/` over documentation snippets.
+
 ---
 
-## 8. Anti-Pattern Matrix: Events & Listeners
+## 8. Testing Events & Listeners
+
+`yiisoft/test-support` provides ready-made PSR-14 test doubles (`vendor/yiisoft/test-support/src/`):
+
+### 8.1. SimpleEventDispatcher
+
+`Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` implements `EventDispatcherInterface`, records every dispatched event, and honors `StoppableEventInterface`. It is the same double used by the official packages' own test suites (`yiisoft/yii-event`, `yiisoft/mailer`, `yiisoft/active-record`).
+
+API:
+
+| Member | Purpose |
+|---|---|
+| `new SimpleEventDispatcher(Closure ...$listeners)` | Constructs the dispatcher with optional inline listeners |
+| `getEvents(): object[]` | All dispatched event instances, in order |
+| `getEventClasses(): string[]` | Class names of all dispatched events, in order — ideal for order assertions |
+| `clearEvents(): void` | Resets the recorded events |
+| `isClassTriggered(string $class, ?int $times = null): bool` | Whether an event of the exact class was dispatched (optionally exactly `$times` times) |
+| `isObjectTriggered(object $event, ?int $times = null): bool` | Whether this exact instance was dispatched |
+| `isInstanceOfTriggered(string $class, ?int $times = null): bool` | Whether an event `instanceof $class` was dispatched |
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Order;
+
+use App\Domain\Order\Event\OrderPlacedEvent;
+use PHPUnit\Framework\TestCase;
+use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
+
+final class OrderPlacedDispatchTest extends TestCase
+{
+    public function testOrderPlacedEventIsDispatchedExactlyOnce(): void
+    {
+        $eventDispatcher = new SimpleEventDispatcher();
+
+        $eventDispatcher->dispatch(new OrderPlacedEvent('ord-1', 'user-1', 1999));
+
+        $this->assertSame([OrderPlacedEvent::class], $eventDispatcher->getEventClasses());
+        $this->assertTrue($eventDispatcher->isClassTriggered(OrderPlacedEvent::class, 1));
+    }
+}
+```
+
+Inject the `SimpleEventDispatcher` instance wherever an `EventDispatcherInterface` is expected (constructor argument of the use case under test) to assert what was dispatched and in which order — e.g. that domain events were released strictly after the transaction committed (see [Section 5](#5-mandatory-post-commit-event-dispatching-rule)).
+
+### 8.2. Testing Active Record Event Semantics
+
+AR event behavior (veto, custom return values) is testable by wiring a `SimpleEventDispatcher` into `EventDispatcherProvider::set()` — the same technique used by `yiisoft/active-record`'s own test suite:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Model;
+
+use App\Model\Category;
+use PHPUnit\Framework\TestCase;
+use Yiisoft\ActiveRecord\Event\BeforeInsert;
+use Yiisoft\ActiveRecord\Event\EventDispatcherProvider;
+use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
+
+final class CategoryInsertPreventionTest extends TestCase
+{
+    protected function tearDown(): void
+    {
+        EventDispatcherProvider::reset();
+    }
+
+    public function testInsertCanBePrevented(): void
+    {
+        // class Category must use Yiisoft\ActiveRecord\Trait\EventsTrait (see Section 6.6)
+        EventDispatcherProvider::set(
+            Category::class,
+            new SimpleEventDispatcher(
+                static function (object $event): void {
+                    if ($event instanceof BeforeInsert) {
+                        $event->preventDefault();
+                    }
+                },
+            ),
+        );
+
+        $category = new Category();
+        $category->name = 'Prevented Category';
+
+        $category->insert();
+
+        $this->assertNull($category->id);
+    }
+}
+```
+
+### 8.3. SimpleContainer for Listener Resolution
+
+`Yiisoft\Test\Support\Container\SimpleContainer` (constructor accepts a `definitions` array, optional `factory`/`hasCallback` closures) resolves listeners and their dependencies without the full application container:
+
+```php
+declare(strict_types=1);
+
+use Psr\Log\LoggerInterface;
+use Yiisoft\Test\Support\Container\SimpleContainer;
+
+/** @var LoggerInterface $logger */
+$container = new SimpleContainer([
+    LoggerInterface::class => $logger,
+]);
+
+$listener = $container->get(\App\Application\Order\Listener\LogOrderPlacementListener::class);
+```
+
+---
+
+## 9. Anti-Pattern Matrix: Events & Listeners
 
 | Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
 |---|---|---|
 | ❌ **Calling `$this->trigger('eventName')`** | Legacy Yii2 Component mechanism. Yii3 domain models, controllers, and services do not extend `Component` and have no `trigger()` method. | ✅ Inject `Psr\EventDispatcher\EventDispatcherInterface` into constructor and call `$this->dispatcher->dispatch(new EventClass(...))`. |
 | ❌ **Calling legacy static facade `Yii::$app->trigger(...)`** | Global static service locators (`Yii::$app`) do not exist in Yii3. | ✅ Inject `EventDispatcherInterface` explicitly via constructor autowiring. |
 | ❌ **Using untyped string event names (`const EVENT_AFTER_LOGIN = 'afterLogin'`)** | Yii2 legacy string constants; impossible to refactor safely or type-check statically. | ✅ Define typed event classes: `new UserLoggedInEvent($user)`. |
-| ❌ **Extending legacy `yii\base\Event`** | In Yii3, events are pure PHP DTOs and do NOT extend any framework base class. | ✅ Define a pure PHP class: `final readonly class OrderPlacedEvent { ... }`. |
+| ❌ **Extending legacy `yii\base\Event`** | In Yii3, application events are pure PHP DTOs and do not extend any framework base class. (Package-local bases such as `AbstractEvent` or `ViewEvent` are framework internals — do not build app events on them.) | ✅ Define a pure PHP class: `final readonly class OrderPlacedEvent { ... }`. |
 | ❌ **Dispatching external side-effects inside an open DB transaction (`$db->transaction()`)** | Causes irreversible side effects (emails sent, SMS sent, jobs queued) if the transaction subsequently fails or rolls back. | ✅ Collect events inside the Aggregate Root (`recordEvent()`) and dispatch post-commit via `releaseEvents()`. |
 | ❌ **Fat Listeners containing direct DB transactions and complex mutations** | Violates Single Responsibility Principle and couples event listeners to storage internals. | ✅ Listeners should invoke dedicated Application Use Cases or dispatch async Queue jobs. |
 | ❌ **Passing Active DB Connections, open sockets, or ContainerInterface inside Event DTOs** | Bloats memory, breaks serialization (e.g. queue workers, audit logs), and creates tight coupling. | ✅ Include only primitive scalars, UUIDs/IDs, and immutable Value Objects in Event DTOs. |
 | ❌ **Throwing unhandled recoverable exceptions in normal event listeners** | Halts the PSR-14 dispatch loop and prevents subsequent listeners for the event from executing. | ✅ Catch and log recoverable errors inside the listener, or dispatch a retry job to a queue. |
-| ❌ **Calling non-existent `ListenerProvider::attach()`** | Hallucinated method. `ListenerCollection` is immutable (`add()` returns a clone); only `CompositeProvider` has `attach()`. | ✅ Register listeners declaratively in `config/common/events.php` or call `$collection->add()`. |
-| ❌ **Putting event listener configurations directly in `config/di.php`** | Pollutes DI container definitions; `yiisoft/yii-event` resolves listeners via `'eventsConfigGroup'` (`events`, `events-web`, `events-console`). | ✅ Put listener configurations in `config/common/events.php` or `config/web/events.php`. |
+| ❌ **Calling non-existent `ListenerProvider::attach()`** | Hallucinated method. `ListenerCollection` is immutable (`add()` returns a clone); only `CompositeProvider` has `attach()`. Beware: some official README examples contain this drift (`$compositeProvider->add(...)`). | ✅ Register listeners declaratively in the event config group or call `$collection->add()`. |
+| ❌ **Putting event listener configurations directly in `config/di.php`** | Pollutes DI container definitions; `yiisoft/yii-event` resolves listeners via the group named by the `eventsConfigGroup` parameter. Shipped defaults are `events-web` / `events-console`; bare `events` is the app template's common upstream group merged into both via the `$events` reference — it is never an `eventsConfigGroup` value. | ✅ Put listener configurations in `config/common/events.php` or `config/web/events.php` (see Section 4.1). |
 | ❌ **Using stateful listeners across requests in RoadRunner or FrankenPHP workers** | In persistent worker runtimes, listener instances remain in memory across requests, causing cross-request data leaks. | ✅ Keep listeners strictly stateless; inject shared services via `__construct()` and process only the passed `$event`. |
 | ❌ **Mutating events to pass arbitrary data between unrelated listeners** | Creates fragile coupling and unmaintainable dependencies on listener execution order. | ✅ Events represent immutable facts; use an explicit pipeline or workflow pattern if sequential data transformation is needed. |
 | ❌ **In-place mutation assumption: calling `$collection->add($listener)` without assignment** | `ListenerCollection` is immutable. `add()` creates and returns a cloned instance, leaving `$collection` unchanged. | ✅ Always reassign the result: `$collection = $collection->add($listener);`. |
-| ❌ **Overriding legacy `ActiveRecord::beforeSave()` or `behaviors()` in models** | Yii3 Active Record models do not use `beforeSave()` or `behaviors()`. | ✅ Subscribe to PSR-14 `Yiisoft\ActiveRecord\Event\BeforeSave` or use domain events released post-commit. |
+| ❌ **Overriding legacy `ActiveRecord::beforeSave()` or `behaviors()` in models** | Yii3 Active Record models do not use `beforeSave()` or `behaviors()`. Moreover, AR events are **opt-in**: the base classes do not dispatch anything until the model uses `EventsTrait` (or a dispatcher is attached via `EventDispatcherProvider::set()`), and bulk `deleteAll()` / `updateAll()` bypass events entirely. | ✅ Add `use Yiisoft\ActiveRecord\Trait\EventsTrait;` to the model, then subscribe to PSR-14 `Yiisoft\ActiveRecord\Event\BeforeSave` (see Section 6.6) or use domain events released post-commit. |

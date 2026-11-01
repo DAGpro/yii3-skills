@@ -1,15 +1,16 @@
-# Yii3 Testing: Architecture, Runners & PSR Doubles
+# Yii3 Testing: Architecture, Runners, PSR Doubles & Quality Gates
 
-> Practical guide for Yii3 test architecture, test runners (`phpunit/phpunit`, `testo/testo`, `codeception/codeception`), PSR test doubles from `yiisoft/test-support`, modern mocking rules, and unit test suites.
+> Practical guide for Yii3 test architecture, test runners (`phpunit/phpunit`, `testo/testo`, `codeception/codeception`), mutation testing (`infection/infection`), PSR test doubles from `yiisoft/test-support`, modern mocking rules, domain validation testing, fixture generation, and unit/console test suites.
 
 ---
 
 ## Table of Contents
 - [1. Testing Pyramid & Layer Boundaries](#1-testing-pyramid--layer-boundaries)
-- [2. Test Runner Ecosystem & The Exclusive Runner Rule](#2-test-runner-ecosystem--the-exclusive-runner-rule)
+- [2. Test Runner Ecosystem & Quality Gates](#2-test-runner-ecosystem--quality-gates)
   - [2.1. PHPUnit (PHPUnit 10 and 11)](#21-phpunit-phpunit-10-and-11)
   - [2.2. Testo (`testo/testo`)](#22-testo-testotesto)
   - [2.3. Codeception (`codeception/codeception` ^5)](#23-codeception-codeceptioncodeception-5)
+  - [2.4. Mutation Testing via Infection (`infection/infection`)](#24-mutation-testing-via-infection-infectioninfection)
 - [3. Ready-Made PSR Test Doubles (`yiisoft/test-support`)](#3-ready-made-psr-test-doubles-yiisofttest-support)
   - [3.1. PSR-14 Event Dispatcher (`SimpleEventDispatcher`)](#31-psr-14-event-dispatcher-simpleeventdispatcher)
   - [3.2. PSR-3 Logger (`SimpleLogger`)](#32-psr-3-logger-simplelogger)
@@ -22,10 +23,21 @@
   - [4.2. Common AI Model Hallucinations in PHPUnit 10/11 (Dead APIs)](#42-common-ai-model-hallucinations-in-phpunit-1011-dead-apis)
   - [4.3. Idiomatic PHPUnit 10/11 Mocking Patterns](#43-idiomatic-phpunit-1011-mocking-patterns)
   - [4.4. Mocking in Testo via Mockery (`php-testo/bridge-mockery`)](#44-mocking-in-testo-via-mockery-php-testobridge-mockery)
-- [5. Unit Testing Use Cases (Zero-Shot Compilable)](#5-unit-testing-use-cases-zero-shot-compilable)
+- [5. Unit Testing Use Cases, Validation, Fixtures & State Isolation](#5-unit-testing-use-cases-validation-fixtures--state-isolation)
+  - [5.1. Unit Testing Application Use Cases (Zero-Shot Compilable)](#51-unit-testing-application-use-cases-zero-shot-compilable)
+  - [5.2. Unit Testing Domain Validation (`yiisoft/validator`)](#52-unit-testing-domain-validation-yiisoftvalidator)
+  - [5.3. Test Fixture Assembly via `yiisoft/factory`](#53-test-fixture-assembly-via-yiisoftfactory)
+  - [5.4. Container State Isolation via `yiisoft/di` (`StateResetter`)](#54-container-state-isolation-via-yiisoftdi-stateresetter)
 - [6. Testing Console Commands (`yiisoft/yii-console`)](#6-testing-console-commands-yiisoftyii-console)
-- [7. Core PHP 8 Named Arguments & Signatures Reference](#7-core-php-8-named-arguments--signatures-reference)
-- [8. Core Anti-Pattern Matrix](#8-core-anti-pattern-matrix)
+  - [6.1. Modern Command Definition with `#[AsCommand]`](#61-modern-command-definition-with-ascommand)
+  - [6.2. Command Execution & Exit Codes (`ExitCode::*`)](#62-command-execution--exit-codes-exitcode)
+  - [6.3. Output Assertion & Line-Ending Normalization (`CommandTester::getDisplay(true)`)](#63-output-assertion--line-ending-normalization-commandtestergetdisplaytrue)
+  - [6.4. Testing Error & Failure Scenarios (`ExitCode::DATAERR`, `ExitCode::UNAVAILABLE`)](#64-testing-error--failure-scenarios-exitcodedataerr-exitcodeunavailable)
+  - [6.5. Interactive Prompts Simulation via `setInputs()`](#65-interactive-prompts-simulation-via-setinputs)
+  - [6.6. Autocompletion Testing via `CommandCompletionTester`](#66-autocompletion-testing-via-commandcompletiontester)
+  - [6.7. Container-Aware Resolution Testing (`CommandHelper` Pattern)](#67-container-aware-resolution-testing-commandhelper-pattern)
+- [7. Master PHP 8 Named Arguments & Signatures Reference](#7-master-php-8-named-arguments--signatures-reference)
+- [8. Comprehensive Anti-Pattern Matrix](#8-comprehensive-anti-pattern-matrix)
 - [9. Related Guides](#9-related-guides)
 
 ---
@@ -50,14 +62,14 @@ Yii3 applications are structured around clean boundaries, explicit dependency in
 
 | Test Layer | Target Components | Tools & Dependencies | Speed | Guide Reference |
 |---|---|---|---|---|
-| **Unit** | Domain entities, Value Objects, Application Use Cases, Validators, Formatters | `phpunit/phpunit`, `yiisoft/test-support` | Sub-millisecond | This guide (`testing-core.md`) |
-| **Console Integration** | Console commands, CLI input/output, ExitCode constants | `Symfony\Component\Console\Tester\CommandTester`, `yiisoft/yii-console` | Fast | This guide (`testing-core.md`) |
+| **Unit** | Domain entities, Value Objects, Application Use Cases, Validators, Formatters | `phpunit/phpunit`, `yiisoft/test-support`, `yiisoft/validator`, `yiisoft/factory` | Sub-millisecond | This guide (`testing-core.md`) |
+| **Console Integration** | Console commands, CLI input/output, ExitCode constants, interactive prompts | `Symfony\Component\Console\Tester\CommandTester`, `yiisoft/yii-console` | Fast | This guide (`testing-core.md`) |
 | **Database Integration** | Repositories, Migrations, Database queries, Cache stores | `yiisoft/db-sqlite`, `yiisoft/db-migration` | Fast (in-memory SQLite) | [`testing-database.md`](testing-database.md) |
 | **Functional HTTP** | End-to-end HTTP pipeline, routing, middleware stacks, request handlers | `yiisoft/yii-testing`, `yiisoft/yii-runner-http`, `codeception/codeception` | Moderate (in-memory HTTP runner) | [`testing-http.md`](testing-http.md) |
 
 ---
 
-## 2. Test Runner Ecosystem & The Exclusive Runner Rule
+## 2. Test Runner Ecosystem & Quality Gates
 
 Yii3 projects support modern PHP test runners: `phpunit/phpunit` serves as the ecosystem standard, while `testo/testo` is an ultra-fast, modern alternative.
 
@@ -77,7 +89,7 @@ composer require --dev phpunit/phpunit
 ```
 
 #### Configuration (`phpunit.xml.dist`)
-Modern Yii3 configurations use PHPUnit 10/11 XML schema:
+Modern Yii3 configurations use the PHPUnit 10/11 XML schema:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -89,7 +101,9 @@ Modern Yii3 configurations use PHPUnit 10/11 XML schema:
          executionOrder="depends,defects"
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
-         failOnWarning="true">
+         failOnWarning="true"
+         displayDetailsOnPhpunitDeprecations="true"
+         displayDetailsOnTestsThatTriggerWarnings="true">
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
@@ -105,12 +119,21 @@ Modern Yii3 configurations use PHPUnit 10/11 XML schema:
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <exclude>
+            <directory>src/Debug</directory>
+        </exclude>
     </source>
+    <coverage>
+        <report>
+            <clover outputFile="coverage.xml"/>
+            <html outputDirectory=".phpunit.cache/html"/>
+        </report>
+    </coverage>
 </phpunit>
 ```
 
 #### Test Structure in PHPUnit
-Tests extend `PHPUnit\Framework\TestCase` and use PHP 8 attributes:
+Tests extend `PHPUnit\Framework\TestCase` and use PHP 8 attributes (`#[Test]`, `#[DataProvider]`, `#[TestWith]`):
 
 ```php
 declare(strict_types=1);
@@ -119,6 +142,7 @@ namespace App\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class PriceCalculator
@@ -141,7 +165,18 @@ final class PriceCalculatorTest extends TestCase
         $this->assertSame($expected, $actual);
     }
 
+    #[Test]
+    #[TestWith([100.0, 0.05, 95.0])]
+    #[TestWith([200.0, 0.50, 100.0])]
+    public function calculatesInlineDiscount(float $price, float $discount, float $expected): void
+    {
+        $calculator = new PriceCalculator();
+        $this->assertSame($expected, $calculator->applyDiscount($price, $discount));
+    }
+
     /**
+     * Data providers in PHPUnit 10/11 MUST be public static methods.
+     *
      * @return array<string, array{0: float, 1: float, 2: float}>
      */
     public static function priceDataProvider(): array
@@ -173,7 +208,7 @@ composer require --dev testo/testo
 ```
 If using Mockery for mocks:
 ```bash
-composer require --dev php-testo/bridge-mockery
+composer require --dev php-testo/bridge-mockery mockery/mockery
 ```
 
 #### Initialization & Configuration (`testo.php`)
@@ -191,7 +226,7 @@ use Testo\Bridge\Mockery\MockeryPlugin;
 return new ApplicationConfig(
     src: ['src'],
     plugins: [
-        new MockeryPlugin(), // Automatically closes \Mockery::close() after tests
+        new MockeryPlugin(), // Automatically invokes \Mockery::close() after every test
     ],
     suites: [
         new SuiteConfig(
@@ -215,6 +250,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use Mockery;
+use Mockery\MockInterface;
 use Testo\Assert;
 use Testo\Test;
 use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
@@ -242,12 +278,18 @@ final class User
     }
 }
 
+final class UserRegisteredEvent
+{
+    public function __construct(public readonly User $user) {}
+}
+
 #[Test]
 final class RegisterUserTest
 {
     public function createsUserAndDispatchesEvent(): void
     {
         // 1. Mock via Mockery (auto-closed by MockeryPlugin)
+        /** @var UserRepositoryInterface&MockInterface $repository */
         $repository = Mockery::mock(UserRepositoryInterface::class);
         $repository->shouldReceive('save')->once();
 
@@ -257,10 +299,44 @@ final class RegisterUserTest
         // 3. Execute
         $user = new User(email: 'alex@example.com', name: 'Alex');
         $repository->save($user);
+        $dispatcher->dispatch(new UserRegisteredEvent($user));
 
         // 4. Assert via Testo\Assert
         Assert::same('alex@example.com', $user->getEmail());
         Assert::true($user->isActive());
+        Assert::true($dispatcher->isClassTriggered(UserRegisteredEvent::class));
+    }
+}
+```
+
+#### In-Memory Functional HTTP Testing on Testo
+Because `yiisoft/yii-testing` requires PHPUnit, functional HTTP testing on the Testo path executes requests in-memory via `HttpApplicationRunner::runAndGetResponse()`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Functional;
+
+use HttpSoft\Message\ServerRequest;
+use Testo\Assert;
+use Testo\Test;
+use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
+
+#[Test]
+final class HomePageTest
+{
+    public function testHomePageReturnsOk(): void
+    {
+        $runner = new HttpApplicationRunner(
+            rootPath: dirname(__DIR__, 2),
+            environment: 'test',
+        );
+
+        $request = new ServerRequest(method: 'GET', uri: '/');
+        $response = $runner->runAndGetResponse($request);
+
+        Assert::same(200, $response->getStatusCode());
+        Assert::true(str_contains((string) $response->getBody(), 'Yii3'));
     }
 }
 ```
@@ -275,11 +351,283 @@ vendor/bin/testo run --suite=Unit
 
 ### 2.3. Codeception (`codeception/codeception` ^5)
 
-Supported in Yii3 application templates (`yiisoft/app`, `yiisoft/app-api`) for projects requiring actor-driven test suites (`Api`, `Functional`, `Unit`, `Console`):
+Codeception 5 is supported in official Yii3 application templates (`yiisoft/app`, `yiisoft/app-api`) for projects requiring actor-driven test suites (`Console`, `Functional`, `Unit`, `Api`, `Web`).
 
-- Configured via `codeception.yml` and `<Suite>.suite.yml`.
-- Invoked via `vendor/bin/codecept run`.
-- In functional suites, requests are routed in-memory through `HttpApplicationRunner::runAndGetResponse()` (see [`testing-http.md`](testing-http.md)).
+#### Installation
+```bash
+composer require --dev codeception/codeception:^5.3.5 codeception/module-asserts codeception/module-cli
+```
+
+#### Root Configuration (`codeception.yml`)
+```yaml
+namespace: App\Tests
+support_namespace: Support
+bootstrap: bootstrap.php
+
+settings:
+  shuffle: true
+  colors: true
+
+paths:
+  tests: tests
+  output: tests/_output
+  data: tests/Support/Data
+  support: tests/Support
+
+coverage:
+  enabled: true
+  show_uncovered: true
+  show_only_summary: true
+  include:
+    - src/*
+    - public/index.php
+    - yii
+
+extensions:
+  enabled:
+    - Codeception\Extension\RunFailed
+```
+
+#### Suite Configuration (`tests/Functional.suite.yml`)
+```yaml
+actor: FunctionalTester
+modules:
+  enabled:
+    - Asserts
+```
+
+#### Actor Roles and Cest Implementation
+
+##### 1. `FunctionalTester` (`tests/Support/FunctionalTester.php`)
+Executes in-memory HTTP requests using `HttpApplicationRunner::runAndGetResponse()` without launching an external web server:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Support;
+
+use Codeception\Actor;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
+
+class FunctionalTester extends Actor
+{
+    use _generated\FunctionalTesterActions;
+
+    public function sendRequest(ServerRequestInterface $request): ResponseInterface
+    {
+        $runner = new HttpApplicationRunner(
+            rootPath: dirname(__DIR__, 2),
+            environment: 'test',
+        );
+
+        $response = $runner->runAndGetResponse($request);
+
+        $body = $response->getBody();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
+
+        return $response;
+    }
+}
+```
+
+##### 2. In-Memory Functional HTTP Test (`tests/Functional/HomePageCest.php`)
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Functional;
+
+use App\Tests\Support\FunctionalTester;
+use HttpSoft\Message\ServerRequest;
+use function PHPUnit\Framework\assertSame;
+use function PHPUnit\Framework\assertStringContainsString;
+
+final class HomePageCest
+{
+    public function testHomePageRenders(FunctionalTester $tester): void
+    {
+        $request = new ServerRequest(method: 'GET', uri: '/');
+        $response = $tester->sendRequest($request);
+
+        assertSame(200, $response->getStatusCode());
+        assertStringContainsString('Yii3', (string) $response->getBody());
+    }
+}
+```
+
+##### 3. `ConsoleTester` (`tests/Support/ConsoleTester.php`)
+Runs `./yii` CLI commands via shell invocation:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Support;
+
+use Codeception\Actor;
+
+class ConsoleTester extends Actor
+{
+    use _generated\ConsoleTesterActions;
+
+    public function runApp(?string $parameters = null): void
+    {
+        $this->runShellCommand(
+            dirname(__DIR__, 2) . '/yii' . ($parameters === null ? '' : (' ' . $parameters)),
+        );
+    }
+}
+```
+
+*Console Cest Usage (`tests/Console/EchoCest.php`):*
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Console;
+
+use App\Tests\Support\ConsoleTester;
+
+final class EchoCest
+{
+    public function testEchoCommand(ConsoleTester $I): void
+    {
+        $I->runApp('echo "Testing Yii3"');
+        $I->canSeeResultCodeIs(0);
+        $I->seeInShellOutput('Testing Yii3');
+    }
+}
+```
+
+##### 4. `ApiTester` (`tests/Support/ApiTester.php`)
+In `yiisoft/app-api`, REST endpoints are tested via `ApiTester` paired with `Codeception\Util\HttpCode`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Api;
+
+use App\Tests\Support\ApiTester;
+use Codeception\Util\HttpCode;
+
+final class UserApiCest
+{
+    public function testGetUsers(ApiTester $I): void
+    {
+        $I->sendGET('/api/users');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'status' => 'success',
+        ]);
+    }
+}
+```
+
+##### 5. `UnitTester` with `Codeception\Test\Unit`
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Unit;
+
+use Codeception\Test\Unit;
+use function PHPUnit\Framework\assertSame;
+
+final class ConfigTest extends Unit
+{
+    protected function _before(): void
+    {
+        // Setup state before each test
+    }
+
+    protected function _after(): void
+    {
+        // Teardown state after each test
+    }
+
+    public function testEnvironment(): void
+    {
+        assertSame('test', getenv('APP_ENV') ?: 'test');
+    }
+}
+```
+
+#### Execution
+```bash
+vendor/bin/codecept run
+vendor/bin/codecept run Functional
+```
+
+---
+
+### 2.4. Mutation Testing via Infection (`infection/infection`)
+
+Mutation testing operates as an **orthogonal quality gate** on top of the test runner. It systematically introduces subtle semantic mutations (flipped conditions, mutated return values, altered arithmetic) into source code to verify that test suites fail when bugs are introduced.
+
+#### Role & Architecture
+- **Does NOT replace the runner:** Operates above `phpunit/phpunit` or `testo/testo`.
+- **Metrics:** Calculates Mutation Score Indicator (MSI) and Covered Code MSI.
+- **Optimization:** Pairing Infection with `roave/infection-static-analysis-plugin` leverages static analysis (Psalm/PHPStan) to eliminate type-impossible mutants upfront, speeding up execution.
+
+#### Installation
+```bash
+composer require --dev infection/infection:^0.29 roave/infection-static-analysis-plugin:^1.35
+```
+
+Enable `infection/extension-installer` in `composer.json`:
+```json
+"config": {
+    "allow-plugins": {
+        "infection/extension-installer": true
+    }
+}
+```
+
+#### Configuration (`infection.json.dist`)
+Canonical configuration grounded in official `yiisoft/*` packages:
+
+```json
+{
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "text": "php://stderr",
+        "stryker": {
+            "report": "master"
+        }
+    },
+    "mutators": {
+        "@default": true,
+        "global-ignoreSourceCodeByRegex": [
+            ".*bool \\$useCache = true.*"
+        ],
+        "LogicalAndSingleSubExprNegation": {
+            "ignoreSourceCodeByRegex": [
+                ".*if \\(\\$enableIdn .*"
+            ]
+        }
+    }
+}
+```
+
+#### Testo Runner Bridge (`testo/bridge-infection`)
+While Infection natively supports PHPUnit, projects using the `testo/testo` runner require the official bridge package:
+```bash
+composer require --dev testo/bridge-infection
+```
+
+#### Execution
+```bash
+# Direct execution:
+vendor/bin/infection --threads=max --min-msi=80 --min-covered-msi=90
+
+# With static analysis plugin:
+vendor/bin/roave-infection-static-analysis-plugin --threads=max
+```
 
 ---
 
@@ -297,20 +645,27 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\StoppableEventInterface;
 use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
 
-final class UserRegisteredEvent
+final class UserRegisteredEvent implements StoppableEventInterface
 {
     public function __construct(
         public readonly string $userId,
+        private bool $stopped = false,
     ) {}
+
+    public function isPropagationStopped(): bool
+    {
+        return $this->stopped;
+    }
 }
 
 final class SimpleEventDispatcherTest extends TestCase
 {
     public function testRecordsAndVerifiesDispatchedEvents(): void
     {
-        // 1. Instantiate (accepts optional Closure listeners in constructor: Closure ...$listeners)
+        // 1. Instantiate (accepts optional Closure listeners: Closure ...$listeners)
         $eventDispatcher = new SimpleEventDispatcher();
 
         // 2. Dispatch event during test execution
@@ -324,10 +679,15 @@ final class SimpleEventDispatcherTest extends TestCase
         $this->assertCount(1, $events);
         $this->assertSame([UserRegisteredEvent::class], $eventClasses);
 
-        // 4. Assert with built-in verification methods (supports named arguments)
+        // 4. Verification helpers:
+        // isClassTriggered uses strict exact class equality ($event::class === $class)
         $this->assertTrue($eventDispatcher->isClassTriggered(UserRegisteredEvent::class));
         $this->assertTrue($eventDispatcher->isClassTriggered(class: UserRegisteredEvent::class, times: 1));
-        $this->assertTrue($eventDispatcher->isInstanceOfTriggered(class: UserRegisteredEvent::class));
+
+        // isInstanceOfTriggered supports interfaces and parent classes ($event instanceof $class)
+        $this->assertTrue($eventDispatcher->isInstanceOfTriggered(class: StoppableEventInterface::class));
+
+        // isObjectTriggered uses strict instance identity ($event === $e)
         $this->assertTrue($eventDispatcher->isObjectTriggered(event: $event, times: 1));
 
         // 5. Reset between steps if needed
@@ -336,6 +696,11 @@ final class SimpleEventDispatcherTest extends TestCase
     }
 }
 ```
+
+> [!NOTE]
+> Even if an event implements `StoppableEventInterface` and returns `isPropagationStopped() === true`, `SimpleEventDispatcher` **still records the event** in `$eventDispatcher->getEvents()`. Stoppability only suppresses listener invocation.
+
+---
 
 ### 3.2. PSR-3 Logger (`SimpleLogger`)
 
@@ -366,7 +731,7 @@ final class SimpleLoggerTest extends TestCase
 
         $this->assertCount(2, $messages);
         $this->assertSame(LogLevel::INFO, $messages[0]['level']);
-        // Placeholders are automatically interpolated from context!
+        // Placeholders matching /{([\w.]+)}/ are automatically interpolated from context!
         $this->assertSame('User usr_123 signed in successfully.', $messages[0]['message']);
         $this->assertSame(['userId' => 'usr_123'], $messages[0]['context']);
 
@@ -377,7 +742,11 @@ final class SimpleLoggerTest extends TestCase
 ```
 
 > [!CAUTION]
-> **Trap:** `SimpleLogger` does **NOT** have a `hasMessage()` method. Calling `$logger->hasMessage(...)` throws a `Fatal Error: Call to undefined method`. Always inspect `$logger->getMessages()`.
+> **Trap:** `SimpleLogger` has **NO** `hasMessage()` method and **NO** `clear()` / `clearMessages()` method.
+> - Calling `$logger->hasMessage(...)` throws a fatal `Error: Call to undefined method`. Always inspect `$logger->getMessages()`.
+> - If you need a clean logger state between test steps, instantiate a fresh `$logger = new SimpleLogger()`.
+
+---
 
 ### 3.3. PSR-16 Simple Cache (`MemorySimpleCache` & `SimpleCacheActionLogger`)
 
@@ -389,6 +758,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Yiisoft\Test\Support\SimpleCache\Action;
 use Yiisoft\Test\Support\SimpleCache\MemorySimpleCache;
 use Yiisoft\Test\Support\SimpleCache\SimpleCacheActionLogger;
 
@@ -405,20 +775,53 @@ final class MemorySimpleCacheTest extends TestCase
         $cache->set(key: 'new_key', value: 'secret', ttl: 3600);
         $this->assertSame('secret', $cache->get('new_key'));
 
-        // 2. Action Logger wrapper (records calls to get, set, delete, clear, etc.)
+        // getValues() returns full dictionary of stored values
+        $this->assertSame(['cached_rate' => 1.25, 'new_key' => 'secret'], $cache->getValues());
+
+        // 2. Action Logger decorator (records calls to get, set, delete, clear, has)
         $actionLogger = new SimpleCacheActionLogger($cache);
         $actionLogger->get('new_key');
         $actionLogger->delete('cached_rate');
 
         $actions = $actionLogger->getActions(); // list<Action>
         $this->assertCount(2, $actions);
-        $this->assertSame('get', $actions[0]->getAction());
+
+        // ALWAYS use Action constants rather than magic strings!
+        $this->assertSame(Action::GET, $actions[0]->getAction());
         $this->assertSame('new_key', $actions[0]->getKey());
-        $this->assertSame('delete', $actions[1]->getAction());
+        $this->assertSame(Action::DELETE, $actions[1]->getAction());
         $this->assertSame('cached_rate', $actions[1]->getKey());
+
+        // Compact inspection via getActionKeyList() -> list<array{0: string, 1: mixed}>
+        $this->assertSame(
+            [[Action::GET, 'new_key'], [Action::DELETE, 'cached_rate']],
+            $actionLogger->getActionKeyList(),
+        );
+    }
+
+    public function testSimulatesBackendCacheFailures(): void
+    {
+        $cache = new MemorySimpleCache();
+
+        // Simulate write, delete, or clear failures using public resilience properties
+        $cache->returnOnSet = false;
+        $this->assertFalse($cache->set('key', 'value'));
+
+        $cache->returnOnDelete = false;
+        $this->assertFalse($cache->delete('key'));
+
+        $cache->returnOnClear = false;
+        $this->assertFalse($cache->clear());
     }
 }
 ```
+
+> [!CAUTION]
+> **Traps:**
+> - `SimpleCacheActionLogger` has **NO** `clearActions()` method. To record fresh actions, instantiate a new `SimpleCacheActionLogger` wrapper.
+> - `Action` tracks `$action`, `$key`, `$value`, and `$ttl`. It does **NOT** track `$default` and has **NO** `getDefault()` method.
+
+---
 
 ### 3.4. PSR-20 Clock (`StaticClock`)
 
@@ -442,8 +845,22 @@ final class StaticClockTest extends TestCase
 
         $this->assertSame('2026-10-22 12:00:00', $clock->now()->format('Y-m-d H:i:s'));
     }
+
+    public function testSimulatesAdvancingTime(): void
+    {
+        $startTime = new DateTimeImmutable('2026-10-22 12:00:00');
+        $clock = new StaticClock($startTime);
+
+        // StaticClock is strictly immutable! It has NO modify() or set() method.
+        // To advance time, instantiate a new StaticClock with the modified DateTimeImmutable:
+        $futureClock = new StaticClock($startTime->modify('+15 minutes'));
+
+        $this->assertSame('2026-10-22 12:15:00', $futureClock->now()->format('Y-m-d H:i:s'));
+    }
 }
 ```
+
+---
 
 ### 3.5. PSR-11 Container (`SimpleContainer`)
 
@@ -455,6 +872,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Yiisoft\Test\Support\Container\Exception\NotFoundException;
 use Yiisoft\Test\Support\Container\SimpleContainer;
 
 interface DummyServiceInterface
@@ -462,10 +880,19 @@ interface DummyServiceInterface
     public function getName(): string;
 }
 
+final class DummyService implements DummyServiceInterface
+{
+    public function getName(): string
+    {
+        return 'synthesized';
+    }
+}
+
 final class SimpleContainerTest extends TestCase
 {
-    public function testLightweightContainerResolution(): void
+    public function testContainerResolutionAndDynamicFactory(): void
     {
+        // 1. Static pre-registered definitions
         $mockService = $this->createMock(DummyServiceInterface::class);
         $mockService->method('getName')->willReturn('mocked');
 
@@ -475,10 +902,34 @@ final class SimpleContainerTest extends TestCase
 
         $this->assertTrue($container->has(DummyServiceInterface::class));
         $this->assertSame($mockService, $container->get(DummyServiceInterface::class));
-        $this->assertSame('mocked', $container->get(DummyServiceInterface::class)->getName());
+
+        // 2. Dynamic synthesis with fallback $factory and $hasCallback closures
+        $dynamicContainer = new SimpleContainer(
+            definitions: [],
+            factory: static function (string $id): object {
+                if ($id === DummyServiceInterface::class) {
+                    return new DummyService();
+                }
+                throw new NotFoundException($id);
+            },
+            hasCallback: static fn(string $id): bool => $id === DummyServiceInterface::class,
+        );
+
+        $this->assertTrue($dynamicContainer->has(DummyServiceInterface::class));
+        $service = $dynamicContainer->get(DummyServiceInterface::class);
+        $this->assertSame('synthesized', $service->getName());
+
+        // Dynamic results are memoized in definitions
+        $this->assertSame($service, $dynamicContainer->get(DummyServiceInterface::class));
+
+        // Unregistered service throws NotFoundException with getId()
+        $this->expectException(NotFoundException::class);
+        $dynamicContainer->get('non_existent');
     }
 }
 ```
+
+---
 
 ### 3.6. PSR-7 Stream (`StringStream`)
 
@@ -490,6 +941,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Yiisoft\Test\Support\HttpMessage\StringStream;
 
 final class StringStreamTest extends TestCase
@@ -501,11 +953,36 @@ final class StringStreamTest extends TestCase
         $this->assertSame(19, $stream->getSize());
         $this->assertSame('{"status":"active"}', $stream->getContents());
         $this->assertTrue($stream->isSeekable());
+        $this->assertFalse($stream->isClosed());
+        $this->assertFalse($stream->isDetached());
+        $this->assertSame(19, $stream->getPosition());
 
         // Stream reading advances pointer; rewinding resets it
         $this->assertSame('', $stream->getContents());
         $stream->rewind();
+        $this->assertSame(0, $stream->getPosition());
         $this->assertSame('{"status":"active"}', $stream->getContents());
+
+        $stream->close();
+        $this->assertTrue($stream->isClosed());
+    }
+
+    public function testEdgeCaseTestingWithConfigurableFlags(): void
+    {
+        // Test error handling in middlewares by configuring unreadable, unseekable, or unwritable streams
+        $unreadableStream = new StringStream(
+            content: 'data',
+            readable: false,
+            writable: false,
+            seekable: false,
+        );
+
+        $this->assertFalse($unreadableStream->isReadable());
+        $this->assertFalse($unreadableStream->isWritable());
+        $this->assertFalse($unreadableStream->isSeekable());
+
+        $this->expectException(RuntimeException::class);
+        $unreadableStream->read(4);
     }
 }
 ```
@@ -540,7 +1017,7 @@ Mocking in modern PHP (PHP 8.2+, PHPUnit 10/11, Yii3) requires strict adherence 
 
 | Removed / Dead API (PHPUnit <= 9) | Why it crashes in PHPUnit 10/11 | Modern PHPUnit 10/11 Replacement |
 |---|---|---|
-| `->withConsecutive([$a], [$b])` | **Removed in PHPUnit 10.** Triggers fatal `Error: Call to undefined method`. | Use `willReturnCallback()` with invocation counter or matching array queue. |
+| `->withConsecutive([$a], [$b])` | **Removed in PHPUnit 10.** Triggers fatal `Error: Call to undefined method`. | Use `willReturnCallback()` with `$matcher->numberOfInvocations()` or array queue. |
 | `->getMockBuilder()->setMethods(...)` | **Removed in PHPUnit 10.** Triggers fatal undefined method. | Use `onlyMethods(['methodName'])` for existing methods, or `addMethods()` for non-existent ones. |
 | `->expects($this->at($index))` | **Removed in PHPUnit 10.** State-based index matcher dropped. | Use `$this->exactly($count)` with `willReturnOnConsecutiveCalls(...)` or callback inspection. |
 | `->expectExceptionMessageRegExp(...)` | **Removed in PHPUnit 10.** | Use `$this->expectExceptionMessageMatches('/pattern/')`. |
@@ -721,7 +1198,9 @@ final class UserRegistrationTest
 
 ---
 
-## 5. Unit Testing Use Cases (Zero-Shot Compilable)
+## 5. Unit Testing Use Cases, Validation, Fixtures & State Isolation
+
+### 5.1. Unit Testing Application Use Cases (Zero-Shot Compilable)
 
 Unit tests run in isolation with zero database or network overhead. Dependencies are either mocked via PHPUnit or replaced with `yiisoft/test-support` doubles:
 
@@ -837,6 +1316,7 @@ final class CreateUserUseCaseTest extends TestCase
 
         // Assert side effects
         $this->assertCount(1, $eventDispatcher->getEvents());
+        $this->assertTrue($eventDispatcher->isClassTriggered(UserCreatedEvent::class));
         $this->assertCount(1, $logger->getMessages());
         $this->assertSame('User alex@example.com created successfully.', $logger->getMessages()[0]['message']);
     }
@@ -845,22 +1325,371 @@ final class CreateUserUseCaseTest extends TestCase
 
 ---
 
-## 6. Testing Console Commands (`yiisoft/yii-console`)
+### 5.2. Unit Testing Domain Validation (`yiisoft/validator`)
 
-Yii3 console commands extend `Symfony\Component\Console\Command\Command`. Use Symfony's official `Symfony\Component\Console\Tester\CommandTester`:
+`Yiisoft\Validator\Validator` can be instantiated without parameters (`new Validator()`). It automatically wires an in-memory `SimpleRuleHandlerContainer` for built-in rules, enabling sub-millisecond unit testing of validation rules, DTOs, and custom rule handlers.
+
+#### 1. DTO Validation with Attributes
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Dto;
+
+use PHPUnit\Framework\TestCase;
+use Yiisoft\Validator\Rule\Email;
+use Yiisoft\Validator\Rule\Length;
+use Yiisoft\Validator\Rule\Required;
+use Yiisoft\Validator\Validator;
+
+final class RegisterUserDto
+{
+    public function __construct(
+        #[Required]
+        #[Length(min: 3, max: 50)]
+        public readonly string $username = '',
+
+        #[Required]
+        #[Email]
+        public readonly string $email = '',
+    ) {}
+}
+
+final class RegisterUserDtoTest extends TestCase
+{
+    public function testValidationPassesForValidData(): void
+    {
+        $validator = new Validator();
+        $dto = new RegisterUserDto('alex', 'alex@example.com');
+
+        $result = $validator->validate($dto);
+
+        $this->assertTrue($result->isValid());
+        $this->assertEmpty($result->getErrors());
+    }
+
+    public function testValidationFailsForInvalidData(): void
+    {
+        $validator = new Validator();
+        $dto = new RegisterUserDto('a', 'invalid-email');
+
+        $result = $validator->validate($dto);
+
+        $this->assertFalse($result->isValid());
+
+        // Target property assertions
+        $this->assertFalse($result->isPropertyValid('username'));
+        $this->assertFalse($result->isPropertyValid('email'));
+
+        $this->assertCount(1, $result->getPropertyErrorMessages('username'));
+        $this->assertCount(1, $result->getPropertyErrorMessages('email'));
+
+        // Inspect indexed errors
+        $errorsByPath = $result->getErrorMessagesIndexedByPath();
+        $this->assertArrayHasKey('username', $errorsByPath);
+        $this->assertArrayHasKey('email', $errorsByPath);
+    }
+}
+```
+
+#### 2. Custom Validation Rule & Handler Testing
+Testing a custom rule requiring external service dependencies using `SimpleRuleHandlerContainer`:
 
 ```php
 declare(strict_types=1);
 
-namespace App\Tests\Integration\Console;
+namespace App\Tests\Unit\Validation;
+
+use Attribute;
+use PHPUnit\Framework\TestCase;
+use Yiisoft\Validator\Exception\UnexpectedRuleException;
+use Yiisoft\Validator\Result;
+use Yiisoft\Validator\RuleHandlerInterface;
+use Yiisoft\Validator\RuleHandlerResolver\SimpleRuleHandlerContainer;
+use Yiisoft\Validator\RuleInterface;
+use Yiisoft\Validator\ValidationContext;
+use Yiisoft\Validator\Validator;
+
+interface UserCheckRepositoryInterface
+{
+    public function isEmailTaken(string $email): bool;
+}
+
+#[Attribute(Attribute::TARGET_PROPERTY)]
+final class UniqueEmail implements RuleInterface
+{
+    public function __construct(
+        public readonly string $message = 'This email is already registered.',
+    ) {}
+
+    public function getHandler(): string
+    {
+        return UniqueEmailHandler::class;
+    }
+}
+
+final class UniqueEmailHandler implements RuleHandlerInterface
+{
+    public function __construct(
+        private UserCheckRepositoryInterface $repository,
+    ) {}
+
+    public function validate(mixed $value, RuleInterface $rule, ValidationContext $context): Result
+    {
+        if (!$rule instanceof UniqueEmail) {
+            throw new UnexpectedRuleException(UniqueEmail::class, $rule);
+        }
+
+        $result = new Result();
+        if (!is_string($value) || $value === '') {
+            return $result;
+        }
+
+        if ($this->repository->isEmailTaken($value)) {
+            $result->addError($rule->message);
+        }
+
+        return $result;
+    }
+}
+
+final class UniqueEmailRuleTest extends TestCase
+{
+    public function testFailsWhenEmailIsTaken(): void
+    {
+        $mockRepo = $this->createMock(UserCheckRepositoryInterface::class);
+        $mockRepo->expects($this->once())
+            ->method('isEmailTaken')
+            ->with('taken@example.com')
+            ->willReturn(true);
+
+        // Inject handler mock dependencies into SimpleRuleHandlerContainer
+        $handlerContainer = new SimpleRuleHandlerContainer([
+            UniqueEmailHandler::class => new UniqueEmailHandler($mockRepo),
+        ]);
+
+        $validator = new Validator(ruleHandlerResolver: $handlerContainer);
+        $result = $validator->validate('taken@example.com', [new UniqueEmail()]);
+
+        $this->assertFalse($result->isValid());
+        $this->assertSame(['This email is already registered.'], $result->getErrorMessages());
+    }
+}
+```
+
+---
+
+### 5.3. Test Fixture Assembly via `yiisoft/factory`
+
+Per `package-catalog.md`, `yiisoft/factory` is the recommended tool to assemble domain fixtures and complex object graphs without hand-wiring repetitive constructors.
+
+#### Key Invariant: Unshared Instances
+Unlike a PSR-11 container, which caches instances as singletons, `Factory::create(...)` always returns a **fresh, unshared instance** (`assertNotSame($obj1, $obj2)`), preventing cross-test state pollution.
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Fixture;
 
 use PHPUnit\Framework\TestCase;
+use Yiisoft\Factory\Factory;
+use Yiisoft\Factory\StrictFactory;
+
+final class Address
+{
+    public function __construct(
+        public readonly string $street,
+        public readonly string $city,
+    ) {}
+}
+
+final class Customer
+{
+    public function __construct(
+        public readonly string $name,
+        public readonly Address $address,
+        public readonly bool $isVip = false,
+    ) {}
+}
+
+final class CustomerFixtureTest extends TestCase
+{
+    public function testAssemblesObjectGraphWithOverrides(): void
+    {
+        // 1. Configure baseline definitions
+        $factory = new Factory(definitions: [
+            Address::class => [
+                'class' => Address::class,
+                '__construct()' => [
+                    'street' => '100 Main St',
+                    'city' => 'Springfield',
+                ],
+            ],
+            Customer::class => [
+                'class' => Customer::class,
+                '__construct()' => [
+                    'name' => 'John Doe',
+                    'isVip' => false,
+                ],
+            ],
+        ]);
+
+        // 2. Create unshared baseline instances
+        $customer1 = $factory->create(Customer::class);
+        $customer2 = $factory->create(Customer::class);
+
+        $this->assertSame('John Doe', $customer1->name);
+        $this->assertSame('Springfield', $customer1->address->city);
+        $this->assertNotSame($customer1, $customer2); // Always unshared!
+
+        // 3. Override properties on the fly per scenario
+        /** @var Customer $vipCustomer */
+        $vipCustomer = $factory->create([
+            'class' => Customer::class,
+            '__construct()' => [
+                'name' => 'Alice Smith',
+                'isVip' => true,
+            ],
+        ]);
+
+        $this->assertSame('Alice Smith', $vipCustomer->name);
+        $this->assertTrue($vipCustomer->isVip);
+        $this->assertSame('Springfield', $vipCustomer->address->city);
+
+        // 4. Scoped definitions using withDefinitions()
+        $specialFactory = $factory->withDefinitions([
+            Address::class => [
+                'class' => Address::class,
+                '__construct()' => [
+                    'street' => '500 Tech Blvd',
+                    'city' => 'Metropolis',
+                ],
+            ],
+        ]);
+
+        /** @var Customer $metroCustomer */
+        $metroCustomer = $specialFactory->create(Customer::class);
+        $this->assertSame('Metropolis', $metroCustomer->address->city);
+    }
+
+    public function testStrictFactoryRequiresRegisteredDefinitions(): void
+    {
+        $strictFactory = new StrictFactory([
+            Address::class => [
+                'class' => Address::class,
+                '__construct()' => ['street' => '1st Ave', 'city' => 'Boston'],
+            ],
+        ]);
+
+        $this->assertInstanceOf(Address::class, $strictFactory->create(Address::class));
+
+        // StrictFactory throws NotFoundException if class definition is absent
+        $this->expectException(\Yiisoft\Factory\NotFoundException::class);
+        $strictFactory->create(Customer::class);
+    }
+}
+```
+
+---
+
+### 5.4. Container State Isolation via `yiisoft/di` (`StateResetter`)
+
+In long-running integration test suites where the PSR-11 container is booted once (`setUpBeforeClass()`) for performance, stateful services leak data into subsequent tests.
+
+`Yiisoft\Di\StateResetter` resets stateful singletons between tests via closures bound directly to the object's class scope:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Integration;
+
+use PHPUnit\Framework\TestCase;
+use Yiisoft\Di\Container;
+use Yiisoft\Di\ContainerConfig;
+use Yiisoft\Di\StateResetter;
+
+final class InMemoryBuffer
+{
+    /** @var list<string> */
+    private array $buffer = [];
+
+    public function push(string $item): void
+    {
+        $this->buffer[] = $item;
+    }
+
+    public function count(): int
+    {
+        return count($this->buffer);
+    }
+}
+
+final class StateIsolationTest extends TestCase
+{
+    private static Container $container;
+
+    public static function setUpBeforeClass(): void
+    {
+        $config = ContainerConfig::create()->withDefinitions([
+            InMemoryBuffer::class => [
+                'class' => InMemoryBuffer::class,
+                // Reserved 'reset' key: closure is bound directly to the instance!
+                // It can access and clear private properties:
+                'reset' => function () {
+                    $this->buffer = [];
+                },
+            ],
+        ]);
+
+        self::$container = new Container($config);
+    }
+
+    protected function tearDown(): void
+    {
+        // Reset all stateful container services after each test
+        self::$container->get(StateResetter::class)->reset();
+        parent::tearDown();
+    }
+
+    public function testStepOneAddsItems(): void
+    {
+        $buffer = self::$container->get(InMemoryBuffer::class);
+        $buffer->push('alpha');
+        $buffer->push('beta');
+
+        $this->assertSame(2, $buffer->count());
+    }
+
+    public function testStepTwoStartsCleanDueToStateResetter(): void
+    {
+        // Thanks to tearDown() StateResetter::reset(), the buffer is clean!
+        $buffer = self::$container->get(InMemoryBuffer::class);
+        $this->assertSame(0, $buffer->count());
+    }
+}
+```
+
+---
+
+## 6. Testing Console Commands (`yiisoft/yii-console`)
+
+Yii3 console commands extend `Symfony\Component\Console\Command\Command` and execute within `Yiisoft\Yii\Console\Application`. Integration testing uses Symfony's official `Symfony\Component\Console\Tester\CommandTester`.
+
+### 6.1. Modern Command Definition with `#[AsCommand]`
+
+> [!WARNING]
+> `protected static $defaultName` and `$this->setDescription(...)` are deprecated in Symfony 6.1+ / 7.0 and are not used in Yii3. Console commands must declare their identity using the PHP 8 attribute `#[AsCommand]`.
+
+```php
+declare(strict_types=1);
+
+namespace App\Console\Command;
+
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Tester\CommandTester;
 use Yiisoft\Yii\Console\ExitCode;
 
 interface NewsletterSenderInterface
@@ -868,10 +1697,12 @@ interface NewsletterSenderInterface
     public function sendAll(string $campaignId, bool $dryRun): int;
 }
 
+#[AsCommand(
+    name: 'newsletter:send',
+    description: 'Sends newsletters for a given campaign',
+)]
 final class SendNewsletterCommand extends Command
 {
-    protected static $defaultName = 'newsletter:send';
-
     public function __construct(
         private NewsletterSenderInterface $sender,
     ) {
@@ -881,9 +1712,8 @@ final class SendNewsletterCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setDescription('Sends newsletters for a given campaign')
             ->addArgument('campaign-id', InputArgument::REQUIRED, 'The campaign ID')
-            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Simulate sending without sending');
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Simulate sending without dispatching emails');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -891,12 +1721,51 @@ final class SendNewsletterCommand extends Command
         $campaignId = (string) $input->getArgument('campaign-id');
         $dryRun = (bool) $input->getOption('dry-run');
 
+        if ($campaignId === '') {
+            $output->writeln('<error>Campaign ID cannot be empty.</error>');
+            return ExitCode::DATAERR;
+        }
+
         $count = $this->sender->sendAll($campaignId, $dryRun);
-        $output->writeln("Successfully processed $count subscribers");
+        $output->writeln("Successfully processed $count subscribers.");
 
         return ExitCode::OK;
     }
 }
+```
+
+---
+
+### 6.2. Command Execution & Exit Codes (`ExitCode::*`)
+
+Yii3 exit codes return constants from `Yiisoft\Yii\Console\ExitCode`, conforming to FreeBSD `sysexits(3)`:
+
+- `ExitCode::OK` (0) — Success.
+- `ExitCode::UNSPECIFIED_ERROR` (1) — Generic failure.
+- `ExitCode::USAGE` (64) — Command line argument syntax error.
+- `ExitCode::DATAERR` (65) — Input data validation failure.
+- `ExitCode::NOINPUT` (66) — Missing or unreadable input file.
+- `ExitCode::UNAVAILABLE` (69) — External service/network unavailable.
+- `ExitCode::SOFTWARE` (70) — Internal software exception.
+- `ExitCode::CONFIG` (78) — Misconfigured application state.
+
+---
+
+### 6.3. Output Assertion & Line-Ending Normalization (`CommandTester::getDisplay(true)`)
+
+> [!IMPORTANT]
+> Always pass `true` to `$tester->getDisplay(true)` in assertions. This normalizes line endings (`\r\n` -> `\n`) across Windows and Linux, preventing flaky CI test failures:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Integration\Console;
+
+use App\Console\Command\NewsletterSenderInterface;
+use App\Console\Command\SendNewsletterCommand;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Tester\CommandTester;
+use Yiisoft\Yii\Console\ExitCode;
 
 final class SendNewsletterCommandTest extends TestCase
 {
@@ -919,55 +1788,306 @@ final class SendNewsletterCommandTest extends TestCase
             '--dry-run' => true,
         ]);
 
-        // 4. Assert exit code and display output
+        // 4. Assert exit code and normalized display output
         $this->assertSame(ExitCode::OK, $exitCode);
-        $this->assertSame(Command::SUCCESS, $exitCode);
-        $output = $tester->getDisplay();
-        $this->assertStringContainsString('Successfully processed 42 subscribers', $output);
+        $tester->assertCommandIsSuccessful();
+
+        $output = $tester->getDisplay(normalize: true);
+        $this->assertStringContainsString('Successfully processed 42 subscribers.', $output);
     }
 }
 ```
 
 ---
 
-## 7. Core PHP 8 Named Arguments & Signatures Reference
+### 6.4. Testing Error & Failure Scenarios (`ExitCode::DATAERR`, `ExitCode::UNAVAILABLE`)
 
-Below is a reference of exact parameter names for key testing classes and methods to prevent `Error: Unknown named parameter` in PHP 8:
+```php
+declare(strict_types=1);
 
-| Class / Method | Signature & Named Parameters |
-|---|---|
-| `Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher::__construct` | `__construct(Closure ...$listeners)` |
-| `SimpleEventDispatcher::isClassTriggered` | `isClassTriggered(string $class, ?int $times = null): bool` |
-| `SimpleEventDispatcher::isInstanceOfTriggered` | `isInstanceOfTriggered(string $class, ?int $times = null): bool` |
-| `SimpleEventDispatcher::isObjectTriggered` | `isObjectTriggered(object $event, ?int $times = null): bool` |
-| `Yiisoft\Test\Support\Log\SimpleLogger::log` | `log(mixed $level, string\|Stringable $message, array $context = []): void` |
-| `Yiisoft\Test\Support\SimpleCache\MemorySimpleCache::__construct` | `__construct(array $cacheData = [])` |
-| `MemorySimpleCache::set` | `set(string $key, mixed $value, int\|DateInterval\|null $ttl = null): bool` |
-| `Yiisoft\Test\Support\SimpleCache\SimpleCacheActionLogger::__construct` | `__construct(CacheInterface $cacheService, array $cacheData = [])` |
-| `Yiisoft\Test\Support\Clock\StaticClock::__construct` | `__construct(DateTimeImmutable $now)` |
-| `Yiisoft\Test\Support\Container\SimpleContainer::__construct` | `__construct(array $definitions = [], ?Closure $factory = null, ?Closure $hasCallback = null)` |
-| `Yiisoft\Test\Support\HttpMessage\StringStream::__construct` | `__construct(string $content = '', int $position = 0, bool $readable = true, bool $writable = true, bool $seekable = true, Closure\|array\|null $metadata = null)` |
+namespace App\Tests\Integration\Console;
+
+use App\Console\Command\NewsletterSenderInterface;
+use App\Console\Command\SendNewsletterCommand;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use Symfony\Component\Console\Tester\CommandTester;
+use Yiisoft\Yii\Console\ExitCode;
+
+final class SendNewsletterCommandFailureTest extends TestCase
+{
+    public function testReturnsDataErrorOnEmptyCampaign(): void
+    {
+        $sender = $this->createMock(NewsletterSenderInterface::class);
+        $sender->expects($this->never())->method('sendAll');
+
+        $command = new SendNewsletterCommand($sender);
+        $tester = new CommandTester($command);
+
+        $exitCode = $tester->execute([
+            'campaign-id' => '',
+        ]);
+
+        $this->assertSame(ExitCode::DATAERR, $exitCode);
+        $this->assertStringContainsString('Campaign ID cannot be empty.', $tester->getDisplay(true));
+    }
+
+    public function testHandlesExternalServiceFailure(): void
+    {
+        $sender = $this->createMock(NewsletterSenderInterface::class);
+        $sender->expects($this->once())
+            ->method('sendAll')
+            ->willThrowException(new RuntimeException('SMTP gateway timed out.'));
+
+        $command = new SendNewsletterCommand($sender);
+        $tester = new CommandTester($command);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('SMTP gateway timed out.');
+
+        $tester->execute([
+            'campaign-id' => 'camp_2026_q4',
+        ]);
+    }
+}
+```
 
 ---
 
-## 8. Core Anti-Pattern Matrix
+### 6.5. Interactive Prompts Simulation via `setInputs()`
 
-| Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
+Commands utilizing confirmation prompts or user input (`SymfonyStyle::confirm`, `SymfonyStyle::ask`) are tested by simulating keystrokes via `$tester->setInputs([...])`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Integration\Console;
+
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Console\Tester\CommandTester;
+use Yiisoft\Yii\Console\ExitCode;
+
+#[AsCommand(name: 'database:truncate', description: 'Truncates test database')]
+final class TruncateDatabaseCommand extends Command
+{
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+        if (!$io->confirm('Are you sure you want to truncate the database?', false)) {
+            $io->warning('Operation cancelled.');
+            return ExitCode::OK;
+        }
+
+        $io->success('Database truncated successfully.');
+        return ExitCode::OK;
+    }
+}
+
+final class TruncateDatabaseCommandTest extends TestCase
+{
+    public function testUserConfirmsTruncation(): void
+    {
+        $command = new TruncateDatabaseCommand();
+        $tester = new CommandTester($command);
+
+        // Feed 'yes' to simulated stdin
+        $tester->setInputs(['yes']);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(ExitCode::OK, $exitCode);
+        $this->assertStringContainsString('Database truncated successfully.', $tester->getDisplay(true));
+    }
+
+    public function testUserCancelsTruncation(): void
+    {
+        $command = new TruncateDatabaseCommand();
+        $tester = new CommandTester($command);
+
+        // Feed 'no' to simulated stdin
+        $tester->setInputs(['no']);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(ExitCode::OK, $exitCode);
+        $this->assertStringContainsString('Operation cancelled.', $tester->getDisplay(true));
+    }
+}
+```
+
+---
+
+### 6.6. Autocompletion Testing via `CommandCompletionTester`
+
+Commands implementing input autocompletion (`complete()`) can be tested using `CommandCompletionTester`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Integration\Console;
+
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Completion\CompletionInput;
+use Symfony\Component\Console\Completion\CompletionSuggestions;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Tester\CommandCompletionTester;
+
+#[AsCommand(name: 'cache:clear', description: 'Clears application cache')]
+final class ClearCacheCommand extends Command
+{
+    protected function configure(): void
+    {
+        $this->addArgument('pool', InputArgument::REQUIRED, 'The cache pool to clear');
+    }
+
+    public function complete(CompletionInput $input, CompletionSuggestions $suggestions): void
+    {
+        if ($input->mustSuggestArgumentValuesFor('pool')) {
+            $suggestions->suggestValues(['redis', 'file', 'db', 'apcu']);
+        }
+    }
+}
+
+final class ClearCacheCommandTest extends TestCase
+{
+    public function testAutocompletesCachePools(): void
+    {
+        $command = new ClearCacheCommand();
+        $tester = new CommandCompletionTester($command);
+
+        $suggestions = $tester->complete(['']);
+
+        $this->assertSame(['redis', 'file', 'db', 'apcu'], $suggestions);
+    }
+}
+```
+
+---
+
+### 6.7. Container-Aware Resolution Testing (`CommandHelper` Pattern)
+
+To test that a console command is discoverable via `CommandLoader` and resolves properly from the PSR-11 container with all its autowired dependencies, use the official `CommandHelper` pattern (grounded in the `yiisoft/db-migration` test suite):
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Support;
+
+use LogicException;
+use Psr\Container\ContainerInterface;
+use ReflectionClass;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
+use Yiisoft\Yii\Console\Application;
+use Yiisoft\Yii\Console\CommandLoader;
+
+final class CommandHelper
+{
+    /**
+     * @psalm-param class-string<Command> $commandClass
+     */
+    public static function getCommandTester(ContainerInterface $container, string $commandClass): CommandTester
+    {
+        $attributes = (new ReflectionClass($commandClass))->getAttributes(AsCommand::class);
+        if (empty($attributes)) {
+            throw new LogicException("The command \"$commandClass\" does not have the #[AsCommand] attribute.");
+        }
+        $commandName = $attributes[0]->newInstance()->name;
+
+        $application = new Application();
+        $application->setCommandLoader(
+            new CommandLoader($container, [$commandName => $commandClass]),
+        );
+
+        return new CommandTester($application->find($commandName));
+    }
+}
+```
+
+---
+
+## 7. Master PHP 8 Named Arguments & Signatures Reference
+
+Below is a master reference of exact parameter names and signatures for key testing classes to guarantee safety against `Error: Unknown named parameter` in PHP 8:
+
+| Class / Component | Method / Property | Exact Signature Grounding |
 |---|---|---|
-| **Global state: `Yii::$app` or static locator** | Yii3 has no global state or `Yii::$app`. Calling it throws `Error: Class "Yii" not found`. | Inject dependencies via constructor or use PSR-11 container in fixtures. |
-| **Mutating container: `$this->getContainer()->set(...)`** | PSR-11 `ContainerInterface` only has `get()` and `has()`. Calling `set()` throws a Fatal Error. | Pass mocks directly to constructor in unit tests, or use `SimpleContainer`. |
-| **Phantom method: `$logger->hasMessage(...)`** | `Yiisoft\Test\Support\Log\SimpleLogger` does not have `hasMessage()`; throws fatal error. | Inspect `$logger->getMessages()` array: `[['level' => ..., 'message' => ..., 'context' => ...]]`. |
-| **Mocking final or readonly classes in PHPUnit** | PHPUnit throws `InvalidArgumentException: Class is declared "final" and cannot be mocked`. | Mock the interface that the class implements (e.g. `UserRepositoryInterface`), or use real instances for DTOs/Entities. |
-| **Using dead PHPUnit methods: `withConsecutive()`, `setMethods()`, `at()`** | Removed in PHPUnit 10; triggers fatal `Error: Call to undefined method`. | Use `willReturnCallback()` with invocation counter, `onlyMethods()`, and `$this->exactly($n)`. |
-| **Over-mocking PSR interfaces with `$this->createMock()`** | Creates brittle, verbose interaction expectations that break upon internal logging/event changes. | Use ready-made in-memory doubles from `yiisoft/test-support` (`SimpleLogger`, `SimpleEventDispatcher`, `StaticClock`, etc.). |
-| **Mocking Domain Entities or Value Objects** | Entities and VOs hold pure state with zero I/O; mocking them creates unrealistic fake states. | Instantiate real domain objects directly; assert against returned object state. |
-| **Non-boolean return in `$this->callback(...)`** | Closure returning `void` or truthy non-bool breaks PHPUnit constraint evaluator. | Ensure callback has strict `: bool` return type: `fn (User $u): bool => $u->getId() === 1`. |
-| **Inverted assertion arguments: `assertSame($actual, $expected)`** | PHPUnit signature is `assertSame($expected, $actual)`. Inverted arguments produce confusing, backwards failure diffs in CI. | Always pass expected first: `$this->assertSame('Alex', $user->getName())`. |
-| **Non-static Data Providers in PHPUnit 10/11** | Non-static data providers are deprecated in PHPUnit 10 and fail in PHPUnit 11. | Declare providers as `public static function provider(): array`. |
-| **Flaky time tests with `time()` or `sleep()`** | Tests fail randomly during second rollovers or CI latency spikes. | Inject PSR-20 `ClockInterface` and use `new StaticClock(new DateTimeImmutable('...'))`. |
-| **Placing `expectException()` after throwing call** | PHPUnit must register the expectation **before** the exception is thrown; post-call throws uncaught exception. | Always place `$this->expectException(...)` before the triggering method invocation. |
-| **Installing both PHPUnit and Testo together** | Conflicting runner binaries (`vendor/bin/phpunit`, `vendor/bin/testo`), competing coverage/mutation plugins, and duplicate test discovery in CI. | Pick one runner per project: standard `phpunit/phpunit` (mandatory if using `yiisoft/yii-testing`) or modern `testo/testo`. |
-| **Using `FunctionalTestCase` with Testo runner** | `FunctionalTestCase` hard-extends `PHPUnit\Framework\TestCase`. Testo executes standalone classes and doesn't run PHPUnit test suites. | If using Testo, run functional HTTP tests via `HttpApplicationRunner::runAndGetResponse()` with `Testo\Assert`. |
+| `Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` | `__construct` | `public function __construct(\Closure ...$listeners)` |
+| `SimpleEventDispatcher` | `dispatch` | `public function dispatch(object $event): object` |
+| `SimpleEventDispatcher` | `isClassTriggered` | `public function isClassTriggered(string $class, ?int $times = null): bool` |
+| `SimpleEventDispatcher` | `isInstanceOfTriggered` | `public function isInstanceOfTriggered(string $class, ?int $times = null): bool` |
+| `SimpleEventDispatcher` | `isObjectTriggered` | `public function isObjectTriggered(object $event, ?int $times = null): bool` |
+| `SimpleEventDispatcher` | `clearEvents` | `public function clearEvents(): void` |
+| `Yiisoft\Test\Support\Log\SimpleLogger` | `log` | `public function log(mixed $level, string\|\Stringable $message, array $context = []): void` |
+| `SimpleLogger` | `getMessages` | `public function getMessages(): array` |
+| `Yiisoft\Test\Support\SimpleCache\MemorySimpleCache` | `__construct` | `public function __construct(array $cacheData = [])` |
+| `MemorySimpleCache` | `set` | `public function set(string $key, mixed $value, int\|\DateInterval\|null $ttl = null): bool` |
+| `MemorySimpleCache` | `get` | `public function get(string $key, mixed $default = null): mixed` |
+| `MemorySimpleCache` | `has` | `public function has(string $key): bool` |
+| `MemorySimpleCache` | `getValues` | `public function getValues(): array` |
+| `MemorySimpleCache` | `$returnOnSet` | `public bool $returnOnSet = true;` |
+| `MemorySimpleCache` | `$returnOnDelete` | `public bool $returnOnDelete = true;` |
+| `MemorySimpleCache` | `$returnOnClear` | `public bool $returnOnClear = true;` |
+| `Yiisoft\Test\Support\SimpleCache\SimpleCacheActionLogger` | `__construct` | `public function __construct(\Psr\SimpleCache\CacheInterface $cacheService, array $cacheData = [])` |
+| `SimpleCacheActionLogger` | `getActions` | `public function getActions(): array` |
+| `SimpleCacheActionLogger` | `getActionKeyList` | `public function getActionKeyList(): array` |
+| `Yiisoft\Test\Support\SimpleCache\Action` | `getAction` | `public function getAction(): string` |
+| `Action` | `getKey` | `public function getKey(): mixed` |
+| `Action` | `getValue` | `public function getValue(): mixed` |
+| `Action` | `getTtl` | `public function getTtl(): mixed` |
+| `Yiisoft\Test\Support\Clock\StaticClock` | `__construct` | `public function __construct(private \DateTimeImmutable $now)` |
+| `StaticClock` | `now` | `public function now(): \DateTimeImmutable` |
+| `Yiisoft\Test\Support\Container\SimpleContainer` | `__construct` | `public function __construct(array $definitions = [], ?\Closure $factory = null, ?\Closure $hasCallback = null)` |
+| `SimpleContainer` | `get` | `public function get(string $id): mixed` |
+| `SimpleContainer` | `has` | `public function has(string $id): bool` |
+| `Yiisoft\Test\Support\HttpMessage\StringStream` | `__construct` | `public function __construct(string $content = '', int $position = 0, bool $readable = true, bool $writable = true, bool $seekable = true, \Closure\|array\|null $metadata = null)` |
+| `StringStream` | `isClosed` | `public function isClosed(): bool` |
+| `StringStream` | `isDetached` | `public function isDetached(): bool` |
+| `StringStream` | `getPosition` | `public function getPosition(): int` |
+| `Yiisoft\Yii\Console\ExitCode` | `getReason` | `public static function getReason(int $exitCode): string` |
+| `Symfony\Component\Console\Tester\CommandTester` | `execute` | `public function execute(array $input, array $options = []): int` |
+| `CommandTester` | `setInputs` | `public function setInputs(array $inputs): static` |
+| `CommandTester` | `getDisplay` | `public function getDisplay(bool $normalize = false): string` |
+| `Yiisoft\Validator\Validator` | `validate` | `public function validate(mixed $data, callable\|iterable\|object\|string\|null $rules = null, ?ValidationContext $context = null): Result` |
+| `Yiisoft\Validator\Result` | `isValid` | `public function isValid(): bool` |
+| `Result` | `isPropertyValid` | `public function isPropertyValid(string $property): bool` |
+| `Result` | `getPropertyErrorMessages` | `public function getPropertyErrorMessages(string $property): array` |
+| `Result` | `getErrorMessagesIndexedByPath` | `public function getErrorMessagesIndexedByPath(string $separator = '.', ?string $escape = '.'): array` |
+| `Yiisoft\Factory\Factory` | `__construct` | `public function __construct(?\Psr\Container\ContainerInterface $container = null, array $definitions = [], bool $validate = true)` |
+| `Factory` | `create` | `public function create(mixed $config): mixed` |
+| `Factory` | `withDefinitions` | `public function withDefinitions(array $definitions): self` |
+| `Yiisoft\Factory\StrictFactory` | `__construct` | `public function __construct(array $definitions, ?\Psr\Container\ContainerInterface $container = null, bool $validate = true)` |
+| `Yiisoft\Di\StateResetter` | `reset` | `public function reset(): void` |
+
+---
+
+## 8. Comprehensive Anti-Pattern Matrix
+
+| # | Forbidden Anti-Pattern | Fatal Consequence / Problem | Idiomatic Solution |
+|---|---|---|---|
+| 1 | **Global state: `Yii::$app` or static locator** | Throws `Error: Class "Yii" not found`. Yii3 has no global state. | Pass dependencies via constructor or resolve via PSR-11 container in integration tests. |
+| 2 | **Mutating container: `$this->getContainer()->set(...)`** | PSR-11 `ContainerInterface` only defines `get()` and `has()`. Throws fatal error. | Pass mocks directly to constructor in unit tests, or use `SimpleContainer`. |
+| 3 | **Phantom method: `$logger->hasMessage(...)`** | `SimpleLogger` has no `hasMessage()` method; throws fatal error. | Inspect `$logger->getMessages()` array. |
+| 4 | **Phantom method: `$logger->clear()`** | `SimpleLogger` has no `clear()` or `clearMessages()` method; throws fatal error. | Instantiate a fresh `new SimpleLogger()` per test step. |
+| 5 | **Phantom method: `$cacheLogger->clearActions()`** | `SimpleCacheActionLogger` has no `clearActions()` method; throws fatal error. | Instantiate a fresh `new SimpleCacheActionLogger($cache)`. |
+| 6 | **Phantom method: `$action->getDefault()`** | `Action` only tracks action, key, value, and ttl; throws fatal error. | Do not assert default value on `Action`; inspect `$cache->get('key', $default)` return value. |
+| 7 | **Magic strings in Action asserts (`'get'`, `'set'`)** | Magic strings bypass static analysis and refactoring safety. | Use typed class constants `Action::GET`, `Action::SET`, `Action::DELETE`, `Action::CLEAR`, `Action::HAS`. |
+| 8 | **Mutating `StaticClock` via `$clock->modify()`** | `StaticClock` is strictly immutable; throws undefined method error. | Instantiate a new `new StaticClock($now->modify('+1 day'))`. |
+| 9 | **Declaring console command via `$defaultName`** | Deprecated in Symfony 6.1+ / 7.0; ignored by Yii3 `CommandLoader` reflection. | Use PHP 8 attribute `#[AsCommand(name: '...', description: '...')]`. |
+| 10 | **Hardcoding raw exit codes (`return 0`, `return 1`)** | Loses semantic precision for cron daemons and CI orchestrators. | Return typed `Yiisoft\Yii\Console\ExitCode` constants (`ExitCode::OK`, `ExitCode::DATAERR`, etc.). |
+| 11 | **Calling `$tester->getDisplay()` without normalization** | Multi-line output tests fail across OS environments due to CRLF vs LF. | Use `$tester->getDisplay(normalize: true)` to normalize line endings. |
+| 12 | **Mocking final or readonly classes in PHPUnit** | PHPUnit throws `InvalidArgumentException: Class is declared "final"`. | Mock the interface that the class implements, or use real instances for DTOs/Entities. |
+| 13 | **Using dead PHPUnit methods (`withConsecutive`, etc.)** | Removed in PHPUnit 10; triggers fatal `Call to undefined method`. | Use `willReturnCallback()` with invocation matcher, `onlyMethods()`, and `$this->exactly($n)`. |
+| 14 | **Non-boolean return in `$this->callback(...)`** | Void or truthy non-bool return breaks PHPUnit constraint evaluator. | Ensure callback closure has strict `: bool` return type. |
+| 15 | **Non-static Data Providers in PHPUnit 10/11** | Deprecated in PHPUnit 10; fatal error in PHPUnit 11. | Declare providers as `public static function provider(): array`. |
+| 16 | **Installing both PHPUnit and Testo together** | Binary collisions (`vendor/bin/phpunit` vs `vendor/bin/testo`), duplicate test discovery. | Pick one runner per project: standard `phpunit/phpunit` or modern `testo/testo`. |
+| 17 | **Sharing container across tests without `StateResetter`** | Stateful services leak memory and dirty state into subsequent tests. | Call `self::$container->get(StateResetter::class)->reset()` in `tearDown()`. |
 
 ---
 

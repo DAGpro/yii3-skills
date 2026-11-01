@@ -29,7 +29,7 @@
 
 | Capability Key | Concern | Primary Packages | Driver / Adapter Choices (Choose ONE) | Key Interfaces & Classes |
 |---|---|---|---|---|
-| `router` | HTTP Routing | `yiisoft/router` | `yiisoft/router-fastroute` (FastRoute) \| `yiisoft/file-router` (convention file routing) \| `yiisoft/router-composer-attribute-collector` (attribute routes collected via Composer) | `Route`, `Group`, `RouteCollectionInterface`, `UrlGeneratorInterface`, `FileRouter` |
+| `router` | HTTP Routing | `yiisoft/router` | `yiisoft/router-fastroute` (FastRoute) \| `yiisoft/file-router` (convention file routing) \| `yiisoft/router-composer-attribute-collector` (attribute routes collected via Composer; **experimental** — pinned to the unreleased `yiisoft/router` `dev-add-attributes` branch, see routes guide §1.4) | `Route`, `Group`, `RouteCollectionInterface`, `UrlGeneratorInterface`, `FileRouter` |
 | `file-router` | Convention File Routing | `yiisoft/file-router` | — | `FileRouter` (PSR-15 middleware mapping URL paths to controller action classes by convention) |
 | `http` | HTTP App & Dispatcher | `yiisoft/yii-http`, `yiisoft/yii-runner-http`, `yiisoft/middleware-dispatcher`, `yiisoft/http`, `yiisoft/psr-emitter` | — | `Application`, `MiddlewareDispatcher`, `Method`, `Status`, `Header`, `SapiEmitter` |
 | `emitter` | Response Emitting (SAPI) | `yiisoft/psr-emitter` | — | `SapiEmitter`, `EmitterInterface`, `EmitterMiddleware` (sends PSR-7 responses via standard SAPI headers and echo) |
@@ -55,29 +55,30 @@
 | `cycle` | Cycle ORM (alternative) | `yiisoft/yii-cycle`, `cycle/orm` | (pairs with `yiisoft/data-cycle`) \| `cycle/annotated` (annotated-entity mapping attributes for `cycle/orm`) | `EntityManagerInterface`, `Select\Repository`, `#[Entity]` |
 | `cache` | Caching (PSR-16) | `yiisoft/cache` | `yiisoft/cache-file` \| `yiisoft/cache-redis` \| `yiisoft/cache-db` \| `yiisoft/cache-apcu` \| `yiisoft/cache-memcached` \| `yiisoft/cache-wincache` | `CacheInterface` |
 | `session` | Session Handling | `yiisoft/session` | — | `SessionInterface`, `SessionMiddleware`, `FlashInterface` |
-| `cookies` | Cookie Management | `yiisoft/cookies` | — | `Cookie`, `CookieCollection` |
+| `cookies` | Cookie Management | `yiisoft/cookies` (plus `psr/clock` only if the app injects a custom `ClockInterface` into `Cookie`) | — | `Cookie`, `CookieCollection` |
 | `csrf` | CSRF Protection | `yiisoft/csrf` | — | `CsrfTokenMiddleware`, `CsrfHeaderMiddleware`, `CsrfTokenCookieMiddleware`, `CsrfTokenInterface` |
 | `auth` | Authentication Core | `yiisoft/auth`, `yiisoft/user` | `yiisoft/auth-jwt` (API tokens) \| `yiisoft/yii-auth-client` (OAuth2/OIDC) \| session auth | `IdentityInterface`, `IdentityRepositoryInterface`, `CurrentUser` |
 | `auth-client` | External OAuth / Social Auth | `yiisoft/yii-auth-client` | OAuth 1.0/2.0 \| OpenID Connect (Google, GitHub, Facebook, etc.) | `AuthClientInterface`, `OAuth2`, `Collection`, `AuthAction`, `AuthChoice` |
 | `rbac` | Role-Based Access | `yiisoft/rbac` | `yiisoft/rbac-db` \| `yiisoft/rbac-php` \| `yiisoft/rbac-cycle-db` | `ManagerInterface`, `Permission`, `Role`, `RuleInterface` |
 | `access` | Access Checking | `yiisoft/access` | — | `AccessCheckerInterface` |
+| `rbac-rules` | Dynamic Rule Definitions | `yiisoft/rbac-rules-container` | — | `RuleFactoryInterface`, `RulesContainer` (params key `'yiisoft/rbac-rules-container' => ['rules' => [...], 'validate' => true]`; rule values are yiisoft/factory definitions — class-strings or alias maps) |
 | `security` | Cryptography & Hashing | `yiisoft/security` | — | `PasswordHasher`, `Random`, `TokenMasker` |
 | `i18n` | Translations (i18n) | `yiisoft/translator`, `yiisoft/i18n` | `yiisoft/translator-message-php` \| `yiisoft/translator-message-db` \| `yiisoft/translator-message-gettext` \| `yiisoft/translator-extractor` (dev-time message extraction, `require-dev`) | `TranslatorInterface`, `CategorySource` |
 | `logging` | Logging (PSR-3) | `yiisoft/log` | `yiisoft/log-target-file` \| `yiisoft/log-target-db` \| `yiisoft/log-target-email` \| `yiisoft/log-target-syslog` | `LoggerInterface`, `Target` |
-| `events` | Event Dispatching (PSR-14) | `yiisoft/event-dispatcher`, `yiisoft/yii-event` | — | `EventDispatcherInterface`, `ListenerProviderInterface` |
-| `console` | CLI Application | `yiisoft/yii-console`, `yiisoft/yii-runner-console` | (Symfony Console bridge) | `Application`, `ExitCode`, `config/console/params.php` |
+| `events` | Event Dispatching (PSR-14) | `psr/event-dispatcher`, `yiisoft/event-dispatcher`, `yiisoft/yii-event` | — | `EventDispatcherInterface`, `ListenerProviderInterface` |
+| `console` | CLI Application | `yiisoft/yii-console`, `yiisoft/yii-runner-console`, `symfony/console` | (Symfony Console bridge) | `Application`, `ExitCode`, `config/console/params.php` |
 | `queue` | Background Queue | `yiisoft/queue` | `yiisoft/queue-db` \| `yiisoft/queue-redis` \| `yiisoft/queue-amqp` | `QueueProducerInterface`, `QueueConsumerInterface`, `MessageInterface`, `HandlerInterface` |
 | `mutex` | Distributed Locks | `yiisoft/mutex` | `yiisoft/mutex-file` \| `yiisoft/mutex-pdo-mysql` \| `yiisoft/mutex-pdo-pgsql` \| `yiisoft/mutex-pdo-oracle` \| `yiisoft/mutex-redis` | `MutexInterface`, `MutexFactoryInterface` |
 | `mail` | Email Sending | `yiisoft/mailer` | `yiisoft/mailer-symfony` (Symfony transport) | `MailerInterface`, `MessageInterface` |
 | `rate-limit` | Rate Limiting | `yiisoft/rate-limiter` | (uses cache backend) | `CounterInterface`, `LimitRequestsMiddleware` |
-| `middleware` | Ready-Made Middleware | `yiisoft/http-middleware`, `yiisoft/yii-middleware`, `yiisoft/proxy-middleware` | — | `CorsAllowAllMiddleware`, `RedirectMiddleware`, `HeadRequestMiddleware`, `TrustedHostsNetworkResolver`, `IpValidator` |
+| `middleware` | Ready-Made Middleware | `yiisoft/http-middleware`, `yiisoft/yii-middleware`, `yiisoft/proxy-middleware` | — | `CorsAllowAllMiddleware`, `RedirectMiddleware`, `Subfolder`, `Locale`, `Redirect`, `TrustedHostsNetworkResolver`, `IpValidator` |
 | `proxy` | Reverse Proxy & Trusted Hosts | `yiisoft/proxy-middleware` | — | `TrustedHostsNetworkResolver`, `TrustedHeaderProtocolResolver`, `IpValidator` (resolves IP/host/proto behind proxies) |
 | `errors` | Error Handling & Pages | `yiisoft/error-handler`, `yiisoft/friendly-exception` | `yiisoft/yii-sentry` (monitoring) | `ErrorHandler`, `FriendlyExceptionInterface` |
 | `debug` | Debug Toolbar & Profiler | `yiisoft/yii-debug`, `yiisoft/yii-debug-api`, `yiisoft/yii-debug-viewer`, `yiisoft/profiler` | — | `Profiler`, `ProfilerInterface`, `TargetInterface`, `FileTarget`, `LogTarget` (install via `require-dev`) |
 | `profiler` | Performance Profiling | `yiisoft/profiler` | `FileTarget` \| `LogTarget` | `Profiler`, `ProfilerInterface`, `TargetInterface`, `FileTarget`, `LogTarget` (measures execution time and memory deltas) |
 | `openapi` | Swagger / OpenAPI Docs | `yiisoft/yii-swagger` | — | `SwaggerService`, `SwaggerUi` |
 | `codegen` | Code Generator Gii | `yiisoft/yii-gii` | — | install via `require-dev` |
-| `testing` | Test Helpers | `yiisoft/test-support`, `yiisoft/yii-testing` | `phpunit/phpunit` (bare or under `codeception/codeception` suites) \| `testo/testo` (+ `php-testo/bridge-mockery` for Mockery) — mutually exclusive runners | PSR doubles, test cases |
+| `testing` | Test Helpers | `yiisoft/test-support`, `yiisoft/yii-testing` | `phpunit/phpunit` (bare or under `codeception/codeception` suites) \| `testo/testo` (+ `php-testo/bridge-mockery` for Mockery) — mutually exclusive runners; mutation testing via `infection/infection` (+ `testo/bridge-infection` on Testo path) | PSR doubles, test cases |
 | `code-style` | CS-Fixer Rules | `yiisoft/code-style` | — | install via `require-dev` |
 | `dev-tooling` | Yii Ecosystem Maintainer Tooling | `yiisoft/yii-dev-tool` | — | Maintainer/monorepo utilities (`require-dev` / dev machines only — not an application dependency) |
 | `utilities` | Common String/File/JSON/Discovery | `yiisoft/arrays`, `yiisoft/files`, `yiisoft/json`, `yiisoft/strings`, `yiisoft/aliases`, `yiisoft/classifier`, `yiisoft/network-utilities`, `yiisoft/var-dumper` | — | Static helper classes with strict types |
@@ -121,7 +122,7 @@ Every target application must pick a consistent storage driver for each infrastr
 | **Mutex Driver** | `yiisoft/mutex-file`<br>`yiisoft/mutex-pdo-mysql`<br>`yiisoft/mutex-pdo-pgsql`<br>`yiisoft/mutex-pdo-oracle`<br>`yiisoft/mutex-redis` | Match the project's primary database or Redis instance. |
 | **RBAC Storage** | `yiisoft/rbac-db`<br>`yiisoft/rbac-php`<br>`yiisoft/rbac-cycle-db` | Use `rbac-php` for static roles/permissions checked in version control; use `rbac-db` if roles/assignments are managed via admin panel in DB. |
 | **Log Targets** | `yiisoft/log-target-file`<br>`yiisoft/log-target-db`<br>`yiisoft/log-target-email`<br>`yiisoft/log-target-syslog` | One or more targets may be enabled simultaneously in `config/**/params.php`. |
-| **Test Runner** | `phpunit/phpunit` (+ `yiisoft/yii-testing`)<br>OR `codeception/codeception` (+ modules; PHPUnit-based suites, app-template style)<br>OR `testo/testo` (+ `php-testo/bridge-mockery` for Mockery) | **Mutually exclusive.** If `phpunit/phpunit` (bare or inside Codeception suites) is in `composer.json`, do NOT install `testo/testo`. If `testo/testo` is used, do not install `phpunit/phpunit` or `codeception/codeception`. |
+| **Test Runner** | `phpunit/phpunit` (+ `yiisoft/yii-testing`)<br>OR `codeception/codeception` (+ modules; PHPUnit-based suites, app-template style)<br>OR `testo/testo` (+ `php-testo/bridge-mockery` for Mockery) | **Mutually exclusive.** If `phpunit/phpunit` (bare or inside Codeception suites) is in `composer.json`, do NOT install `testo/testo`. If `testo/testo` is used, do not install `phpunit/phpunit` or `codeception/codeception`. Mutation testing via `infection/infection` is orthogonal and runs above either runner (+ `testo/bridge-infection` on the Testo path). |
 
 ---
 
@@ -131,9 +132,10 @@ The following packages are commonly hallucinated by AI models but **DO NOT EXIST
 
 | Hallucinated Package Name | What Actually Implements It in Yii3 | Correct Action |
 |---|---|---|
-| ❌ `yiisoft/cors` | `yiisoft/http-middleware` & `yiisoft/yii-middleware` | Use `Yiisoft\Yii\Middleware\CorsAllowAll` or configure CORS headers in middleware stack. |
+| ❌ `yiisoft/cors` | `yiisoft/http-middleware` | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware` from `yiisoft/http-middleware` or configure CORS headers in middleware stack. |
 | ❌ `yiisoft/http-client` | No official Yii3 HTTP client wrapper exists. | Install standard PSR-18 client: `composer require guzzlehttp/guzzle` or `symfony/http-client`. |
 | ❌ `yiisoft/testo` | The vendor is `testo`, not `yiisoft`. | Use `composer require --dev testo/testo`. |
+| ❌ `yiisoft/infection` | The vendor is `infection`, not `yiisoft`. | Use `composer require --dev infection/infection roave/infection-static-analysis-plugin`. |
 | ❌ `yiisoft/yii-queue` | Deprecated older package. | Use `composer require yiisoft/queue`. |
 | ❌ `yiisoft/yii-view` | Older template package. | Use `composer require yiisoft/view yiisoft/yii-view-renderer`. |
 | ❌ `yiisoft/rbac-rules` | Rules container is separate. | Use `composer require yiisoft/rbac-rules-container`. |
@@ -143,7 +145,7 @@ The following packages are commonly hallucinated by AI models but **DO NOT EXIST
 | ❌ `yiisoft/grid` | Dataview handles grid rendering. | Use `composer require yiisoft/yii-dataview`. |
 | ❌ `yiisoft/helpers` | Split into discrete standalone packages. | Use `yiisoft/arrays`, `yiisoft/strings`, `yiisoft/files`, `yiisoft/json`. |
 | ❌ `yiisoft/db-common` | Core database abstraction is unified. | Use `composer require yiisoft/db`. |
-| ❌ `yiisoft/i18n-message-php` / `yiisoft/i18n-message-gettext` | Composer names are `yiisoft/translator-message-php` / `yiisoft/translator-message-gettext` (the cloned sources are identical); there is also no `GettextMessageFormatter` class. | Use `composer require yiisoft/translator-message-php` (or `-gettext` / `-db`); never `yiisoft/i18n-message-*`. |
+| ❌ `yiisoft/i18n-message-php` / `yiisoft/i18n-message-gettext` | Composer names are `yiisoft/translator-message-php` / `yiisoft/translator-message-gettext` (the sources are identical); there is also no `GettextMessageFormatter` class. | Use `composer require yiisoft/translator-message-php` (or `-gettext` / `-db`); never `yiisoft/i18n-message-*`. |
 
 ---
 
@@ -167,7 +169,14 @@ composer require yiisoft/db yiisoft/db-migration yiisoft/active-record yiisoft/d
 
 ### 5.3. Database with Cycle ORM
 ```bash
-composer require yiisoft/yii-cycle yiisoft/data-cycle yiisoft/db yiisoft/db-migration yiisoft/db-mysql
+# Core Cycle ORM integration, data readers, DBAL, and migrations:
+composer require yiisoft/yii-cycle yiisoft/data-cycle cycle/database cycle/migrations
+
+# Optional: Entity Behaviors (#[CreatedAt], #[UpdatedAt], #[SoftDelete])
+composer require cycle/entity-behavior
+
+# Optional: RBAC Storage backed by Cycle ORM
+composer require yiisoft/rbac yiisoft/rbac-cycle-db
 ```
 
 ### 5.4. REST API Endpoint with Validation
@@ -197,8 +206,9 @@ composer require yiisoft/form yiisoft/form-model yiisoft/html yiisoft/view yiiso
 
 ### 5.9. High-Performance Workers & OAuth
 ```bash
-# RoadRunner Worker:
-composer require spiral/roadrunner-cli spiral/roadrunner-http yiisoft/yii-runner-roadrunner
+# RoadRunner Worker (spiral/roadrunner-http, -worker, -cli, -grpc arrive transitively;
+# after install run ./vendor/bin/rr get to download the rr binary, then ./rr serve):
+composer require yiisoft/yii-runner-roadrunner
 
 # FrankenPHP Worker:
 composer require yiisoft/yii-runner-frankenphp

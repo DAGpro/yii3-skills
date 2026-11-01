@@ -778,8 +778,9 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 
 - [Routing Guide](routes.md) — Route groups, URL generation, FastRoute parameters, and route middleware pipelines.
 - [Actions & Controllers Guide](actions-and-controllers.md) — Single-action invokable controllers, parameter resolution, and response factories.
-- [Authentication & RBAC Guide](auth-and-rbac.md) — Authentication middleware methods, identity repositories, and RBAC rules.
+- [Authentication & RBAC Guide](auth-and-rbac.md) — Authentication middleware methods, identity repositories, OAuth2/OIDC login (`AuthAction`), and RBAC rules.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and headers.
 - [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
 - [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
+- [Utility Packages Guide](utilities.md) — `IpHelper`/`IpRanges` for building custom IP allow/deny guards, and `DnsHelper` for domain validation.
 

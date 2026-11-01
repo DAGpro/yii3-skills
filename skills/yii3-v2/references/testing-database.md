@@ -51,7 +51,7 @@ To ensure tests execute within milliseconds and require zero external database c
 
 ### 2.1. In-Memory Database DI Configuration
 
-In the `tests` environment (`config/environments/tests/di.php`), rebind `ConnectionInterface::class` to an in-memory SQLite connection:
+In the `test` environment (`config/environments/test/di.php`), rebind `ConnectionInterface::class` to an in-memory SQLite connection:
 
 ```php
 declare(strict_types=1);
@@ -72,10 +72,10 @@ return [
 
 ### 2.2. Isolated Test Environment Setup
 
-Ensure `tests` environment inherits common configurations while disabling file cache and foreign external connections:
+Ensure `test` environment inherits common configurations while disabling file cache and foreign external connections:
 
 ```php
-// config/environments/tests/params.php
+// config/environments/test/params.php
 return [
     'yiisoft/db-sqlite' => [
         'dsn' => 'sqlite::memory:',
@@ -396,4 +396,4 @@ final class SqliteUserRepositoryTest extends DatabaseTestCase
 - [`persistence-db.md`](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
 - [`persistence-active-record.md`](persistence-active-record.md) — Active Record models, relations, lifecycle, and LazyLoadGuard.
 - [`persistence-cycle-orm.md`](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
-- [`di-and-config.md`](di-and-config.md) — Environment configuration and container definitions for `tests`.
+- [`di-and-config.md`](di-and-config.md) — Environment configuration and container definitions for `test`.

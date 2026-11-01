@@ -1076,8 +1076,14 @@ use Yiisoft\Mutex\Pgsql\PgsqlMutexFactory;
 use Yiisoft\Queue\Db\Adapter as DbQueueAdapter;
 
 return [
-    // Wire MutexFactory (FileMutexFactory, PgsqlMutexFactory, MysqlMutexFactory, etc.)
-    MutexFactoryInterface::class => PgsqlMutexFactory::class,
+    // PDO mutex factories (PgsqlMutexFactory, MysqlMutexFactory, etc.) require a native \PDO,
+    // resolved from the active DB connection — see section 6 "Wiring PDO Mutex Drivers".
+    MutexFactoryInterface::class => [
+        'class' => PgsqlMutexFactory::class,
+        '__construct()' => [
+            'connection' => static fn (ConnectionInterface $db) => $db->getActivePdo(),
+        ],
+    ],
 
     DbQueueAdapter::class => [
         'class' => DbQueueAdapter::class,

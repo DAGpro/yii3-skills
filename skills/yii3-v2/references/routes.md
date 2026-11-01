@@ -645,7 +645,7 @@ final readonly class ViewUserAction
 
 > [!NOTE]
 > **Unconditional URI Availability:**
-> `Router::process()` calls `$currentRoute->setUri($request->getUri())` **before** matching checks. As a result, `$currentRoute->getUri()` is **always available**, even on 404 (Not Found) or 405 (Method Not Allowed) responses.
+> `Router::process()` calls `$currentRoute->setUri($request->getUri())` **after route matching but before the 404/405 response checks**. As a result, `$currentRoute->getUri()` is **always available**, even on 404 (Not Found) or 405 (Method Not Allowed) responses.
 
 ### 4.2. Hydrator Parameter Resolution (`#[RouteArgument]`)
 
@@ -1020,18 +1020,33 @@ public function __construct(
 3. **Alias Registration:** It registers the detected base path with `Yiisoft\Aliases\Aliases` under `@baseUrl` (`$aliases->set('@baseUrl', $baseUrl)`), making it available to asset publishers and template helpers.
 4. **Auto-Detection Mode:** If `$prefix` is omitted (`null`), `Subfolder` automatically derives the web path from `$_SERVER` environment variables (`SCRIPT_FILENAME`, `PHP_SELF`, `ORIG_SCRIPT_NAME`, `DOCUMENT_ROOT`).
 
+Register `Subfolder` in the HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via `withMiddlewares()` on `MiddlewareDispatcher` (see [error-handling.md](error-handling.md), section 2):
+
 ```php
 declare(strict_types=1);
 
-// In application middleware pipeline (e.g. config/params-web.php):
+// In config/web/di/application.php:
+use Yiisoft\Definitions\DynamicReference;
+use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
+use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
 use Yiisoft\Router\Middleware\Router;
+use Yiisoft\Yii\Http\Application;
 use Yiisoft\Yii\Middleware\Subfolder;
 
 return [
-    'middlewares' => [
-        // MUST precede Router middleware:
-        Subfolder::class,
-        Router::class,
+    Application::class => [
+        '__construct()' => [
+            'dispatcher' => DynamicReference::to([
+                'class' => MiddlewareDispatcher::class,
+                'withMiddlewares()' => [
+                    [
+                        ErrorCatcher::class,
+                        Subfolder::class, // MUST precede Router middleware
+                        Router::class,
+                    ],
+                ],
+            ]),
+        ],
     ],
 ];
 ```

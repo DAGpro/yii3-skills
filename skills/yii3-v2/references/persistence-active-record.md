@@ -716,7 +716,6 @@ use Yiisoft\ActiveRecord\Trait\RepositoryTrait;
  * SoftDelete constructor: __construct(mixed $value = null, string ...$propertyNames)
  * Note: There is NO $column parameter!
  */
-#[SoftDelete(true, 'is_deleted')]
 final class ProductRecord extends ActiveRecord
 {
     use RepositoryTrait;
@@ -726,7 +725,12 @@ final class ProductRecord extends ActiveRecord
     public ?string $id = null;
     public string $title = '';
     public int $price = 0;
-    public bool $is_deleted = false;
+
+    // Nullable sentinel: delete() sets it to `true` ONLY because the current
+    // value is `null`. A non-nullable default (e.g. `false`) makes delete()
+    // a silent no-op, and the read filter (`IS NULL`) would exclude every row.
+    #[SoftDelete(true)]
+    public ?bool $is_deleted = null;
 
     #[DefaultDateTimeOnInsert]
     public ?string $created_at = null;
@@ -743,10 +747,11 @@ final class ProductRecord extends ActiveRecord
 
 #### Attribute Configuration Rules:
 1. **`#[SoftDelete]`:**
-   - Class-level attribute: `#[SoftDelete(true, 'is_deleted')]` marks the record by setting property `$is_deleted = true` upon `$record->delete()`.
-   - Property-level attribute: `#[SoftDelete(true)] public bool $is_deleted = false;`.
+   - Class-level attribute: `#[SoftDelete(true, 'is_deleted')]` marks the record upon `$record->delete()` by setting the `$is_deleted` property to `true` instead of issuing a real `DELETE`.
+   - Property-level attribute: `#[SoftDelete(true)] public ?bool $is_deleted = null;` — the attribute attaches to the property it is declared on.
    - Parameterless default: `#[SoftDelete]` targets property `deleted_at` and sets it to a `DateTimeImmutable` instance.
-   - Automatically appends `WHERE is_deleted = false` (or `deleted_at IS NULL`) to all queries initiated by the model.
+   - **The sentinel property MUST be nullable with default `null`:** the handler assigns the value only when the current property value is exactly `null` (`get($prop) === null`). With a non-nullable default such as `false`, `delete()` becomes a silent no-op.
+   - Read filter: automatically appends `WHERE is_deleted IS NULL` (or `deleted_at IS NULL`) to all queries initiated by the model — only rows whose sentinel is still `NULL` are visible. This is the same reason the default must be `null`: a row is "alive" while the property is `NULL`, and `delete()` flips it to the configured value.
 2. **`#[DefaultDateTimeOnInsert]`:**
    - Applied to property: sets the current `DateTimeImmutable` upon `insert()`.
    - Class-level default: `#[DefaultDateTimeOnInsert]` automatically populates `created_at` and `updated_at`.
@@ -1238,11 +1243,11 @@ LazyLoadGuard::resetCounters();
 | ❌ **`$record->isNewRecord` or `$record->isNewRecord()`** | Legacy Yii2 property/method. Does not exist in Yii3. | Call `$record->isNew(): bool`. |
 | ❌ **Declaring `rules()` in `ActiveRecord`** | Legacy Yii2 feature. Yii3 `ActiveRecord` contains no validation engine; `rules()` is ignored. | Decouple validation into Form Models / DTOs using `yiisoft/validator` with PHP 8 attributes. |
 | ❌ **Lifecycle attributes without `EventsTrait`** | Base `ActiveRecord` does not dispatch events. `#[SoftDelete]`, `#[DefaultDateTimeOnInsert]`, etc. fail silently. | Add `use Yiisoft\ActiveRecord\Trait\EventsTrait;` to the Active Record model class. |
-| ❌ **`#[SoftDelete(column: 'is_deleted')]`** | `SoftDelete` constructor has no `$column` parameter. Throws PHP 8 `Error: Unknown named parameter $column`. | Use `#[SoftDelete(true, 'is_deleted')]` or property attribute `#[SoftDelete(true)] public bool $is_deleted = false;`. |
+| ❌ **`#[SoftDelete(column: 'is_deleted')]`** | `SoftDelete` constructor has no `$column` parameter. Throws PHP 8 `Error: Unknown named parameter $column`. | Use class-level `#[SoftDelete(true, 'is_deleted')]` or property-level `#[SoftDelete(true)] public ?bool $is_deleted = null;` (nullable sentinel, default `null`). |
 | ❌ **Plain relation getters like `getProfile()` without `relationQuery()`** | Without `relationQuery()` or `MagicRelationsTrait`, relation resolution fails with `InvalidArgumentException`. | Override `relationQuery(string $name)` with `match ($name)`, or use `MagicRelationsTrait` with `getProfileQuery()`. |
 | ❌ **Uncontrolled AR relation lazy-loading in loops** | Triggers silent N+1 query storms that degrade database throughput. | Use eager loading `->with('orders')`, add `LazyLoadGuardTrait` to model, and enforce `LazyLoadGuard::set(LazyLoadGuardMode::Strict)`. |
 | ❌ **Calling `Query::where()` multiple times** | DBAL guards against condition overwrite by throwing `\LogicException`. | Use `andWhere()` / `orWhere()` to combine conditions, or `setWhere()` to intentionally overwrite. |
-| ❌ **Calling `ActiveQuery::cache()` or `Query::cache()`** | DBAL has no query result caching methods; call throws `BadMethodCallException`. | Implement caching at the application / repository layer using PSR-16 (`CacheInterface`). |
+| ❌ **Calling `ActiveQuery::cache()` or `Query::cache()`** | DBAL has no query result caching methods, and `Query` defines no `__call()` fallback; the call fails with a fatal `Error: Call to undefined method`. | Implement caching at the application / repository layer using PSR-16 (`CacheInterface`). The DBAL only provides `Yiisoft\Db\Cache\SchemaCache` (schema metadata caching). |
 | ❌ **Passing non-Closure to `$record->db()->transaction()`** | Parameter is strictly typed `\Closure`, not a generic `callable`. Passing array callable throws `TypeError`. | Use `static function (ConnectionInterface $db) { ... }`. |
 | ❌ **Dynamic untyped properties on AR class** | Deprecated in PHP 8.2+; prevents static analysis tools from catching errors. | Declare typed public properties on the record class (e.g. `public string $name = '';`). |
 | ❌ **Forgetting worker resets in daemon loops** | Leaks memory in static `WeakMap` and caches invalid event listeners between worker requests. | Call `LazyLoadGuard::resetCounters()` and `EventDispatcherProvider::reset()` in the worker loop `finally` block. |

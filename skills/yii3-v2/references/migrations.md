@@ -67,11 +67,11 @@ Yii3 decomposes migration responsibilities into three distinct, composable inter
 | **`TransactionalMigrationInterface`** | `Yiisoft\Db\Migration\TransactionalMigrationInterface` | Extends `MigrationInterface`. Empty marker interface (`{}`). When implemented, `Migrator` wraps execution within `$db->transaction()`. |
 
 #### Strict Type Enforcement in Rollbacks
-`Yiisoft\Db\Migration\Runner\DownRunner::run()` strictly requires `RevertibleMigrationInterface $migration`. If a migration only implements `MigrationInterface`, the runner rejects rollback attempts before execution with a fatal `RuntimeException`:
+The console rollback flow instantiates migrations through `Yiisoft\Db\Migration\Service\MigrationService::makeRevertibleMigration()`, which enforces the contract: if a migration only implements `MigrationInterface`, the service rejects it before execution with a fatal `RuntimeException`:
 ```text
 RuntimeException: Migration <Class> does not implement RevertibleMigrationInterface.
 ```
-This architectural guard prevents accidental database corruption when rolling back irreversible migrations.
+`Yiisoft\Db\Migration\Runner\DownRunner::run()` then accepts the migration via a plain `RevertibleMigrationInterface $migration` type hint — instances have already been validated by the service. This architectural guard prevents accidental database corruption when rolling back irreversible migrations.
 
 ---
 
@@ -221,7 +221,8 @@ src/
 
 Configure `config/params.php` to register this namespace:
 ```php
-'yiisoft/db-migration' => [\n    'newMigrationNamespace' => 'App\\Infrastructure\\Migration',
+'yiisoft/db-migration' => [
+    'newMigrationNamespace' => 'App\\Infrastructure\\Migration',
     'newMigrationPath' => '',
     'sourceNamespaces' => [
         'App\\Infrastructure\\Migration',
@@ -392,7 +393,8 @@ PostgreSQL provides first-class array types. Use `$columns::array()` with an inn
 // 1D array of integers: integer[]
 'tag_ids' => $columns::array($columns::integer())->notNull()->defaultValue('{}'),
 
-// 2D matrix of floats: real[][]\n'matrix'  => $columns::array($columns::float())->dimension(2)->null(),
+// 2D matrix of floats: real[][]
+'matrix'  => $columns::array($columns::float())->dimension(2)->null(),
 ```
 
 #### JSON & UUID Mappings Across Drivers
@@ -559,8 +561,8 @@ Class `Yiisoft\Db\Constant\ReferentialAction` defines standard referential actio
 | **PostgreSQL** (`db-pgsql`) | All actions supported | All actions supported | Fully compliant with ANSI SQL. |
 | **MySQL / MariaDB** (`db-mysql`) | All actions supported | All actions supported | InnoDB engine required for foreign key enforcement. |
 | **SQLite** (`db-sqlite`) | ❌ `NotSupportedException` | ❌ `NotSupportedException` | SQLite does not support `addForeignKey()` via `ALTER TABLE`. Must define inline in `createTable` or use Copy-and-Rename. |
-| **MS SQL Server** (`db-mssql`) | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | **`RESTRICT` is unsupported in T-SQL.** Passing `delete: ReferentialAction::RESTRICT` produces a fatal syntax error. Use `NO_ACTION` or `null`. |
-| **Oracle** (`db-oracle`) | `CASCADE`, `SET NULL` only | ❌ **Completely unsupported** | Passing non-null `$update` throws `Exception: Oracle does not support ON UPDATE clause.`. On delete, passing `RESTRICT` throws `ORA-00905: missing keyword`. |
+| **MS SQL Server** (`db-mssql`) | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | **`RESTRICT` is unsupported in T-SQL and is silently dropped:** the builder omits the `ON DELETE`/`ON UPDATE` clause entirely, leaving SQL Server's default `NO ACTION` behavior. Use `ReferentialAction::NO_ACTION` explicitly or `null`. |
+| **Oracle** (`db-oracle`) | `CASCADE`, `SET NULL` only | ❌ **Completely unsupported** | Passing non-null `$update` throws `Exception: Oracle does not support ON UPDATE clause.`. On delete, any action other than `CASCADE`/`SET NULL` (including `RESTRICT`) is **silently dropped** — the generated DDL simply omits the clause, leaving Oracle's default `NO ACTION` behavior. |
 
 > [!TIP]
 > **Cross-DBMS Foreign Key Rule:**
@@ -1086,9 +1088,11 @@ Running `--command=junction --and=<table2>` automatically generates:
 > When running migrations inside CI/CD runners, deployment scripts, or Docker container entrypoints, **always pass the `--force-yes` (or `-y`) flag**. Without `-y`, the command waits indefinitely for interactive confirmation (`Apply the above migration? (yes/no) [no]:`), causing the build pipeline to hang or timeout.
 
 #### Multi-Database Execution Behavior
-When multiple databases are configured in `config/params.php`:
-- Running `./yii migrate:up` **without** `--db` sequentially applies pending migrations to **all** configured databases in order.
-- If `--namespace` or `--path` is passed, `--db` is required to prevent applying targeted migrations to the wrong database.
+Once additional databases are configured under `'yiisoft/db-migration' => ['databases' => [...]]` in `config/params.php`, the `--db` option is **mandatory** for every migration command. Running `./yii migrate:up` without `--db` does **not** fan out to all configured databases — the command aborts with the error:
+```text
+The --db option is required when multiple databases are configured.
+```
+Only when no additional databases are configured does the command fall back to the `default` database automatically. Targeted runs (`--namespace`, `--path`) must always name the database explicitly.
 
 ---
 
@@ -1161,7 +1165,7 @@ When multiple databases are configured in `config/params.php`:
 | **Slash in console commands: `./yii migrate/up`** | Yii3 console uses Symfony Console syntax with colons. Slashes fail with `Command not found`. | Use `./yii migrate:up`, `./yii migrate:create`, `./yii migrate:down`. |
 | **`$b->batchInsert($table, $columns, $rows)`** | `batchInsert()` is deprecated; parameter order changed. | Use `$b->insertBatch(table: $table, rows: $rows, columns: $columns)`. |
 | **Setting both `newMigrationNamespace` and `newMigrationPath`** | `MigrationService::before('migrate:create')` enforces mutual exclusivity, terminating with `Command::INVALID`. | Set `newMigrationNamespace` and leave `'newMigrationPath' => ''`. |
-| **Empty `down()` for irreversible migrations** | Falsely claims the migration is revertible. Rollback leaves schema or data in a corrupted state. | Implement `MigrationInterface` without `RevertibleMigrationInterface`. `DownRunner` will safely reject rollback. |
+| **Empty `down()` for irreversible migrations** | Falsely claims the migration is revertible. Rollback leaves schema or data in a corrupted state. | Implement `MigrationInterface` without `RevertibleMigrationInterface`. `MigrationService::makeRevertibleMigration()` will safely reject rollback. |
 | **Raw table names without tokens: `'user'`** | Bypasses database table prefix configuration (`tbl_user`). | Wrap all table names in prefix tokens: `'{{%user}}'`. |
 | **`Yii::$app->db` inside migration** | Static service locator removed in Yii3. | Use `$b->getDb()` to access `ConnectionInterface`. |
 | **Omitting indexes on foreign key columns** | Causes full table scans during `JOIN` queries and row lock escalations on updates/deletes. | Call `$b->createIndex()` on foreign key columns before adding foreign key constraints. |
@@ -1169,7 +1173,7 @@ When multiple databases are configured in `config/params.php`:
 | **`sourcePaths` pointing to vendor parent directory: `'vendor/yiisoft/rbac-db/migrations'`** | `MigrationService` scans non-recursively. Package migrations reside in subdirectories `migrations/items` and `migrations/assignments`. 0 migrations will be found. | Register exact subdirectories in `sourcePaths`: `dirname(__DIR__) . '/vendor/yiisoft/rbac-db/migrations/items'` and `.../assignments`. |
 | **Using `migrate:mark` as a substitute for running migrations** | `migrate:mark` only modifies history rows and never executes SQL. The database schema remains untouched while history claims it exists. | Use `migrate:up` to change schema. Reserve `migrate:mark` for baselining existing databases. |
 | **Calling `->unsigned()` on PostgreSQL, SQLite, MSSQL, Oracle** | `unsigned()` is supported exclusively by MySQL. All other drivers throw fatal `NotSupportedException`. | Use check constraints (`->check('val >= 0')`) or use `bigint` for portable migrations. |
-| **Passing `ReferentialAction::RESTRICT` on MSSQL** | Transact-SQL does not recognize the keyword `RESTRICT`. Produces fatal SQL Server syntax error. | Use `ReferentialAction::NO_ACTION` or omit `$delete`/`$update` (`null`). |
+| **Passing `ReferentialAction::RESTRICT` on MSSQL/Oracle** | Neither driver emits the `RESTRICT` keyword; it is silently dropped from the generated DDL and the constraint falls back to `NO ACTION` behavior. No error is raised. | Use `ReferentialAction::NO_ACTION` explicitly, or omit `$delete`/`$update` (`null`). |
 | **Passing `$update` clause on Oracle** | Oracle Database does not support `ON UPDATE` on foreign keys. Throws fatal `Exception: Oracle does not support ON UPDATE clause.`. | Leave `$update: null` on Oracle. |
 | **Executing `alterColumn` or `dropColumn` on SQLite** | `Yiisoft\Db\Sqlite\DDLQueryBuilder` throws `NotSupportedException` on 18 alteration methods. | Use the Table Copy-and-Rename pattern when running schema alterations on SQLite. |
 | **Calling `$b->checkIntegrity()` on `MigrationBuilder`** | Method does not exist on `MigrationBuilder`. Calling it causes fatal `Error: Call to undefined method`. | Invoke via command: `$b->getDb()->createCommand()->checkIntegrity(...)`. |

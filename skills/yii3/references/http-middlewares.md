@@ -487,7 +487,7 @@ return [
 
 ### 4.2. Route Group Pipeline (`config/web/routes.php`)
 
-Executes for all routes inside a specific route group (e.g. `/api/v1`). For route group definitions, prefixing, and FastRoute rules, see [Routing Guide](routes.md).
+Executes for all routes inside a specific route group (e.g. `/api/v1`). For route group definitions, prefixing, and FastRoute rules, see [Routing Guide](http-routes.md).
 
 ```php
 <?php
@@ -588,7 +588,7 @@ return [
 
 > [!NOTE]
 > In Yii3 routing, `Route::action()` is the terminal middleware of that route's pipeline. When `->middleware(...)` is called after `->action(...)`, `Route` automatically inserts the new middleware **before** the action in the execution list.
-> For action handler implementation patterns, single-action invokable controllers, and PSR-7 response factories, see [Actions & Controllers Guide](actions-and-controllers.md).
+> For action handler implementation patterns, single-action invokable controllers, and PSR-7 response factories, see [Actions & Controllers Guide](http-actions-and-controllers.md).
 
 ---
 
@@ -776,11 +776,11 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 
 ## 8. Related Topic Guides
 
-- [Routing Guide](routes.md) — Route groups, URL generation, FastRoute parameters, and route middleware pipelines.
-- [Actions & Controllers Guide](actions-and-controllers.md) — Single-action invokable controllers, parameter resolution, and response factories.
-- [Authentication & RBAC Guide](auth-and-rbac.md) — Authentication middleware methods, identity repositories, OAuth2/OIDC login (`AuthAction`), and RBAC rules.
+- [Routing Guide](http-routes.md) — Route groups, URL generation, FastRoute parameters, and route middleware pipelines.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Single-action invokable controllers, parameter resolution, and response factories.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Authentication middleware methods, identity repositories, OAuth2/OIDC login (`AuthAction`), and RBAC rules.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and headers.
-- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
-- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
-- [Utility Packages Guide](utilities.md) — `IpHelper`/`IpRanges` for building custom IP allow/deny guards, and `DnsHelper` for domain validation.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
+- [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
+- [Utility Packages Guide](core-utilities.md) — `IpHelper`/`IpRanges` for building custom IP allow/deny guards, and `DnsHelper` for domain validation.
 

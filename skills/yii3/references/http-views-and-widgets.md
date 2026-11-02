@@ -75,7 +75,7 @@
 In Yii3, controllers and actions do not have their own internal rendering engine. Views are rendered by injecting `Yiisoft\Yii\View\Renderer\WebViewRenderer` into the Action handler.
 
 > [!TIP]
-> For single-action controller structure, dependency injection, and PSR-7 response orchestration, see [Actions & Controllers Guide](actions-and-controllers.md).
+> For single-action controller structure, dependency injection, and PSR-7 response orchestration, see [Actions & Controllers Guide](http-actions-and-controllers.md).
 
 ### 1.1. Single-Action Injection and Deferred PSR-7 Response
 
@@ -2044,6 +2044,6 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 
 ## 11. Related Topic Guides
 
-- [Actions & Controllers Guide](actions-and-controllers.md) — Action handlers, parameter resolution, and injecting `WebViewRenderer`.
-- [Validation & Forms Guide](validation-and-forms.md) — Form models, validation rules, and `FormHydrator`.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Action handlers, parameter resolution, and injecting `WebViewRenderer`.
+- [Validation & Forms Guide](http-validation-and-forms.md) — Form models, validation rules, and `FormHydrator`.
 - [HTTP State Guide](http-state.md) — Flash messages, session handling, and cookie management.

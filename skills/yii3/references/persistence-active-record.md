@@ -1260,7 +1260,7 @@ LazyLoadGuard::resetCounters();
 
 - [Database Persistence Guide](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
 - [Cycle ORM Persistence Guide](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
-- [Database Migrations Guide](migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands.
+- [Database Migrations Guide](persistence-migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands.
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
-- [Validation & Forms Guide](validation-and-forms.md) — Form models, validation rules, and input DTOs.
-- [Actions & Controllers Guide](actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
+- [Validation & Forms Guide](http-validation-and-forms.md) — Form models, validation rules, and input DTOs.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.

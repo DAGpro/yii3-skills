@@ -2096,5 +2096,5 @@ Below is a master reference of exact parameter names and signatures for key test
 ## 9. Related Guides
 - [`testing-http.md`](testing-http.md) — Functional HTTP testing, middleware pipelines, endpoints, sessions, and `ResponseAccessor`.
 - [`testing-database.md`](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
-- [`commands.md`](commands.md) — Console command definition, input arguments/options, and execution lifecycle.
-- [`events-and-listeners.md`](events-and-listeners.md) — PSR-14 event architecture and domain event testing.
+- [`infra-commands.md`](infra-commands.md) — Console command definition, input arguments/options, and execution lifecycle.
+- [`core-events-and-listeners.md`](core-events-and-listeners.md) — PSR-14 event architecture and domain event testing.

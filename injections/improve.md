@@ -25,6 +25,6 @@ While refining the plan also check, and report in the usual findings groups:
   refactor the task to split into Use Case / Command Handler + Event Listener, keeping Action strictly for HTTP orchestration.
 - **Wrong order** — code tasks that precede the install/config/migration they depend on (🔗 dependency fixes).
 - **Architecture placement** — every file path vs the architecture source (`/aif-architecture` artifact, else the existing layout):
-  wrong layer/slice, dependency-rule violations, new top-level folders. Consult `references/feature-recipes.md`.
+  wrong layer/slice, dependency-rule violations, new top-level folders. Consult `references/core-feature-recipes.md`.
 - **Yii2-isms** in task text (`Yii::$app`, `yii\...`, `rules()`, behaviors) → rewrite for Yii3.
 Existing-code refactoring goes only to "💡 Out of scope".

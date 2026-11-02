@@ -198,7 +198,7 @@ The map above is the complete `yiisoft/app` set — **19 groups**. There is deli
 **Package-side configuration.** Packages participate through their own `composer.json` `extra`: a `config-plugin` map (group => files), `config-plugin-options`, or a `config-plugin-file` pointing to a PHP map with the same schema as above (when `config-plugin-file` is set, inline `config-plugin*` extras are ignored). The plugin scans every installed package of the configured `package-types` and merges their groups into the merge plan.
 
 > [!NOTE]
-> **The `events*` groups are consumed by `yiisoft/yii-event`.** The package's params key selects the active group — `'yiisoft/yii-event' => ['eventsConfigGroup' => 'events-web']` (or `'events-console'`) — and its own DI wiring loads that group through the `$config` local variable (see [3.1](#31-rules-for-parameters)): `ListenerCollection::class => static fn (Factory $factory) => $factory->create($config->get($params['yiisoft/yii-event']['eventsConfigGroup']))`. `yiisoft/yii-event` also ships the PSR-14 bindings (`EventDispatcherInterface::class`, `ListenerProviderInterface::class`) and declares the `events*` groups as empty so they always exist. Event names inside an events group must be event class names — no wildcards. See the [Events & Listeners Guide](events-and-listeners.md).
+> **The `events*` groups are consumed by `yiisoft/yii-event`.** The package's params key selects the active group — `'yiisoft/yii-event' => ['eventsConfigGroup' => 'events-web']` (or `'events-console'`) — and its own DI wiring loads that group through the `$config` local variable (see [3.1](#31-rules-for-parameters)): `ListenerCollection::class => static fn (Factory $factory) => $factory->create($config->get($params['yiisoft/yii-event']['eventsConfigGroup']))`. `yiisoft/yii-event` also ships the PSR-14 bindings (`EventDispatcherInterface::class`, `ListenerProviderInterface::class`) and declares the `events*` groups as empty so they always exist. Event names inside an events group must be event class names — no wildcards. See the [Events & Listeners Guide](core-events-and-listeners.md).
 
 ### 2.4. File Syntax Markers in Config Groups
 
@@ -1143,6 +1143,6 @@ php scripts/check-di-syntax.php [path-to-project]
 
 ## 9. Related Topic Guides
 
-- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and RoadRunner/FrankenPHP workers with `StateResetter`.
-- [Events & Listeners Guide](events-and-listeners.md) — PSR-14 event mapping and listener registration in config groups.
-- [Conventions Guide](conventions.md) — Architectural invariants, configuration directories, and SSOT verification rule.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and RoadRunner/FrankenPHP workers with `StateResetter`.
+- [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 event mapping and listener registration in config groups.
+- [Conventions Guide](core-conventions.md) — Architectural invariants, configuration directories, and SSOT verification rule.

@@ -562,7 +562,7 @@ final readonly class UserApiCest
 ## 10. Related Guides
 - [`testing-core.md`](testing-core.md) — Test architecture, test runners (PHPUnit, Testo), PSR test doubles, and unit testing.
 - [`testing-database.md`](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
-- [`middlewares.md`](middlewares.md) — PSR-15 middleware pipeline and official middleware catalog.
+- [`http-middlewares.md`](http-middlewares.md) — PSR-15 middleware pipeline and official middleware catalog.
 - [`http-state.md`](http-state.md) — Sessions, cookies, CSRF protection, and flash messages.
-- [`actions-and-controllers.md`](actions-and-controllers.md) — Action design, request DTO hydration, and response formatting.
-- [`routes.md`](routes.md) — FastRoute routing syntax, route groups, and route middleware dispatching.
+- [`http-actions-and-controllers.md`](http-actions-and-controllers.md) — Action design, request DTO hydration, and response formatting.
+- [`http-routes.md`](http-routes.md) — FastRoute routing syntax, route groups, and route middleware dispatching.

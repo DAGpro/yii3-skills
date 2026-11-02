@@ -178,7 +178,7 @@ Yii3 route actions are resolved via `Yiisoft\Middleware\Dispatcher\MiddlewareFac
 | **Closure / Callable** | `function(ServerRequestInterface $request): ResponseInterface` | `->action(fn(ServerRequestInterface $r): ResponseInterface => $responseFactory->createResponse())` |
 
 > [!TIP]
-> For detailed instructions on writing single-action invokable controllers, parameter resolution, and PSR-7 response generation, see [Actions & Controllers Guide](actions-and-controllers.md).
+> For detailed instructions on writing single-action invokable controllers, parameter resolution, and PSR-7 response generation, see [Actions & Controllers Guide](http-actions-and-controllers.md).
 
 ### 1.4. Attribute-Based Route Collection (`yiisoft/router-composer-attribute-collector`)
 
@@ -720,7 +720,7 @@ final readonly class OrderRequest
 Route middleware execution follows the standard PSR-15 **onion / pipeline model (FIFO on Request Ingress, LIFO on Response Egress)**.
 
 > [!TIP]
-> For complete instructions on authoring custom PSR-15 middlewares, global application pipelines, and the official middleware catalog, see [PSR-15 Middlewares Guide](middlewares.md).
+> For complete instructions on authoring custom PSR-15 middlewares, global application pipelines, and the official middleware catalog, see [PSR-15 Middlewares Guide](http-middlewares.md).
 
 ### 5.1. Execution Order Hierarchy (The Onion Model)
 
@@ -864,7 +864,7 @@ return [
 ```
 
 > [!TIP]
-> For identity storage, token authentication, and defining role/permission hierarchies in `yiisoft/rbac`, see [Authentication & RBAC Guide](auth-and-rbac.md).
+> For identity storage, token authentication, and defining role/permission hierarchies in `yiisoft/rbac`, see [Authentication & RBAC Guide](infra-auth-and-rbac.md).
 
 ---
 
@@ -1020,7 +1020,7 @@ public function __construct(
 3. **Alias Registration:** It registers the detected base path with `Yiisoft\Aliases\Aliases` under `@baseUrl` (`$aliases->set('@baseUrl', $baseUrl)`), making it available to asset publishers and template helpers.
 4. **Auto-Detection Mode:** If `$prefix` is omitted (`null`), `Subfolder` automatically derives the web path from `$_SERVER` environment variables (`SCRIPT_FILENAME`, `PHP_SELF`, `ORIG_SCRIPT_NAME`, `DOCUMENT_ROOT`).
 
-Register `Subfolder` in the HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via `withMiddlewares()` on `MiddlewareDispatcher` (see [error-handling.md](error-handling.md), section 2):
+Register `Subfolder` in the HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via `withMiddlewares()` on `MiddlewareDispatcher` (see [error-handling.md](infra-error-handling.md), section 2):
 
 ```php
 declare(strict_types=1);
@@ -1429,8 +1429,8 @@ return [
 
 ## 10. Related Topic Guides
 
-- [Actions & Controllers Guide](actions-and-controllers.md) — Single-action controllers, PSR-7 response factories, and input DTO hydration.
-- [PSR-15 Middlewares Guide](middlewares.md) — Middleware pipeline flow, official middlewares catalog, and custom guards.
-- [Authentication & RBAC Guide](auth-and-rbac.md) — Route access control, authentication middlewares, and RBAC permission checks.
-- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting routes, endpoints, and schemas with PHP 8 attributes.
-- [I18n & Translation Guide](i18n-translation.md) — Message translation, category sources, and integration with `SetLocaleEvent`.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Single-action controllers, PSR-7 response factories, and input DTO hydration.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Middleware pipeline flow, official middlewares catalog, and custom guards.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Route access control, authentication middlewares, and RBAC permission checks.
+- [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting routes, endpoints, and schemas with PHP 8 attributes.
+- [I18n & Translation Guide](http-i18n-translation.md) — Message translation, category sources, and integration with `SetLocaleEvent`.

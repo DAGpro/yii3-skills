@@ -1251,9 +1251,9 @@ $this->resetters[] = $callback->bindTo($instance, $instance::class);
 
 ## 9. Related Topic Guides
 
-- [DI & Configuration Guide](di-and-config.md) — Config groups, definitions, modifiers, and container compilation.
-- [Console Commands Guide](commands.md) — CLI commands executed via `ConsoleApplicationRunner`.
-- [PSR-15 Middlewares Guide](middlewares.md) — HTTP pipeline execution order and request catchers.
-- [Error Handling Guide](error-handling.md) — ErrorCatcher middleware, friendly exceptions, and temporary error handlers.
+- [DI & Configuration Guide](core-di-and-config.md) — Config groups, definitions, modifiers, and container compilation.
+- [Console Commands Guide](infra-commands.md) — CLI commands executed via `ConsoleApplicationRunner`.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — HTTP pipeline execution order and request catchers.
+- [Error Handling Guide](infra-error-handling.md) — ErrorCatcher middleware, friendly exceptions, and temporary error handlers.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, and CSRF token handling.
-- [Authentication & RBAC Guide](auth-and-rbac.md) — `CurrentUser` lifecycle and identity management.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — `CurrentUser` lifecycle and identity management.

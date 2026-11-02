@@ -1014,9 +1014,9 @@ $writer->delete(items: [$oldUser]);
 
 - [Database Persistence Guide](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
 - [Active Record Persistence Guide](persistence-active-record.md) — Active Record models, relations, lifecycle, and LazyLoadGuard.
-- [Database Migrations Guide](migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands for `yiisoft/db`.
+- [Database Migrations Guide](persistence-migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands for `yiisoft/db`.
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
-- [Actions & Controllers Guide](actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
-- [Caching Guide](caching.md) — Query caching and cache invalidation strategies for repositories.
-- [Auth & RBAC Guide](auth-and-rbac.md) — RBAC manager, permission checks, and `yiisoft/rbac-cycle-db` integration.
-- [Runners & Runtimes Guide](runners-and-runtimes.md) — RoadRunner & FrankenPHP workers, StateResetter, and long-running process safety.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
+- [Caching Guide](persistence-caching.md) — Query caching and cache invalidation strategies for repositories.
+- [Auth & RBAC Guide](infra-auth-and-rbac.md) — RBAC manager, permission checks, and `yiisoft/rbac-cycle-db` integration.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — RoadRunner & FrankenPHP workers, StateResetter, and long-running process safety.

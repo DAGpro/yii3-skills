@@ -30,8 +30,8 @@
 |---|---|---|
 | `yiisoft/files` | Static filesystem utilities: directories, copying, deletion, path normalization, wildcard filtering | `Yiisoft\Files\FileHelper` + `PathMatcher\*` classes. **No** `File`/`Directory` objects, **no** upload helpers, **no** filename sanitizer. **Never resolves aliases** — resolve with `Yiisoft\Aliases\Aliases::get()` before any call (§2.2). |
 | `yiisoft/response-download` | Factory for PSR-7 download responses (attachment/inline, x-sendfile, byte ranges) | `Yiisoft\ResponseDownload\DownloadResponseFactory`. **Concrete class, no factory interface exists.** |
-| `yiisoft/validator` | Upload validation rules: `Yiisoft\Validator\Rule\File` (extensions, MIME, size), `Yiisoft\Validator\Rule\Image\Image` (dimensions) | The file rule is the **flat class** `Rule\File` — `Rule\File\File` does not exist. See [Validation & Forms Guide](validation-and-forms.md) §2.3. |
-| `yiisoft/input-http` | `#[UploadedFiles]` parameter attribute to pull uploaded files into action arguments | See [Validation & Forms Guide](validation-and-forms.md) §8. |
+| `yiisoft/validator` | Upload validation rules: `Yiisoft\Validator\Rule\File` (extensions, MIME, size), `Yiisoft\Validator\Rule\Image\Image` (dimensions) | The file rule is the **flat class** `Rule\File` — `Rule\File\File` does not exist. See [Validation & Forms Guide](http-validation-and-forms.md) §2.3. |
+| `yiisoft/input-http` | `#[UploadedFiles]` parameter attribute to pull uploaded files into action arguments | See [Validation & Forms Guide](http-validation-and-forms.md) §8. |
 | `yiisoft/http` | HTTP constants: `Yiisoft\Http\Status`, `Yiisoft\Http\Header`, `Yiisoft\Http\ContentDispositionHeader` (`ATTACHMENT` / `INLINE`) | Final constant-only classes. **No** `ContentType` or `StatusCode` classes exist. |
 | `yiisoft/data-response` | Data/JSON responses: `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface::createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = '')` | The data parameter is `mixed`, not `array`. Root-namespace `DataResponse*` classes are `@deprecated` — use `ResponseFactory\*`. |
 | `yiisoft/aliases` | Alias resolution: `Yiisoft\Aliases\Aliases::get('@alias')` | `final`, **no interface** — inject the concrete class. Ships no predefined aliases; `@runtime` is defined by the app template, `@uploads` must be registered by the project (§5). |
@@ -577,4 +577,4 @@ return [
 
 ## Related Topic Guides
 
-- [Utility Packages Guide](utilities.md) — `ArrayHelper`, `StringHelper`, `Json`, `VarDumper`, `Classifier`, and IP/DNS helpers.
+- [Utility Packages Guide](core-utilities.md) — `ArrayHelper`, `StringHelper`, `Json`, `VarDumper`, `Classifier`, and IP/DNS helpers.

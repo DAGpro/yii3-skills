@@ -57,7 +57,7 @@
 
 ## 1. Package Architecture & Responsibilities
 
-In Yii 3, validation, object hydration, form modeling, and HTTP request parsing are deliberately decoupled into dedicated, focused packages. Applications install only what their architecture requires (see [Dependency Protocol](dependency-protocol.md)).
+In Yii 3, validation, object hydration, form modeling, and HTTP request parsing are deliberately decoupled into dedicated, focused packages. Applications install only what their architecture requires (see [Dependency Protocol](core-dependency-protocol.md)).
 
 ```
 +---------------------------------------------------------------------------------------+
@@ -106,7 +106,7 @@ In Yii 3, validation, object hydration, form modeling, and HTTP request parsing 
 | `yiisoft/translator` | Message translation and placeholder formatting engine | `TranslatorInterface`, `SimpleMessageFormatter`, `IntlMessageFormatter` | `vendor/yiisoft/translator/src/` |
 
 > [!IMPORTANT]
-> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from `yiisoft/request-body-parser` must be placed in the middleware pipeline before any action or input resolver. If omitted, `$request->getParsedBody()` returns `null` for JSON requests, causing `FromBodyResolver` to silently resolve an empty array `[]`. See [PSR-15 Middlewares Guide](middlewares.md).
+> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from `yiisoft/request-body-parser` must be placed in the middleware pipeline before any action or input resolver. If omitted, `$request->getParsedBody()` returns `null` for JSON requests, causing `FromBodyResolver` to silently resolve an empty array `[]`. See [PSR-15 Middlewares Guide](http-middlewares.md).
 
 ---
 
@@ -1799,9 +1799,9 @@ final readonly class ValidationProblemDetailsResponder
 
 ## 13. Related Topic Guides
 
-- [Actions & Controllers Guide](actions-and-controllers.md) — Hydrating DTOs and handling FormModels inside Web and API controllers.
-- [Views, Layouts & Widgets Guide](views-and-widgets.md) — View rendering, asset management, and field widget configurations.
-- [PSR-15 Middlewares Guide](middlewares.md) — Configuring `RequestBodyParser`, `CsrfTokenMiddleware`, and request pipeline ordering.
-- [Routing Guide](routes.md) — Inspecting route parameters via `CurrentRoute`.
-- [Error Handling Guide](error-handling.md) — Centralized exception responders and Problem Details formatting.
-- [Dependency Protocol](dependency-protocol.md) — Package dependency resolution and installation rules.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Hydrating DTOs and handling FormModels inside Web and API controllers.
+- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — View rendering, asset management, and field widget configurations.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Configuring `RequestBodyParser`, `CsrfTokenMiddleware`, and request pipeline ordering.
+- [Routing Guide](http-routes.md) — Inspecting route parameters via `CurrentRoute`.
+- [Error Handling Guide](infra-error-handling.md) — Centralized exception responders and Problem Details formatting.
+- [Dependency Protocol](core-dependency-protocol.md) — Package dependency resolution and installation rules.

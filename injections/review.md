@@ -9,5 +9,5 @@ In a Yii3 project (`yiisoft/*` in `composer.json`, no `yiisoft/yii2`) additional
 - **Missing Transactions:** multiple state-modifying database operations without `$db->transaction()`.
 - **API Response:** returning raw PHP arrays or `json_encode` instead of using `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` with proper HTTP status codes.
 - **Packages & Config:** packages used in code but missing from `composer.json`, or files edited in `vendor/` or `config/.merge-plan.php`.
-- **Architecture violations:** judged against the `/aif-architecture` artifact or, if absent, the existing project structure (`references/feature-recipes.md`).
+- **Architecture violations:** judged against the `/aif-architecture` artifact or, if absent, the existing project structure (`references/core-feature-recipes.md`).
 Ensure project linters and static analysis (Psalm/PHPStan, Rector, CS-Fixer) pass.

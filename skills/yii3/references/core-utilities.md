@@ -60,8 +60,8 @@ Yii3 decomposes monolithic framework helpers into focused, independent packages.
 | `yiisoft/friendly-exception` | `composer require yiisoft/friendly-exception` | `FriendlyExceptionInterface` | Cross-cutting contract defining `getName()` and `getSolution()`. Rendered automatically by `yiisoft/error-handler` and `yiisoft/yii-console`. |
 
 Two closely related packages are documented in dedicated guides:
-- `yiisoft/files` (`FileHelper`) in [File Handling Guide](file-handling.md).
-- `yiisoft/aliases` (`Aliases`) in [DI & Configuration Guide](di-and-config.md).
+- `yiisoft/files` (`FileHelper`) in [File Handling Guide](http-file-handling.md).
+- `yiisoft/aliases` (`Aliases`) in [DI & Configuration Guide](core-di-and-config.md).
 
 ---
 
@@ -955,7 +955,7 @@ Application code never needs custom try-catch rendering blocks for friendly exce
 
 ## 10. Placement in Yii3 Architecture
 
-Following the architectural taxonomy in [Architecture Alignment Guide](architecture-alignment.md):
+Following the architectural taxonomy in [Architecture Alignment Guide](core-architecture-alignment.md):
 
 | Layer | Packages | Clean Architecture Placement & Invariants |
 |---|---|---|
@@ -1009,11 +1009,11 @@ If your domain layer requires string transformations (such as slug generation), 
 
 ## 12. Related Topic Guides
 
-- [Architecture Alignment Guide](architecture-alignment.md) — Architectural placement of utility packages, static helper boundaries, and domain adapter encapsulation.
-- [File Handling Guide](file-handling.md) — Filesystem operations via `yiisoft/files` (`FileHelper`), stream responses, and secure file uploads.
-- [DI & Configuration Guide](di-and-config.md) — Path aliases via `yiisoft/aliases` (`Aliases`) and configuration parameter compilation.
-- [Authentication & RBAC Guide](auth-and-rbac.md) — Role-based access control storage using `VarDumper::create()->export()` to persist PHP permission rules.
-- [Views & Widgets Guide](views-and-widgets.md) — Secure template rendering, HTML escaping, and embedding `Json::htmlEncode()` payloads into JavaScript widgets.
-- [PSR-15 Middlewares Guide](middlewares.md) — Enforcing network security guards, trusted proxy subnets, and IP allowlists via `IpRanges`.
-- [Console Commands Guide](commands.md) — Authoring console commands that execute build-time `Classifier` scanning and `RequirementsChecker` pre-flight diagnostics.
-- [Caching Guide](caching.md) — Caching discovered class lists, reflection metadata, and compiled regular expression match tables.
+- [Architecture Alignment Guide](core-architecture-alignment.md) — Architectural placement of utility packages, static helper boundaries, and domain adapter encapsulation.
+- [File Handling Guide](http-file-handling.md) — Filesystem operations via `yiisoft/files` (`FileHelper`), stream responses, and secure file uploads.
+- [DI & Configuration Guide](core-di-and-config.md) — Path aliases via `yiisoft/aliases` (`Aliases`) and configuration parameter compilation.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Role-based access control storage using `VarDumper::create()->export()` to persist PHP permission rules.
+- [Views & Widgets Guide](http-views-and-widgets.md) — Secure template rendering, HTML escaping, and embedding `Json::htmlEncode()` payloads into JavaScript widgets.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Enforcing network security guards, trusted proxy subnets, and IP allowlists via `IpRanges`.
+- [Console Commands Guide](infra-commands.md) — Authoring console commands that execute build-time `Classifier` scanning and `RequirementsChecker` pre-flight diagnostics.
+- [Caching Guide](persistence-caching.md) — Caching discovered class lists, reflection metadata, and compiled regular expression match tables.

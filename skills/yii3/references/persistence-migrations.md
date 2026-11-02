@@ -1188,4 +1188,4 @@ Only when no additional databases are configured does the command fall back to t
 - [Database Persistence Guide](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
 - [Active Record Persistence Guide](persistence-active-record.md) — Active Record models, relations, lifecycle, and LazyLoadGuard.
 - [Cycle ORM Persistence Guide](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
-- [Console Commands Guide](commands.md) — Running migration commands (`./yii migrate:*`) and console runners.
+- [Console Commands Guide](infra-commands.md) — Running migration commands (`./yii migrate:*`) and console runners.

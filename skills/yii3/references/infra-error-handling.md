@@ -139,7 +139,7 @@ return [
 
 ## 3. Exception Mapping with ExceptionResponder
 
-`Yiisoft\ErrorHandler\Middleware\ExceptionResponder` converts domain and application exceptions into designated HTTP responses or status codes without bloating controllers with try-catch blocks. For guidelines on thin-action design and returning structured responses, see [Actions & Controllers Guide](actions-and-controllers.md).
+`Yiisoft\ErrorHandler\Middleware\ExceptionResponder` converts domain and application exceptions into designated HTTP responses or status codes without bloating controllers with try-catch blocks. For guidelines on thin-action design and returning structured responses, see [Actions & Controllers Guide](http-actions-and-controllers.md).
 
 Constructor signature (exact names, order, and defaults):
 
@@ -659,7 +659,7 @@ When `ErrorCatcher` catches an uncaught exception, it dispatches the `Yiisoft\Er
 > Installing `yiisoft/error-handler` alone provides **no** PSR-14 dispatcher (`psr/event-dispatcher` is only a `require-dev` dependency of the package). `yiisoft/yii-event` ships the actual wiring: `EventDispatcherInterface::class => Dispatcher::class` and `ListenerProviderInterface::class => Provider::class`. Without a dispatcher reaching `ErrorCatcher` / `ErrorHandler`, no `ApplicationError` listener ever runs.
 
 > [!TIP]
-> For logger DI wiring, targets (file/db/email/syslog/stream), categories, and placeholders, see [Logging Guide](logging.md). Note that `yiisoft/log` ships its own listeners that flush the logger on `Yiisoft\Yii\Http\Event\AfterEmit` (web) and `ConsoleTerminateEvent` (console).
+> For logger DI wiring, targets (file/db/email/syslog/stream), categories, and placeholders, see [Logging Guide](infra-logging.md). Note that `yiisoft/log` ships its own listeners that flush the logger on `Yiisoft\Yii\Http\Event\AfterEmit` (web) and `ConsoleTerminateEvent` (console).
 
 In `src/Infrastructure/Error/Listener/LogApplicationErrorListener.php`:
 
@@ -954,7 +954,7 @@ $errorHandler->register(); // Idempotent; once per process.
 
 ## 12. Related Topic Guides
 
-- [Actions & Controllers Guide](actions-and-controllers.md) — Action handlers, PSR-7 response factories, and thin-action error delegation.
-- [PSR-15 Middlewares Guide](middlewares.md) — Pipeline flow, ErrorCatcher positioning, and custom error middleware.
-- [Logging Guide](logging.md) — PSR-3 logger configuration, log targets, and context logging.
-- [Events & Listeners Guide](events-and-listeners.md) — PSR-14 dispatcher wiring, listener definition formats, and event configuration groups.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Action handlers, PSR-7 response factories, and thin-action error delegation.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Pipeline flow, ErrorCatcher positioning, and custom error middleware.
+- [Logging Guide](infra-logging.md) — PSR-3 logger configuration, log targets, and context logging.
+- [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 dispatcher wiring, listener definition formats, and event configuration groups.

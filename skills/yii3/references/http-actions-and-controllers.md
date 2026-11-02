@@ -23,8 +23,8 @@
 2. **Single-Action Invokable Classes (Recommended):**
    - Prefer single-action classes implementing `__invoke(ServerRequestInterface $request): ResponseInterface` or PSR-15 `Psr\Http\Server\RequestHandlerInterface::handle(ServerRequestInterface $request): ResponseInterface`.
    - Multi-action controllers (e.g. `[UserController::class, 'view']`) are supported via `MiddlewareFactory`, but every action method must strictly return `ResponseInterface`.
-   - Actions are mapped to HTTP endpoints via route definitions. For routing syntax, FastRoute placeholders, and route groups, see [Routing Guide](routes.md).
-   - Actions are the terminal handlers of the PSR-15 pipeline. For middleware ordering, body parsers, and guard filters, see [PSR-15 Middlewares Guide](middlewares.md).
+   - Actions are mapped to HTTP endpoints via route definitions. For routing syntax, FastRoute placeholders, and route groups, see [Routing Guide](http-routes.md).
+   - Actions are the terminal handlers of the PSR-15 pipeline. For middleware ordering, body parsers, and guard filters, see [PSR-15 Middlewares Guide](http-middlewares.md).
 3. **Thin Action Principle (Strict Boundary):**
    - **Allowed in Actions:**
      - Extract request parameters, route arguments (`CurrentRoute`), query params, headers, cookies, and parsed body.
@@ -354,7 +354,7 @@ if (!$result->isValid()) {
 
 > [!TIP]
 > For the full built-in rules catalog, custom rule authoring, `skipOnEmpty`/`when` modifiers, message translation,
-> FormModel + `FormHydrator`, and `yiisoft/input-http` wiring details, see [Validation & Forms Guide](validation-and-forms.md).
+> FormModel + `FormHydrator`, and `yiisoft/input-http` wiring details, see [Validation & Forms Guide](http-validation-and-forms.md).
 
 > [!CAUTION]
 > **Optional fields are not skipped by default.** The per-rule `skipOnEmpty` option defaults to `null`, which the validator normalizes to "never skip". An empty value in an optional property therefore still fails `Length`, `Integer`, `Regex`, and similar rules. Pass `skipOnEmpty: true` on the rule (or configure the validator with `defaultSkipOnEmpty`) to make fields truly optional.
@@ -564,7 +564,7 @@ final readonly class ContactAction
 > Missing scope data is not silent: `populateFromPostAndValidate()` then deterministically returns `false` and validation is skipped. Always branch on the returned `bool` — that is the detection mechanism.
 
 > [!TIP]
-> For layout configurations, page lifecycle, asset bundles, custom widgets, and DataView components (`GridView`, `ListView`, `DetailView`), see [Views, Layouts & Widgets Guide](views-and-widgets.md).
+> For layout configurations, page lifecycle, asset bundles, custom widgets, and DataView components (`GridView`, `ListView`, `DetailView`), see [Views, Layouts & Widgets Guide](http-views-and-widgets.md).
 
 **WebViewRenderer Capabilities:**
 - Full layout rendering: `$this->webViewRenderer->render('contact/index', ['form' => $form])` returns a typed `ResponseInterface` and sets `Content-Type: text/html; charset=UTF-8` (customizable via `withContentType()` / `withEncoding()`).
@@ -963,7 +963,7 @@ final readonly class NotifyUserAction
 > Notice the named argument is `parameters:`, NOT `params:`. Passing `params:` produces an `Unknown named parameter $params` fatal error — this is the PHP language consequence of a wrong named parameter, not a framework-level check.
 
 > [!TIP]
-> The default category is `app` and the default locale is `en-US`. Translating via an unregistered category does not throw — the raw message ID is returned as-is. For message sources, plural forms, locale switching, and category configuration, see [i18n & Translation Guide](i18n-translation.md).
+> The default category is `app` and the default locale is `en-US`. Translating via an unregistered category does not throw — the raw message ID is returned as-is. For message sources, plural forms, locale switching, and category configuration, see [i18n & Translation Guide](http-i18n-translation.md).
 
 ---
 
@@ -1032,7 +1032,7 @@ final readonly class ShowUserAction
 
 > [!TIP]
 > **Error Handling & Exception Propagation:**
-> If an action or domain service throws an unhandled exception, it is caught by `Yiisoft\ErrorHandler\Middleware\ErrorCatcher` (package `yiisoft/error-handler`) and converted into an appropriate HTTP response. For exception responders and error templates, see [Error Handling Guide](error-handling.md).
+> If an action or domain service throws an unhandled exception, it is caught by `Yiisoft\ErrorHandler\Middleware\ErrorCatcher` (package `yiisoft/error-handler`) and converted into an appropriate HTTP response. For exception responders and error templates, see [Error Handling Guide](infra-error-handling.md).
 
 ---
 
@@ -1063,12 +1063,12 @@ final readonly class ShowUserAction
 
 ## 5. Related Topic Guides
 
-- [Routing Guide](routes.md) — Route definition, FastRoute patterns, and URL generation.
-- [PSR-15 Middlewares Guide](middlewares.md) — Middleware pipeline ordering, authentication guards, and request manipulation.
-- [Views, Layouts & Widgets Guide](views-and-widgets.md) — HTML view templates, layouts, asset bundles, and DataView widgets.
-- [Error Handling Guide](error-handling.md) — Exception catching, status code responders, and error presentation formats.
-- [Validation & Forms Guide](validation-and-forms.md) — Input validation, FormModel hydration, and DTO rules.
-- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API action endpoints, request bodies, and schemas with PHP 8 attributes.
+- [Routing Guide](http-routes.md) — Route definition, FastRoute patterns, and URL generation.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Middleware pipeline ordering, authentication guards, and request manipulation.
+- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — HTML view templates, layouts, asset bundles, and DataView widgets.
+- [Error Handling Guide](infra-error-handling.md) — Exception catching, status code responders, and error presentation formats.
+- [Validation & Forms Guide](http-validation-and-forms.md) — Input validation, FormModel hydration, and DTO rules.
+- [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting API action endpoints, request bodies, and schemas with PHP 8 attributes.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and CSRF state management in depth.
-- [i18n & Translation Guide](i18n-translation.md) — Message sources, categories, plural forms, and locale handling.
+- [i18n & Translation Guide](http-i18n-translation.md) — Message sources, categories, plural forms, and locale handling.
 

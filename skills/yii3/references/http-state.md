@@ -424,13 +424,13 @@ For AJAX: send the token via the `X-CSRF-Token` header, or use one of the two of
   `ErrorCatcher → SessionMiddleware → CsrfTokenCookieMiddleware → CsrfTokenMiddleware (withHeaderName('X-XSRF-TOKEN')) → Router`.
 
 There is no built-in integration with `yiisoft/form-model` /
-`yiisoft/form` — the hidden field is rendered manually in templates (see [Validation & Forms Guide](validation-and-forms.md)
+`yiisoft/form` — the hidden field is rendered manually in templates (see [Validation & Forms Guide](http-validation-and-forms.md)
 §6 for form rendering).
 
 > [!IMPORTANT]
 > `CsrfTokenMiddleware` reads the token from **parsed body** — for JSON payloads the body must be parsed by
 > `Yiisoft\Request\Body\RequestBodyParser` first, or the token must arrive via the header instead
-> (see [PSR-15 Middlewares Guide](middlewares.md)). Its default parsers cover **only** `application/json`
+> (see [PSR-15 Middlewares Guide](http-middlewares.md)). Its default parsers cover **only** `application/json`
 > (XML or form-data parsers require `withParser()`); malformed JSON is answered with `400` by the default
 > `BadRequestHandler`, and JSON objects are decoded as associative arrays.
 

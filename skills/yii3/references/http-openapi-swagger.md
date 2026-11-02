@@ -1581,11 +1581,11 @@ When deploying new code releases in production:
 
 ## 11. Related Topic Guides
 
-- [Routing Guide](routes.md) — FastRoute syntax, route groups, regex parameter constraints, and middleware ordering.
-- [Actions & Controllers Guide](actions-and-controllers.md) — Single-action invokable controllers, PSR-7 data responses, and request handling.
-- [Validation & Forms Guide](validation-and-forms.md) — Request DTO validation using `yiisoft/validator` attributes and `ValidatingHydrator`.
-- [PSR-15 Middlewares Guide](middlewares.md) — Guarding endpoints with authentication, rate limiting, and IP filtering.
-- [Authentication & RBAC Guide](auth-and-rbac.md) — Implementing JWT bearer tokens and OAuth 2.0 flows documented in OpenAPI security schemes.
-- [Console Commands Guide](commands.md) — Building Symfony Console CLI tools like offline specification generators.
-- [File Handling Guide](file-handling.md) — Handling binary uploads (`multipart/form-data`) and stream responses.
-- [Views & Widgets Guide](views-and-widgets.md) — View rendering, theme path mapping (`Theme::$pathMap`), and asset bundle architecture.
+- [Routing Guide](http-routes.md) — FastRoute syntax, route groups, regex parameter constraints, and middleware ordering.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Single-action invokable controllers, PSR-7 data responses, and request handling.
+- [Validation & Forms Guide](http-validation-and-forms.md) — Request DTO validation using `yiisoft/validator` attributes and `ValidatingHydrator`.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Guarding endpoints with authentication, rate limiting, and IP filtering.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Implementing JWT bearer tokens and OAuth 2.0 flows documented in OpenAPI security schemes.
+- [Console Commands Guide](infra-commands.md) — Building Symfony Console CLI tools like offline specification generators.
+- [File Handling Guide](http-file-handling.md) — Handling binary uploads (`multipart/form-data`) and stream responses.
+- [Views & Widgets Guide](http-views-and-widgets.md) — View rendering, theme path mapping (`Theme::$pathMap`), and asset bundle architecture.

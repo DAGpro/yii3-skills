@@ -56,7 +56,7 @@ Creates or modifies domain state and involves side-effects.
 5. **Configuration & Wiring (Mandatory):**
    - **DI:** Bind `OrderRepositoryInterface => SqlOrderRepository` in `config/common/di/*.php`. Definition forms: `Interface::class => Class::class` or the full form `['class' => ..., '__construct()' => [...]]`.
    - **Events:** Map listeners in the events config group selected by the `'yiisoft/yii-event' => ['eventsConfigGroup' => ...]` param (`events-web` for HTTP, `events-console` for console; the canonical app template ships `'events' => []` and `'events-web' => ['$events']`). A file-based layout (e.g. `config/common/events.php`) works only if you also map that file into the `events` group in the app's root config plugin — the same way `'routes' => 'common/routes.php'` is mapped.
-   - **Routes:** Register routes in `config/common/routes.php` (the only routes group in the canonical template — there is no `routes-web` group). Use version-aware route syntax — see Archetype F and the [Routing Guide](routes.md).
+   - **Routes:** Register routes in `config/common/routes.php` (the only routes group in the canonical template — there is no `routes-web` group). Use version-aware route syntax — see Archetype F and the [Routing Guide](http-routes.md).
 
 ---
 
@@ -130,7 +130,7 @@ $list = $this->productListService->getList(currentPage: $page);
 return $this->dataResponseFactory->createResponse($list, Status::OK); // Yiisoft\Http\Status
 ```
 
-**Web listing:** render through `yiisoft/view` templates and the dataview widget — note the doubled sub-namespace: `Yiisoft\Yii\DataView\GridView\GridView::widget()->dataReader($paginator)->columns(new DataColumn(property: 'title', header: 'Title'))` (see the [Views & Widgets Guide](views-and-widgets.md)).
+**Web listing:** render through `yiisoft/view` templates and the dataview widget — note the doubled sub-namespace: `Yiisoft\Yii\DataView\GridView\GridView::widget()->dataReader($paginator)->columns(new DataColumn(property: 'title', header: 'Title'))` (see the [Views & Widgets Guide](http-views-and-widgets.md)).
 
 ---
 
@@ -196,7 +196,7 @@ final class SendWelcomeEmailHandler implements HandlerInterface
 
 **Workers:** the consumer commands `queue:run`, `queue:listen`, and `queue:listen-all` are auto-registered under `'yiisoft/yii-console' => ['commands' => [...]]` by the queue package.
 
-**Retry is NOT built into the core package:** configure the `middlewares-fail` list (built-in middlewares `SendAgainMiddleware`, `ExponentialDelayMiddleware`). Adapter notes: `queue-db` works with any `ConnectionInterface` (TTR default 300 s; ships the `queue` table migration), `queue-redis` requires ext-redis (a handler returning `true` acknowledges/deletes the message), `queue-amqp`'s `status()` throws `NotImplementedException` and delays require exchange settings. Adapters pin `yiisoft/queue` at dev-master — anchor wiring to the installed vendor versions (see the [Queue Jobs Guide](queue-jobs.md)).
+**Retry is NOT built into the core package:** configure the `middlewares-fail` list (built-in middlewares `SendAgainMiddleware`, `ExponentialDelayMiddleware`). Adapter notes: `queue-db` works with any `ConnectionInterface` (TTR default 300 s; ships the `queue` table migration), `queue-redis` requires ext-redis (a handler returning `true` acknowledges/deletes the message), `queue-amqp`'s `status()` throws `NotImplementedException` and delays require exchange settings. Adapters pin `yiisoft/queue` at dev-master — anchor wiring to the installed vendor versions (see the [Queue Jobs Guide](infra-queue-jobs.md)).
 
 ---
 
@@ -301,7 +301,7 @@ final readonly class SignupAction
 </form>
 ```
 
-Note: CSRF is not auto-embedded by `yiisoft/form` or `yiisoft/form-model` — the middleware plus the rendered token handle it (see the [Validation & Forms Guide](validation-and-forms.md) and the [HTTP State Guide](http-state.md)).
+Note: CSRF is not auto-embedded by `yiisoft/form` or `yiisoft/form-model` — the middleware plus the rendered token handle it (see the [Validation & Forms Guide](http-validation-and-forms.md) and the [HTTP State Guide](http-state.md)).
 
 ---
 
@@ -388,7 +388,7 @@ final class ImportCommand extends Command
          ],
      ],
      ```
-     The `:` separator is the naming convention; alias/hidden syntax `'start|run|s|r'` is supported (see the [Commands Guide](commands.md)).
+     The `:` separator is the naming convention; alias/hidden syntax `'start|run|s|r'` is supported (see the [Commands Guide](infra-commands.md)).
 
 ---
 
@@ -435,7 +435,7 @@ Exposes complete collection and resource management with standard HTTP semantics
      > Discriminator: check whether `vendor/yiisoft/router/src/Route/Get.php` exists in the installed project.
      > Routes live in `config/common/routes.php` (the canonical template has no `routes-web` group); the
      > `routes` config group is consumed by DI, which builds `RouteCollectionInterface` via
-     > `(new RouteCollector())->addRoute(...$config->get('routes'))` — see the [Routing Guide](routes.md).
+     > `(new RouteCollector())->addRoute(...$config->get('routes'))` — see the [Routing Guide](http-routes.md).
 
 ---
 
@@ -577,7 +577,7 @@ When a feature requires role-based or permission-based checks:
      ```
 3. **Wiring:**
    - Register rule in `config/common/params.php` under `'yiisoft/rbac-rules-container' => ['rules' => [...]]` (the package default params also carry `'validate' => true`; rule values are yiisoft/factory definitions — class-strings or alias maps).
-   - Plan migration or RBAC seeder creating the Permission, attaching the Rule (`Item::withRuleName()`), and assigning to Roles (see the [Auth & RBAC Guide](auth-and-rbac.md)).
+   - Plan migration or RBAC seeder creating the Permission, attaching the Rule (`Item::withRuleName()`), and assigning to Roles (see the [Auth & RBAC Guide](infra-auth-and-rbac.md)).
 
 ---
 
@@ -661,7 +661,7 @@ src/
       Request/Order/CheckoutRequest.php
 ```
 
-**Topic cross-links:** [Actions & Controllers](actions-and-controllers.md), [Routing](routes.md), [Validation & Forms](validation-and-forms.md), [DI & Config](di-and-config.md), [Persistence: Plain DB](persistence-db.md), [Persistence: Active Record](persistence-active-record.md), [Persistence: Cycle ORM](persistence-cycle-orm.md), [Migrations](migrations.md), [Events & Listeners](events-and-listeners.md), [Queue Jobs](queue-jobs.md), [Console Commands](commands.md), [Auth & RBAC](auth-and-rbac.md), [Mailer](mailer.md), [Views & Widgets](views-and-widgets.md), [File Handling](file-handling.md), [HTTP State](http-state.md).
+**Topic cross-links:** [Actions & Controllers](http-actions-and-controllers.md), [Routing](http-routes.md), [Validation & Forms](http-validation-and-forms.md), [DI & Config](core-di-and-config.md), [Persistence: Plain DB](persistence-db.md), [Persistence: Active Record](persistence-active-record.md), [Persistence: Cycle ORM](persistence-cycle-orm.md), [Migrations](persistence-migrations.md), [Events & Listeners](core-events-and-listeners.md), [Queue Jobs](infra-queue-jobs.md), [Console Commands](infra-commands.md), [Auth & RBAC](infra-auth-and-rbac.md), [Mailer](infra-mailer.md), [Views & Widgets](http-views-and-widgets.md), [File Handling](http-file-handling.md), [HTTP State](http-state.md).
 
 ---
 

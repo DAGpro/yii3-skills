@@ -516,7 +516,7 @@ Psr\SimpleCache\CacheInterface::class => ArrayCache::class,        // request-sc
 ```
 
 The default PSR-16 store (`ArrayCache`) lives only for the current request — override it with a persistent store
-in production (`yiisoft/cache-file` or `yiisoft/cache-redis`; see [Caching Guide](caching.md)):
+in production (`yiisoft/cache-file` or `yiisoft/cache-redis`; see [Caching Guide](persistence-caching.md)):
 
 ```php
 // config/common/di/cache.php — production override example
@@ -889,7 +889,7 @@ When a message or category cannot be resolved **and** a dispatcher is configured
 Listener wiring follows the `yiisoft/yii-event` events configuration format (array keyed by event class name;
 parameters after the first — the event itself — are resolved from the DI container). A typical application
 pattern is logging gaps to a dedicated channel (e.g. `translation.missing` — see
-[Logging Guide](logging.md)) so untranslated strings surface in monitoring:
+[Logging Guide](infra-logging.md)) so untranslated strings surface in monitoring:
 
 ```php
 // config/common/events.php — application events configuration (format: yiisoft/yii-event)
@@ -952,17 +952,17 @@ localization from them:
   ?string $sourceLocale = null): string` look up templates in `{dir}/{locale}/file.php` with a fallback from
   full locale to language-only code (e.g. `zh-CN` → `zh`). Translate messages with the translator before
   rendering, or pass `TranslatorInterface` into templates as a render parameter at the application level
-  (see [Views Guide](views-and-widgets.md)).
+  (see [Views Guide](http-views-and-widgets.md)).
 - **`yiisoft/mailer`** — no i18n/translator integration. Translate the subject and body **before** building the
   message: `withSubject()`, `withTextBody()`, `withHtmlBody()` on `MessageInterface`; sending via
   `MailerInterface::send()` / `sendMultiple()`. The development mock `FileMailer` writes `.eml` files
-  (params `yiisoft/mailer` → `fileMailer` → `path`) (see [Mailer Guide](mailer.md)).
+  (params `yiisoft/mailer` → `fileMailer` → `path`) (see [Mailer Guide](infra-mailer.md)).
 - **`yiisoft/error-handler`** — no i18n integration; the shipped error-page templates hardcode
   `<html lang="en">`. The sanctioned user-facing path is `Yiisoft\ErrorHandler\Exception\UserException`
   (either thrown directly or attached to any exception class as the `#[UserException]` class attribute; checked
   via `UserException::isUserException()`) — translate the message **at throw time** in application code.
   A custom `ThrowableRendererInterface` implementation is the extension point for localized error pages
-  (see [Error Handling Guide](error-handling.md)).
+  (see [Error Handling Guide](infra-error-handling.md)).
 
 ## 9. Testing the Translator
 

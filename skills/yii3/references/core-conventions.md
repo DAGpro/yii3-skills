@@ -2,7 +2,7 @@
 
 > **Architectural Authority Note:**  
 > The directory layout and conventions detailed below represent canonical best practices derived from official Yii 3 packages (`yiisoft/*`) and templates (`yiisoft/app`, `yiisoft/app-api`).  
-> In existing projects, project-specific architecture definitions (such as `.ai-factory/ARCHITECTURE.md`) and actual codebase layouts in `src/` and `config/` always take precedence over generic fallback conventions. See [Architecture Alignment Guide](architecture-alignment.md).
+> In existing projects, project-specific architecture definitions (such as `.ai-factory/ARCHITECTURE.md`) and actual codebase layouts in `src/` and `config/` always take precedence over generic fallback conventions. See [Architecture Alignment Guide](core-architecture-alignment.md).
 
 ---
 

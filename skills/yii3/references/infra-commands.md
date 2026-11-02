@@ -1079,7 +1079,7 @@ Ecosystem details worth knowing:
 
 ## 11. Related Topic Guides
 
-- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runner architecture, `ConsoleApplicationRunner`, and entry points.
-- [DI & Configuration Guide](di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
-- [Queue & Asynchronous Jobs Guide](queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
-- [Error Handling Guide](error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `ConsoleApplicationRunner`, and entry points.
+- [DI & Configuration Guide](core-di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
+- [Queue & Asynchronous Jobs Guide](infra-queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
+- [Error Handling Guide](infra-error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.

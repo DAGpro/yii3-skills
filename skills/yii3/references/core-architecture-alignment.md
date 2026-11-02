@@ -44,7 +44,7 @@ Before creating, moving, or refactoring files, agents must identify the project'
 3. **Existing Codebase Layout (`src/` and `config/`)**:
    - If no architecture artifact exists, the project's actual folder tree is the governing authority.
    - Inspect 2–3 existing, similar features (e.g., an action, its input DTO, its service/repository, its route and DI definitions) and replicate their layout, naming, namespaces, and wiring.
-4. **Fallback Conventions ([Conventions](conventions.md))**:
+4. **Fallback Conventions ([Conventions](core-conventions.md))**:
    - Used only for structural gaps not addressed by the sources above, or when bootstrapping an empty project.
 
 > [!TIP]
@@ -77,7 +77,7 @@ Before creating a file, verify its exact classification and destination within t
 ### Architectural Invariants for Yii 3 Artifacts
 - **Handlers Depend on Interfaces:** Controllers and CLI commands must inject service or repository interfaces, never concrete infrastructure drivers.
 - **Yii 3 Packages are Infrastructure:** Unless an official `yiisoft/*` package explicitly defines a pure contract (e.g., `psr/*`, `yiisoft/friendly-exception`), its classes represent infrastructure and must not leak into pure `Domain/`.
-- **Match the Resolved Pattern:** Follow the pattern's placement scheme (layers vs. vertical slices vs. hexagonal ports/adapters). See [Feature Recipes](feature-recipes.md) for layout diagrams.
+- **Match the Resolved Pattern:** Follow the pattern's placement scheme (layers vs. vertical slices vs. hexagonal ports/adapters). See [Feature Recipes](core-feature-recipes.md) for layout diagrams.
 
 ---
 

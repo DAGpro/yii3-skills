@@ -6,6 +6,24 @@
 
 ---
 
+## Table of Contents
+- [1. Single Source of Truth (SSOT) & Verification Hierarchy](#1-single-source-of-truth-ssot--verification-hierarchy)
+- [2. Directory Layout & Feature-Oriented Architecture](#2-directory-layout--feature-oriented-architecture)
+- [3. Configuration System & Application Environment](#3-configuration-system--application-environment)
+- [4. Dependency Injection & Service Definitions](#4-dependency-injection--service-definitions)
+- [5. Application Runners & Entry Points](#5-application-runners--entry-points)
+- [6. Web & HTTP Layer](#6-web--http-layer)
+- [7. Request DTOs, Hydration & Validation](#7-request-dtos-hydration--validation)
+- [8. Views, Layouts & HTML Forms](#8-views-layouts--html-forms)
+- [9. Data Persistence & Database](#9-data-persistence--database)
+- [10. Events & Logging](#10-events--logging)
+- [11. Security, Authentication & Session](#11-security-authentication--session)
+- [12. Console Commands](#12-console-commands)
+- [13. Testing & Code Quality Assurance](#13-testing--code-quality-assurance)
+- [14. Comprehensive Anti-Patterns & Yii2 Migration Matrix](#14-comprehensive-anti-patterns--yii2-migration-matrix)
+
+---
+
 ## 1. Single Source of Truth (SSOT) & Verification Hierarchy
 
 AI agents and developers writing Yii 3 code must strictly observe the following verification hierarchy and grounding principles:

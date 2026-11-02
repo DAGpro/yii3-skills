@@ -1,655 +1,1807 @@
 # Yii3 Validation & Forms Guide
 
-> Practical guide for input validation with `yiisoft/validator`, typed DTO hydration with `yiisoft/hydrator` and
-> `yiisoft/hydrator-validator`, HTML form models with `yiisoft/form-model`, and PSR-7 request mapping with
-> `yiisoft/input-http`.
->
-> **Source of Truth & Verification Rule for AI Models:**
-> In projects using this extension, always verify exact method signatures, constructor arguments, and rule options
-> directly in `vendor/yiisoft/<package>/src/` for installed packages.
-> When generating code, if an installed package's method signature or rule option is unfamiliar or in doubt,
-> **read its source files in `vendor/yiisoft/<package>/src/`** rather than guessing or relying on Yii2 habits.
+> Complete reference and architectural guide for input validation with `yiisoft/validator`, typed DTO hydration with `yiisoft/hydrator` and `yiisoft/hydrator-validator`, HTML form modeling and widget rendering with `yiisoft/form-model` and `yiisoft/form`, and PSR-7 request mapping with `yiisoft/input-http`.
 
 ---
 
 ## Table of Contents
-- [1. Package Map: Who Does What](#1-package-map-who-does-what)
-- [2. Core Validation API (`yiisoft/validator`)](#2-core-validation-api-yiisoftvalidator)
-  - [2.1. ValidatorInterface](#21-validatorinterface)
-  - [2.2. Inspecting the Result](#22-inspecting-the-result)
-  - [2.3. Built-In Rules Catalog](#23-built-in-rules-catalog)
-- [3. Declaring Rules](#3-declaring-rules)
-  - [3.1. PHP Attributes](#31-php-attributes)
-  - [3.2. Rules Without Attributes](#32-rules-without-attributes)
-  - [3.3. Rule Behavior Modifiers](#33-rule-behavior-modifiers)
-- [4. Custom Rules](#4-custom-rules)
-- [5. Messages, Labels & Translation](#5-messages-labels--translation)
-- [6. Form Models (`yiisoft/form-model`)](#6-form-models-yiisoftform-model)
-  - [6.1. FormModel Base Class](#61-formmodel-base-class)
-  - [6.2. FormHydrator: Populate & Validate](#62-formhydrator-populate--validate)
-  - [6.3. Full Web Form Example](#63-full-web-form-example)
-- [7. Typed DTO Hydration (`yiisoft/hydrator`, `yiisoft/hydrator-validator`)](#7-typed-dto-hydration-yiisofthydrator-yiisofthydrator-validator)
-- [8. HTTP Request Inputs (`yiisoft/input-http`)](#8-http-request-inputs-yiisoftinput-http)
-- [9. Choosing the Right Tool](#9-choosing-the-right-tool)
-- [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
+- [1. Package Architecture & Responsibilities](#1-package-architecture--responsibilities)
+- [2. Core Validation Engine (`yiisoft/validator`)](#2-core-validation-engine-yiisoftvalidator)
+  - [2.1. ValidatorInterface Contract](#21-validatorinterface-contract)
+  - [2.2. Result API & Mutable Accumulator](#22-result-api--mutable-accumulator)
+  - [2.3. Exhaustive Built-In Rules Catalog](#23-exhaustive-built-in-rules-catalog)
+  - [2.4. Lenient HTTP Input Rules vs. Strict Domain Type Rules](#24-lenient-http-input-rules-vs-strict-domain-type-rules)
+- [3. Declaring Rules & Validation Flow Modifiers](#3-declaring-rules--validation-flow-modifiers)
+  - [3.1. Repeatable PHP Attributes](#31-repeatable-php-attributes)
+  - [3.2. Ad-Hoc Rules, Class Strings & RulesProviderInterface](#32-ad-hoc-rules-class-strings--rulesproviderinterface)
+  - [3.3. Execution Modifiers: skipOnEmpty, skipOnError, when](#33-execution-modifiers-skiponempty-skiponerror-when)
+  - [3.4. Flow Control Combinators: StopOnError, AnyRule, Composite](#34-flow-control-combinators-stoponerror-anyrule-composite)
+- [4. Custom Rules & Dependency Injection](#4-custom-rules--dependency-injection)
+  - [4.1. Custom Rule & Handler Pair Contract](#41-custom-rule--handler-pair-contract)
+  - [4.2. Dependency Injection in Handlers: The RuleHandlerContainer Binding](#42-dependency-injection-in-handlers-the-rulehandlercontainer-binding)
+  - [4.3. One-Off Checks with Callback Rule](#43-one-off-checks-with-callback-rule)
+  - [4.4. Isolated Unit Testing of Custom Rule Handlers](#44-isolated-unit-testing-of-custom-rule-handlers)
+- [5. File & Image Validation](#5-file--image-validation)
+  - [5.1. File Rule & Safe Post-Validation Storage](#51-file-rule--safe-post-validation-storage)
+  - [5.2. Image & Aspect Ratio Rules (`Rule\Image\Image`, `ImageAspectRatio`)](#52-image--aspect-ratio-rules-ruleimageimage-imageaspectratio)
+  - [5.3. Validating PSR-7 UploadedFileInterface & Multi-File Collections](#53-validating-psr-7-uploadedfileinterface--multi-file-collections)
+- [6. Cross-Property Validation & Contextual Comparison](#6-cross-property-validation--contextual-comparison)
+  - [6.1. Comparison Rules: targetProperty vs. targetValue](#61-comparison-rules-targetproperty-vs-targetvalue)
+  - [6.2. Cross-Property Cardinality: FilledAtLeast, FilledOnlyOneOf](#62-cross-property-cardinality-filledatleast-filledonlyoneof)
+  - [6.3. Dynamic Context Inspection via ValidationContext](#63-dynamic-context-inspection-via-validationcontext)
+- [7. Messages, Labels, Placeholders & Internationalization](#7-messages-labels-placeholders--internationalization)
+  - [7.1. Translation Category 'yii-validator' & TranslatorMessagePhp Requirement](#71-translation-category-yii-validator--translatormessagephp-requirement)
+  - [7.2. Placeholder Substitution: {Property}, {value}, and Parameter Tokens](#72-placeholder-substitution-property-value-and-parameter-tokens)
+  - [7.3. Property Labels via #[Label] and Property Translators](#73-property-labels-via-label-and-property-translators)
+  - [7.4. Message Formatters: SimpleMessageFormatter vs. IntlMessageFormatter](#74-message-formatters-simplemessageformatter-vs-intlmessageformatter)
+- [8. Form Models & Web Form Lifecycle (`yiisoft/form-model` & `yiisoft/form`)](#8-form-models--web-form-lifecycle-yiisoftform-model--yiisoftform)
+  - [8.1. FormModel Base Class & FormModelInterface Contract](#81-formmodel-base-class--formmodelinterface-contract)
+  - [8.2. FormHydrator: Population, GET/POST Scoping, and Mass-Assignment Protection](#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection)
+  - [8.3. Complete Web Form Lifecycle (FormModel, Action, PRG Pattern & CSRF View)](#83-complete-web-form-lifecycle-formmodel-action-prg-pattern--csrf-view)
+  - [8.4. Field Widget Catalog, PureField & ValidationRulesEnricher](#84-field-widget-catalog-purefield--validationrulesenricher)
+- [9. Typed DTO Hydration & ValidatingHydrator (`yiisoft/hydrator`, `yiisoft/hydrator-validator`)](#9-typed-dto-hydration--validatinghydrator-yiisofthydrator-yiisofthydrator-validator)
+  - [9.1. Hydrator Architecture, Built-in EnumTypeCaster & Composite Type Casting](#91-hydrator-architecture-built-in-enumtypecaster--composite-type-casting)
+  - [9.2. Two-Stage Validation via ValidatingHydrator & #[Validate]](#92-two-stage-validation-via-validatinghydrator--validate)
+  - [9.3. Nested DTOs & Collections (OrderDto & OrderItemDto)](#93-nested-dtos--collections-orderdto--orderitemdto)
+  - [9.4. Parameter Attributes Catalog & Custom TypeCasters](#94-parameter-attributes-catalog--custom-typecasters)
+- [10. HTTP Request Inputs Mapping (`yiisoft/input-http`)](#10-http-request-inputs-mapping-yiisoftinput-http)
+  - [10.1. Class Data Attributes: #[FromBody] & #[FromQuery]](#101-class-data-attributes-frombody--fromquery)
+  - [10.2. Parameter Attributes: #[Body], #[Query], #[Request], #[UploadedFiles]](#102-parameter-attributes-body-query-request-uploadedfiles)
+  - [10.3. Action Parameter Resolution: DTOs vs. Direct HydratorAttributeParametersResolver](#103-action-parameter-resolution-dtos-vs-direct-hydratorattributeparametersresolver)
+  - [10.4. RFC 7807 Problem Details Error Responder](#104-rfc-7807-problem-details-error-responder)
+- [11. Architectural Decision Matrix (Choosing the Right Tool)](#11-architectural-decision-matrix-choosing-the-right-tool)
+- [12. Anti-Pattern Matrix](#12-anti-pattern-matrix)
+- [13. Related Topic Guides](#13-related-topic-guides)
 
 ---
 
-## 1. Package Map: Who Does What
+## 1. Package Architecture & Responsibilities
 
-Five small packages cooperate; each has a single responsibility. Install only what the feature uses
-(see `references/dependency-protocol.md`).
+In Yii 3, validation, object hydration, form modeling, and HTTP request parsing are deliberately decoupled into dedicated, focused packages. Applications install only what their architecture requires (see [Dependency Protocol](dependency-protocol.md)).
 
-| Package | Role | Key entry points |
-|---|---|---|
-| `yiisoft/validator` | Rule definitions, rule handlers, validation engine, `Result`/`Error` value objects | `ValidatorInterface`, `Rule\*` classes |
-| `yiisoft/hydrator` | Creates and populates typed objects from arrays with type casting, mapping, and DI-resolved dependencies | `HydratorInterface::create()`, `hydrate()` |
-| `yiisoft/hydrator-validator` | Decorator that hydrates **and** validates in one call; stores the `Result` on the object | `ValidatingHydrator`, `ValidatedInputInterface` |
-| `yiisoft/form-model` | Base class + hydration helpers for HTML form models (labels, hints, placeholders) | `FormModel`, `FormHydrator` |
-| `yiisoft/input-http` | Maps PSR-7 request data to input DTOs via attributes; plugs into middleware-dispatcher | `AbstractInput`, `#[FromBody]`, `RequestInputParametersResolver` |
-
-> [!IMPORTANT]
-> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser`
-> from `yiisoft/request-body-parser` must be in the middleware pipeline before the action. Otherwise
-> `$request->getParsedBody()` returns `null` for JSON payloads. See `references/middlewares.md`.
-
----
-
-## 2. Core Validation API (`yiisoft/validator`)
-
-### 2.1. ValidatorInterface
-
-The single method of the interface (verbatim from `src/ValidatorInterface.php`):
-
-```php
-public function validate(
-    mixed $data,
-    callable|iterable|object|string|null $rules = null,
-    ?ValidationContext $context = null,
-): Result;
+```
++---------------------------------------------------------------------------------------+
+|                                    HTTP Layer                                         |
+|  [yiisoft/request-body-parser]  -->  [yiisoft/csrf]  -->  [yiisoft/input-http]        |
+|  (Parses application/json)          (CSRF protection)    (Maps PSR-7 to Action DTOs)  |
++---------------------------------------------------------------------------------------+
+                                           |
+                                           v
++---------------------------------------------------------------------------------------+
+|                                 Hydration & DTO Layer                                 |
+|  [yiisoft/hydrator]                <---+---> [yiisoft/hydrator-validator]             |
+|  (Type casting, parameters, DI)        |     (Two-stage DTO validation decorator)     |
+|                                        |                                              |
+|                                        +---> [yiisoft/form-model]                     |
+|                                              (Scoped hydration, mass-assignment guard)|
++---------------------------------------------------------------------------------------+
+                                           |
+                                           v
++---------------------------------------------------------------------------------------+
+|                                  Core Validation Layer                                |
+|  [yiisoft/validator]                                                                  |
+|  (Rule attributes, RuleHandlerInterface, ValidationContext, Result accumulator)       |
+|  [yiisoft/translator] (Category 'yii-validator' with ICU / simple formatting)         |
++---------------------------------------------------------------------------------------+
+                                           |
+                                           v
++---------------------------------------------------------------------------------------+
+|                                 Presentation / Widget Layer                           |
+|  [yiisoft/form]                                                                       |
+|  (Model-agnostic PureField\Field widgets & form rendering engine)                     |
+|  [yiisoft/form-model] Field facade & ValidationRulesEnricher (HTML5 attributes)       |
++---------------------------------------------------------------------------------------+
 ```
 
-- Inject `Yiisoft\Validator\ValidatorInterface` — never instantiate `Yiisoft\Validator\Validator` by hand in application code.
-- `$data` accepts: a plain value, an array, an object (DTO/FormModel), a `DataSetInterface`, or a `RulesProviderInterface` object (its `getRules()` is used when `$rules` is `null`).
-- `$rules`, when passed, has priority over rules attached to `$data` itself (attributes or `getRules()`).
+| Package | Role | Key Entry Points | Target Project Source |
+|---|---|---|---|
+| `yiisoft/validator` | Rule definitions, rule handlers, validation engine, `Result` accumulator, and `Error` value objects | `ValidatorInterface`, `Rule\*`, `Result`, `Error`, `ValidationContext` | `vendor/yiisoft/validator/src/` |
+| `yiisoft/hydrator` | Creates and populates typed objects from arrays with composite type casting, parameter attributes, and DI resolution | `HydratorInterface::create()`, `hydrate()`, `TypeCasterInterface` | `vendor/yiisoft/hydrator/src/` |
+| `yiisoft/hydrator-validator` | Decorator that validates raw input before hydration, populates typed properties, and validates the resulting object; stores `Result` on the DTO | `ValidatingHydrator`, `ValidatedInputInterface`, `ValidatedInputTrait`, `#[Validate]` | `vendor/yiisoft/hydrator-validator/src/` |
+| `yiisoft/form-model` | Base class and scoped hydrator for HTML forms, metadata attributes (`#[Hint]`, `#[Placeholder]`, `#[Safe]`), field shortcut facade `Field`, and HTML5 validation enricher | `FormModel`, `FormModelInterface`, `FormHydrator`, `Field`, `ValidationRulesEnricher` | `vendor/yiisoft/form-model/src/` |
+| `yiisoft/form` | Model-agnostic HTML form widgets and tag generators (independent of validator and hydrator) | `Yiisoft\Form\PureField\Field`, individual field widgets | `vendor/yiisoft/form/src/` |
+| `yiisoft/input-http` | Maps incoming PSR-7 request data (`Body`, `Query`, `UploadedFiles`, `Request` attributes) directly into typed action parameters via middleware dispatcher | `AbstractInput`, `#[FromBody]`, `#[FromQuery]`, `RequestInputParametersResolver`, `HydratorAttributeParametersResolver` | `vendor/yiisoft/input-http/src/` |
+| `yiisoft/request-body-parser` | PSR-15 middleware that parses raw HTTP bodies (such as `application/json`) into `$request->getParsedBody()` | `RequestBodyParser`, `JsonParser` | `vendor/yiisoft/request-body-parser/src/` |
+| `yiisoft/csrf` | CSRF token generation, validation middleware, and masking. Note: `CsrfTokenMiddleware` is the canonical middleware; `CsrfMiddleware` is `@deprecated` | `CsrfTokenMiddleware`, `CsrfTokenInterface` | `vendor/yiisoft/csrf/src/` |
+| `yiisoft/translator` | Message translation and placeholder formatting engine | `TranslatorInterface`, `SimpleMessageFormatter`, `IntlMessageFormatter` | `vendor/yiisoft/translator/src/` |
 
-### 2.2. Inspecting the Result
+> [!IMPORTANT]
+> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from `yiisoft/request-body-parser` must be placed in the middleware pipeline before any action or input resolver. If omitted, `$request->getParsedBody()` returns `null` for JSON requests, causing `FromBodyResolver` to silently resolve an empty array `[]`. See [PSR-15 Middlewares Guide](middlewares.md).
 
-`Yiisoft\Validator\Result` is an immutable value object. Key inspection methods:
+---
 
-| Method | Returns |
-|---|---|
-| `isValid(): bool` | `true` when there are no errors |
-| `isPropertyValid(string $property): bool` | per-property validity |
-| `getErrors(): array` | list of `Yiisoft\Validator\Error` objects |
-| `getErrorMessages(): array` | flat list of message strings |
-| `getErrorMessagesIndexedByPath(string $separator = '.', ?string $escape = '.'): array` | `['title' => ['Title cannot be blank.']]` |
-| `getFirstErrorMessagesIndexedByPath(string $separator = '.', ?string $escape = '.'): array` | `['title' => 'Title cannot be blank.']` |
-| `getErrorMessagesIndexedByProperty(): array` / `getFirstErrorMessagesIndexedByProperty(): array` | same, indexed by property name |
-| `getPropertyErrorMessages(string $property): array` | messages of a single property |
+## 2. Core Validation Engine (`yiisoft/validator`)
 
-For API responses, `getErrorMessagesIndexedByPath()` is the standard shape; for form re-rendering,
-`getFirstErrorMessagesIndexedByProperty()` matches one error per input field.
+### 2.1. ValidatorInterface Contract
 
-`Yiisoft\Validator\Error` exposes `getMessage(): string`, `getParameters(): array`, and
-`getValuePath(?string $escape = null): array`.
+The single entry point of `yiisoft/validator` is `Yiisoft\Validator\ValidatorInterface` (`vendor/yiisoft/validator/src/ValidatorInterface.php`):
 
 ```php
-$result = $this->validator->validate($dto);
-if (!$result->isValid()) {
-    return $this->responseFactory->createResponse([
-        'status' => 'error',
-        'errors' => $result->getErrorMessagesIndexedByPath(),
-    ], Status::UNPROCESSABLE_ENTITY);
+declare(strict_types=1);
+
+namespace Yiisoft\Validator;
+
+interface ValidatorInterface
+{
+    /**
+     * Validates data against a set of rules.
+     *
+     * @param mixed $data Data to validate (scalar, array, object, DataSetInterface, or RulesProviderInterface).
+     * @param callable|iterable|object|string|null $rules Rules to apply. If null, extracted from $data.
+     * @param ValidationContext|null $context Optional validation context.
+     *
+     * @return Result Validation result containing accumulated errors.
+     */
+    public function validate(
+        mixed $data,
+        callable|iterable|object|string|null $rules = null,
+        ?ValidationContext $context = null,
+    ): Result;
 }
 ```
 
-### 2.3. Built-In Rules Catalog
+- **Dependency Injection Invariant:** Always inject `Yiisoft\Validator\ValidatorInterface`. Never instantiate `new Yiisoft\Validator\Validator(...)` manually in application code; manual instantiation bypasses container-configured translation categories, property translators, and rule handler resolvers.
+- **Data Normalization:** The engine normalizes `$data` via `Yiisoft\Validator\Helper\DataSetNormalizer`:
+  - Scalars are wrapped into `SingleValueDataSet`.
+  - Associative arrays are wrapped into `ArrayDataSet`.
+  - Objects are wrapped into `ObjectDataSet`.
+  - Objects implementing `Yiisoft\Validator\RulesProviderInterface` supply their own rules when `$rules === null`.
+- **Rules Precedence:** Explicitly passing `$rules` to `validate()` takes precedence over rules declared directly on `$data` (attributes or `getRules()`), enabling scenario-based overrides.
+- **Post-Validation Hook:** If `$data` implements `Yiisoft\Validator\PostValidationHookInterface` (such as `FormModel` or `ValidatedInputInterface`), `Validator::validate()` automatically calls `$data->processValidationResult($result)`.
 
-All rule classes live in `Yiisoft\Validator\Rule\` and are PHP attributes marked `IS_REPEATABLE` (verified against
-`src/Rule/`). Exact class names in the current version — there is **no** `HasLength`, `NumberValue`, or `IsString`
-(those are Yii 2 / older draft names):
+### 2.2. Result API & Mutable Accumulator
 
-| Group | Rules |
-|---|---|
-| Requiredness | `Required` |
-| Lenient type & format | `StringValue`, `BooleanValue`, `Integer`, `Number` |
-| Strict native types (`Rule\Type\`) | `StringType`, `IntegerType`, `FloatType`, `BooleanType` |
-| Strings | `Length`, `Email`, `Regex`, `Json`, `Url`, `Uuid`, `Ip` |
-| Numbers | `Integer`, `Number` (min/max, pattern) |
-| Comparison (extend `AbstractCompare`) | `Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual`, `Compare` (with `CompareType`) |
-| Collections | `Count`, `Each`, `Subset`, `In`, `InEnum`, `UniqueIterable` |
-| Structure | `Nested`, `Composite`, `StopOnError`, `AnyRule` |
-| Cross-property | `FilledAtLeast`, `FilledOnlyOneOf` |
-| Dates (`Rule\Date\`) | `Date`, `DateTime`, `Time` |
-| Files (`Rule\Image\`) | `File` (extension, MIME, size), `Image` (dimensions), `ImageAspectRatio` |
-| Misc | `Callback`, `TrueValue` |
+> [!CAUTION]
+> `Yiisoft\Validator\Result` is a **MUTABLE ERROR ACCUMULATOR**, not an immutable value object.
+> Methods such as `addError()`, `addErrorWithFormatOnly()`, `addErrorWithoutPostProcessing()`, and `add()` mutate the internal `$this->errors` array in-place and return `$this` for method chaining. Reusing a single `Result` instance across separate validation runs will contaminate results with stale errors.
 
-Representative constructors (named arguments; every rule also accepts `skipOnEmpty`, `skipOnError`, `when`):
+The primary inspection methods of `Result` (`vendor/yiisoft/validator/src/Result.php`):
 
-```php
-new Required()                                            // '{Property} cannot be blank.'
-new Length(min: 3, max: 255)                              // or exactly: 10; encoding: 'UTF-8'
-new Integer(min: 1, max: 100)                             // validates integer strings/ints against range
-new Number(min: 0.5)                                      // floats/numeric strings
-new Regex(pattern: '/^[a-z0-9-]+$/')
-new Email()                                               // checkDns: true adds DNS-level checks
-new Count(min: 1, max: 5)                                 // arrays / Countable
-new Each([new StringValue(), new Length(max: 100)])       // rules per collection element
-new In(values: ['draft', 'published'])
-new InEnum(class: StatusEnum::class)                      // backing enum values
-new Nested([new Required(), new Length(max: 255)])        // nested structure/object
-```
+| Method | Return Type | Semantics & Primary Usage |
+|---|---|---|
+| `isValid()` | `bool` | Returns `true` if there are no errors in the accumulator (`$this->errors === []`). |
+| `isPropertyValid(string $property)` | `bool` | Returns `true` if no errors exist whose value path begins with `$property`. *(Note: `isAttributeValid` DOES NOT EXIST).* |
+| `getErrors()` | `list<Error>` | Returns the raw list of `Yiisoft\Validator\Error` value objects. |
+| `getErrorMessages()` | `list<string>` | Returns a flat list of translated error message strings. |
+| `getErrorMessagesIndexedByPath(string $separator = '.', ?string $escape = '.')` | `array<string, non-empty-list<string>>` | Groups error messages by dot-separated path (e.g. `['items.0.price' => ['Price must be at least 1.']]`). **Standard format for REST APIs (RFC 7807).** |
+| `getFirstErrorMessagesIndexedByPath(string $separator = '.', ?string $escape = '.')` | `array<string, string>` | Returns the first error message string per dot-separated path. |
+| `getErrorMessagesIndexedByProperty()` | `array<string, non-empty-list<string>>` | Groups error messages by root property name. *(Note: `getErrorMessagesIndexedByAttribute` DOES NOT EXIST).* |
+| `getFirstErrorMessagesIndexedByProperty()` | `array<string, string>` | Returns the first error message string per root property name. **Standard format for server-rendered HTML forms.** |
+| `getPropertyErrorMessages(string $property)` | `list<string>` | Returns all error message strings associated with a single property. |
+| `getCommonErrorMessages()` | `list<string>` | Returns general error messages not bound to any property path. *(Note: `getCommonErrors` DOES NOT EXIST).* |
 
-Two rule layers for type checking — pick deliberately:
+Each `Yiisoft\Validator\Error` value object exposes:
+- `getMessage(): string` — the translated or formatted error message.
+- `getParameters(): array` — the parameter key-value pairs passed for translation substitution.
+- `getValuePath(?string $escape = null): array` — the path array identifying the nested property (e.g. `['items', 0, 'price']`).
+- `getMessageProcessing(): int` — message processing mode (`Error::MESSAGE_TRANSLATE`, `Error::MESSAGE_FORMAT`, `Error::MESSAGE_NONE`).
 
-- **Lenient rules** (`StringValue`, `Integer`, `Number`, `BooleanValue`) accept compatible scalar input (e.g.
-  `"123"` passes `Integer`) and cast internally. Use them for **HTTP input**, which always arrives as strings.
-- **Strict type rules** (`Rule\Type\StringType`, `IntegerType`, `FloatType`, `BooleanType`) require the exact native
-  PHP type. Use them for **internal domain data** that is already typed.
+### 2.3. Exhaustive Built-In Rules Catalog
 
-`Required` must come first when combined with other rules on the same property; without it, empty values are skipped
-by the other rules (see §3.3).
+`yiisoft/validator` ships 42 built-in rule classes. All concrete rule classes are PHP attributes marked `#[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]`.
+
+> [!IMPORTANT]
+> **PHP 8 Named Arguments Mandate & Positional Traps:**
+> 1. **`Required` has NO `$skipOnEmpty` parameter:** Calling `new Required(skipOnEmpty: ...)` throws a fatal `Error: Unknown named parameter $skipOnEmpty`. Its constructor accepts `$message`, `$notPassedMessage`, `$emptyCondition`, `$skipOnError`, and `$when`.
+> 2. **Positional Parameter Trap in `Length` and `Count`:** The first positional parameter of both `Length` and `Count` is `$exactly`, followed by `$min` and `$max`. Calling `new Length(3, 255)` evaluates to `exactly: 3, min: 255`! Always use named arguments: `new Length(min: 3, max: 255)` or `new Count(min: 1, max: 10)`.
+> 3. **Comparison Rules use `$targetProperty`:** The target field in `Equal`, `NotEqual`, `GreaterThan`, etc., is named strictly `$targetProperty` (or `$targetValue`). The legacy Yii 2 name `$targetAttribute` does not exist and throws an `Error: Unknown named parameter`.
+> 4. **Named Arguments Required for Complex Rules:** Built-in rules like `Each`, `Nested`, `Compare`, and `Image` place message templates or reflection parameters before functional options in their positional sequences (e.g. `$stopOnError` is parameter #7 in `Each`, and 8 message parameters precede `$skipOnEmpty` in `Image`). Always configure rule options via explicit PHP 8 named arguments (e.g. `new Each([new Integer()], stopOnError: true)`).
+
+#### 1. Requiredness Rule
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Required` | `Yiisoft\Validator\Rule\Required` | `string $message = '{Property} cannot be blank.'`, `string $notPassedMessage = '{Property} not passed.'`, `?callable $emptyCondition = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnError`, `when` (**NO `skipOnEmpty`**) | `RequiredHandler` |
+
+#### 2. Lenient Scalar Rules (Ideal for HTTP Strings)
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `StringValue` | `Yiisoft\Validator\Rule\StringValue` | `string $message = '{Property} must be a string.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StringValueHandler` |
+| `BooleanValue` | `Yiisoft\Validator\Rule\BooleanValue` | `mixed $trueValue = '1'`, `mixed $falseValue = '0'`, `bool $strict = false`, `string $message = 'The value of {property} must be either "{true}" or "{false}".'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `BooleanValueHandler` |
+| `Integer` | `Yiisoft\Validator\Rule\Integer` | `float\|int\|null $min = null`, `float\|int\|null $max = null`, `string $pattern = '/^\s*[+-]?\d+\s*$/'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `NumberHandler` |
+| `Number` | `Yiisoft\Validator\Rule\Number` | `float\|int\|null $min = null`, `float\|int\|null $max = null`, `string $pattern = '/^\s*[-+]?\d*\.?\d+([eE][-+]?\d+)?\s*$/'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `NumberHandler` |
+| `TrueValue` | `Yiisoft\Validator\Rule\TrueValue` | `mixed $trueValue = '1'`, `bool $strict = false`, `string $message = 'The value of {property} must be "{true}".'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `TrueValueHandler` |
+
+#### 3. Strict Native Type Rules (`Rule\Type\*`, for Domain Invariants)
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `StringType` | `Yiisoft\Validator\Rule\Type\StringType` | `string $message = '{Property} must be a string. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StringTypeHandler` |
+| `IntegerType` | `Yiisoft\Validator\Rule\Type\IntegerType` | `string $message = '{Property} must be an integer. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `IntegerTypeHandler` |
+| `FloatType` | `Yiisoft\Validator\Rule\Type\FloatType` | `string $message = '{Property} must be a float. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FloatTypeHandler` |
+| `BooleanType` | `Yiisoft\Validator\Rule\Type\BooleanType` | `string $message = '{Property} must be a boolean. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `BooleanTypeHandler` |
+
+#### 4. String & Format Rules
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Length` | `Yiisoft\Validator\Rule\Length` | `?int $exactly = null`, `?int $min = null`, `?int $max = null`, `string $encoding = 'UTF-8'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments `min:`, `max:`, `exactly:` required)* | `skipOnEmpty`, `skipOnError`, `when` | `LengthHandler` |
+| `Email` | `Yiisoft\Validator\Rule\Email` | `string $pattern = ...`, `string $fullPattern = ...`, `string $idnEmailPattern = ...`, `bool $allowName = false`, `bool $checkDns = false`, `bool $enableIdn = false`, `string $incorrectInputMessage = ...`, `string $message = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Use named arguments)* | `skipOnEmpty`, `skipOnError`, `when` | `EmailHandler` |
+| `Regex` | `Yiisoft\Validator\Rule\Regex` | `string $pattern`, `bool $not = false`, `string $message = '{Property} is invalid.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `RegexHandler` |
+| `Url` | `Yiisoft\Validator\Rule\Url` | `string $pattern = ...`, `array $validSchemes = ['http', 'https']`, `bool $enableIdn = false`, `string $incorrectInputMessage = ...`, `string $message = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Use named arguments)* | `skipOnEmpty`, `skipOnError`, `when` | `UrlHandler` |
+| `Uuid` | `Yiisoft\Validator\Rule\Uuid` | `string $message = 'The value of {property} is not a valid UUID.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `UuidHandler` |
+| `Ip` | `Yiisoft\Validator\Rule\Ip` | `array $networks = []`, `bool $allowIpv4 = true`, `bool $allowIpv6 = true`, `bool $allowSubnet = false`, `bool $requireSubnet = false`, `bool $allowNegation = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `IpHandler` |
+| `Json` | `Yiisoft\Validator\Rule\Json` | `string $message = '{Property} is not a valid JSON.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `JsonHandler` |
+
+#### 5. Comparison Rules (Extend `AbstractCompare`)
+> [!NOTE]
+> In all comparison rules, `$skipOnEmpty` defaults to `false` (unlike other rules where it defaults to `null`). Always use named arguments `targetProperty:`, `targetValue:`, `operator:`, `type:`.
+
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Compare` | `Yiisoft\Validator\Rule\Compare` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `string $operator = '=='`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `CompareHandler` |
+| `Equal` | `Yiisoft\Validator\Rule\Equal` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `bool $strict = false`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `NotEqual` | `Yiisoft\Validator\Rule\NotEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `bool $strict = false`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `GreaterThan` | `Yiisoft\Validator\Rule\GreaterThan` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `GreaterThanOrEqual` | `Yiisoft\Validator\Rule\GreaterThanOrEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `LessThan` | `Yiisoft\Validator\Rule\LessThan` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `LessThanOrEqual` | `Yiisoft\Validator\Rule\LessThanOrEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+
+#### 6. Collections & Iteration Rules
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Count` | `Yiisoft\Validator\Rule\Count` | `?int $exactly = null`, `?int $min = null`, `?int $max = null`, `string $incorrectInputMessage = ...`, `string $lessThanMinMessage = ...`, `string $greaterThanMaxMessage = ...`, `string $notExactlyMessage = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments `min:`, `max:`, `exactly:` required)* | `skipOnEmpty`, `skipOnError`, `when` | `CountHandler` |
+| `Each` | `Yiisoft\Validator\Rule\Each` | `callable\|iterable\|object\|string $rules = []`, `string $incorrectInputMessage = ...`, `string $incorrectInputKeyMessage = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null`, `bool $stopOnError = false` *(Note: `$stopOnError` is parameter #7; use named `stopOnError: true`)* | `skipOnEmpty`, `skipOnError`, `when` | `EachHandler` |
+| `In` | `Yiisoft\Validator\Rule\In` | `iterable $values`, `bool $strict = false`, `bool $not = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `InHandler` |
+| `InEnum` | `Yiisoft\Validator\Rule\InEnum` | `class-string<UnitEnum> $class`, `bool $useNames = false`, `bool $strict = false`, `bool $not = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `InEnumHandler` |
+| `Subset` | `Yiisoft\Validator\Rule\Subset` | `iterable $values`, `bool $strict = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `SubsetHandler` |
+| `UniqueIterable` | `Yiisoft\Validator\Rule\UniqueIterable` | `string $message = 'Every iterable\'s item of {property} must be unique.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `UniqueIterableHandler` |
+
+#### 7. Structural & Flow Combinator Rules
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Nested` | `Yiisoft\Validator\Rule\Nested` | `iterable\|object\|string\|null $rules = null`, `int $validatedObjectPropertyVisibility = ...`, `int $rulesSourceClassPropertyVisibility = ...`, `string $noRulesWithNoObjectMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `string $incorrectInputMessage = ...`, `bool $requirePropertyPath = false`, `string $noPropertyPathMessage = ...`, `bool $handleEachShortcut = true`, `bool $propagateOptions = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `NestedHandler` |
+| `Composite` | `Yiisoft\Validator\Rule\Composite` | `iterable $rules = []`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `CompositeHandler` |
+| `StopOnError` | `Yiisoft\Validator\Rule\StopOnError` | `iterable $rules = []`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StopOnErrorHandler` |
+| `AnyRule` | `Yiisoft\Validator\Rule\AnyRule` | `iterable $rules = []`, `string $message = 'At least one of the inner rules must pass the validation.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `AnyRuleHandler` |
+
+#### 8. Cross-Property Cardinality Rules
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `FilledAtLeast` | `Yiisoft\Validator\Rule\FilledAtLeast` | `array $properties`, `int $min = 1`, `string $message = 'At least {min, number} {min, plural, one{property} other{properties}} from this list must be filled: {properties}.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FilledAtLeastHandler` |
+| `FilledOnlyOneOf` | `Yiisoft\Validator\Rule\FilledOnlyOneOf` | `array $properties`, `string $message = 'Exactly 1 property from this list must be filled: {properties}.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FilledOnlyOneOfHandler` |
+
+#### 9. Date Rules (`Rule\Date\*`)
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Date` | `Yiisoft\Validator\Rule\Date\Date` | `?string $format = null`, `?int $dateType = null`, `?string $timeZone = null`, `?string $locale = null`, `mixed $min = null`, `mixed $max = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `Date\DateHandler` |
+| `DateTime` | `Yiisoft\Validator\Rule\Date\DateTime` | `?string $format = null`, `?int $dateType = null`, `?int $timeType = null`, `?string $timeZone = null`, `?string $locale = null`, `mixed $min = null`, `mixed $max = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `Date\DateTimeHandler` |
+| `Time` | `Yiisoft\Validator\Rule\Date\Time` | `?string $format = null`, `?int $timeType = null`, `?string $timeZone = null`, `?string $locale = null`, `mixed $min = null`, `mixed $max = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `Date\TimeHandler` |
+
+#### 10. File & Image Rules
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `File` | `Yiisoft\Validator\Rule\File` | `array\|string\|null $extensions = null`, `array\|string\|null $mimeTypes = null`, `?int $size = null`, `?int $minSize = null`, `?int $maxSize = null`, `bool $trustClientMediaType = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FileHandler` |
+| `Image` | `Yiisoft\Validator\Rule\Image\Image` | `?int $width = null`, `?int $height = null`, `?int $minWidth = null`, `?int $minHeight = null`, `?int $maxWidth = null`, `?int $maxHeight = null`, `?ImageAspectRatio $aspectRatio = null`, `string $notImageMessage = ...` *(8 dimension messages follow)*, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Image\ImageHandler` |
+| `ImageAspectRatio` | `Yiisoft\Validator\Rule\Image\ImageAspectRatio` | `int $width`, `int $height`, `float $margin = 0` | Value object companion | Evaluated by `ImageHandler` |
+
+#### 11. Miscellaneous Rules
+| Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
+|---|---|---|---|---|
+| `Callback` | `Yiisoft\Validator\Rule\Callback` | `mixed $callback = null`, `?string $method = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `CallbackHandler` |
 
 ---
 
-## 3. Declaring Rules
+### 2.4. Lenient HTTP Input Rules vs. Strict Domain Type Rules
 
-### 3.1. PHP Attributes
+Pick rules intentionally based on the architectural layer:
 
-Attributes are repeatable: stacking several on one property accumulates rules (all are
-`#[Attribute(..., Attribute::IS_REPEATABLE)]`).
+1. **HTTP Input Boundary (Lenient Rules):**
+   - Rules: `StringValue`, `Integer`, `Number`, `BooleanValue`.
+   - Behavior: Accepts scalar representations. For example, string `"42"` passes `Integer(min: 1, max: 100)`; string `"1"` passes `BooleanValue()`.
+   - Usage: Apply to form models and raw request DTOs where data arrives encoded as HTTP strings or query parameters.
+
+2. **Domain Invariants Layer (Strict Rules):**
+   - Rules: `Yiisoft\Validator\Rule\Type\StringType`, `IntegerType`, `FloatType`, `BooleanType`.
+   - Behavior: Enforces native PHP types via `is_string()`, `is_int()`, `is_float()`, `is_bool()`. Passing `"42"` to `IntegerType` immediately fails with `"{Property} must be an integer. string given."`.
+   - Usage: Apply to internal service DTOs, domain command handlers, or database entity invariants to guard against subtle type coercion bugs.
+
+---
+
+## 3. Declaring Rules & Validation Flow Modifiers
+
+### 3.1. Repeatable PHP Attributes
+
+Stacking attributes on a typed DTO property declares a rule chain. Rules run sequentially in the order declared:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Post\Dto;
+
+use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\Length;
+use Yiisoft\Validator\Rule\Required;
+use Yiisoft\Validator\Rule\StringValue;
+
+final class CreatePostInput
+{
+    #[Label('Publication Title')]
+    #[Required]
+    #[StringValue]
+    #[Length(min: 3, max: 255)]
+    public string $title = '';
+}
+```
+
+The validator automatically extracts attributes via `Yiisoft\Validator\RulesProvider\AttributesRulesProvider`.
+
+> [!WARNING]
+> Always place `#[Required]` **first** in the attribute stack. Subsequent rules implement `SkipOnEmptyInterface` and skip validation if the value is empty (`""` or `null`). If `#[Required]` is missing or placed after other rules, empty inputs will bypass validation and pass cleanly.
+
+### 3.2. Ad-Hoc Rules, Class Strings & RulesProviderInterface
+
+`ValidatorInterface::validate($data, $rules)` accepts four distinct rule sources normalized by `Yiisoft\Validator\Helper\RulesNormalizer`:
 
 ```php
 declare(strict_types=1);
 
 namespace App\Application\Post;
 
+use App\Application\Post\Dto\CreatePostInput;
+use Yiisoft\Validator\Result;
+use Yiisoft\Validator\Rule\Each;
 use Yiisoft\Validator\Rule\Length;
 use Yiisoft\Validator\Rule\Required;
 use Yiisoft\Validator\Rule\StringValue;
+use Yiisoft\Validator\ValidatorInterface;
 
-final class CreatePostDto
+final readonly class PostValidationService
 {
-    #[Required]
-    #[StringValue]
-    #[Length(min: 3, max: 255)]
-    public string $title = '';
+    public function __construct(
+        private ValidatorInterface $validator,
+    ) {}
 
-    #[Required]
-    #[Each([new StringValue(), new Length(max: 100)])]
-    public array $tags = [];
+    public function validateRawData(array $payload): Result
+    {
+        // 1. Explicit mapping: property name => array of rules
+        return $this->validator->validate($payload, [
+            'title' => [new Required(), new Length(min: 3, max: 255)],
+            'tags'  => [new Each([new StringValue(), new Length(max: 50)])],
+        ]);
+    }
+
+    public function validateByClassString(array $payload): Result
+    {
+        // 2. Class string: validator extracts attributes from CreatePostInput without instantiating it
+        return $this->validator->validate($payload, CreatePostInput::class);
+    }
 }
 ```
 
-Attributes are extracted by `Yiisoft\Validator\RulesProvider\AttributesRulesProvider`; the validator does this
-automatically when you pass a class-string or an object with attributes.
+- **Dynamic Rules (`RulesProviderInterface`):** When `$data` implements `Yiisoft\Validator\RulesProviderInterface`, its `getRules(): iterable` method supplies rules dynamically (e.g. conditional fields based on database settings).
+- **Callable Wrapping:** A bare closure passed to `validate()` is automatically wrapped into a `Callback` rule.
 
-### 3.2. Rules Without Attributes
+### 3.3. Execution Modifiers: skipOnEmpty, skipOnError, when
 
-`validate($data, $rules)` accepts several rule sources (normalized by `Yiisoft\Validator\Helper\RulesNormalizer`):
+All rules (with the noted exception of `Required` regarding `skipOnEmpty`) support three execution modifiers implemented via `Yiisoft\Validator\Rule\Trait\*`:
+
+#### 1. `skipOnEmpty: bool|callable|null`
+Controls whether empty values bypass the rule:
+- `null` (default): uses the validator's global default.
+- `false`: the rule runs even if the value is empty.
+- `true`: skips validation if the value is `null`, empty string `""`, or an empty array.
+- `callable`: a custom empty condition. Yii 3 ships four built-in condition classes in `Yiisoft\Validator\EmptyCondition\*`:
+  - `WhenEmpty`: default check (`null`, `""`, or `[]`).
+  - `WhenNull`: skips only when the value is strictly `null`.
+  - `NeverEmpty`: never skips.
+  - `WhenMissing`: skips only if the key was completely omitted from the dataset.
+
+> [!TIP]
+> **PATCH Endpoints & `WhenMissing`:**
+> Use `#[Required(emptyCondition: new WhenMissing())]` for partial HTTP PATCH requests. This allows clients to update a field to `""` or `null` while ensuring an error is raised only if the key is missing from the payload.
+
+#### 2. `skipOnError: bool`
+When set to `true`, the rule is skipped if a preceding rule on the same property has already failed. This prevents error cascading (e.g. preventing `Regex` or `Email` from executing after `Length` has already rejected the string).
+
+#### 3. `when: ?Closure`
+A conditional execution closure with signature:
+```php
+fn (mixed $value, ValidationContext $context): bool
+```
+The rule executes only if the closure returns `true`.
 
 ```php
-// 1. Plain map: property => list of rules
-$result = $this->validator->validate($data, [
-    'title' => [new Required(), new Length(min: 3, max: 255)],
-    'tags'  => [new Each([new StringValue()])],
-]);
+declare(strict_types=1);
 
-// 2. Class-string: rules taken from the class's attributes
-$result = $this->validator->validate($array, CreatePostDto::class);
+namespace App\Application\Order\Dto;
 
-// 3. Object implementing RulesProviderInterface
-//    public function getRules(): iterable;
-$result = $this->validator->validate($data, new PostRulesProvider());
+use Yiisoft\Validator\Rule\Required;
+use Yiisoft\Validator\Rule\Url;
+use Yiisoft\Validator\ValidationContext;
 
-// 4. A bare callable is wrapped into a Callback rule
-$result = $this->validator->validate($value, static fn (mixed $value): Result => /* ... */);
+final class DeliveryOptionsDto
+{
+    public bool $isPickup = false;
+
+    // Required only when pickup is disabled
+    #[Required(when: static fn (mixed $value, ValidationContext $context): bool => self::isShippingRequired($value, $context))]
+    public ?string $shippingAddress = null;
+
+    public static function isShippingRequired(mixed $value, ValidationContext $context): bool
+    {
+        return $context->getDataSet()->getPropertyValue('isPickup') === false;
+    }
+}
 ```
 
-Use plain maps for one-off ad-hoc validation (e.g. validating a decoded JSON blob inside a use case); use attributes
-on DTOs and form models — they keep rules next to the data they guard.
+### 3.4. Flow Control Combinators: StopOnError, AnyRule, Composite
 
-### 3.3. Rule Behavior Modifiers
+Combinator rules control execution flow across grouped rules:
 
-Every rule supports three modifiers (verified: `SkipOnEmptyInterface`, `SkipOnErrorInterface`, `WhenInterface` +
-traits in `src/Rule/Trait/`):
-
-| Modifier | Semantics |
-|---|---|
-| `skipOnEmpty: bool\|callable\|null` | `null` → validator's global default; `false` → never skip; `true` → skip when value is not passed / `null` / `""` / empty iterable; callable → skip when it returns `true`. Named empty conditions also ship as classes: `Yiisoft\Validator\EmptyCondition\NeverEmpty`, `WhenEmpty`, `WhenMissing`, `WhenNull`. |
-| `skipOnError: bool` | skip this rule when a previous rule on the same property already failed (avoids cascading noise) |
-| `when: ?Closure` | run the rule only if the closure returns `true`: `fn (mixed $value, ValidationContext $context): bool` |
-
-```php
-// Only validate the URL when the source is external
-#[Url(when: static fn (mixed $value, ValidationContext $context): bool => $context->getParameter('isExternal') === true)]
-public ?string $externalUrl = null;
-
-// Required only when another field is missing — treat "missing" and "empty" distinctly
-#[Required(emptyCondition: new WhenMissing())]
-public ?string $optionalId = null;
-```
-
-> [!NOTE]
-> The distinction matters in APIs: `Required` with the default `WhenEmpty`-style semantics fails on `""` and `null`
-> alike. Use `new WhenMissing()` when a field must be present in the payload but is allowed to be empty.
-
-Structural combinators control rule-group flow: `StopOnError([...])` stops the group at the first failing rule;
-`AnyRule([...])` succeeds at the first passing rule; `Composite([...], skipOnEmpty: ..., when: ...)` shares
-modifiers across the group.
+- **`StopOnError([...])` (Circuit Breaker):** Halts evaluation of subsequent rules in the group as soon as the first rule produces an error:
+  ```php
+  #[StopOnError([
+      new Required(),
+      new Integer(min: 1),
+      new Callback([self::class, 'checkRemoteInventory']),
+  ])]
+  public ?int $productId = null;
+  ```
+- **`AnyRule([...], message: ...)` (Logical OR):** Succeeds if at least one rule in the collection passes. If all fail, returns a composite error:
+  ```php
+  #[AnyRule([
+      new Regex(pattern: '/^\+?[1-9]\d{1,14}$/'), // E.164 phone format
+      new Email(),
+  ], message: '{Property} must be a valid telephone number or email address.')]
+  public string $contactIdentifier = '';
+  ```
+- **`Composite([...], skipOnEmpty: ..., when: ...)`:** Bundles multiple rules so they can share common `skipOnEmpty`, `skipOnError`, or `when` modifiers.
 
 ---
 
-## 4. Custom Rules
+## 4. Custom Rules & Dependency Injection
 
-A custom rule is a pair: an immutable rule class implementing `Yiisoft\Validator\RuleInterface` and a handler
-implementing `Yiisoft\Validator\RuleHandlerInterface`. Exact contract (from `src/RuleInterface.php` and
-`src/RuleHandlerInterface.php`):
+### 4.1. Custom Rule & Handler Pair Contract
 
-```php
-// Rule: value object carrying options; returns the handler
-public function getHandler(): string|RuleHandlerInterface;
+Custom rules in Yii 3 follow a strict decoupled architecture:
+1. **Rule Class (`RuleInterface`):** An immutable configuration value object carrying options and error message templates.
+2. **Rule Handler Class (`RuleHandlerInterface`):** An execution service performing the actual check.
 
-// Handler: performs the check
-public function validate(mixed $value, RuleInterface $rule, ValidationContext $context): Result;
+```
++---------------------------+                +-------------------------------+
+|     Rule (Value Object)   |                |    RuleHandler (Service)      |
+|  implements RuleInterface | -------------> |  implements RuleHandlerInterface
+|  - message templates      |  delegates to  |  - validate($val, $rule, $ctx)|
+|  - constructor options    |  via           |  - injects DB / repositories  |
+|  - getHandler(): string   |  getHandler()  |  - returns Result             |
++---------------------------+                +-------------------------------+
 ```
 
-The handler must throw `Yiisoft\Validator\Exception\UnexpectedRuleException` when the passed rule is not its own type.
-Follow the handler idiom used by all built-in handlers (`src/Rule/RegexHandler.php`): create `new Result()`, call
-`$result->addError($message, $parameters)` (it returns the `Result`), and pass translated property placeholders.
+The handler must throw `Yiisoft\Validator\Exception\UnexpectedRuleException` if invoked with an incompatible rule.
+
+### 4.2. Dependency Injection in Handlers: The RuleHandlerContainer Binding
+
+> [!CAUTION]
+> **The `SimpleRuleHandlerContainer` Trap:**
+> In `yiisoft/validator`'s default `config/di.php`, `RuleHandlerResolverInterface::class` is bound to `Yiisoft\Validator\RuleHandlerResolver\SimpleRuleHandlerContainer`.
+> `SimpleRuleHandlerContainer` instantiates handlers using `new $handlerName()`. If your custom rule handler injects application dependencies (such as a database connection, repository, or hasher), validation fails with:
+> `ArgumentCountError: Too few arguments to function ...Handler::__construct(), 0 passed`.
+
+#### The Solution: Rebind to `RuleHandlerContainer`
+Rebind `RuleHandlerResolverInterface` in your application's `config/common/di/validator.php` to `RuleHandlerContainer`. `RuleHandlerContainer` delegates handler instantiation to the PSR-11 container:
+
+```php
+// config/common/di/validator.php
+declare(strict_types=1);
+
+use Yiisoft\Validator\RuleHandlerResolverInterface;
+use Yiisoft\Validator\RuleHandlerResolver\RuleHandlerContainer;
+
+return [
+    RuleHandlerResolverInterface::class => RuleHandlerContainer::class,
+];
+```
+
+#### Complete Recipe: Service-Injected Unique Email Rule
 
 ```php
 declare(strict_types=1);
 
 namespace App\Application\Shared\Validator\Rule;
 
+use Attribute;
+use Closure;
+use Yiisoft\Validator\Rule\Trait\SkipOnEmptyTrait;
+use Yiisoft\Validator\Rule\Trait\SkipOnErrorTrait;
+use Yiisoft\Validator\Rule\Trait\WhenTrait;
+use Yiisoft\Validator\RuleInterface;
+use Yiisoft\Validator\SkipOnEmptyInterface;
+use Yiisoft\Validator\SkipOnErrorInterface;
+use Yiisoft\Validator\WhenInterface;
+
+#[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
+final class UniqueUserEmail implements RuleInterface, SkipOnEmptyInterface, SkipOnErrorInterface, WhenInterface
+{
+    use SkipOnEmptyTrait;
+    use SkipOnErrorTrait;
+    use WhenTrait;
+
+    public function __construct(
+        public readonly string $message = 'User with email "{value}" is already registered.',
+        mixed $skipOnEmpty = null,
+        bool $skipOnError = false,
+        ?Closure $when = null,
+    ) {
+        $this->skipOnEmpty = $skipOnEmpty;
+        $this->skipOnError = $skipOnError;
+        $this->when = $when;
+    }
+
+    public function getHandler(): string
+    {
+        return UniqueUserEmailHandler::class;
+    }
+}
+```
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Shared\Validator\Rule;
+
+use App\Domain\User\UserRepositoryInterface;
 use Yiisoft\Validator\Exception\UnexpectedRuleException;
 use Yiisoft\Validator\Result;
 use Yiisoft\Validator\RuleHandlerInterface;
 use Yiisoft\Validator\RuleInterface;
 use Yiisoft\Validator\ValidationContext;
 
-use function is_string;
-
-final readonly class HexColor implements RuleInterface
+final readonly class UniqueUserEmailHandler implements RuleHandlerInterface
 {
     public function __construct(
-        private string $message = 'Value must be a hexadecimal color like #RRGGBB.',
+        private UserRepositoryInterface $userRepository,
     ) {}
 
-    public function getMessage(): string
-    {
-        return $this->message;
-    }
-
-    public function getHandler(): string|RuleHandlerInterface
-    {
-        return HexColorHandler::class;
-    }
-}
-
-final class HexColorHandler implements RuleHandlerInterface
-{
     public function validate(mixed $value, RuleInterface $rule, ValidationContext $context): Result
     {
-        if (!$rule instanceof HexColor) {
-            throw new UnexpectedRuleException(HexColor::class, $rule);
+        if (!$rule instanceof UniqueUserEmail) {
+            throw new UnexpectedRuleException(UniqueUserEmail::class, $rule);
         }
 
         $result = new Result();
-        if (is_string($value) && preg_match('/^#[0-9a-fA-F]{6}$/', $value) === 1) {
+        if (!is_string($value) || $value === '') {
             return $result;
         }
 
-        return $result->addError($rule->getMessage(), [
-            'property' => $context->getTranslatedProperty(),
-            'Property' => $context->getCapitalizedTranslatedProperty(),
-            'value'    => is_scalar($value) ? $value : get_debug_type($value),
+        if ($this->userRepository->hasByEmail($value)) {
+            $result->addError($rule->message, [
+                'property' => $context->getTranslatedProperty(),
+                'Property' => $context->getCapitalizedTranslatedProperty(),
+                'value' => $value,
+            ]);
+        }
+
+        return $result;
+    }
+}
+```
+
+### 4.3. One-Off Checks with Callback Rule
+
+For domain validations unique to a single DTO that do not warrant a full rule-handler pair, use `Callback`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Auth\Dto;
+
+use Yiisoft\Validator\Result;
+use Yiisoft\Validator\Rule\Callback;
+use Yiisoft\Validator\Rule\Required;
+use Yiisoft\Validator\ValidationContext;
+
+final class ChangePasswordInput
+{
+    #[Required]
+    public string $oldPassword = '';
+
+    #[Required]
+    #[Callback(method: 'validateNewPasswordNotSame')]
+    public string $newPassword = '';
+
+    public function validateNewPasswordNotSame(mixed $value, Callback $rule, ValidationContext $context): Result
+    {
+        $result = new Result();
+        if ($value === $this->oldPassword) {
+            $result->addError('New password must differ from the current password.', [
+                'property' => $context->getTranslatedProperty(),
+            ]);
+        }
+        return $result;
+    }
+}
+```
+
+### 4.4. Isolated Unit Testing of Custom Rule Handlers
+
+Custom rule handlers implementing `RuleHandlerInterface` can be tested in complete isolation without bootstrapping a DI container, HTTP pipeline, or database. Pass mock dependencies directly into the handler's constructor and create a standalone `ValidationContext`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Application\Shared\Validator\Rule;
+
+use App\Application\Shared\Validator\Rule\UniqueUserEmail;
+use App\Application\Shared\Validator\Rule\UniqueUserEmailHandler;
+use App\Domain\User\UserRepositoryInterface;
+use PHPUnit\Framework\TestCase;
+use Yiisoft\Validator\DataSet\ArrayDataSet;
+use Yiisoft\Validator\ValidationContext;
+
+final class UniqueUserEmailHandlerTest extends TestCase
+{
+    public function testEmailAlreadyTakenProducesValidationError(): void
+    {
+        $repositoryMock = $this->createMock(UserRepositoryInterface::class);
+        $repositoryMock
+            ->expects($this->once())
+            ->method('hasByEmail')
+            ->with('taken@example.com')
+            ->willReturn(true);
+
+        $handler = new UniqueUserEmailHandler($repositoryMock);
+        $rule = new UniqueUserEmail();
+        $context = (new ValidationContext())
+            ->setDataSet(new ArrayDataSet(['email' => 'taken@example.com']))
+            ->setProperty('email');
+
+        $result = $handler->validate('taken@example.com', $rule, $context);
+
+        $this->assertFalse($result->isValid());
+        $this->assertSame(
+            ['User with email "taken@example.com" is already registered.'],
+            $result->getErrorMessages(),
+        );
+    }
+
+    public function testAvailableEmailPassesCleanly(): void
+    {
+        $repositoryMock = $this->createMock(UserRepositoryInterface::class);
+        $repositoryMock
+            ->expects($this->once())
+            ->method('hasByEmail')
+            ->with('available@example.com')
+            ->willReturn(false);
+
+        $handler = new UniqueUserEmailHandler($repositoryMock);
+        $rule = new UniqueUserEmail();
+        $context = (new ValidationContext())
+            ->setDataSet(new ArrayDataSet(['email' => 'available@example.com']))
+            ->setProperty('email');
+
+        $result = $handler->validate('available@example.com', $rule, $context);
+
+        $this->assertTrue($result->isValid());
+        $this->assertSame([], $result->getErrors());
+    }
+}
+```
+
+---
+
+## 5. File & Image Validation
+
+### 5.1. File Rule & Safe Post-Validation Storage
+
+The file validation rule resides in the root rule namespace: `Yiisoft\Validator\Rule\File` (`vendor/yiisoft/validator/src/Rule/File.php`).
+
+`File` validates:
+- Local filesystem paths (`string`).
+- Standard PHP `SplFileInfo` objects.
+- PSR-7 `Psr\Http\Message\UploadedFileInterface` instances.
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Document\Dto;
+
+use Psr\Http\Message\UploadedFileInterface;
+use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\File;
+use Yiisoft\Validator\Rule\Required;
+
+final class UploadDocumentInput
+{
+    #[Label('Contract PDF')]
+    #[Required]
+    #[File(
+        extensions: ['pdf'],
+        mimeTypes: ['application/pdf'],
+        minSize: 10 * 1024,           // 10 KB
+        maxSize: 15 * 1024 * 1024,     // 15 MB
+        message: 'Please provide a valid file.',
+        tooBigMessage: 'The file {property} cannot exceed 15 MB.',
+    )]
+    public ?UploadedFileInterface $document = null;
+}
+```
+
+#### Safe Post-Validation File Moving
+
+> [!CAUTION]
+> **`FileHelper::createDirectory()` Trap:**
+> In `yiisoft/files`, `FileHelper::createDirectory()` does **NOT** exist. The correct method is `Yiisoft\Files\FileHelper::ensureDirectory(string $path, int $mode = 0775): void`. It normalizes directory paths and safely handles concurrent mkdir race conditions.
+
+After validation confirms that the uploaded file is valid, persist it using `$file->moveTo()`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Document;
+
+use App\Application\Document\Dto\UploadDocumentInput;
+use RuntimeException;
+use Yiisoft\Files\FileHelper;
+
+final readonly class DocumentStorageService
+{
+    public function __construct(
+        private string $storageDirectory = '/var/uploads/contracts',
+    ) {}
+
+    public function store(UploadDocumentInput $input): string
+    {
+        $file = $input->document;
+        if ($file === null || $file->getError() !== UPLOAD_ERR_OK) {
+            throw new RuntimeException('Uploaded file is missing or corrupted.');
+        }
+
+        // 1. Ensure storage directory exists with proper permissions
+        FileHelper::ensureDirectory($this->storageDirectory, 0775);
+
+        // 2. Generate a collision-resistant filename
+        $extension = pathinfo($file->getClientFilename() ?? '', PATHINFO_EXTENSION);
+        $safeFilename = bin2hex(random_bytes(16)) . '.' . strtolower($extension);
+        $targetPath = $this->storageDirectory . DIRECTORY_SEPARATOR . $safeFilename;
+
+        // 3. Move the file from PHP temp folder to permanent storage
+        $file->moveTo($targetPath);
+
+        return $safeFilename;
+    }
+}
+```
+
+### 5.2. Image & Aspect Ratio Rules (`Rule\Image\Image`, `ImageAspectRatio`)
+
+Image rules are housed in `Yiisoft\Validator\Rule\Image\*`:
+- `Yiisoft\Validator\Rule\Image\Image` checks dimensions (width and height limits in pixels). Requires PHP `ext-gd`.
+- `Yiisoft\Validator\Rule\Image\ImageAspectRatio` is a companion value object validating aspect ratios with an allowed tolerance margin.
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Profile\Dto;
+
+use Psr\Http\Message\UploadedFileInterface;
+use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\File;
+use Yiisoft\Validator\Rule\Image\Image;
+use Yiisoft\Validator\Rule\Image\ImageAspectRatio;
+use Yiisoft\Validator\Rule\Required;
+
+final class UpdateAvatarInput
+{
+    #[Label('Profile Picture')]
+    #[Required]
+    #[File(
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+        mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        maxSize: 2 * 1024 * 1024,
+    )]
+    #[Image(
+        minWidth: 200,
+        minHeight: 200,
+        maxWidth: 2000,
+        maxHeight: 2000,
+        aspectRatio: new ImageAspectRatio(width: 1, height: 1, margin: 5.0), // 1:1 ±5% margin
+    )]
+    public ?UploadedFileInterface $avatar = null;
+}
+```
+
+### 5.3. Validating PSR-7 UploadedFileInterface & Multi-File Collections
+
+When receiving an array of uploaded files, wrap `File` or `Image` inside `Each`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Gallery\Dto;
+
+use Psr\Http\Message\UploadedFileInterface;
+use Yiisoft\Input\Http\Attribute\Parameter\UploadedFiles;
+use Yiisoft\Validator\Rule\Count;
+use Yiisoft\Validator\Rule\Each;
+use Yiisoft\Validator\Rule\File;
+use Yiisoft\Validator\Rule\Image\Image;
+use Yiisoft\Validator\Rule\Required;
+
+final class UploadGalleryInput
+{
+    /**
+     * @var array<UploadedFileInterface>
+     */
+    #[UploadedFiles('gallery_images')]
+    #[Required]
+    #[Count(min: 1, max: 10)]
+    #[Each([
+        new File(extensions: ['jpg', 'png'], maxSize: 5 * 1024 * 1024),
+        new Image(minWidth: 800, minHeight: 600),
+    ])]
+    public array $images = [];
+}
+```
+
+---
+
+## 6. Cross-Property Validation & Contextual Comparison
+
+### 6.1. Comparison Rules: targetProperty vs. targetValue
+
+All comparison rules (`Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual`, `Compare`) inherit from `Yiisoft\Validator\Rule\AbstractCompare`.
+
+- To compare against a static scalar: use `targetValue: 100`.
+- To compare against a sibling property in the dataset: use `targetProperty: 'otherPropertyName'`.
+
+> [!WARNING]
+> In Yii 3, the target field parameter is named **`targetProperty`**. Using `targetAttribute`, `target`, or `property` causes an `Error: Unknown named parameter` in PHP 8.
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Auth\Dto;
+
+use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\Equal;
+use Yiisoft\Validator\Rule\Length;
+use Yiisoft\Validator\Rule\Required;
+
+final class RegisterInput
+{
+    #[Label('Password')]
+    #[Required]
+    #[Length(min: 8)]
+    public string $password = '';
+
+    #[Label('Password Confirmation')]
+    #[Required]
+    #[Equal(
+        targetProperty: 'password',
+        message: '{Property} must match {targetProperty}.',
+    )]
+    public string $passwordRepeat = '';
+}
+```
+
+Available message placeholders in comparison rules:
+- `{property}` / `{Property}` — validated property name.
+- `{targetProperty}` / `{TargetProperty}` — target property name.
+- `{targetValue}` — static target value.
+- `{targetPropertyValue}` — resolved value of the target property.
+- `{targetValueOrProperty}` — resolved property value or static target value.
+
+### 6.2. Cross-Property Cardinality: FilledAtLeast, FilledOnlyOneOf
+
+Use cross-property cardinality rules when multiple properties must be validated in relation to each other:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Notification\Dto;
+
+use Yiisoft\Validator\Rule\Email;
+use Yiisoft\Validator\Rule\FilledAtLeast;
+use Yiisoft\Validator\Rule\FilledOnlyOneOf;
+use Yiisoft\Validator\Rule\Regex;
+
+#[FilledAtLeast(
+    properties: ['mobilePhone', 'emailAddress'],
+    min: 1,
+    message: 'At least one contact method must be provided.',
+)]
+#[FilledOnlyOneOf(
+    properties: ['discountPercentage', 'fixedDiscountAmount'],
+    message: 'Specify either a percentage discount or a fixed discount, not both.',
+)]
+final class CustomerPreferencesInput
+{
+    #[Regex(pattern: '/^\+?[1-9]\d{1,14}$/')]
+    public ?string $mobilePhone = null;
+
+    #[Email]
+    public ?string $emailAddress = null;
+
+    public ?int $discountPercentage = null;
+    public ?float $fixedDiscountAmount = null;
+}
+```
+
+### 6.3. Dynamic Context Inspection via ValidationContext
+
+Within custom rules or callbacks, inspect the enclosing dataset via `$context->getDataSet()`:
+
+```php
+$dataset = $context->getDataSet();
+$userRole = $dataset->getPropertyValue('role');
+$accountType = $dataset->getPropertyValue('accountType');
+```
+
+---
+
+## 7. Messages, Labels, Placeholders & Internationalization
+
+### 7.1. Translation Category 'yii-validator' & TranslatorMessagePhp Requirement
+
+All built-in error messages in `yiisoft/validator` are translated using `Yiisoft\Translator\TranslatorInterface` under the default category **`'yii-validator'`** (`Yiisoft\Validator\Validator::DEFAULT_TRANSLATION_CATEGORY`).
+
+The package ships official translations in `vendor/yiisoft/validator/messages/<locale>/yii-validator.php` (e.g. Russian, German, French, Spanish, Ukrainian).
+
+> [!IMPORTANT]
+> **Mandatory Dependency: `yiisoft/translator-message-php`**
+> In `vendor/yiisoft/validator/config/di.php`, the category source definition checks:
+> ```php
+> $reader = class_exists(MessageSource::class)
+>     ? new MessageSource(\dirname(__DIR__) . '/messages')
+>     : new IdMessageReader();
+> ```
+> If `yiisoft/translator-message-php` is missing from `composer.json`, `class_exists(MessageSource::class)` returns `false`. The validator falls back to `IdMessageReader`, leaving all system error messages untranslated even if the application locale is configured. Always install:
+> ```bash
+> composer require yiisoft/translator-message-php
+> ```
+
+Application DI configuration (`config/common/di/validator.php`):
+```php
+declare(strict_types=1);
+
+use Yiisoft\Validator\Validator;
+use Yiisoft\Validator\ValidatorInterface;
+
+return [
+    ValidatorInterface::class => [
+        'class' => Validator::class,
+        '__construct()' => [
+            'translationCategory' => 'yii-validator',
+        ],
+    ],
+];
+```
+
+### 7.2. Placeholder Substitution: {Property}, {value}, and Parameter Tokens
+
+Placeholders use curly braces and match parameter arrays passed to `$result->addError()`:
+- `{Property}` — capitalized translated property name (e.g. `"Publication Title"`).
+- `{property}` — lowercase translated property name (e.g. `"publication title"`).
+- `{value}` — scalar value that failed validation.
+- Numerical limits: `{min}`, `{max}`, `{exactly}`, `{limit}`.
+
+### 7.3. Property Labels via #[Label] and Property Translators
+
+Property names in error messages default to camelCase property identifiers. To supply human-readable labels, decorate properties with `#[\Yiisoft\Validator\Label('...')]`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Article\Dto;
+
+use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\Length;
+use Yiisoft\Validator\Rule\Required;
+
+final class ArticleInput
+{
+    #[Label('Article Headline')]
+    #[Required]
+    #[Length(min: 5, max: 200)]
+    public string $headline = '';
+}
+```
+
+> [!IMPORTANT]
+> The `#[Label]` attribute belongs to **`Yiisoft\Validator\Label`**, NOT `yiisoft/form-model`.
+
+#### Property Translators
+Dynamic label resolution can also be customized via `PropertyTranslatorInterface`:
+- `Yiisoft\Validator\PropertyTranslator\NullPropertyTranslator` — returns the raw property name untouched.
+- `Yiisoft\Validator\PropertyTranslator\ArrayPropertyTranslator` — translates using a static map: `new ArrayPropertyTranslator(['title' => 'Article Title'])`.
+- `Yiisoft\Validator\PropertyTranslator\TranslatorPropertyTranslator` — delegates property name translation to `Yiisoft\Translator\TranslatorInterface`.
+
+*(Note: There is no `SimplePropertyTranslator` in Yii 3; using it causes a fatal class not found error).*
+
+### 7.4. Message Formatters: SimpleMessageFormatter vs. IntlMessageFormatter
+
+When configuring `yiisoft/translator`:
+- **`SimpleMessageFormatter`:** Replaces tokens via string substitution and supports basic binary pluralization (`one` and `other`). It throws `InvalidArgumentException` if any `{param}` token in the template is absent from parameters.
+- **`IntlMessageFormatter`:** Uses PHP's `ext-intl` and ICU MessageFormat. It is **mandatory** for languages with complex plural rules (such as Russian, Polish, Czech with `one`, `few`, `many`, `other`). In ICU templates, escape literal curly braces with single quotes: `'{'`.
+
+---
+
+## 8. Form Models & Web Form Lifecycle (`yiisoft/form-model` & `yiisoft/form`)
+
+### 8.1. FormModel Base Class & FormModelInterface Contract
+
+`Yiisoft\FormModel\FormModel` is the abstract base class for HTML forms. It bridges validation, hydration, presentation metadata, and form widgets.
+
+Key methods of `FormModelInterface` (`vendor/yiisoft/form-model/src/FormModelInterface.php`):
+- `getFormName(): string` — short class name by default (`"ContactForm"`). Acts as the scope key in POST payloads (`$_POST['ContactForm']['email']`).
+- `hasProperty(string $property): bool` — verifies property existence.
+- `getPropertyValue(string $property): mixed` — retrieves current value (supports dot paths like `address.city`).
+- `getPropertyLabel(string $property): string` — resolves label from `getPropertyLabels()`, `#[Label]`, or inflects the property name using `(new Inflector())->toWords(...)`.
+- `getPropertyHint(string $property): string` — retrieves hint from `#[\Yiisoft\FormModel\Attribute\Hint]`.
+- `getPropertyPlaceholder(string $property): string` — retrieves placeholder from `#[\Yiisoft\FormModel\Attribute\Placeholder]`.
+- `isValid(): bool` / `isValidated(): bool` — queries validation state.
+- `getValidationResult(): Result` — returns the accumulated validation result.
+
+> [!CAUTION]
+> **`FormModel::addError()` Precondition Trap:**
+> `FormModel::addError(string $message, array $valuePath = []): static` calls `$this->getValidationResult()->addErrorWithoutPostProcessing(...)`.
+> If called **before** the model has been validated, `getValidationResult()` throws:
+> `LogicException: Validation result is not set.`
+> Only call `addError()` after `populate*AndValidate()` has executed, or when `isValidated()` is `true`.
+
+### 8.2. FormHydrator: Population, GET/POST Scoping, and Mass-Assignment Protection
+
+`Yiisoft\FormModel\FormHydrator` populates form models from HTTP requests and coordinates validation.
+
+Method signatures (`vendor/yiisoft/form-model/src/FormHydrator.php`):
+```php
+public function populate(FormModelInterface $model, mixed $data, ?array $map = null, ?bool $strict = null, ?string $scope = null): bool;
+public function validate(FormModelInterface $model): Result;
+public function populateAndValidate(FormModelInterface $model, mixed $data, ?array $map = null, ?bool $strict = null, ?string $scope = null): bool;
+
+// POST Form Submissions:
+public function populateFromPost(FormModelInterface $model, ServerRequestInterface $request, ?array $map = null, ?bool $strict = null, ?string $scope = null): bool;
+public function populateFromPostAndValidate(FormModelInterface $model, ServerRequestInterface $request, ?array $map = null, ?bool $strict = null, ?string $scope = null): bool;
+
+// GET Search & Filter Submissions:
+public function populateFromGet(FormModelInterface $model, ServerRequestInterface $request, ?array $map = null, ?bool $strict = null, ?string $scope = null): bool;
+public function populateFromGetAndValidate(FormModelInterface $model, ServerRequestInterface $request, ?array $map = null, ?bool $strict = null, ?string $scope = null): bool;
+```
+
+#### Tail Arguments Semantics & Query Scoping
+- **`$scope`:** The array key in `$data` to read from.
+  - Defaults to `$model->getFormName()` (e.g. `$_POST['ContactForm']['email']` or `$_GET['PostFilter']['status']`).
+  - **Flat URL Queries:** For search/filter forms where query parameters sit directly at the root of the URL (`?status=active&search=php`), you **must** pass `$scope: ''`.
+- **`$strict` (Mass-Assignment Protection):**
+  - `null` (default): **Hydrates only properties that carry validation rules or the `#[Safe]` attribute.** Any extraneous keys sent by the client are silently discarded.
+  - `false`: Hydrates all properties present in `$data`.
+  - `true`: Hydrates only properties explicitly listed in `$map`.
+- **`#[\Yiisoft\FormModel\Attribute\Safe]`:** Marks a property fillable without validation rules under default `$strict = null` mode.
+
+#### FormHydrator TypeCaster Chain
+In `yiisoft/form-model/config/di.php`, `FormHydrator` is configured with a specialized type caster chain:
+1. `Yiisoft\Hydrator\TypeCaster\NullTypeCaster(emptyString: true)` — converts `""` to `null` for nullable properties (`?string`, `?int`).
+2. `Yiisoft\Hydrator\TypeCaster\PhpNativeTypeCaster` — casts scalar PHP types.
+3. `Yiisoft\FormModel\NonArrayTypeCaster` — **Form-specific typecaster:** if a property is typed `array` but the submitted value is empty or not an array (e.g. unselected checkbox lists), it casts the input to `[]` to prevent fatal `TypeError`s during hydration. *(Note: belongs to `yiisoft/form-model`, NOT `hydrator`).*
+4. `Yiisoft\Hydrator\TypeCaster\HydratorTypeCaster` — recursively hydrates nested DTOs.
+
+#### Recipe: Handling GET Filter Forms with Flat URL Parameters
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Web\Post;
+
+use App\Application\Post\PostRepositoryInterface;
+use App\Presentation\Web\Post\Form\PostFilterForm;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\FormModel\FormHydrator;
+use Yiisoft\Yii\View\Renderer\WebViewRenderer;
+
+final readonly class PostIndexAction
+{
+    public function __construct(
+        private WebViewRenderer $viewRenderer,
+        private FormHydrator $formHydrator,
+        private PostRepositoryInterface $postRepository,
+    ) {}
+
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        $filterForm = new PostFilterForm();
+
+        // Pass scope: '' because GET parameters are flat in the query string (?search=yii&status=published)
+        if ($request->getMethod() === 'GET') {
+            $this->formHydrator->populateFromGetAndValidate($filterForm, $request, scope: '');
+        }
+
+        $posts = $this->postRepository->findFiltered(
+            search: $filterForm->search,
+            status: $filterForm->status,
+        );
+
+        return $this->viewRenderer->render('post/index', [
+            'filterForm' => $filterForm,
+            'posts' => $posts,
         ]);
     }
 }
 ```
 
-Usage — as an attribute (add `#[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::IS_REPEATABLE)]` on
-`HexColor` if used declaratively) or inline:
-
-```php
-#[HexColor()]
-public string $brandColor = '#000000';
-
-$result = $this->validator->validate($dto, ['brandColor' => [new HexColor()]]);
-```
-
-> [!TIP]
-> For one-off checks a `Callback` rule is enough — introduce a full rule/handler pair only when the constraint is
-> reused across DTOs or needs options.
-
 ---
 
-## 5. Messages, Labels & Translation
+### 8.3. Complete Web Form Lifecycle (FormModel, Action, PRG Pattern & CSRF View)
 
-- Every rule constructor accepts message parameters (`message:`, `lessThanMinMessage:`, …). Placeholders are
-  brace-style: `{Property}`, `{min}`, `{max}`, `{value}`, `{type}`. Placeholders are filled from the parameters array
-  the handler passes to `addError()` — property names come from the validation context
-  (`$context->getTranslatedProperty()` / `getCapitalizedTranslatedProperty()`).
-- Messages are translated by default (`Error::MESSAGE_TRANSLATE` is the default message-processing mode). The
-  validator uses `Yiisoft\Translator\TranslatorInterface` with the default category **`'yii-validator'`**
-  (`Validator::DEFAULT_TRANSLATION_CATEGORY`, `src/Validator.php`). The category ships translations for built-in
-  messages (e.g. `messages/ru/yii-validator.php`).
-- Property labels for `{Property}` substitution come from the `#[\Yiisoft\Validator\Label('...')]` attribute on
-  properties, or from a `PropertyTranslatorInterface` / `PropertyTranslatorProviderInterface` implementation passed
-  to the validator.
-
-```php
-#[Required(message: '{Property} must be provided.')]
-#[Label('Publication title')]
-public string $title = '';
-```
-
-> [!NOTE]
-> `Error::MESSAGE_NONE` / `addErrorWithFormatOnly()` / `addErrorWithoutPostProcessing()` exist for custom handlers
-> that must bypass translation or formatting; normal application code keeps the default.
-
----
-
-## 6. Form Models (`yiisoft/form-model`)
-
-### 6.1. FormModel Base Class
-
-`Yiisoft\FormModel\FormModel` is the abstract base for HTML form models. Public API comes from
-`FormModelInterface` (verified — there is **no** `isPropertyRequired()` or `getAttributeValue()` method):
-
-| Method | Purpose |
-|---|---|
-| `getFormName(): string` | short class name by default; used as the scope key in POST payloads (`ContactForm[email]`) |
-| `hasProperty(string $property): bool` | property existence |
-| `getPropertyValue(string $property): mixed` | current value |
-| `getPropertyLabel(string $property): string` / `getPropertyLabels(): array` | labels (auto-generated from property names, or from `#[Label]`) |
-| `getPropertyHint(...)` / `getPropertyPlaceholder(...)` | hints and placeholders from `#[Hint]` / `#[Placeholder]` attributes |
-| `isValid(): bool` / `isValidated(): bool` | validation state |
-| `getValidationResult(): Result` | throws `LogicException` when not yet validated |
-| `addError(string $message, array $valuePath = []): static` | manual error (e.g. from a use-case failure) |
-
-The validator calls `processValidationResult(Result)` on the model automatically (the class implements
-`PostValidationHookInterface`), so `populateAndValidate()` leaves the model fully introspectable — no manual
-result plumbing in the action.
-
-### 6.2. FormHydrator: Populate & Validate
-
-`Yiisoft\FormModel\FormHydrator` combines hydration and validation. Exact methods (from `src/FormHydrator.php`):
-
-```php
-public function __construct(HydratorInterface $hydrator, ValidatorInterface $validator) {}
-
-public function populate(FormModelInterface $model, mixed $data, ?array $map = null,
-    ?bool $strict = null, ?string $scope = null): bool;
-public function validate(FormModelInterface $model): Result;
-public function populateAndValidate(FormModelInterface $model, mixed $data, ?array $map = null,
-    ?bool $strict = null, ?string $scope = null): bool;
-
-public function populateFromGet(FormModelInterface $model, ServerRequestInterface $request, /* same tail */): bool;
-public function populateFromPost(FormModelInterface $model, ServerRequestInterface $request, /* same tail */): bool;
-public function populateFromGetAndValidate(...): bool;
-public function populateFromPostAndValidate(...): bool;
-```
-
-Semantics of the tail arguments (`$map`, `$strict`, `$scope`):
-
-| Argument | Meaning |
-|---|---|
-| `$map` | explicit map of model property names → keys in the data array |
-| `$strict` | `false` → fill everything present in the data; `null` (default) → fill only properties that have validation rules (mass-assignment protection via `#[Safe]`); `true` → strict mapping only |
-| `$scope` | key of the payload to read from (`ContactForm`); defaults to `getFormName()`, `''` reads the whole payload |
-
-`populate*()` methods return `bool` (whether filling succeeded — e.g. `false` when the scope key is absent);
-`populate*AndValidate()` return `bool` = filled **and** valid.
-
-The `#[\Yiisoft\FormModel\Attribute\Safe]` attribute marks a property fillable: only properties that carry
-validation rules (or `#[Safe]`) are filled in default (`$strict = null`) mode. A property with no rules and no
-`#[Safe]` is **never** filled from user input — this is the mass-assignment guard.
-
-### 6.3. Full Web Form Example
-
+#### 1. Form Model
 ```php
 declare(strict_types=1);
 
 namespace App\Presentation\Web\Contact\Form;
 
+use Yiisoft\FormModel\Attribute\Hint;
+use Yiisoft\FormModel\Attribute\Safe;
 use Yiisoft\FormModel\FormModel;
+use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Rule\Email;
 use Yiisoft\Validator\Rule\Length;
 use Yiisoft\Validator\Rule\Required;
 
 final class ContactForm extends FormModel
 {
-    #[Label('Your name')]
+    #[Label('Your Name')]
     #[Required]
     #[Length(min: 2, max: 100)]
     public string $name = '';
 
+    #[Label('Email Address')]
     #[Required]
     #[Email]
     public string $email = '';
 
-    #[Hint('We never share your address.')]
+    #[Label('Message')]
+    #[Hint('Please describe your inquiry in detail.')]
     #[Required]
     #[Length(min: 10, max: 2000)]
     public string $message = '';
+
+    #[Safe]
+    public ?string $referrer = null;
 }
 ```
+
+#### 2. Controller Action with Post/Redirect/Get (PRG) & Flash Messages
+
+> [!CAUTION]
+> **`$session->getFlash()` Trap:**
+> In `yiisoft/session`, `$session->getFlash()` does **NOT** exist. You must inject `Yiisoft\Session\Flash\FlashInterface $flash` directly and call `$flash->add('success', '...')` or `$flash->set('success', '...')`.
 
 ```php
 declare(strict_types=1);
 
 namespace App\Presentation\Web\Contact;
 
+use App\Application\Contact\ContactUseCase;
 use App\Presentation\Web\Contact\Form\ContactForm;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\FormModel\FormHydrator;
-use Yiisoft\Yii\View\Renderer\ViewRenderer;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+use Yiisoft\Session\Flash\FlashInterface;
+use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
 final readonly class ContactAction
 {
     public function __construct(
-        private ViewRenderer $viewRenderer,
+        private WebViewRenderer $viewRenderer,
         private FormHydrator $formHydrator,
-        private ContactUseCase $useCase,
+        private ContactUseCase $contactUseCase,
+        private FlashInterface $flash,
+        private ResponseFactoryInterface $responseFactory,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $form = new ContactForm();
 
-        if ($request->getMethod() === 'POST') {
-            if ($this->formHydrator->populateFromPostAndValidate($form, $request)) {
-                $this->useCase->handle($form->name, $form->email, $form->message);
-                return $this->viewRenderer->render('contact/success');
-            }
+        if ($request->getMethod() === 'POST' && $this->formHydrator->populateFromPostAndValidate($form, $request)) {
+            $this->contactUseCase->handle(
+                name: $form->name,
+                email: $form->email,
+                message: $form->message,
+                referrer: $form->referrer,
+            );
+
+            // Post/Redirect/Get (PRG) pattern prevents form resubmission on refresh
+            $this->flash->add('success', 'Your inquiry has been submitted successfully.');
+
+            return $this->responseFactory
+                ->createResponse(Status::FOUND)
+                ->withHeader(Header::LOCATION, '/contact');
         }
 
-        // Re-render with errors: template reads $form->getValidationResult()
-        // and $form->getPropertyLabel('name') for <label> texts.
-        return $this->viewRenderer->render('contact/form', ['form' => $form]);
+        return $this->viewRenderer->render('contact/form', [
+            'form' => $form,
+        ]);
     }
 }
 ```
 
-DI: `yiisoft/form-model` ships `config/di.php` defining `FormHydrator` with a dedicated `Hydrator` whose type
-caster chain is `NullTypeCaster(emptyString: true)` → `PhpNativeTypeCaster` → `NonArrayTypeCaster` →
-`HydratorTypeCaster` (empty strings cast to `null` for nullable properties). Use the package defaults; do not
-redefine `FormHydrator` unless you must.
+#### 3. View Template (`views/contact/form.php`)
+```php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Yiisoft\View\WebView $this
+ * @var App\Presentation\Web\Contact\Form\ContactForm $form
+ * @var Yiisoft\Yii\View\Renderer\Csrf $csrf
+ * @var Yiisoft\Session\Flash\FlashInterface $flash
+ */
+
+use Yiisoft\FormModel\Field;
+use Yiisoft\Html\Html;
+
+$this->setTitle('Contact Us');
+?>
+
+<h1><?= Html::encode($this->getTitle()) ?></h1>
+
+<?php foreach ($flash->getAll() as $type => $messages): ?>
+    <?php foreach ((array) $messages as $message): ?>
+        <div class="alert alert-<?= Html::encode($type) ?>"><?= Html::encode($message) ?></div>
+    <?php endforeach; ?>
+<?php endforeach; ?>
+
+<?= Html::form()
+    ->post('/contact')
+    ->csrf($csrf)
+    ->open() ?>
+
+    <?= Field::errorSummary($form) ?>
+
+    <?= Field::text($form, 'name') ?>
+    <?= Field::email($form, 'email') ?>
+    <?= Field::textarea($form, 'message') ?>
+    <?= Field::hidden($form, 'referrer') ?>
+
+    <div class="form-group mt-3">
+        <?= Field::submitButton('Send Message') ?>
+    </div>
+
+<?= Html::form()->close() ?>
+```
+
+> [!NOTE]
+> **CSRF Integration Mechanics:**
+> - `Yiisoft\Yii\View\Renderer\CsrfViewInjection` automatically injects the `$csrf` view variable into templates.
+> - `Html::form()->csrf($csrf)->open()` automatically generates the `<input type="hidden" name="_csrf" value="...">` tag.
+> - `Yiisoft\Csrf\CsrfTokenMiddleware` validates the token before the controller executes. Form models do **not** need a `_csrf` property. *(Note: `CsrfTokenMiddleware` is the canonical middleware; `CsrfMiddleware` is `@deprecated`).*
 
 ---
 
-## 7. Typed DTO Hydration (`yiisoft/hydrator`, `yiisoft/hydrator-validator`)
+### 8.4. Field Widget Catalog, PureField & ValidationRulesEnricher
 
-`Yiisoft\Hydrator\HydratorInterface` (from `src/HydratorInterface.php`):
+`Yiisoft\FormModel\Field` is a static shortcut factory that binds form properties to `yiisoft/form` widgets:
 
-```php
-public function hydrate(object $object, array|DataInterface $data = []): void;
-public function create(string $class, array|DataInterface $data = []): object;
-```
+| Field Method | Rendered HTML Widget | Notes |
+|---|---|---|
+| `Field::text($form, 'name')` | `<input type="text">` | Automatically receives HTML5 `required`, `minlength`, `maxlength` |
+| `Field::password($form, 'password')` | `<input type="password">` | Client-side attribute enrichment |
+| `Field::hidden($form, 'id')` | `<input type="hidden">` | Rendered without label/hint wrappers |
+| `Field::textarea($form, 'message')` | `<textarea>` | Uses `minlength` and `maxlength` from `Length` |
+| `Field::email($form, 'email')` | `<input type="email">` | Type set to email |
+| `Field::telephone($form, 'phone')` | `<input type="tel">` | Method is `telephone()`, NOT `tel()` |
+| `Field::number($form, 'quantity')` | `<input type="number">` | Derives `min`/`max` from `Integer` or `Number` |
+| `Field::range($form, 'volume')` | `<input type="range">` | Slider input with optional min/max/step |
+| `Field::color($form, 'accentColor')` | `<input type="color">` | Color picker input |
+| `Field::date($form, 'birthday')` | `<input type="date">` | Date picker widget |
+| `Field::dateTimeLocal($form, 'eventAt')` | `<input type="datetime-local">` | Local date and time input |
+| `Field::time($form, 'startTime')` | `<input type="time">` | Time picker input |
+| `Field::checkbox($form, 'agree')` | `<input type="checkbox">` | Boolean binding |
+| `Field::checkboxList($form, 'roles')` | Checkbox collection | Set items via `->items(['admin' => 'Admin'])` |
+| `Field::radioList($form, 'status')` | Radio buttons list | **Method is `radioList()`; there is NO `Field::radio()`** |
+| `Field::select($form, 'country')` | `<select>` dropdown | Set options via `->optionsData(['US' => 'USA'])` |
+| `Field::file($form, 'document')` | `<input type="file">` | Multi-file or single-file input |
+| `Field::image(?string $url = null)` | `<input type="image">` / `<img>` | Graphical submit or image field |
+| `Field::fieldset()` | `<fieldset>` container | Groups nested fields |
+| `Field::buttonGroup()` | `<div>` button group | Groups multiple buttons |
+| `Field::label($form, 'prop')` | Standalone `<label>` | Standalone label part |
+| `Field::hint($form, 'prop')` | Standalone hint `<div>` | Standalone hint part |
+| `Field::error($form, 'prop')` | Standalone error message | Standalone error part |
+| `Field::submitButton('Save')` | `<button type="submit">` | **Method is `submitButton()`; there is NO `Field::submit()`** |
+| `Field::resetButton('Reset')` | `<button type="reset">` | **Method is `resetButton()`; there is NO `Field::reset()`** |
+| `Field::button('Click')` | `<button type="button">` | Plain button |
+| `Field::errorSummary($form)` | Alert box of all errors | Renders list of first property errors |
 
-`Hydrator` casts raw values to declared property types (with the type caster chain above), supports property/argument
-mapping, and resolves `Parameter` attributes (see `src/Attribute/Parameter/`): `#[Di]` (pull a dependency from the
-container), `#[Data('key')]`, `#[ToDateTime]`, `#[ToString]`, `#[ToArrayOfStrings]`, `#[Trim]`, `#[Collection]`,
-among others. Use these on constructor parameters or promoted properties of DTOs.
-
-`yiisoft/hydrator-validator` adds validation to hydration. Its complete public surface (three classes + one
-attribute, verified in `src/`):
-
-| Symbol | Role |
-|---|---|
-| `ValidatingHydrator` | `final` decorator implementing `HydratorInterface`; validates raw data before hydration and the hydrated object after it |
-| `ValidatedInputInterface` | extends `PostValidationHookInterface`; adds `getValidationResult(): Result` |
-| `ValidatedInputTrait` | implements `processValidationResult(Result)` + `getValidationResult()` |
-| `#[Validate(RuleInterface ...$rules)]` | attaches rules to a property/parameter during hydration |
+#### Theme-Aware DI: `FieldFactory`
+When your application relies on customizable form themes (e.g. Bootstrap 5, Tailwind CSS), inject `Yiisoft\FormModel\FieldFactory` rather than calling the static facade `Field`:
 
 ```php
 declare(strict_types=1);
 
-namespace App\Application\Post;
+namespace App\Presentation\Web\Shared;
 
-use Yiisoft\Hydrator\Validator\ValidatedInputInterface;
-use Yiisoft\Hydrator\Validator\ValidatedInputTrait;
-use Yiisoft\Validator\Rule\Length;
-use Yiisoft\Validator\Rule\Required;
-use Yiisoft\Validator\Rule\StringValue;
+use App\Presentation\Web\Contact\Form\ContactForm;
+use Yiisoft\FormModel\FieldFactory;
 
-final class CreatePostInput implements ValidatedInputInterface
+final readonly class FormRenderer
 {
-    use ValidatedInputTrait;
+    public function __construct(
+        private FieldFactory $fieldFactory, // configured with default theme in DI
+    ) {}
 
-    #[Required]
-    #[StringValue]
-    #[Length(min: 3, max: 255)]
-    public string $title = '';
+    public function render(ContactForm $form): string
+    {
+        return (string) $this->fieldFactory->text($form, 'name');
+    }
+}
+```
+
+#### `ValidationRulesEnricher` & The File `accept` Invariant
+When rendering fields via `Field::*`, `Yiisoft\FormModel\ValidationRulesEnricher` automatically inspects `yiisoft/validator` attributes on the model property and generates standard HTML5 client-side attributes:
+- `#[Required]` &rarr; `required`
+- `#[Length(min: 3, max: 20)]` &rarr; `minlength="3"` and `maxlength="20"`
+- `#[Integer(min: 1, max: 100)]` &rarr; `min="1"` and `max="100"`
+- `#[Regex(pattern: '/^[A-Z]+$/')]` &rarr; `pattern="^[A-Z]+$"`
+- Rules with active `when:` conditions are excluded from client-side enrichment to avoid conflicting states.
+
+> [!WARNING]
+> **`ValidationRulesEnricher` Does NOT Generate `accept`:**
+> For `Field::file()`, `ValidationRulesEnricher` only converts `#[Required]` into `required`. It does **not** convert `File(extensions: [...], mimeTypes: [...])` into the HTML5 `accept` attribute. You must chain `->accept()` explicitly on the field widget:
+> ```php
+> <?= Field::file($form, 'document')->accept('application/pdf,image/png') ?>
+> ```
+
+#### Model-Agnostic Forms: `Yiisoft\Form\PureField\Field`
+For lightweight, ad-hoc, or search bar forms where defining a dedicated `FormModel` class is unnecessary overhead, use `Yiisoft\Form\PureField\Field`. Pure fields accept raw `$name` and `$value` parameters without requiring a model:
+
+```php
+use Yiisoft\Form\PureField\Field as PureField;
+
+// Render standalone inputs without a FormModel instance:
+echo PureField::text('search', $currentSearchQuery)->placeholder('Search articles...');
+echo PureField::submitButton('Search');
+```
+
+---
+
+## 9. Typed DTO Hydration & ValidatingHydrator (`yiisoft/hydrator`, `yiisoft/hydrator-validator`)
+
+### 9.1. Hydrator Architecture, Built-in EnumTypeCaster & Composite Type Casting
+
+`Yiisoft\Hydrator\HydratorInterface` (`vendor/yiisoft/hydrator/src/HydratorInterface.php`):
+```php
+declare(strict_types=1);
+
+namespace Yiisoft\Hydrator;
+
+interface HydratorInterface
+{
+    public function hydrate(object $object, array|DataInterface $data = []): void;
+    public function create(string $class, array|DataInterface $data = []): object;
+}
+```
+
+The hydrator parses constructor arguments and promoted properties, uses reflection to resolve parameter attributes (`#[Data]`, `#[ToDateTime]`), and applies a composite chain of `TypeCasterInterface` implementations.
+
+#### Built-in Enum Support (`EnumTypeCaster`)
+`Yiisoft\Hydrator\TypeCaster\EnumTypeCaster` provides built-in hydration support for backed PHP 8.1+ Enums (`BackedEnum` and `UnitEnum`). When a DTO constructor parameter is typed with an Enum, strings or integers from the payload are automatically cast to the corresponding Enum instance without requiring a custom typecaster:
+
+```php
+declare(strict_types=1);
+
+namespace App\Domain\Order;
+
+enum OrderStatus: string
+{
+    case PENDING = 'pending';
+    case PROCESSING = 'processing';
+    case COMPLETED = 'completed';
 }
 ```
 
 ```php
-// In a use case or action — one call hydrates AND validates:
-/** @var CreatePostInput $input */
-$input = $this->validatingHydrator->create(CreatePostInput::class, $data);
-if (!$input->getValidationResult()->isValid()) { /* ... */ }
+declare(strict_types=1);
+
+namespace App\Application\Order\Dto;
+
+use App\Domain\Order\OrderStatus;
+use Yiisoft\Hydrator\Validator\Attribute\Validate;
+use Yiisoft\Validator\Rule\InEnum;
+use Yiisoft\Validator\Rule\Required;
+
+final class UpdateStatusInput
+{
+    public function __construct(
+        #[Validate(new Required(), new InEnum(OrderStatus::class))]
+        public readonly OrderStatus $status, // Automatically cast from 'completed' or 'pending'
+    ) {}
+}
 ```
 
-DI: map `Yiisoft\Hydrator\HydratorInterface::class => ValidatingHydrator::class` (or inject
-`ValidatingHydrator` directly). `yiisoft/input-http`'s shipped configuration already wires
-`RequestInputParametersResolver` to `ValidatingHydrator` — see §8.
+### 9.2. Two-Stage Validation via ValidatingHydrator & #[Validate]
 
----
+`yiisoft/hydrator-validator` provides `Yiisoft\Hydrator\Validator\ValidatingHydrator`, a decorator implementing `HydratorInterface`.
 
-## 8. HTTP Request Inputs (`yiisoft/input-http`)
+```
+                    Raw Input Array ['quantity' => 'not-an-int']
+                                       |
+                                       v
+         +-----------------------------------------------------------+
+         | Phase 1: Pre-Hydration Raw Validation                     |
+         | Validates raw values against #[Validate(new Integer())]   |
+         +-----------------------------------------------------------+
+                        |                             |
+               Valid    |                             | Invalid
+                        v                             v
++------------------------------------+   +------------------------------------+
+| Instantiation & Type Casting       |   | Halt Hydration                     |
+| Typed constructor runs safely      |   | Prevents fatal PHP TypeError!      |
+| without fatal TypeError exceptions |   | Accumulates error in Result        |
++------------------------------------+   +------------------------------------+
+                        |                             |
+                        v                             v
++--------------------------------------------------------------------+
+| Phase 2: Post-Hydration Object Validation                          |
+| Runs object-level attributes and rules via ValidatorInterface      |
+| Stores Result on DTO via ValidatedInputInterface                   |
++--------------------------------------------------------------------+
+```
 
-`yiisoft/input-http` maps PSR-7 request data to input DTOs injected directly into action signatures.
+- **`#[Validate(RuleInterface ...$rules)]`:** Declares rules on constructor parameters. This executes **before** type casting and instantiation. If a string is sent where an integer is expected, `Validate` catches it gracefully without causing a fatal `TypeError`.
+- **`ValidatedInputInterface` & `ValidatedInputTrait`:** Contracts for storing and retrieving the `Result`.
 
-**Data attributes** (class-level, on the DTO; verified — only two exist):
-
-| Attribute | Constructor | Source |
-|---|---|---|
-| `#[FromBody]` | `__construct(string\|array\|null $name = null, array $map = [], bool $strict = false)` | `$request->getParsedBody()`; `$name = null` → whole payload, string/array → sub-path |
-| `#[FromQuery]` | same signature | `$request->getQueryParams()` |
-
-**Parameter attributes** (property/argument-level; `Yiisoft\Input\Http\Attribute\Parameter\`): `#[Body('name')]`,
-`#[Query('id')]`, `#[Request('headerName')]`, `#[UploadedFiles]` — pull a single value from the respective part of the
-request.
-
-**The input DTO** extends `Yiisoft\Input\Http\AbstractInput` (which implements `RequestInputInterface` +
-`ValidatedInputInterface` via `ValidatedInputTrait`):
+### 9.3. Nested DTOs & Collections (OrderDto & OrderItemDto)
 
 ```php
 declare(strict_types=1);
 
-namespace App\Presentation\Action\Post\Input;
+namespace App\Application\Order\Dto;
+
+use DateTimeImmutable;
+use Yiisoft\Hydrator\Attribute\Parameter\Collection;
+use Yiisoft\Hydrator\Attribute\Parameter\Data;
+use Yiisoft\Hydrator\Attribute\Parameter\ToDateTime;
+use Yiisoft\Hydrator\Attribute\Parameter\Trim;
+use Yiisoft\Hydrator\Validator\Attribute\Validate;
+use Yiisoft\Hydrator\Validator\ValidatedInputInterface;
+use Yiisoft\Hydrator\Validator\ValidatedInputTrait;
+use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\Count;
+use Yiisoft\Validator\Rule\Each;
+use Yiisoft\Validator\Rule\Email;
+use Yiisoft\Validator\Rule\Integer;
+use Yiisoft\Validator\Rule\Length;
+use Yiisoft\Validator\Rule\Number;
+use Yiisoft\Validator\Rule\Required;
+
+final class OrderItemDto implements ValidatedInputInterface
+{
+    use ValidatedInputTrait;
+
+    public function __construct(
+        #[Validate(new Required(), new Integer(min: 1))]
+        #[Data('product_id')]
+        public readonly int $productId,
+
+        #[Validate(new Required(), new Integer(min: 1, max: 99))]
+        public readonly int $quantity,
+
+        #[Validate(new Required(), new Number(min: 0.01))]
+        public readonly float $price,
+    ) {}
+}
+
+final class CreateOrderInput implements ValidatedInputInterface
+{
+    use ValidatedInputTrait;
+
+    public function __construct(
+        #[Label('Customer Email')]
+        #[Validate(new Required(), new Email(), new Length(max: 255))]
+        #[Trim]
+        #[Data('customer_email')]
+        public readonly string $customerEmail,
+
+        #[Validate(new Required())]
+        #[ToDateTime(format: 'Y-m-d')]
+        #[Data('delivery_date')]
+        public readonly DateTimeImmutable $deliveryDate,
+
+        #[Label('Order Items')]
+        #[Validate(new Required(), new Count(min: 1, max: 50))]
+        #[Collection(className: OrderItemDto::class)]
+        #[Data('items')]
+        public readonly array $items,
+    ) {}
+}
+```
+
+```php
+// In an Action or Application Service:
+$orderInput = $validatingHydrator->create(CreateOrderInput::class, $requestPayload);
+
+if (!$orderInput->getValidationResult()->isValid()) {
+    // Returns nested dot-notation paths: e.g. 'items.0.price' => ['Price must be at least 0.01.']
+    $errors = $orderInput->getValidationResult()->getErrorMessagesIndexedByPath();
+}
+```
+
+### 9.4. Parameter Attributes Catalog & Custom TypeCasters
+
+#### Parameter Attributes Catalog (`Yiisoft\Hydrator\Attribute\Parameter\*`)
+| Attribute | Target | Role |
+|---|---|---|
+| `#[Data('key')]` | Parameter / Property | Maps the parameter to an alternative key in the raw data array. |
+| `#[Di('service_id')]` | Parameter / Property | Resolves and injects a service from the PSR-11 container into the DTO constructor. |
+| `#[ToDateTime(format: 'Y-m-d')]` | Parameter / Property | Parses a string into a `DateTimeImmutable` instance. |
+| `#[ToString]` | Parameter / Property | Casts scalar values explicitly to `string`. |
+| `#[ToArrayOfStrings]` | Parameter / Property | Converts an iterable into a flat `array<string>`. |
+| `#[Trim(characters: " \t\n\r\0\x0B")]` | Parameter / Property | Trims whitespace or specified characters. |
+| `#[LeftTrim]` / `#[RightTrim]` | Parameter / Property | Trims left or right side only. |
+| `#[Collection(className: Dto::class)]`| Parameter / Property | Hydrates an array of nested DTOs of the specified class. |
+| `#[SkipHydration]` | Parameter / Property | *(Located in `Yiisoft\Hydrator\Attribute\SkipHydration`)*. Excludes property from hydration. |
+
+#### Custom TypeCasters (`TypeCasterInterface`)
+To cast custom domain value objects (such as UUIDs, Money, or GeoCoordinates), implement `Yiisoft\Hydrator\TypeCaster\TypeCasterInterface`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Application\Shared\Hydrator;
+
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
+use ReflectionNamedType;
+use Yiisoft\Hydrator\Result;
+use Yiisoft\Hydrator\TypeCaster\TypeCastContext;
+use Yiisoft\Hydrator\TypeCaster\TypeCasterInterface;
+
+final class UuidTypeCaster implements TypeCasterInterface
+{
+    public function cast(mixed $value, TypeCastContext $context): Result
+    {
+        $type = $context->getReflectionType();
+
+        if (
+            $type instanceof ReflectionNamedType
+            && is_a($type->getName(), UuidInterface::class, true)
+            && is_string($value)
+            && Uuid::isValid($value)
+        ) {
+            return Result::success(Uuid::fromString($value));
+        }
+
+        return Result::fail();
+    }
+}
+```
+
+---
+
+## 10. HTTP Request Inputs Mapping (`yiisoft/input-http`)
+
+### 10.1. Class Data Attributes: #[FromBody] & #[FromQuery]
+
+`yiisoft/input-http` resolves action method parameters implementing `Yiisoft\Input\Http\RequestInputInterface` (or extending `Yiisoft\Input\Http\AbstractInput`).
+
+Class-level data attributes (`Yiisoft\Input\Http\Attribute\Data\*`):
+- `#[FromBody(name: null, map: [], strict: false)]` &rarr; reads from `$request->getParsedBody()`.
+- `#[FromQuery(name: null, map: [], strict: false)]` &rarr; reads from `$request->getQueryParams()`.
+
+Setting `$name = 'user'` extracts a nested key from the body or query parameters.
+
+> [!WARNING]
+> There are strictly **NO** `#[FromRoute]`, `#[FromHeader]`, or `#[FromCookie]` class data attributes in `yiisoft/input-http`. Route parameters are retrieved via `Yiisoft\Router\CurrentRoute` or `#[Request]`. Headers are retrieved via PSR-7 `$request->getHeaderLine()`.
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Api\Post\Input;
 
 use Yiisoft\Input\Http\AbstractInput;
 use Yiisoft\Input\Http\Attribute\Data\FromBody;
 use Yiisoft\Validator\Rule\Length;
 use Yiisoft\Validator\Rule\Required;
-use Yiisoft\Validator\Rule\StringValue;
 
 #[FromBody]
 final class CreatePostInput extends AbstractInput
 {
     #[Required]
-    #[StringValue]
     #[Length(min: 3, max: 255)]
     public string $title = '';
 }
 ```
 
-**Wiring.** `RequestInputParametersResolver` (a `ParametersResolverInterface` from `yiisoft/middleware-dispatcher`)
-instantiates action parameters typed as `RequestInputInterface`, hydrates them from the request, and validates:
+### 10.2. Parameter Attributes: #[Body], #[Query], #[Request], #[UploadedFiles]
+
+Parameter attributes (`Yiisoft\Input\Http\Attribute\Parameter\*`) pull specific request segments:
+- `#[Body('title')]` &rarr; extracts a single property from the request body.
+- `#[Query('page')]` &rarr; extracts a query parameter.
+- `#[UploadedFiles('avatar')]` &rarr; extracts an uploaded file from `$request->getUploadedFiles()`.
+- **`#[Request('attributeName')]`:** Reads from **PSR-7 request attributes** (`$request->getAttributes()`), such as router match parameters or middleware context. **It does NOT read HTTP headers.**
+
+### 10.3. Action Parameter Resolution: DTOs vs. Direct HydratorAttributeParametersResolver
+
+`yiisoft/input-http` provides two parameter resolvers implementing `Yiisoft\Middleware\Dispatcher\ParametersResolverInterface`:
+
+1. **`RequestInputParametersResolver`:** Resolves full DTOs extending `AbstractInput` or implementing `RequestInputInterface`.
+2. **`HydratorAttributeParametersResolver`:** Resolves **individual action method parameters** directly decorated with hydrator attributes, without requiring a separate DTO class!
+
+#### Direct Action Method Parameter Resolution Example:
 
 ```php
-// config/common/di/input-http.php (package ships this in config/di-web.php)
-use Yiisoft\Definitions\Reference;
-use Yiisoft\Hydrator\Validator\ValidatingHydrator;
-use Yiisoft\Input\Http\RequestInputParametersResolver;
+declare(strict_types=1);
 
-return [
-    RequestInputParametersResolver::class => [
-        '__construct()' => [
-            'hydrator' => Reference::to(ValidatingHydrator::class),
-            'throwInputValidationException'
-                => $params['yiisoft/input-http']['requestInputParametersResolver']['throwInputValidationException'],
-        ],
-    ],
-];
+namespace App\Presentation\Api\Post;
+
+use Psr\Http\Message\ResponseInterface;
+use Yiisoft\DataResponse\DataResponseFactoryInterface;
+use Yiisoft\Input\Http\Attribute\Parameter\Query;
+
+final readonly class ListPostsAction
+{
+    public function __construct(
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    // HydratorAttributeParametersResolver injects $page, $limit, and $search directly:
+    public function __invoke(
+        #[Query('page')] int $page = 1,
+        #[Query('limit')] int $limit = 20,
+        #[Query('search')] ?string $search = null,
+    ): ResponseInterface {
+        $payload = [
+            'page' => $page,
+            'limit' => $limit,
+            'search' => $search,
+        ];
+
+        return $this->responseFactory->createResponse($payload);
+    }
+}
 ```
 
+#### Full DTO Resolution with Action Validation Check:
+
 ```php
-// config/common/params.php
+declare(strict_types=1);
+
+namespace App\Presentation\Api\Post;
+
+use App\Application\Post\CreatePostService;
+use App\Presentation\Api\Post\Input\CreatePostInput;
+use App\Presentation\Api\Shared\ValidationProblemDetailsResponder;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+
+final readonly class CreatePostAction
+{
+    public function __construct(
+        private ValidationProblemDetailsResponder $problemDetailsResponder,
+        private CreatePostService $postService,
+        private ResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function __invoke(CreatePostInput $input): ResponseInterface
+    {
+        if (!$input->getValidationResult()->isValid()) {
+            return $this->problemDetailsResponder->respond($input->getValidationResult());
+        }
+
+        $post = $this->postService->create($input->title);
+
+        return $this->responseFactory
+            ->createResponse(Status::CREATED)
+            ->withHeader(Header::LOCATION, '/posts/' . $post->getId());
+    }
+}
+```
+
+#### Exception-Driven Flow (`throwInputValidationException`)
+In `config/common/params.php`:
+```php
+declare(strict_types=1);
+
 return [
     'yiisoft/input-http' => [
         'requestInputParametersResolver' => [
-            'throwInputValidationException' => false, // default
+            'throwInputValidationException' => true, // Default is false
         ],
     ],
 ];
 ```
+When set to `true`, invalid inputs throw `Yiisoft\Input\Http\InputValidationException` before the action executes, which can be handled centrally by an exception middleware.
 
-- `throwInputValidationException: false` (default) — the action itself checks
-  `$input->getValidationResult()->isValid()` and shapes the error response.
-- `true` — invalid input throws `Yiisoft\Input\Http\InputValidationException` (constructor takes the `Result`,
-  exposes `getResult(): Result`) before the action runs; pair with a Problem Details renderer
-  (see `references/error-handling.md`).
+### 10.4. RFC 7807 Problem Details Error Responder
 
-There is **no** `#[FromRoute]`, `#[FromHeader]`, or `#[FromCookie]` data attribute in this package — route arguments
-come via `Yiisoft\Router\CurrentRoute` (see `references/routes.md`), headers/cookies via parameter attributes or
-direct PSR-7 access.
+> [!CAUTION]
+> **`InputValidationException` API Invariant:**
+> `Yiisoft\Input\Http\InputValidationException` does **NOT** provide a `getResponse()` method. It encapsulates strictly `private Result $result`, accessible via `getResult(): Result`. Creating an RFC 7807 response is the explicit responsibility of your responder or exception handling middleware.
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Api\Shared;
+
+use Psr\Http\Message\ResponseInterface;
+use Yiisoft\DataResponse\DataResponseFactoryInterface;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+use Yiisoft\Input\Http\InputValidationException;
+use Yiisoft\Validator\Result;
+
+final readonly class ValidationProblemDetailsResponder
+{
+    public function __construct(
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function respond(Result|InputValidationException $validation): ResponseInterface
+    {
+        $result = $validation instanceof InputValidationException
+            ? $validation->getResult()
+            : $validation;
+
+        $payload = [
+            'type' => 'https://tools.ietf.org/html/rfc4918#section-11.2',
+            'title' => 'Validation Failed',
+            'status' => Status::UNPROCESSABLE_ENTITY,
+            'detail' => 'One or more parameters failed validation.',
+            'invalid_params' => $result->getErrorMessagesIndexedByPath(),
+        ];
+
+        return $this->responseFactory
+            ->createResponse($payload, Status::UNPROCESSABLE_ENTITY)
+            ->withHeader(Header::CONTENT_TYPE, 'application/problem+json');
+    }
+}
+```
 
 ---
 
-## 9. Choosing the Right Tool
+## 11. Architectural Decision Matrix (Choosing the Right Tool)
 
-| Scenario | Tool | Notes |
-|---|---|---|
-| JSON API input | plain DTO + `#[Validate]`/rule attributes, hydrated by `ValidatingHydrator` (via `input-http` or manually) | DTOs live in the application layer; no HTML helpers needed |
-| HTML form (server-rendered) | `FormModel` + `FormHydrator::populateFromPostAndValidate()` | labels/hints/placeholders feed the view; errors re-render the form |
-| One-off value check in a use case | `$validator->validate($value, [new ...])` with a plain rules map | no DTO needed |
-| Internal domain invariants | strict type rules (`Rule\Type\*`) + custom rules | HTTP leniency (`"1"` → `true`) must not leak into the domain |
-| Cross-field conditions | `when: fn () => ...`, `FilledAtLeast`, `FilledOnlyOneOf`, or a custom rule reading `ValidationContext` | keep conditions pure |
-| Route parameters | `CurrentRoute::getArgument()` + explicit validation, **not** `input-http` | no `FromRoute` attribute exists |
+| Scenario | Recommended Approach | Key Packages & Classes | Rationale |
+|---|---|---|---|
+| **JSON REST API Endpoint** | Typed DTO with `#[FromBody]` extending `AbstractInput` | `yiisoft/input-http`, `yiisoft/hydrator-validator`, `ValidatingHydrator` | Decoupled from HTML; maps directly into controller action signature; two-stage pre/post validation. |
+| **Server-Rendered HTML Web Form** | `FormModel` + `FormHydrator::populateFromPostAndValidate()` | `yiisoft/form-model`, `yiisoft/form`, `yiisoft/csrf` | Scoped inputs (`Form[field]`), automatic HTML5 attribute enrichment, labels/hints metadata, CSRF support. |
+| **Search / Filter Form (HTTP GET)** | `FormModel` + `FormHydrator::populateFromGetAndValidate(..., scope: '')` | `yiisoft/form-model`, `yiisoft/data` | Retains filter parameters in URL; flat query scoping prevents nested key mismatches. |
+| **Complex Domain DTO / Value Object** | Constructor-promoted typed DTO + `#[Validate]` | `yiisoft/hydrator-validator`, `#[Validate]`, custom `TypeCasterInterface` | Ensures raw strings cannot trigger fatal `TypeError`s during instantiation; deep collection mapping. |
+| **Ad-Hoc One-Off Validation** | `$validator->validate($data, $rules)` with plain array map | `yiisoft/validator`, `ValidatorInterface`, `Rule\*` | Fast, lightweight validation of decoded arrays without defining single-use classes. |
+| **Domain Layer Invariant Enforcement** | Strict rules (`Rule\Type\*`) + Custom Rules | `yiisoft/validator`, `Rule\Type\*`, `RuleHandlerInterface` | Prevents HTTP string leniency (`"0"` &rarr; `false`) from corrupting domain logic. |
+| **Route Parameters** | `CurrentRoute::getArgument()` + explicit rule validation | `yiisoft/router`, `CurrentRoute`, `ValidatorInterface` | `input-http` does not map route arguments; keeping route parameters distinct preserves clarity. |
 
 ---
 
-## 10. Anti-Pattern Matrix
+## 12. Anti-Pattern Matrix
 
-| Forbidden Anti-Pattern | Why it breaks | Idiomatic Yii3 Solution |
+| Forbidden Anti-Pattern | Why It Breaks | Grounded Idiomatic Solution |
 |---|---|---|
-| Validating raw `$_POST` / array data inside actions | Actions become untestable and duplicate rules per endpoint | Rule-attribute DTOs / `FormModel`; validate once, pass typed data down |
-| Assuming `HasLength`, `NumberValue`, `IsString` rules | These class names do not exist in `yiisoft/validator` — fatal "class not found" | Use `Length`, `Number`, `StringValue` (see §2.3 catalog) |
-| Using lenient `Integer`/`BooleanValue` for domain data | `"0"` passes; type drift sneaks into the domain layer | Strict `Rule\Type\*` rules after the HTTP boundary |
-| Forgetting `#[Required]` before `#[Length]` etc. | Empty values skip the remaining rules and "pass" validation | Always lead with `#[Required]` or rely on deliberate `skipOnEmpty` |
-| Manual `$hydrator->create()` + separate `$validator->validate()` on `ValidatedInputInterface` DTOs | Double validation: `ValidatingHydrator` already validated the object | Inject/resolve `ValidatingHydrator` and read `$dto->getValidationResult()` |
-| Calling `$form->getValidationResult()` before validation ran | Throws `LogicException('Validation result is not set.')` | Only read the result after `populate*AndValidate()` / `validate()`; check `isValidated()` |
-| Filling models with properties that have no rules and no `#[Safe]` | Not possible by design — data silently not filled; dev expects the value | Add `#[Safe]` or validation rules to the properties that must be filled |
-| Inventing `#[FromRoute]` / `#[FromHeader]` attributes | They do not exist in `yiisoft/input-http` — fatal error | Route args via `CurrentRoute`; headers via `#[Request]` or PSR-7 directly |
-| Reading JSON body without `RequestBodyParser` middleware | `getParsedBody()` is `null`; hydration silently fills nothing | Register `Yiisoft\Request\Body\RequestBodyParser` before the action (see `references/middlewares.md`) |
-| Custom handler returning `void` or mutating the passed rule | Contract requires returning `Result`; rules must stay immutable | Return `new Result()` with `addError()`; throw `UnexpectedRuleException` on type mismatch |
-| Hard-coding English error strings where translation is expected | Breaks i18n; inconsistent with built-in rule messages | Use `{Property}`-style placeholders + `#[Label]`, let the `'yii-validator'` category translate |
-| Catching validation errors as exceptions everywhere | With the default config, validation does not throw; the exception path only triggers with `throwInputValidationException: true` | Check `Result` explicitly; enable the exception only with a matching error renderer |
+| **Assuming `Result` is an immutable value object** | `Result::addError()` mutates state in-place. Reusing instances contaminates distinct validations | Treat `Result` as a mutable accumulator. Instantiate a fresh `new Result()` per validation pass. |
+| **Calling non-existent `Result::isAttributeValid()`** | The term "attribute" was replaced in Yii 3. Method does not exist; throws fatal `Error: Call to undefined method` | Call `Result::isPropertyValid(string $property): bool`. |
+| **Calling non-existent `$session->getFlash()` or `$session->setFlash()`** | `SessionInterface` does not contain flash message methods in Yii 3 | Inject `Yiisoft\Session\Flash\FlashInterface $flash` directly and call `$flash->add('success', '...')` or `$flash->set(...)`. |
+| **Calling non-existent `FileHelper::createDirectory()`** | Method does not exist in `yiisoft/files`; causes fatal `Error: Call to undefined method` | Call `Yiisoft\Files\FileHelper::ensureDirectory(string $path, int $mode = 0775): void`. |
+| **Passing `skipOnEmpty:` to `new Required()`** | `Required` constructor does NOT accept `$skipOnEmpty`. Causes fatal `Error: Unknown named parameter $skipOnEmpty` | Only pass `message:`, `notPassedMessage:`, `emptyCondition:`, `skipOnError:`, `when:` to `Required`. |
+| **Positional arguments in `new Length(3, 255)` or `new Count(1, 10)`** | First positional parameter is `$exactly`. Causes `exactly: 3, min: 255` | Always use explicit PHP 8 named arguments: `new Length(min: 3, max: 255)` and `new Count(min: 1, max: 10)`. |
+| **Using `$targetAttribute` in comparison rules** | Comparison rules inherit `AbstractCompare` which names the sibling property `$targetProperty` | Pass `targetProperty: 'passwordConfirmation'` (or `targetValue:`). `$targetAttribute` throws PHP 8 argument error. |
+| **Calling `FormModel::addError()` before validation** | Throws `LogicException: Validation result is not set.` | Only add manual domain errors after `populate*AndValidate()` has executed; check `isValidated()`. |
+| **Relying on `SimpleRuleHandlerContainer` with DI** | Default container uses `new $class()`. Handlers with dependencies fail with `ArgumentCountError` | Rebind `RuleHandlerResolverInterface::class => RuleHandlerContainer::class` in `config/common/di/validator.php`. |
+| **Calling non-existent `InputValidationException::getResponse()`** | Exception carries only `Result $result`. Does not generate HTTP responses | Call `$exception->getResult()` and pass it to an RFC 7807 Problem Details responder or exception handler. |
+| **Assuming `ValidationRulesEnricher` generates `accept` for files** | `ValidationRulesEnricher` only converts `Required` to `required` on `Field::file()`; ignores file extensions/types | Set the `accept` attribute explicitly on the widget: `Field::file($form, 'doc')->accept('.pdf,image/*')`. |
+| **Calling static methods on `Yiisoft\Strings\Inflector`** | `Inflector` has NO static methods in Yii 3; all methods are instance-based | Instantiate an inflector: `(new Inflector())->toWords(...)` or `(new Inflector())->pascalCaseToId(...)`. |
+| **Using `@deprecated` `Yiisoft\Csrf\CsrfMiddleware`** | Legacy middleware deprecated in favor of separate token management | Use `Yiisoft\Csrf\CsrfTokenMiddleware` in the PSR-15 middleware pipeline. |
+| **Assuming `#[Request]` reads HTTP headers** | `#[Request]` strictly reads PSR-7 request **attributes** (`$request->getAttributes()`) | Read HTTP headers via PSR-7 `$request->getHeaderLine()`. There is no header attribute in `input-http`. |
+| **Inventing `Field::submit()`, `Field::radio()`, `Field::reset()`, `Field::tel()`** | These method names do not exist on `Yiisoft\FormModel\Field` and cause fatal method not found errors | Use `Field::submitButton()`, `Field::radioList()`, `Field::resetButton()`, `Field::telephone()`. |
+| **Importing `#[Label]` from `yiisoft/form-model`** | `#[Label]` does NOT exist in `yiisoft/form-model`. Causes fatal `Class not found` | Import `Yiisoft\Validator\Label`. Hints (`#[Hint]`) and placeholders (`#[Placeholder]`) come from `form-model`. |
+| **Inventing phantom `SimplePropertyTranslator`** | Class does not exist in `yiisoft/validator` | Use `NullPropertyTranslator`, `ArrayPropertyTranslator`, or `TranslatorPropertyTranslator`. |
+| **Inventing `#[FromRoute]`, `#[FromHeader]`, `#[FromCookie]`** | Attributes do not exist in `yiisoft/input-http` | Access route parameters via `CurrentRoute`, headers via `$request->getHeaderLine()`. |
+| **Omitted `RequestBodyParser` middleware for JSON** | `$request->getParsedBody()` is `null`; hydration silently resolves an empty array | Register `Yiisoft\Request\Body\RequestBodyParser` in the middleware pipeline prior to actions. |
+| **Omitting `#[Required]` before `#[Length]`** | Subsequent rules skip empty values by default, allowing empty inputs to pass validation | Always place `#[Required]` first in the attribute list. |
+| **Importing `NonArrayTypeCaster` from `yiisoft/hydrator`** | Class does not exist in `hydrator` | Import `Yiisoft\FormModel\NonArrayTypeCaster` from `yiisoft/form-model`. |
+| **Missing `yiisoft/translator-message-php` package** | Validator falls back to `IdMessageReader`, leaving system error messages untranslated | Require `yiisoft/translator-message-php` in `composer.json` whenever multi-language validation is needed. |
+
+---
+
+## 13. Related Topic Guides
+
+- [Actions & Controllers Guide](actions-and-controllers.md) — Hydrating DTOs and handling FormModels inside Web and API controllers.
+- [Views, Layouts & Widgets Guide](views-and-widgets.md) — View rendering, asset management, and field widget configurations.
+- [PSR-15 Middlewares Guide](middlewares.md) — Configuring `RequestBodyParser`, `CsrfTokenMiddleware`, and request pipeline ordering.
+- [Routing Guide](routes.md) — Inspecting route parameters via `CurrentRoute`.
+- [Error Handling Guide](error-handling.md) — Centralized exception responders and Problem Details formatting.
+- [Dependency Protocol](dependency-protocol.md) — Package dependency resolution and installation rules.

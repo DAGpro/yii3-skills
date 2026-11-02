@@ -3,7 +3,7 @@
 If the project does not use Yii3 (no `yiisoft/*` in `composer.json`), ignore this block.
 
 When shaping Yii3 roadmap milestones, enforce these stack invariants (full driver lists:
-`references/package-catalog.md`, section "Driver & Storage Selection Rules (Pick Exactly ONE per Family)" — §2 of the `yii3` catalog, §3 of `yii3-v2`):
+`references/package-catalog.md`, section "Driver & Storage Selection Rules (Pick Exactly ONE per Family)" (§3):
 - **Exactly ONE database driver:** `yiisoft/db-mysql` | `yiisoft/db-pgsql` | `yiisoft/db-sqlite` |
   `yiisoft/db-mssql` | `yiisoft/db-oracle` — plus `yiisoft/db-sqlite` additionally for CI/tests.
   Never two production DB drivers in `require`.

@@ -12,7 +12,7 @@
 - [2. PHP Template Anatomy & Typing (WebView)](#2-php-template-anatomy--typing-webview)
   - [2.1. Standard PHP Template Anatomy](#21-standard-php-template-anatomy)
   - [2.2. Page Title, Meta Tags & Script Registration API](#22-page-title-meta-tags--script-registration-api)
-  - [2.3. Parameter Exchange (setParameter / getParameter)](#23-parameter-exchange-setparameter--getparameter)
+  - [2.3. Parameter Exchange (setParameter / getParameter / addToParameter / removeParameter)](#23-parameter-exchange-setparameter--getparameter--addtoparameter--removeparameter)
   - [2.4. Application View Theming (Yiisoft\View\Theme)](#24-application-view-theming-yiisoftviewtheme)
   - [2.5. PSR-14 View Lifecycle Events](#25-psr-14-view-lifecycle-events)
 - [3. Alternative Template Engine: Twig (yiisoft/view-twig & yiisoft/yii-twig)](#3-alternative-template-engine-twig-yiisoftview-twig--yiisoftyii-twig)
@@ -25,6 +25,7 @@
   - [4.2. Tag Builders & NoEncodeStringableInterface](#42-tag-builders--noencodestringableinterface)
   - [4.3. Disabling Tag Builder Escaping (->encode(false))](#43-disabling-tag-builder-escaping--encodefalse)
   - [4.4. Essential HTML Tag Factory Catalog](#44-essential-html-tag-factory-catalog)
+  - [4.5. CSS Class, Style & Attribute Manipulation Utilities](#45-css-class-style--attribute-manipulation-utilities)
 - [5. Layouts, Page Lifecycle & View Injections](#5-layouts-page-lifecycle--view-injections)
   - [5.1. Main Layout Structure & Lifecycle Sequence](#51-main-layout-structure--lifecycle-sequence)
   - [5.2. View Injections Architecture (The 4 Canonical Contracts)](#52-view-injections-architecture-the-4-canonical-contracts)
@@ -35,16 +36,17 @@
   - [5.7. Content Blocks (Yiisoft\Yii\Widgets\Block)](#57-content-blocks-yiisoftyiiwidgetsblock)
   - [5.8. Nested Layouts with ContentDecorator](#58-nested-layouts-with-contentdecorator)
 - [6. Asset Bundles & Publishing Pipeline (Yiisoft\Assets)](#6-asset-bundles--publishing-pipeline-yiisoftassets)
-  - [6.1. Declaring an Asset Bundle (AssetBundle Properties)](#61-declaring-an-asset-bundle-assetbundle-properties)
+  - [6.1. Declaring an Asset Bundle (AssetBundle Properties & CDN with SRI)](#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri)
   - [6.2. Registering Asset Bundles (Layout vs Page-Specific)](#62-registering-asset-bundles-layout-vs-page-specific)
   - [6.3. Asset Publishing (AssetPublisher, Symlinks vs Copying)](#63-asset-publishing-assetpublisher-symlinks-vs-copying)
   - [6.4. Directory Hashing & URL Timestamp Cache-Busting (appendTimestamp)](#64-directory-hashing--url-timestamp-cache-busting-appendtimestamp)
   - [6.5. Asset Compilation On-the-Fly (AssetConverter: SCSS, Less, TypeScript)](#65-asset-compilation-on-the-fly-assetconverter-scss-less-typescript)
   - [6.6. Asset Exporting (JsonAssetExporter, WebpackAssetExporter)](#66-asset-exporting-jsonassetexporter-webpackassetexporter)
+  - [6.7. Overriding & Disabling Bundles (customizedBundles in params.php)](#67-overriding--disabling-bundles-customizedbundles-in-paramsphp)
 - [7. Custom Widgets, Core Widgets & CSS-Framework Drivers](#7-custom-widgets-core-widgets--css-framework-drivers)
-  - [7.1. Creating a Custom Widget (Yiisoft\Widget\Widget)](#71-creating-a-custom-widget-yiisoftwidgetwidget)
+  - [7.1. Creating a Custom Widget (Yiisoft\Widget\Widget & Container Pattern)](#71-creating-a-custom-widget-yiisoftwidgetwidget--container-pattern)
   - [7.2. Widget Life Cycle, Factory & Themes (WidgetFactory in 2.2+)](#72-widget-life-cycle-factory--themes-widgetfactory-in-22)
-  - [7.3. Built-in Core Widgets (yiisoft/yii-widgets)](#73-built-in-core-widgets-yiisoftyii-widgets)
+  - [7.3. Built-in Core Widgets (yiisoft/yii-widgets: Breadcrumbs, FragmentCache, Menu, Alert, Dropdown)](#73-built-in-core-widgets-yiisoftyii-widgets-breadcrumbs-fragmentcache-menu-alert-dropdown)
   - [7.4. CSS-Framework Widget Drivers: Bootstrap 5 (yiisoft/bootstrap5)](#74-css-framework-widget-drivers-bootstrap-5-yiisoftbootstrap5)
   - [7.5. CSS-Framework Widget Drivers: Bulma (yiisoft/yii-bulma)](#75-css-framework-widget-drivers-bulma-yiisoftyii-bulma)
   - [7.6. Comparison Matrix: Bootstrap 5 vs Bulma Drivers](#76-comparison-matrix-bootstrap-5-vs-bulma-drivers)
@@ -58,7 +60,7 @@
   - [8.7. Centralized Form Theming (ThemeContainer, ThemePath, params.php)](#87-centralized-form-theming-themecontainer-themepath-paramsphp)
 - [9. DataView Widgets: GridView, ListView & DetailView (yiisoft/yii-dataview)](#9-dataview-widgets-gridview-listview--detailview-yiisoftyii-dataview)
   - [9.1. GridView Architecture & Table Rendering](#91-gridview-architecture--table-rendering)
-  - [9.2. Column Catalog (DataColumn, ActionColumn, CheckboxColumn, RadioColumn, SerialColumn)](#92-column-catalog-datacolumn-actioncolumn-checkboxcolumn-radiocolumn-serialcolumn)
+  - [9.2. Column Catalog (DataColumn, ActionColumn & ActionButton, CheckboxColumn, RadioColumn, SerialColumn)](#92-column-catalog-datacolumn-actioncolumn--actionbutton-checkboxcolumn-radiocolumn-serialcolumn)
   - [9.3. Column Filtering in GridView (TextInputFilter, DropdownFilter)](#93-column-filtering-in-gridview-textinputfilter-dropdownfilter)
   - [9.4. ListView (Yiisoft\Yii\DataView\ListView\ListView)](#94-listview-yiisoftyiidataviewlistviewlistview)
   - [9.5. DetailView (Yiisoft\Yii\DataView\DetailView\DetailView & DataField)](#95-detailview-yiisoftyiidataviewdetailviewdetailview--datafield)
@@ -271,8 +273,16 @@ $this->registerMetaTag(Html::meta()->name('robots')->content('noindex, follow'))
 $this->registerLink(['rel' => 'icon', 'type' => 'image/png', 'href' => '/favicon.png']);
 $this->registerLinkTag(Html::link()->toCssFile('/theme.css'));
 
-// Custom inline CSS / Script
-$this->registerCss('.user-profile { margin-top: 2rem; }', WebView::POSITION_HEAD);
+// Custom inline CSS
+// Signature: registerCss(string $css, int $position = self::POSITION_HEAD, array $attributes = [], ?string $key = null): self
+// 1. Using named argument (recommended):
+$this->registerCss('.user-profile { margin-top: 2rem; }', key: 'user-profile-css');
+
+// 2. Using positional arguments (pass empty array [] for 3rd parameter $attributes if supplying a $key):
+$this->registerCss('.user-profile { margin-top: 2rem; }', WebView::POSITION_HEAD, [], 'user-profile-css');
+
+// Custom inline JavaScript
+// Signature: registerJs(string $js, int $position = self::POSITION_END, ?string $key = null): self
 $this->registerJs('console.log("Profile view loaded");', WebView::POSITION_END);
 
 // Inject global JavaScript variables
@@ -286,7 +296,12 @@ Available script positions (`WebView::POSITION_*`):
 - `WebView::POSITION_READY = 4` — executed on `document.addEventListener('DOMContentLoaded', ...)`.
 - `WebView::POSITION_LOAD = 5` — executed on `window.addEventListener('load', ...)`.
 
-### 2.3. Parameter Exchange (`setParameter` / `getParameter`)
+> [!WARNING]
+> **`registerCss` 3rd Parameter is `$attributes` (Array):**
+> The signature is `public function registerCss(string $css, int $position = self::POSITION_HEAD, array $attributes = [], ?string $key = null): self`.
+> Passing a string key as the 3rd positional argument (`$this->registerCss($css, WebView::POSITION_HEAD, 'custom-key')`) triggers a fatal `TypeError: Argument #3 ($attributes) must be of type array, string given`. Always pass an empty array `[]` for attributes or use the PHP 8 named argument `key: 'custom-key'`. (Unlike `registerCss`, `registerJs` does not have an `$attributes` parameter: `registerJs(string $js, int $position = self::POSITION_END, ?string $key = null)`).
+
+### 2.3. Parameter Exchange (`setParameter` / `getParameter` / `addToParameter` / `removeParameter`)
 
 Templates and layouts communicate bidirectionally using `setParameter()` and `getParameter()`:
 
@@ -295,10 +310,18 @@ Templates and layouts communicate bidirectionally using `setParameter()` and `ge
 $this->setParameter('pageClass', 'dark-theme');
 $this->setParameter('sidebarVisible', true);
 
+// Accumulating array parameter values across partials or components:
+$this->addToParameter('breadcrumbs', ['label' => 'Products', 'url' => '/products']);
+$this->addToParameter('breadcrumbs', ['label' => 'Laptops']);
+
+// Removing a parameter previously set:
+$this->removeParameter('unwantedKey');
+
 // In layout (views/layout/main.php):
 // Notice: getParameter takes variadic ...$default. If no default is passed and key is missing, throws InvalidArgumentException!
 $pageClass = $this->getParameter('pageClass', 'light-theme');
 $sidebarVisible = $this->getParameter('sidebarVisible', false);
+$breadcrumbs = $this->getParameter('breadcrumbs', []);
 
 // Check if parameter exists:
 if ($this->hasParameter('sidebarVisible')) {
@@ -542,7 +565,43 @@ Alternatively, wrap trusted strings in `Yiisoft\Html\NoEncode::string('<strong>T
 | `Html::ul(array $attributes = []): Ul` | `Yiisoft\Html\Tag\Ul` | Unordered list `<ul>` (add items via `->items(Li ...$items)`) |
 | `Html::ol(array $attributes = []): Ol` | `Yiisoft\Html\Tag\Ol` | Ordered list `<ol>` |
 | `Html::li(string\|Stringable\|int\|float\|null $content = '', array $attributes = []): Li` | `Yiisoft\Html\Tag\Li` | List item `<li>` |
-| `Html::form(?string $action = null, ?string $method = null, array $attributes = []): Form` | `Yiisoft\Html\Tag\Form` | Form tag with CSRF support |
+| `Html::form(?string $action = null, ?string $method = null, array $attributes = []): Form` | `Yiisoft\Html\Tag\Form` | Form tag with CSRF support (for file uploads, chain `->enctypeMultipartFormData()`) |
+
+### 4.5. CSS Class, Style & Attribute Manipulation Utilities
+
+`Yiisoft\Html\Html` provides static helper methods to manipulate HTML attributes, CSS classes, inline styles, and generate unique tag IDs:
+
+| Static Helper Method | Signature | Description |
+|---|---|---|
+| `Html::addCssClass` | `addCssClass(array &$attributes, BackedEnum\|array\|string\|null $class): void` | Appends CSS class(es) to `$attributes['class']`. Avoids duplicate entries. Supports BackedEnum, arrays, and strings. |
+| `Html::removeCssClass` | `removeCssClass(array &$attributes, string\|array $class): void` | Removes specified CSS class(es) from `$attributes['class']`. |
+| `Html::addCssStyle` | `addCssStyle(array &$attributes, array\|string $style, bool $overwrite = true): void` | Adds or merges CSS style properties into `$attributes['style']`. Set `$overwrite = false` to preserve existing style properties. |
+| `Html::removeCssStyle` | `removeCssStyle(array &$attributes, string\|array $properties): void` | Removes specified CSS properties from `$attributes['style']`. |
+| `Html::renderTagAttributes` | `renderTagAttributes(array $attributes): string` | Formats an associative array of attributes into an HTML attribute string (e.g. ` id="btn-1" class="btn"`). |
+| `Html::generateId` | `generateId(string $prefix = 'i'): string` | Generates a sequential, unique HTML tag identifier (e.g. `'i1'`, `'i2'`). |
+
+```php
+use Yiisoft\Html\Html;
+
+$attributes = ['class' => 'btn btn-secondary', 'style' => 'margin: 5px;'];
+
+// Add CSS classes:
+Html::addCssClass($attributes, ['btn-lg', 'btn-primary']);
+// Result: $attributes['class'] === 'btn btn-secondary btn-lg btn-primary'
+
+// Remove a class:
+Html::removeCssClass($attributes, 'btn-secondary');
+// Result: $attributes['class'] === 'btn btn-lg btn-primary'
+
+// Add CSS styles:
+Html::addCssStyle($attributes, ['display' => 'inline-block', 'margin' => '10px'], overwrite: true);
+
+// Render attributes to string:
+$attrString = Html::renderTagAttributes($attributes);
+
+// Generate unique element ID:
+$fieldId = Html::generateId('field-'); // 'field-1'
+```
 
 ---
 
@@ -568,7 +627,10 @@ declare(strict_types=1);
 
 use App\Presentation\Asset\AppAsset;
 use Yiisoft\Assets\AssetManager;
+use Yiisoft\Bootstrap5\Alert;
+use Yiisoft\Bootstrap5\AlertVariant;
 use Yiisoft\Html\Html;
+use Yiisoft\Session\Flash\FlashInterface;
 use Yiisoft\View\WebView;
 use Yiisoft\Yii\View\Renderer\Csrf;
 
@@ -576,6 +638,7 @@ use Yiisoft\Yii\View\Renderer\Csrf;
  * @var WebView $this
  * @var AssetManager $assetManager
  * @var Csrf $csrf
+ * @var FlashInterface|null $flash (optionally injected via CommonParametersInjectionInterface)
  * @var string $content
  */
 
@@ -608,6 +671,28 @@ $this->beginPage();
         <a class="navbar-brand" href="/">My App</a>
     </div>
 </header>
+
+<!-- Flash notifications block -->
+<?php if (isset($flash)): ?>
+<div class="flash-messages container my-3">
+    <?php foreach ($flash->getAll() as $type => $messages): ?>
+        <?php
+        $variant = match ($type) {
+            'success' => AlertVariant::SUCCESS,
+            'danger', 'error' => AlertVariant::DANGER,
+            'warning' => AlertVariant::WARNING,
+            default => AlertVariant::INFO,
+        };
+        ?>
+        <?php foreach ($messages as $message): ?>
+            <?= Alert::widget()
+                ->variant($variant)
+                ->body(is_array($message) ? ($message['body'] ?? '') : (string) $message)
+                ->dismissable(true) ?>
+        <?php endforeach ?>
+    <?php endforeach ?>
+</div>
+<?php endif ?>
 
 <main class="app-main container py-4">
     <!-- View template content is output here -->
@@ -746,6 +831,12 @@ return [
 ];
 ```
 
+> [!IMPORTANT]
+> **`LayoutSpecificInjections` Constructor Invariants:**
+> Constructor signature: `public function __construct(private readonly string $layout, object ...$injections)`
+> 1. The first parameter is named `$layout` (not `$layoutFile`).
+> 2. Variadic parameters are typed `object ...$injections`. Unlike `WebViewRenderer::withInjections()`, which accepts string class names, `LayoutSpecificInjections` requires instantiated objects or DI definition references (`Reference::to(AdminNavigationInjection::class)`). Passing a raw class string like `AdminNavigationInjection::class` throws a fatal `TypeError: LayoutSpecificInjections::__construct(): Argument #2 must be of type object, string given`.
+
 ### 5.5. CSRF Token Object (`Csrf`) & Injected Security
 
 `CsrfViewInjection` is pre-configured in `yiisoft/yii-view-renderer` and automatically injects `$csrf` into all templates and layouts.
@@ -857,7 +948,7 @@ ContentDecorator::widget()
 
 Asset bundles manage CSS, JavaScript, images, and fonts, publishing web-inaccessible resources to the public web root.
 
-### 6.1. Declaring an Asset Bundle (`AssetBundle` Properties)
+### 6.1. Declaring an Asset Bundle (`AssetBundle` Properties & CDN with SRI)
 
 ```php
 declare(strict_types=1);
@@ -919,6 +1010,38 @@ Full public properties list on `AssetBundle`:
 - `$publishOptions` (`array`) — options for directory copying (`forceCopy`, `beforeCopy`, `afterCopy`, `filter`).
 - `$converterOptions` (`array`) — options passed to `AssetConverter` compilers.
 - `$export` (`array`) — explicit list of files exported for external bundlers.
+
+#### External CDN Bundle Declaration with Subresource Integrity (SRI)
+
+When loading third-party libraries directly from a Content Delivery Network, set `$cdn = true` to skip local publishing:
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Asset;
+
+use Yiisoft\Assets\AssetBundle;
+use Yiisoft\View\WebView;
+
+final class BootstrapCdnAsset extends AssetBundle
+{
+    public bool $cdn = true;
+    public ?string $baseUrl = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist';
+
+    public array $css = ['css/bootstrap.min.css'];
+    public array $cssOptions = [
+        'integrity' => 'sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH',
+        'crossorigin' => 'anonymous',
+    ];
+
+    public array $js = ['js/bootstrap.bundle.min.js'];
+    public array $jsOptions = [
+        'integrity' => 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz',
+        'crossorigin' => 'anonymous',
+        'position' => WebView::POSITION_END,
+    ];
+}
+```
 
 ### 6.2. Registering Asset Bundles (Layout vs Page-Specific)
 
@@ -995,11 +1118,41 @@ To delegate asset bundling to Vite or Webpack, use `AssetManager::export()`:
 > [!NOTE]
 > `AssetManager::getExport()` does **NOT** exist. Exporting is performed via `$assetManager->export(new JsonAssetExporter($targetPath))`.
 
+### 6.7. Overriding & Disabling Bundles (`customizedBundles` in `params.php`)
+
+To replace a third-party asset bundle (e.g. substituting a local package bundle with an external CDN bundle) or to completely disable a bundle, configure `customizedBundles` in `config/params.php`:
+
+```php
+declare(strict_types=1);
+
+use App\Presentation\Asset\BootstrapCdnAsset;
+use Yiisoft\Bootstrap5\Assets\BootstrapAsset;
+
+return [
+    'yiisoft/assets' => [
+        'assetManager' => [
+            // CRITICAL: The config key is 'customizedBundles', NOT 'bundles'!
+            'customizedBundles' => [
+                // 1. Substitute local vendor bundle with an external CDN bundle:
+                BootstrapAsset::class => [
+                    'class' => BootstrapCdnAsset::class,
+                ],
+                // 2. Completely disable an unwanted bundle by mapping to false:
+                \Vendor\Package\UnwantedAsset::class => false,
+            ],
+        ],
+    ],
+];
+```
+
+> [!WARNING]
+> In Yii 2, asset bundle customizations were configured under `'bundles'`. In Yii 3 `yiisoft/assets`, the configuration key is strictly `'customizedBundles'`. Using `'bundles'` has no effect and will be silently ignored by `AssetManager`.
+
 ---
 
 ## 7. Custom Widgets, Core Widgets & CSS-Framework Drivers
 
-### 7.1. Creating a Custom Widget (`Yiisoft\Widget\Widget`)
+### 7.1. Creating a Custom Widget (`Yiisoft\Widget\Widget` & Container Pattern)
 
 Widgets are reusable, immutable presentation components that implement `NoEncodeStringableInterface`. When cast to string or printed in templates (`<?= MyWidget::widget() ?>`), they invoke `render()`:
 
@@ -1064,6 +1217,73 @@ final class AlertBox extends Widget
     ->message('User profile updated successfully!') ?>
 ```
 
+> [!IMPORTANT]
+> **Strict Return Type on `render(): string`:**
+> Subclasses extending `Yiisoft\Widget\Widget` must declare the exact return type:
+> ```php
+> abstract public function render(): string;
+> ```
+> Widening the return type to `string|Stringable` causes a fatal PHP compile-time signature incompatibility error (`Fatal error: Declaration of MyWidget::render(): string|Stringable must be compatible with Yiisoft\Widget\Widget::render(): string`). Always return strictly `string`.
+
+#### Container Widget Pattern with Output Buffering (`begin()` / `end()`)
+
+To create container widgets that wrap dynamic view content between opening and closing tags, override `begin()` with output buffering and capture it in `render()`:
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Widget;
+
+use Yiisoft\Html\Html;
+use Yiisoft\Widget\Widget;
+
+final class Card extends Widget
+{
+    private string $header = '';
+
+    public function header(string $header): self
+    {
+        $new = clone $this;
+        $new->header = $header;
+        return $new;
+    }
+
+    public function begin(): ?string
+    {
+        parent::begin();
+        ob_start();
+        return null;
+    }
+
+    public function render(): string
+    {
+        $content = (string) ob_get_clean();
+
+        $html = Html::openTag('div', ['class' => 'card']);
+        if ($this->header !== '') {
+            $html .= Html::div($this->header, ['class' => 'card-header'])->render();
+        }
+        $html .= Html::div($content, ['class' => 'card-body'])->render();
+        $html .= Html::closeTag('div');
+
+        return $html;
+    }
+}
+```
+
+**Invoking the Container Widget in a View Template:**
+```php
+<?php
+Card::widget()->header('User Profile')->begin();
+?>
+    <p>This markup is buffered between begin() and end().</p>
+    <p>Joined: <?= Html::encode($user->getCreatedAt()->format('Y-m-d')) ?></p>
+<?php Card::end(); ?>
+```
+
+> [!NOTE]
+> `Widget::$stack` internally tracks currently opened widgets. `Widget::end()` pops the top widget off the stack, asserts that the closing class matches the opened class, and calls `render()`. Always call `parent::begin()` inside custom `begin()` implementations to ensure the instance is pushed onto the stack.
+
 ### 7.2. Widget Life Cycle, Factory & Themes (`WidgetFactory` in 2.2+)
 
 Widgets are created via the static factory `Widget::widget()`, which delegates to `Yiisoft\Widget\WidgetFactory`.
@@ -1075,7 +1295,7 @@ Widgets are created via the static factory `Widget::widget()`, which delegates t
 > - If a widget has constructor dependencies that cannot be resolved without a container (e.g. `Block` requires `WebView`, `FragmentCache` requires `CacheInterface`), `WidgetFactory` throws `Yiisoft\Widget\NotInstantiableException`.
 > - In standard applications, `WidgetFactory::initialize()` is invoked automatically via `config/bootstrap.php`.
 
-### 7.3. Built-in Core Widgets (`yiisoft/yii-widgets`)
+### 7.3. Built-in Core Widgets (`yiisoft/yii-widgets`: Breadcrumbs, FragmentCache, Menu, Alert, Dropdown)
 
 #### 1. `Breadcrumbs`
 Renders navigation breadcrumbs with Schema.org JSON-LD support:
@@ -1130,6 +1350,35 @@ Renders multi-level navigation lists with active-state matching:
 ?>
 ```
 
+#### 4. `Alert`
+Framework-agnostic alert notification widget supporting custom HTML attributes and classes:
+```php
+use Yiisoft\Yii\Widgets\Alert;
+
+<?= Alert::widget()
+    ->class('notification is-warning') // class() adds CSS classes to root tag
+    ->header('Account Notice')
+    ->body('Please verify your email address to enable all features.')
+    ->buttonLabel('&times;')
+    ->buttonClass('delete')
+    ->buttonAttributes(['aria-label' => 'close']) ?>
+```
+
+#### 5. `Dropdown`
+Framework-agnostic dropdown menu widget:
+```php
+use Yiisoft\Yii\Widgets\Dropdown;
+
+<?= Dropdown::widget()
+    ->itemsContainerClass('dropdown-menu')
+    ->items([
+        ['label' => 'Profile', 'link' => '/profile'],
+        ['label' => 'Settings', 'link' => '/settings'],
+        '-', // String '-' renders as a divider
+        ['label' => 'Logout', 'link' => '/logout'],
+    ]) ?>
+```
+
 ### 7.4. CSS-Framework Widget Drivers: Bootstrap 5 (`yiisoft/bootstrap5`)
 
 `yiisoft/bootstrap5` provides 16 widgets: `Alert`, `Accordion`, `Breadcrumbs`, `Button`, `ButtonGroup`, `ButtonToolbar`, `Carousel`, `Collapse`, `Dropdown`, `Modal`, `Nav`, `NavBar`, `Offcanvas`, `Progress`, `ProgressStack`, `Toast`.
@@ -1152,12 +1401,16 @@ use Yiisoft\Bootstrap5\NavStyle;
 // 2. Tabs assembled via Nav + NavStyle::TABS + NavLink::tab():
 <?= Nav::widget()
     ->styles(NavStyle::TABS) // Notice: styles() is plural
-    ->fade(true) // fade() MUST be called AFTER styles(NavStyle::TABS)
+    ->fade(true) // Invariant: fade(true) MUST be called strictly AFTER styles(NavStyle::TABS)
     ->items(
         NavLink::tab('Overview', '<p>Overview Content</p>', active: true),
         NavLink::tab('Specifications', '<p>Specs Content</p>'),
     ) ?>
 ```
+
+> [!WARNING]
+> **Strict Invocation Order: `styles()` Before `fade()`:**
+> In `Yiisoft\Bootstrap5\Nav`, `fade(bool $enabled)` checks `$this->isTabsOrPills()`. If `->fade(true)` is called before `->styles(NavStyle::TABS)`, `isTabsOrPills()` evaluates to `false`, throwing a fatal `RuntimeException: Fade effect can only be used with tabs or pills.`. Always call `->styles(NavStyle::TABS)` prior to `->fade(true)`. Also note that the method is plural `styles(...)`, not `style(...)`.
 
 ### 7.5. CSS-Framework Widget Drivers: Bulma (`yiisoft/yii-bulma`)
 
@@ -1367,10 +1620,35 @@ Every static factory in `Yiisoft\FormModel\Field` binds to `$formModel` and `$pr
 - `Regex` rule -> adds `pattern="..."`.
 - `Number(min: 0, max: 100)` rule -> adds `min="0"` and `max="100"`.
 
-Activate it on a per-field basis:
-```php
-<?= Field::text($formModel, 'username')->enrichFromValidationRules() ?>
-```
+> [!IMPORTANT]
+> **`ValidationRulesEnricher` Runtime Dependency Requirement:**
+> In `yiisoft/form`, `$this->validationRulesEnricher` is `null` by default on all field instances. Simply calling `->enrichFromValidationRules()` without configuring an enricher produces **no HTML5 attributes**.
+>
+> To enable validation rules enrichment globally, register `ValidationRulesEnricher` in `config/params.php` within `ThemeContainer`:
+> ```php
+> declare(strict_types=1);
+>
+> use Yiisoft\Definitions\Reference;
+> use Yiisoft\FormModel\ValidationRulesEnricher;
+>
+> return [
+>     'yiisoft/form' => [
+>         'themes' => [
+>             'default' => [
+>                 'validationRulesEnricher' => Reference::to(ValidationRulesEnricher::class),
+>             ],
+>         ],
+>         'defaultTheme' => 'default',
+>     ],
+> ];
+> ```
+>
+> Alternatively, supply the enricher instance directly to the field:
+> ```php
+> <?= Field::text($formModel, 'username')
+>     ->validationRulesEnricher(new \Yiisoft\FormModel\ValidationRulesEnricher())
+>     ->enrichFromValidationRules() ?>
+> ```
 
 ### 8.6. Pure Fields (Ad-Hoc Forms Without `FormModel`)
 
@@ -1430,6 +1708,7 @@ use Stringable;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Html\Html;
 use Yiisoft\View\WebView;
+use Yiisoft\Yii\DataView\GridView\Column\ActionButton;
 use Yiisoft\Yii\DataView\GridView\Column\ActionColumn;
 use Yiisoft\Yii\DataView\GridView\Column\Base\DataContext;
 use Yiisoft\Yii\DataView\GridView\Column\DataColumn;
@@ -1471,6 +1750,7 @@ $this->setTitle('Users Management');
             property: 'status',
             header: 'Status',
             bodyClass: static fn (User $user): string => $user->isActive() ? 'text-success' : 'text-muted',
+            withSorting: false, // Disables sorting for computed column
         ),
         new ActionColumn(
             urlCreator: static fn (string $action, DataContext $context): string => sprintf(
@@ -1478,11 +1758,25 @@ $this->setTitle('Users Management');
                 $context->data->getId(),
                 $action,
             ),
+            buttons: [
+                'view' => new ActionButton(
+                    content: 'View',
+                    url: static fn (User $user, DataContext $context): string => "/users/{$user->getId()}",
+                    class: 'btn btn-sm btn-outline-info',
+                ),
+                'approve' => new ActionButton(
+                    content: 'Approve',
+                    url: static fn (User $user, DataContext $context): string => "/users/{$user->getId()}/approve",
+                    attributes: ['data-method' => 'post'],
+                    class: 'btn btn-sm btn-outline-success',
+                ),
+            ],
             // Buttons NOT explicitly listed here are HIDDEN by default
+            // Notice: visibleButtons closure receives ($data, $key, $index) — it does NOT receive DataContext!
             visibleButtons: [
-                'view' => static fn (User $user): bool => true,
-                'update' => static fn (User $user): bool => true,
-                'delete' => static fn (User $user): bool => $user->isDeletable(),
+                'view' => static fn (User $user, mixed $key, int $index): bool => true,
+                'approve' => static fn (User $user, mixed $key, int $index): bool => $user->isPending(),
+                'delete' => static fn (User $user, mixed $key, int $index): bool => $user->isDeletable(),
             ],
         ),
     )
@@ -1497,15 +1791,29 @@ $this->setTitle('Users Management');
 > If `encodeContent` is `null` (default), plain `string` values returned by a `content` callable are automatically encoded via `Html::encode()`. A returned raw HTML string like `'<a href="...">...</a>'` will render as escaped text!
 > Always return a Tag object (e.g. `Html::a()`), or set `encodeContent: false` on the column.
 
-### 9.2. Column Catalog (`DataColumn`, `ActionColumn`, `CheckboxColumn`, `RadioColumn`, `SerialColumn`)
+### 9.2. Column Catalog (`DataColumn`, `ActionColumn & ActionButton`, `CheckboxColumn`, `RadioColumn`, `SerialColumn`)
 
 1. **`DataColumn`:**
-   - Constructor parameters: `property:`, `header:`, `withSorting:` (default `true`), `content:`, `bodyClass:`, `filter:`, `encodeContent:`.
+   - Constructor parameters: `property:`, `header:`, `withSorting:` (default `true`; pass `withSorting: false` to disable column header sorting links), `content:`, `bodyClass:`, `filter:`, `encodeContent:`.
    - Parameter name is `property:`, **NOT** `attribute:`.
-2. **`ActionColumn`:**
-   - Provides action buttons (`view`, `update`, `delete`).
+2. **`ActionColumn` & `ActionButton`:**
+   - Displays action buttons (`view`, `update`, `delete`, or custom buttons).
    - `urlCreator` callback signature: `function (string $action, DataContext $context): string`.
+   - Buttons can be configured using `Yiisoft\Yii\DataView\GridView\Column\ActionButton`:
+     ```php
+     new ActionButton(
+         content: 'Edit', // Closure|string|Stringable
+         url: static fn (User $user, DataContext $context): string => "/users/{$user->getId()}/edit",
+         attributes: ['class' => 'btn btn-sm btn-primary'],
+         title: 'Edit User',
+     )
+     ```
    - `visibleButtons` array: buttons not listed default to `false` (hidden).
+     > [!WARNING]
+     > **`visibleButtons` Callback Signature Invariant:**
+     > When a closure is passed in `visibleButtons[$name]`, its signature is:
+     > `function (array|object $data, mixed $key, int $index): bool`
+     > It does **NOT** receive `DataContext $context`! Typing `fn (User $user, DataContext $context) => ...` passes `$key` (an integer or string) as the second argument, immediately throwing a fatal `TypeError: Argument #2 must be of type DataContext, int given`.
 3. **`CheckboxColumn`:**
    - Renders row selection checkboxes for batch actions.
    - Master "select all" checkbox is automatically placed in the header when `$header === null` and `$multiple === true`.
@@ -1513,7 +1821,7 @@ $this->setTitle('Users Management');
 4. **`RadioColumn`:**
    - Renders radio buttons for single row selection. Shared name `'radio-selection'`.
 5. **`SerialColumn`:**
-   - Renders 1-based sequential row numbers taking paginator offset into account.
+   - Renders 1-based sequential row numbers taking paginator offset into account: `$paginator->getOffset() + $index + 1`.
 
 ### 9.3. Column Filtering in GridView (`TextInputFilter`, `DropdownFilter`)
 
@@ -1548,15 +1856,20 @@ $dateCol = new DataColumn(
 // 4. Customized dropdown filter:
 $roleCol = new DataColumn(
     property: 'role',
-    filter: (new DropdownFilter())->optionsData([
+    filter: DropdownFilter::widget()->optionsData([
+        '' => 'All Roles', // Empty string key provides the prompt option label
         'admin' => 'Administrator',
         'editor' => 'Editor',
-    ])->prompt('All Roles'),
+    ]),
 );
 ```
 
 > [!NOTE]
 > Only `TextInputFilter` and `DropdownFilter` exist in `yiisoft/yii-dataview`. `SelectFilter` and `DateFilter` are phantom classes.
+
+> [!WARNING]
+> **`DropdownFilter` Has No `prompt()` Method:**
+> `DropdownFilter` does **NOT** provide a `prompt()` method. Calling `->prompt('All Roles')` throws a fatal `Error: Call to undefined method Yiisoft\Yii\DataView\Filter\Widget\DropdownFilter::prompt()`. To configure a prompt option, pass an empty string key `'' => 'All Roles'` as the first item in `optionsData()`.
 
 ### 9.4. ListView (`Yiisoft\Yii\DataView\ListView\ListView`)
 
@@ -1716,6 +2029,15 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 | **`new DataField('title')` on an entity with private properties** | `property` resolves public properties / `'getter()'` keys only — no getter fallback; private-prop entities silently get `null`. | Use `new DataField(property: 'getTitle()', ...)` or a `value:` closure receiving `GetValueContext`. |
 | **`Breadcrumbs::widget()->options(['class' => '...'])`** | Method `options()` does not exist on Yii3 Breadcrumbs. | Call `->attributes(['class' => '...'])`. |
 | **`FragmentCache::widget()->dynamicPlaceholders(...)`** | Method does not exist in Yii3. | Call `->dynamicContents(DynamicContent ...$dynamicContents)`. |
+| **`$this->registerCss($css, WebView::POSITION_HEAD, 'key')`** | 3rd parameter is `array $attributes = []`, 4th is `?string $key`. Passing a string key as 3rd parameter throws fatal `TypeError`. | Pass named argument `key: 'key'` or empty attributes array: `$this->registerCss($css, WebView::POSITION_HEAD, [], 'key')`. |
+| **`new LayoutSpecificInjections('layout.php', MyInjection::class)`** | Constructor parameter is `$layout` (not `$layoutFile`), and variadic arguments must be instantiated `object` instances, not class strings. | Use `new LayoutSpecificInjections('@views/layout.php', Reference::to(MyInjection::class))`. |
+| **`Nav::widget()->fade(true)->styles(NavStyle::TABS)`** | Method is plural `styles()`. Calling `fade(true)` before `styles(NavStyle::TABS)` throws `RuntimeException: Fade effect can only be used with tabs or pills.`. | Call `styles()` strictly prior to `fade(true)`: `Nav::widget()->styles(NavStyle::TABS)->fade(true)`. |
+| **`visibleButtons: ['edit' => fn($user, DataContext $context) => ...]`** | Visibility callback receives `($data, $key, $index)`, NOT `DataContext`. Typehinting `DataContext` throws fatal `TypeError` because `$key` is passed as argument #2. | Use `visibleButtons: ['edit' => fn(User $user, mixed $key, int $index): bool => ...]`. |
+| **`DropdownFilter::widget()->prompt('All')`** | `DropdownFilter` has no `prompt()` method; causes fatal `Error: Call to undefined method`. | Provide prompt option via empty string key: `->optionsData(['' => 'All', ...])`. |
+| **`Html::form()->post()->enctypeMultipart()`** | Method name does not exist; throws fatal `Error: Call to undefined method`. | Call `Html::form()->post()->enctypeMultipartFormData()`. |
+| **`$params['yiisoft/assets']['assetManager']['bundles'] = [...]`** | Yii 2 legacy configuration key; silently ignored by Yii 3 `AssetManager`. | Configure under `$params['yiisoft/assets']['assetManager']['customizedBundles']`. |
+| **Calling `->enrichFromValidationRules()` without enricher** | `ValidationRulesEnricher` is `null` by default in `yiisoft/form`; produces no HTML5 attributes. | Register `ValidationRulesEnricher` in `ThemeContainer` under `defaultTheme` or pass to field via `->validationRulesEnricher()`. |
+| **Widening `Widget::render()` to `string\|Stringable`** | Base contract requires strictly `abstract public function render(): string;`. Widening causes compile-time fatal error. | Declare return type strictly as `: string`. |
 | **Calling repositories or SQL inside Views** | Breaks MVC, makes templates non-cacheable and side-effectful. | Prepare all domain data in Action/Handler and pass into view parameters. |
 
 ---

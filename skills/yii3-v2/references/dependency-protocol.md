@@ -6,6 +6,17 @@
 
 ---
 
+## Table of Contents
+- [Operational Inputs & Purpose](#operational-inputs--purpose)
+- [1. Check Requirements](#1-check-requirements)
+- [2. Decide Who Decides](#2-decide-who-decides)
+- [3. Install Safely](#3-install-safely)
+- [4. Verify Wiring](#4-verify-wiring)
+- [5. Learn the API from the Source (vendor/)](#5-learn-the-api-from-the-source-vendor)
+- [6. Write Code, Then Verify](#6-write-code-then-verify)
+
+---
+
 ## Operational Inputs & Purpose
 
 Every dependency decision begins with two canonical inputs:

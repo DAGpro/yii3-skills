@@ -1,20 +1,24 @@
 ---
 name: yii3-v2
 description: >-
-  For planning, implementing, fixing, reviewing or verifying Yii3 code (requires yiisoft/*; no
-  yii2). Provides conventions, package catalog, architecture decomposition, and DI/routing.
-  Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "add repository", "add
-  use case", "add event", "add listener", "add middleware", "send email", "queue job", "worker command", "mutex
-  lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3
-  form", "validation rules", "form model", "PHPUnit", "functional test",
-  "cache", "apcu", "memcached", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC",
-  "oauth", "openid connect", "bootstrap5", "bulma", "sqlite", "mssql", "oracle",
-  "error handling", "log target", "PSR-3 logging", "i18n", "flash
-  message", "CSRF", "file upload", "download file", "swagger", "openapi", "RoadRunner", "FrankenPHP",
-  "layered architecture", "vertical slices", "ArrayHelper", "slug".
+  Architectural guide, code generator, and verification suite for modern Yii 3 applications (PHP 8.2+, yiisoft/* packages; strict zero-Yii2 policy). Provides conventions, package catalogs, layer decomposition, deterministic AST validation scripts, and vertical slice templates. Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "add repository", "add use case", "add event", "add listener", "add middleware", "configure DI", "register route", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3 form", "validation rules", "form model", "PHPUnit", "cache", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC", "oauth", "sqlite", "error handling", "PSR-3 logging", "i18n", "flash message", "CSRF", "file upload", "download file", "swagger", "openapi", "layered architecture", "vertical slices".
 ---
 
 # Yii3 development
+
+## Table of Contents
+- [Core rules](#core-rules)
+- [Workflow per task](#workflow-per-task)
+- [References (read on demand)](#references-read-on-demand)
+  - [Task & Intent Routing Matrix](#task--intent-routing-matrix)
+  - [Core & Architecture](#core--architecture)
+  - [HTTP & Presentation](#http--presentation)
+  - [Persistence & Data](#persistence--data)
+  - [Infrastructure, Async & Operations](#infrastructure-async--operations)
+- [Deterministic tooling & validation scripts](#deterministic-tooling--validation-scripts)
+- [Canonical examples & templates](#canonical-examples--templates)
+
+---
 
 ## Core rules
 1. **Yii3 is not Yii2.** No `Yii::$app`, no `yii\` namespace, no static facades. PSR-based, injected.
@@ -33,21 +37,31 @@ description: >-
 2. For business feature requests, decompose into full artifact graph (Domain, Persistence, Use Case, Presentation, Wiring) via `references/feature-recipes.md`; check the Chain Integrity Checklist (§6) there before writing code, and use the canonical slice `examples/crud-slice/README.md` as the decomposition reference.
 3. Install/wire missing packages per `references/dependency-protocol.md`.
 4. Place and write code: architecture source first, then `references/conventions.md`; for file placement and format follow the canonical example `examples/crud-slice/README.md`.
-5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Then run the deterministic gate — both validation scripts (see "Deterministic tooling & validation scripts" below) against the changed scope (project root by default): fix every reported error and rerun both until both exit 0. Exit 2 means a misconfigured invocation (wrong path or PHP guard) — fix the invocation, never treat it as a pass. Warnings exit 0 — report them separately, do not block. Report added packages and changed config files.
+5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Then run the deterministic gate — the unified validation suite (or individual verifiers, see "Deterministic tooling & validation scripts" below) against the changed scope: fix every reported error and rerun until all exit 0. Exit 2 means a misconfigured invocation (wrong path or PHP guard) — fix the invocation, never treat it as a pass. Warnings exit 0 — report them separately, do not block. Report added packages and changed config files.
 
    Step-5 verification report (compact template):
 
    ```
-   check-di-syntax.php <scope> -> exit 0
-   verify-actions.php <scope>  -> exit 1 (1 error)
-   issues:
-   - config/common/di/db.php:5 — typo_class_key — invalid class key 'classname'
+   verify-all.php <scope> -> exit 1 (1 error)
+   - verify-actions.php: config/common/di/db.php:5 — typo_class_key — invalid class key 'classname'
    fixes applied: renamed 'classname' to 'class'
-   rerun: check-di-syntax.php -> 0; verify-actions.php -> 0
+   rerun: verify-all.php <scope> -> exit 0
    warnings (exit 0, non-blocking): params.php:4 — closure_in_params — closure in parameters file
    ```
 
 ## References (read on demand)
+
+### Task & Intent Routing Matrix
+Load only the targeted reference guides required for the active task archetype:
+
+| Task Archetype | Primary Guides (Start Here) | Secondary / Wiring Guides | Canonical Template / Gate |
+|---|---|---|---|
+| **REST API Endpoint / CRUD** | `references/actions-and-controllers.md`<br>`references/validation-and-forms.md`<br>`references/routes.md` | `references/persistence-db.md`<br>`references/error-handling.md` | `examples/crud-slice/README.md`<br>`verify-actions.php` |
+| **CLI Command / Worker** | `references/commands.md`<br>`references/queue-jobs.md` | `references/logging.md`<br>`references/di-and-config.md` | `check-di-syntax.php` |
+| **HTML UI / Forms / Grid** | `references/views-and-widgets.md`<br>`references/validation-and-forms.md`<br>`references/http-state.md` | `references/actions-and-controllers.md`<br>`references/file-handling.md` | `verify-actions.php` |
+| **Auth / Identity / RBAC** | `references/auth-and-rbac.md`<br>`references/middlewares.md` | `references/routes.md`<br>`references/http-state.md` | `verify-actions.php` |
+| **Database & Schema Migrations** | `references/migrations.md`<br>`references/persistence-db.md` (or `persistence-cycle-orm.md`) | `references/di-and-config.md`<br>`references/caching.md` | `examples/crud-slice/Migration` |
+| **Full Architecture Slices** | `references/architecture-alignment.md`<br>`references/feature-recipes.md` | `references/dependency-protocol.md`<br>`references/package-catalog.md` | `examples/crud-slice/README.md` |
 
 ### Core & Architecture
 - `references/conventions.md` — layout, config, DI, actions, routes, anti-patterns, SSOT verification rule
@@ -92,10 +106,12 @@ description: >-
 
 ## Deterministic tooling & validation scripts
 
-Both scripts are dependency-free token-level analyzers, run from this skill package directory. They require **PHP 8.1+** — on older versions they print `[FATAL]` to STDERR and exit 2 before any output (including JSON).
+All scripts are dependency-free token-level static analyzers, executed from this skill package directory (`${CLAUDE_SKILL_DIR}/scripts` or relative path). They require **PHP 8.1+** — on older versions they print `[FATAL]` to STDERR and exit 2 before any output.
 
-Exit codes (both scripts): **0** = pass or warnings only · **1** = at least one error (blocking) · **2** = fatal invocation error (PHP guard, wrong scan path / nothing to scan, `--file` not found). Warnings never block: they exit 0 and are reported separately from errors.
+Exit codes (all scripts): **0** = pass or warnings only · **1** = at least one error (blocking) · **2** = fatal invocation error (PHP guard, wrong scan path / nothing to scan, `--file` not found). Warnings never block: they exit 0 and are reported separately from errors.
 
+- `scripts/verify-all.php` — unified orchestrator running all checkers in a single pass with aggregated summary:
+  - Run: `php scripts/verify-all.php [project-path] [--format=text|json] [--quiet] [--verbose]`
 - `scripts/check-di-syntax.php` — static AST/token validation for DI files (`config/**/di/*.php`) and `params.php`:
   - Catches typos in configuration keys (`'__construct()'`, `'class'`, missing `()` on methods, missing `$` on properties) and PHP syntax errors; requires a returned array (`return [...]`).
   - Detects legacy Yii 2 constructs (`'__class'`).
@@ -109,6 +125,12 @@ Exit codes (both scripts): **0** = pass or warnings only · **1** = at least one
   - Catches high-frequency Yii 3 traps: `Cookie::create()`, `Yiisoft\Cookies\SameSite` import, `->createToken()` on token factories, `->send()`/`->sendStream()` on download responses, `->withStatus()` on a view renderer.
   - Warning rule: importing the deprecated `Yiisoft\DataResponse\DataResponseFactoryInterface` (use `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` instead); everything else is a blocking error.
   - Run: `php scripts/verify-actions.php [project-path] [--format=text|json] [--quiet]`
+- `scripts/verify-routes.php` — static token audit for Route configuration files (`routes.php`):
+  - Enforces `declare(strict_types=1);` as the first statement in route files.
+  - Detects legacy Yii 2 route parameter syntax `<id:\d+>` or `<id>` and requires FastRoute `{id:\d+}`.
+  - Detects duplicate route names defined via `->name('...')`.
+  - Blocks legacy string action targets (`'site/index'`) and static facades (`Yii::$app`).
+  - Run: `php scripts/verify-routes.php [project-path] [--format=text|json] [--quiet]`
 
 ## Canonical examples & templates
 
@@ -118,6 +140,3 @@ Exit codes (both scripts): **0** = pass or warnings only · **1** = at least one
   - `Persistence/` — repository implementation using `ConnectionInterface` and `Query` (`DbPostRepository.php`).
   - `Presentation/` — invokable thin actions (`CreatePostAction.php`, `ViewPostAction.php`) and input DTO with validation attributes `#[Required]`, `#[Length]` (`CreatePostDto.php`).
   - `Config/` — DI container mapping (`di.php`) and modern HTTP routing (`routes.php`).
-
-
-

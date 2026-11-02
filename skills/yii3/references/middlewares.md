@@ -1,10 +1,6 @@
 # Yii3 PSR-15 Middlewares Guide
 
 > Practical guide for implementing, configuring, and testing PSR-15 HTTP middleware pipelines using `yiisoft/middleware-dispatcher`, `yiisoft/http-middleware`, `yiisoft/router`, and official Yii3 components.
->
-> **Source of Truth & Verification Rule for AI Models:**
-> In projects using this extension, always verify exact method signatures, constructor arguments, and options directly in `vendor/yiisoft/<package>/src/` for installed packages.
-> When generating code, if an installed package's method signature or property is unfamiliar or in doubt, **read its source files in `vendor/yiisoft/<package>/src/`** rather than guessing or relying on Yii2 habits.
 
 ---
 
@@ -22,9 +18,11 @@
   - [4.1. Global Application Pipeline (config/web/di/application.php)](#41-global-application-pipeline-configwebdiapplicationphp)
   - [4.2. Route Group Pipeline (config/web/routes.php)](#42-route-group-pipeline-configwebroutesphp)
   - [4.3. Single Route Pipeline (config/web/routes.php)](#43-single-route-pipeline-configwebroutesphp)
+  - [4.4. Rate Limiting Recipes (yiisoft/rate-limiter)](#44-rate-limiting-recipes-yiisoftrate-limiter)
 - [5. Supported Middleware Definition Formats](#5-supported-middleware-definition-formats)
 - [6. Hidden Pitfalls & Critical Gotchas](#6-hidden-pitfalls--critical-gotchas)
 - [7. Anti-Pattern Matrix](#7-anti-pattern-matrix)
+- [8. Related Topic Guides](#8-related-topic-guides)
 
 ---
 
@@ -372,7 +370,7 @@ The following table documents verified PSR-15 middlewares across official `yiiso
 
 > [!TIP]
 > For session API, flash messages, cookie signing/encryption, CSRF token implementations, and the required
-> middleware ordering (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → Router`), see `references/http-state.md`.
+> middleware ordering (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → Router`), see [HTTP State Guide](http-state.md).
 | `Yiisoft\RequestProvider\RequestCatcherMiddleware` | `yiisoft/request-provider` | Ingress | Captures current `$request` into `RequestProviderInterface $provider` so DI-resolved domain services can access request context. Dependencies: `RequestProviderInterface $provider`. |
 | `Yiisoft\Request\Body\RequestBodyParser` | `yiisoft/request-body-parser` | Ingress | Parses raw HTTP body (`application/json` via `JsonParser`) into `$request->withParsedBody()`. Returns HTTP 400 on malformed payloads. Dependencies: `ResponseFactoryInterface $responseFactory`, `ContainerInterface $container`, `?BadRequestHandlerInterface $badRequestHandler = null`. |
 | `Yiisoft\Router\Middleware\Router` | `yiisoft/router` | Ingress / Terminal | Matches route via `UrlMatcherInterface`. Sets `CurrentRoute`. Dispatches route-level middleware stack. Returns HTTP 405 with `Allow` header on method mismatch. Dependencies: `UrlMatcherInterface $matcher`, `ResponseFactoryInterface $responseFactory`, `MiddlewareFactory $middlewareFactory`, `CurrentRoute $currentRoute`, `?EventDispatcherInterface $eventDispatcher = null`. |
@@ -489,7 +487,7 @@ return [
 
 ### 4.2. Route Group Pipeline (`config/web/routes.php`)
 
-Executes for all routes inside a specific route group (e.g. `/api/v1`).
+Executes for all routes inside a specific route group (e.g. `/api/v1`). For route group definitions, prefixing, and FastRoute rules, see [Routing Guide](routes.md).
 
 ```php
 <?php
@@ -590,6 +588,79 @@ return [
 
 > [!NOTE]
 > In Yii3 routing, `Route::action()` is the terminal middleware of that route's pipeline. When `->middleware(...)` is called after `->action(...)`, `Route` automatically inserts the new middleware **before** the action in the execution list.
+> For action handler implementation patterns, single-action invokable controllers, and PSR-7 response factories, see [Actions & Controllers Guide](actions-and-controllers.md).
+
+---
+
+### 4.4. Rate Limiting Recipes (`yiisoft/rate-limiter`)
+
+`Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware` enforces rate limits using sliding windows, protecting APIs and login endpoints from abusive traffic.
+
+#### 1. DI Configuration (`config/web/di/rate-limiter.php`)
+
+```php
+declare(strict_types=1);
+
+use Psr\SimpleCache\CacheInterface;
+use Yiisoft\Definitions\Reference;
+use Yiisoft\Yii\RateLimiter\Counter;
+use Yiisoft\Yii\RateLimiter\CounterInterface;
+use Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware;
+use Yiisoft\Yii\RateLimiter\Policy\LimitPerIp;
+use Yiisoft\Yii\RateLimiter\Policy\LimitPolicyInterface;
+use Yiisoft\Yii\RateLimiter\Storage\SimpleCacheStorage;
+use Yiisoft\Yii\RateLimiter\Storage\StorageInterface;
+
+return [
+    // Storage backend: SimpleCacheStorage (PSR-16) or ApcuStorage (high-speed APCu)
+    StorageInterface::class => static fn (CacheInterface $cache): StorageInterface => new SimpleCacheStorage($cache),
+
+    // Counter sliding window: 100 requests per 60 seconds
+    CounterInterface::class => [
+        'class' => Counter::class,
+        '__construct()' => [
+            'limit' => 100,
+            'periodInSeconds' => 60,
+        ],
+    ],
+
+    // Default policy: fingerprint by client remote IP
+    LimitPolicyInterface::class => LimitPerIp::class,
+
+    LimitRequestsMiddleware::class => [
+        '__construct()' => [
+            'limitingPolicy' => Reference::to(LimitPolicyInterface::class),
+        ],
+    ],
+];
+```
+
+#### 2. Custom Rate-Limiting Policy (e.g. per-user or API token)
+
+```php
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\Auth\Middleware\Authentication;
+use Yiisoft\Yii\RateLimiter\Policy\LimitCallback;
+
+// Rate limit by authenticated user ID, falling back to client IP
+$policy = new LimitCallback(
+    static function (ServerRequestInterface $request): string {
+        $identity = $request->getAttribute(Authentication::class);
+        return $identity?->getId() ?? $request->getServerParams()['REMOTE_ADDR'] ?? 'anonymous';
+    }
+);
+```
+
+#### 3. Automatic Response Headers & Status Mapping
+
+`LimitRequestsMiddleware` automatically maps headers to all responses and blocks requests when the limit is exceeded:
+
+| Header / Status | Value | Description |
+|---|---|---|
+| `X-Rate-Limit-Limit` | `(string) $result->getLimit()` | Maximum request limit in current window (e.g. `100`). |
+| `X-Rate-Limit-Remaining` | `(string) $result->getRemaining()` | Remaining request quota in current window. |
+| `X-Rate-Limit-Reset` | `(string) $result->getResetTime()` | Unix timestamp when request quota resets. |
+| **HTTP 429** | `Too Many Requests` | Returned automatically when `$state->isLimitReached() === true`. |
 
 ---
 
@@ -700,3 +771,16 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 | **Placing heavy business or DB logic inside global middlewares** | Slows down every incoming request, including health checks and static file serving. | Keep middlewares lightweight; scope auth/rate-limiting to specific route groups or routes. |
 | **Calling `$handler->handle($request)` inside short-circuit guard** | Downstream action still executes, causing unintended state changes before returning error response. | Return error `ResponseInterface` immediately without delegating to `$handler->handle($request)`. |
 | **Calling `$handler->handle()` multiple times in one middleware** | Causes downstream middlewares and controller actions to execute multiple times. | Call `$handler->handle($request)` exactly once per request. |
+
+---
+
+## 8. Related Topic Guides
+
+- [Routing Guide](routes.md) — Route groups, URL generation, FastRoute parameters, and route middleware pipelines.
+- [Actions & Controllers Guide](actions-and-controllers.md) — Single-action invokable controllers, parameter resolution, and response factories.
+- [Authentication & RBAC Guide](auth-and-rbac.md) — Authentication middleware methods, identity repositories, OAuth2/OIDC login (`AuthAction`), and RBAC rules.
+- [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and headers.
+- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
+- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
+- [Utility Packages Guide](utilities.md) — `IpHelper`/`IpRanges` for building custom IP allow/deny guards, and `DnsHelper` for domain validation.
+

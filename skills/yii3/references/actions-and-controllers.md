@@ -2,9 +2,6 @@
 
 > Practical recommendations and idiomatic patterns for using official `yiisoft/*` packages inside Yii3 Actions and Controllers.
 >
-> **Source of Truth & Verification Rule for AI Models:**
-> In projects using this extension, always verify exact method signatures, constructor arguments, and options directly in `vendor/yiisoft/<package>/src/` for installed packages.
-> When generating code, if an installed package's method signature or property is unfamiliar or in doubt, **read its source files in `vendor/yiisoft/<package>/src/`** rather than guessing or relying on Yii2 habits.
 > Actions belong to the **Presentation Layer**: they orchestrate HTTP input/output and delegate all business logic, persistence, and heavy calculations to Application Use Cases and Domain models.
 
 ---
@@ -14,6 +11,7 @@
 - [2. Action Concern → Package Quick Matrix](#2-action-concern--package-quick-matrix)
 - [3. Detailed Package Usage in Actions](#3-detailed-package-usage-in-actions)
 - [4. Anti-Pattern Matrix: Actions & Presentation Layer](#4-anti-pattern-matrix-actions--presentation-layer)
+- [5. Related Topic Guides](#5-related-topic-guides)
 
 ---
 
@@ -25,13 +23,15 @@
 2. **Single-Action Invokable Classes (Recommended):**
    - Prefer single-action classes implementing `__invoke(ServerRequestInterface $request): ResponseInterface` or PSR-15 `Psr\Http\Server\RequestHandlerInterface::handle(ServerRequestInterface $request): ResponseInterface`.
    - Multi-action controllers (e.g. `[UserController::class, 'view']`) are supported via `MiddlewareFactory`, but every action method must strictly return `ResponseInterface`.
+   - Actions are mapped to HTTP endpoints via route definitions. For routing syntax, FastRoute placeholders, and route groups, see [Routing Guide](routes.md).
+   - Actions are the terminal handlers of the PSR-15 pipeline. For middleware ordering, body parsers, and guard filters, see [PSR-15 Middlewares Guide](middlewares.md).
 3. **Thin Action Principle (Strict Boundary):**
    - **Allowed in Actions:**
      - Extract request parameters, route arguments (`CurrentRoute`), query params, headers, cookies, and parsed body.
      - Hydrate and validate input DTOs (`HydratorInterface`, `ValidatorInterface`, `yiisoft/input-http`) or Form Models (`FormHydrator`).
      - Check current user state and permissions (`Yiisoft\User\CurrentUser`).
      - Invoke an Application Use Case, Command Handler, or Service.
-     - Build and return PSR-7 responses (`DataResponseFactoryInterface`, `ViewRenderer`, `WebViewRenderer`, `DownloadResponseFactory`, HTTP redirects).
+     - Build and return PSR-7 responses (`DataResponseFactoryInterface`, `WebViewRenderer`, `DownloadResponseFactory`, HTTP redirects). The legacy `ViewRenderer` is `@deprecated`.
    - **Strictly Forbidden in Actions (Anti-Patterns):**
      - ❌ Direct SQL queries, Query Builder, or ActiveRecord / Cycle persistence calls (delegate to Repositories / Use Cases).
      - ❌ Database transaction management (`$db->transaction()` belongs in Use Cases / Unit of Work).
@@ -45,7 +45,7 @@
 | Action Concern | Official Package | Injected Service / Interface | Return / Result Type |
 |---|---|---|---|
 | **API Response (JSON/XML)** | `yiisoft/data-response` | `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` | `Psr\Http\Message\ResponseInterface` |
-| **HTML Rendering** | `yiisoft/yii-view-renderer` | `Yiisoft\Yii\View\Renderer\ViewRenderer` or `WebViewRenderer` | `Psr\Http\Message\ResponseInterface` |
+| **HTML Rendering** | `yiisoft/yii-view-renderer` | `Yiisoft\Yii\View\Renderer\WebViewRenderer` (primary; `ViewRenderer` is `@deprecated`) | `Psr\Http\Message\ResponseInterface` |
 | **HTTP Statuses & Headers** | `yiisoft/http` | `Yiisoft\Http\Status`, `Yiisoft\Http\Header`, `Yiisoft\Http\Method` | Constants (`Status::OK`, `Header::LOCATION`) |
 | **Route Parameters** | `yiisoft/router` | `Yiisoft\Router\CurrentRoute` | `$currentRoute->getArgument('id')` (`?string`) |
 | **Redirects & URLs** | `yiisoft/router` | `Yiisoft\Router\UrlGeneratorInterface` | `$urlGenerator->generate('route', $arguments)` |
@@ -57,7 +57,7 @@
 | **File Downloads** | `yiisoft/response-download` | `Yiisoft\ResponseDownload\DownloadResponseFactory` | `Psr\Http\Message\ResponseInterface` |
 | **Pagination & Sorting** | `yiisoft/data` | `Yiisoft\Data\Paginator\OffsetPaginator`, `Yiisoft\Data\Reader\Sort` | Iterable data + pagination metadata |
 | **Current User & Auth** | `yiisoft/user` | `Yiisoft\User\CurrentUser` | `$currentUser->getId()`, `$currentUser->can(...)` |
-| **API JWT Token Creation** | `yiisoft/auth-jwt` | `Yiisoft\Auth\Jwt\TokenFactoryInterface` | `$tokenFactory->create($payload, 'jws_compact')` |
+| **API JWT Token Creation** | `yiisoft/auth-jwt` | `Yiisoft\Auth\Jwt\TokenFactoryInterface` | `$tokenFactory->create($payload, CompactSerializer::NAME)` |
 | **Flash Messages** | `yiisoft/session` | `Yiisoft\Session\Flash\FlashInterface` | `$flash->add('success', $msg)` |
 | **Session Data** | `yiisoft/session` | `Yiisoft\Session\SessionInterface` | `$session->get($key)`, `$session->set($key, $val)` |
 | **Cookies Management** | `yiisoft/cookies` | `Yiisoft\Cookies\Cookie` | `$cookie->addToResponse($response)` |
@@ -142,7 +142,7 @@ final readonly class ViewUserAction
 In Yii3, request bodies and query parameters should be converted into strongly-typed DTOs rather than reading raw associative arrays across the action.
 
 > [!IMPORTANT]
-> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from package `yiisoft/request-body-parser` MUST be added to the middleware pipeline before the action. Otherwise, `$request->getParsedBody()` returns `null` for JSON payloads.
+> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from package `yiisoft/request-body-parser` MUST be added to the middleware pipeline before the action. Otherwise, `$request->getParsedBody()` returns `null` for JSON payloads. Note that the package ships only a JSON parser out of the box; parsing other body formats requires a custom `ParserInterface` implementation.
 
 #### Approach A: Manual Hydration via `HydratorInterface` + `ValidatorInterface`
 Suitable for any DTO class without framework dependencies.
@@ -298,7 +298,28 @@ final readonly class CreatePostAutoAction
 ```
 
 > [!NOTE]
-> In `RequestInputParametersResolver`, if `$throwInputValidationException = true`, invalid inputs automatically throw `Yiisoft\Input\Http\InputValidationException` instead of entering the action. If `false` (default), the action checks `$input->getValidationResult()`.
+> In `RequestInputParametersResolver`, if `$throwInputValidationException = true`, invalid inputs automatically throw `Yiisoft\Input\Http\InputValidationException` instead of entering the action. If `false` (default), the action checks `$input->getValidationResult()`. The exception path applies only when the resolved input implements `ValidatedInputInterface` (which `AbstractInput` does).
+
+**Query Parameters via `#[FromQuery]`:**
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Action\Post\Input;
+
+use Yiisoft\Input\Http\AbstractInput;
+use Yiisoft\Input\Http\Attribute\Data\FromQuery;
+
+#[FromQuery]
+final class PostListInput extends AbstractInput
+{
+    public int $page = 1;
+    public int $pageSize = 20;
+}
+```
+`RequestInputParametersResolver` injects it into the action exactly like a `#[FromBody]` input (`__invoke(PostListInput $input): ResponseInterface`), populating the properties from `$request->getQueryParams()`.
+
+> [!IMPORTANT]
+> `yiisoft/input-http` ships only two class-level data attributes: `#[FromBody]` and `#[FromQuery]` — there are no `#[FromHeader]`, `#[FromCookie]`, or `#[FromRoute]` data attributes. For binding individual method parameters it provides the parameter attributes `#[Body]`, `#[Query]`, `#[Request]`, and `#[UploadedFiles]` (namespace `Yiisoft\Input\Http\Attribute\Parameter`).
 
 ---
 
@@ -333,7 +354,10 @@ if (!$result->isValid()) {
 
 > [!TIP]
 > For the full built-in rules catalog, custom rule authoring, `skipOnEmpty`/`when` modifiers, message translation,
-> FormModel + `FormHydrator`, and `yiisoft/input-http` wiring details, see `references/validation-and-forms.md`.
+> FormModel + `FormHydrator`, and `yiisoft/input-http` wiring details, see [Validation & Forms Guide](validation-and-forms.md).
+
+> [!CAUTION]
+> **Optional fields are not skipped by default.** The per-rule `skipOnEmpty` option defaults to `null`, which the validator normalizes to "never skip". An empty value in an optional property therefore still fails `Length`, `Integer`, `Regex`, and similar rules. Pass `skipOnEmpty: true` on the rule (or configure the validator with `defaultSkipOnEmpty`) to make fields truly optional.
 
 ---
 
@@ -353,6 +377,15 @@ $contentNegotiator = new ContentNegotiatorDataResponseMiddleware([
     'application/xml' => new XmlFormatter(),
 ]);
 ```
+
+**Full Constructor Signature:**
+```php
+public function __construct(
+    array $formatters = [],
+    FormatterInterface|RequestHandlerInterface|null $fallback = null,
+) {}
+```
+The optional `$fallback` handler is a `RequestHandlerInterface` invoked when no formatter matches the client's `Accept` header; the package's default DI wiring registers a fallback handler that responds with `406 Not Acceptable`.
 
 > [!IMPORTANT]
 > 1. Always inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface`. The old interface `Yiisoft\DataResponse\DataResponseFactoryInterface` is deprecated.
@@ -430,7 +463,7 @@ public function createResponse(
 
 ### 3.5. HTML Web Views & Form Models (`yiisoft/yii-view-renderer`, `yiisoft/form-model`)
 
-For full-page web applications, inject `Yiisoft\Yii\View\Renderer\ViewRenderer` (or `WebViewRenderer`) for template rendering and `FormHydrator` for populating and validating HTML forms.
+For full-page web applications, inject `Yiisoft\Yii\View\Renderer\WebViewRenderer` — the current renderer (the older `ViewRenderer` is `@deprecated`, see the note at the end of this section) — for template rendering, and `FormHydrator` for populating and validating HTML forms.
 
 **The Form Model:**
 ```php
@@ -476,12 +509,12 @@ use Yiisoft\Http\Header;
 use Yiisoft\Http\Status;
 use Yiisoft\Router\UrlGeneratorInterface;
 use Yiisoft\Session\Flash\FlashInterface;
-use Yiisoft\Yii\View\Renderer\ViewRenderer;
+use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
 final readonly class ContactAction
 {
     public function __construct(
-        private ViewRenderer $viewRenderer,
+        private WebViewRenderer $webViewRenderer,
         private FormHydrator $formHydrator,
         private ContactUseCase $useCase,
         private FlashInterface $flash,
@@ -511,7 +544,7 @@ final readonly class ContactAction
 
         // Render HTML view with the form model
         // If POST failed validation, return 422 Unprocessable Entity
-        $response = $this->viewRenderer->render('contact/index', [
+        $response = $this->webViewRenderer->render('contact/index', [
             'form' => $form,
         ]);
 
@@ -526,14 +559,22 @@ final readonly class ContactAction
 
 > [!WARNING]
 > **The Form Name / Scope Trap:**
-> By default, `FormModel::getFormName()` returns the short class name (e.g. `'ContactForm'`). When `populateFromPostAndValidate()` is called, it looks for nested data: `$request->getParsedBody()['ContactForm']`.
-> If your HTML inputs are flat (e.g. `<input name="email">` instead of `<input name="ContactForm[email]">`), hydration will fail unless you pass `scope: ''` or override `getFormName(): string { return ''; }` in your form model.
+> `populateFromPostAndValidate()` accepts an optional `?string $scope = null` parameter. When omitted (`null`), the scope falls back to `FormModel::getFormName()`, which returns the short class name (e.g. `'ContactForm'`), so the hydrator looks for nested data: `$request->getParsedBody()['ContactForm']`.
+> If your HTML inputs are flat (e.g. `<input name="email">` instead of `<input name="ContactForm[email]">`), pass `scope: ''` — the empty string is the deliberate value meaning "use the whole parsed body array" — or override `getFormName(): string { return ''; }` in your form model.
+> Missing scope data is not silent: `populateFromPostAndValidate()` then deterministically returns `false` and validation is skipped. Always branch on the returned `bool` — that is the detection mechanism.
 
-**ViewRenderer Capabilities:**
-- Full layout rendering: `$this->viewRenderer->render('contact/index', ['form' => $form])`.
-- Partial rendering (no layout, for HTMX/AJAX/modals): `$this->viewRenderer->renderPartial('partial/_modal', [...])`.
-- Custom layout per action: `$this->viewRenderer->withLayout('layout/blank')->render('login', [...])`.
-- Setting HTTP status: Call `->withStatus(Status::BAD_REQUEST)` on the **returned `ResponseInterface`**, NOT on `$viewRenderer` itself (which does not have a `withStatus()` method).
+> [!TIP]
+> For layout configurations, page lifecycle, asset bundles, custom widgets, and DataView components (`GridView`, `ListView`, `DetailView`), see [Views, Layouts & Widgets Guide](views-and-widgets.md).
+
+**WebViewRenderer Capabilities:**
+- Full layout rendering: `$this->webViewRenderer->render('contact/index', ['form' => $form])` returns a typed `ResponseInterface` and sets `Content-Type: text/html; charset=UTF-8` (customizable via `withContentType()` / `withEncoding()`).
+- Partial rendering (no layout, for HTMX/AJAX/modals): `$this->webViewRenderer->renderPartial('partial/_modal', [...])`.
+- Custom layout per action: `$this->webViewRenderer->withLayout('@views/layout/blank.php')->render('login', [...])`. The `withLayout()` argument is the **full path or alias to the layout file** (e.g. `'@views/layout/blank.php'`), not a bare view name like `'layout/blank'`.
+- Controller-to-view path mapping: `$this->webViewRenderer->withController($this)` or `->withControllerName('contact')` prefixes relative view names.
+- Setting HTTP status: Call `->withStatus(Status::BAD_REQUEST)` on the **returned `ResponseInterface`**, NOT on the renderer itself (which does not have a `withStatus()` method).
+
+> [!IMPORTANT]
+> **`ViewRenderer` is deprecated.** The legacy `Yiisoft\Yii\View\Renderer\ViewRenderer` returns a `DataResponse` (which still implements `ResponseInterface`) and will be removed in a future version. Use `WebViewRenderer` in new code and migrate existing actions to it.
 
 ---
 
@@ -687,8 +728,12 @@ final readonly class ListPostsAction
 ```
 
 **Key Traps & Recommendations:**
-- `Sort::only(['col1', 'col2'])` ignores unconfigured field names submitted by clients, protecting against SQL injection and sorting crashes.
-- When calling `$paginator->read()`, if the requested page exceeds `$paginator->getTotalPages()`, it throws `Yiisoft\Data\Paginator\PageNotFoundException`. Always catch this exception to return HTTP 404 or redirect.
+- `Sort::only(['col1', 'col2'])` acts as a **field whitelist**: sort field names submitted by clients that are not in the list are silently dropped. This guarantees sorting happens only on configured fields — it is a whitelist, not a general SQL-injection protection mechanism.
+- `$paginator->read()` returns an `iterable` (a generator): `Yiisoft\Data\Paginator\PageNotFoundException` is thrown lazily on the first iteration, not at the `read()` call itself. Keep the consumption (`foreach` or `iterator_to_array()`) inside the `try` block, as in the example above. Note that `getTotalPages(): int` can legitimately be `0` for an empty data set.
+
+**Large Datasets & List Filtering:**
+- For very large tables, prefer `Yiisoft\Data\Paginator\KeysetPaginator`: its performance does not depend on the page number and results stay consistent under concurrent insertions and deletions. Trade-offs: no total-pages metadata, only "previous/next" navigation, and the data reader must stay sorted.
+- For list filtering, use the data reader's `withFilter(Yiisoft\Data\Reader\FilterInterface)` (the `FilterableDataInterface` contract) with composable filter objects from `Yiisoft\Data\Reader\Filter` (`Equals`, `In`, `Like`, `AndX`, `GreaterThan`, ...). Build filters from validated input, never from raw query strings.
 
 ---
 
@@ -744,24 +789,59 @@ final readonly class DeletePostAction
 }
 ```
 
+> [!CAUTION]
+> `CurrentUser::can()` has the signature `can(string|BackedEnum $permissionName, array $params = []): bool` and delegates to `Yiisoft\Access\AccessCheckerInterface` (backed by `yiisoft/rbac` in the application wiring). **When no access checker is attached, `can()` always returns `false`** — every permission check silently denies access. Make sure the application wires an access checker.
+> Related members: `getId(): ?string` returns `null` for guests (safe to use after the `isGuest()` check above), and `getIdentity(): IdentityInterface` is the accessor for the current identity object. The `IdentityInterface` contract itself ships in `yiisoft/auth`.
+
 **Authentication in Login Actions:**
-- **Web Session Login:**
-  ```php
-  $this->currentUser->login($identity);
-  ```
-- **Web Session Logout:**
-  ```php
-  $this->currentUser->logout();
-  ```
+- **Web Session Login:** `$this->currentUser->login($identity)` — exact signature `login(IdentityInterface $identity): bool`. On success it stores the identity and regenerates the session ID (session-fixation protection).
+- **Web Session Logout:** `$this->currentUser->logout(): bool`.
 - **API JWT Token Creation (`yiisoft/auth-jwt`):**
   ```php
+  use Jose\Component\Signature\Serializer\CompactSerializer;
   use Yiisoft\Auth\Jwt\TokenFactoryInterface;
 
   // Exact signature: create(array $payload, string $format, ?int $signatureIndex = null): string
-  $token = $this->tokenFactory->create(['sub' => $identity->getId()], 'jws_compact');
+  $token = $this->tokenFactory->create(['sub' => $identity->getId()], CompactSerializer::NAME);
   ```
   > [!CAUTION]
-  > The method on `TokenFactoryInterface` is `create()`, NOT `createToken()`. The `$format` argument must match a serializer name registered in `JWSSerializerManager`. The package's default config registers `Jose\Component\Signature\Serializer\CompactSerializer`, whose format name is `'jws_compact'` — if you add other serializers (e.g. flattened/general JSON), pass their names instead.
+  > The method on `TokenFactoryInterface` is `create()`, NOT `createToken()`. The `$format` argument must match the name of a serializer registered in `JWSSerializerManager`. The package's default config registers `Jose\Component\Signature\Serializer\CompactSerializer::class`, so pass its `CompactSerializer::NAME` constant — never hardcode a serializer name string. If you register additional serializers (e.g. flattened/general JSON), pass their `NAME` constants instead.
+
+#### CSRF Token (`yiisoft/csrf`)
+
+Inject `Yiisoft\Csrf\CsrfTokenInterface` to obtain the current CSRF token for embedding into forms or AJAX request headers:
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Action\Web\Comment;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\Csrf\CsrfTokenInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+
+final readonly class CommentFormAction
+{
+    public function __construct(
+        private CsrfTokenInterface $csrfToken,
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        return $this->responseFactory->createResponse([
+            'csrfToken' => $this->csrfToken->getValue(),
+        ]);
+    }
+}
+```
+
+**Key facts:**
+- The token is obtained **only** through the injected `CsrfTokenInterface::getValue(): string` — it is not exposed as a request attribute.
+- Validation is performed by the PSR-15 middleware `Yiisoft\Csrf\CsrfTokenMiddleware` (the old `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated`) placed before the action in the pipeline.
+- The token is read from the parsed body parameter `_csrf` first, then from the `X-CSRF-Token` header. Safe methods (`GET`, `HEAD`, `OPTIONS`) skip validation.
+- Failed validation produces a `422 Unprocessable Entity` response (or delegates to the custom failure handler passed to the middleware constructor).
 
 ---
 
@@ -811,12 +891,19 @@ final readonly class SetThemeAction
 > [!CAUTION]
 > 1. `Yiisoft\Cookies\Cookie` has **no static `create()` method**. Instantiate it via `new Cookie($name, $value)`.
 > 2. There is **no `SameSite` class or enum**. SameSite constants are located directly on the `Cookie` class: `Cookie::SAME_SITE_LAX`, `Cookie::SAME_SITE_STRICT`, `Cookie::SAME_SITE_NONE`.
+> 3. `withMaxAge()` accepts a `DateInterval` ONLY — passing an `int` (seconds) throws a `TypeError`.
 
 **Reading Cookies from Request:**
 ```php
 $cookies = $request->getCookieParams();
 $theme = $cookies['preferred_theme'] ?? 'light';
 ```
+
+**Cookie Deletion (idiom):** send a cookie with the same name and an expired date:
+```php
+return (new Cookie('preferred_theme'))->expire()->addToResponse($response);
+```
+For object-oriented access to request cookies, build a `Yiisoft\Cookies\CookieCollection` from `$request->getCookieParams()`. For tamper-proof values, the package provides `CookieSigner` and `CookieEncryptor` — consult the package README before wiring them into the DI config.
 
 **Session & Flash Messages (`yiisoft/session`):**
 ```php
@@ -829,6 +916,10 @@ $this->session->set('last_page', '/dashboard');
 $lastPage = $this->session->get('last_page', default: '/');
 $this->session->remove('last_page');
 ```
+
+**Session Regeneration:** call `$session->regenerateId(): void` after privilege-level changes (e.g. after login — `CurrentUser::login()` already does this) to mitigate session fixation.
+
+**Flash Method Set:** `FlashInterface` exposes exactly `get()`, `getAll()`, `set()`, `add()`, `remove()`, `removeAll()`, and `has()` — there is **no `delete()` method**. Note that `getAll()` is a consuming read: flash messages are removed automatically on the next request.
 
 ---
 
@@ -869,7 +960,10 @@ final readonly class NotifyUserAction
 ```
 
 > [!TIP]
-> Notice the named argument is `parameters:`, NOT `params:`. Passing `params:` in PHP 8 will result in an `Unknown named parameter $params` Fatal Error.
+> Notice the named argument is `parameters:`, NOT `params:`. Passing `params:` produces an `Unknown named parameter $params` fatal error — this is the PHP language consequence of a wrong named parameter, not a framework-level check.
+
+> [!TIP]
+> The default category is `app` and the default locale is `en-US`. Translating via an unregistered category does not throw — the raw message ID is returned as-is. For message sources, plural forms, locale switching, and category configuration, see [i18n & Translation Guide](i18n-translation.md).
 
 ---
 
@@ -879,27 +973,66 @@ Yii3 executes actions through `Yiisoft\Middleware\Dispatcher\MiddlewareFactory`.
 
 1. **Invokable Action Class (Best Practice):**
    ```php
-   Route::get('/users/{id:\d+}')->action(ViewUserAction::class)
+   (new \Yiisoft\Router\Route\Get('/users/{id:\d+}'))->action(ViewUserAction::class)
    ```
    Requires method `__invoke(ServerRequestInterface $request, ...): ResponseInterface`.
 2. **PSR-15 RequestHandlerInterface:**
    ```php
-   Route::get('/health')->action(HealthCheckHandler::class)
+   (new \Yiisoft\Router\Route\Get('/health'))->action(HealthCheckHandler::class)
    ```
    Requires method `handle(ServerRequestInterface $request): ResponseInterface`.
 3. **Controller Method Pair:**
    ```php
-   Route::get('/users')->action([UserController::class, 'index'])
+   (new \Yiisoft\Router\Route\Get('/users'))->action([UserController::class, 'index'])
    ```
    Requires method `index(ServerRequestInterface $request, ...): ResponseInterface`.
 
+> [!IMPORTANT]
+> `Route` is a normal class in the `Yiisoft\Router\Route` sub-namespace, not a static facade. The static factories `Route::get()`, `Route::post()`, `Route::put()`, `Route::delete()` (and the other HTTP verb helpers) are `@deprecated` — use `new \Yiisoft\Router\Route\Get(...)`, `new \Yiisoft\Router\Route\Post(...)`, etc. instead. Each accepts the URL pattern as the first constructor argument and supports named arguments such as `name:` and `action:`.
+
+**Route Argument Injection via `#[RouteArgument]`:**
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Action\User;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+use Yiisoft\Router\HydratorAttribute\RouteArgument;
+
+final readonly class ShowUserAction
+{
+    public function __construct(
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function __invoke(
+        ServerRequestInterface $request,
+        #[RouteArgument('id')]
+        ?string $id = null,
+    ): ResponseInterface {
+        return $this->responseFactory->createResponse(['id' => $id]);
+    }
+}
+```
+
+**Missing Route Argument Behavior:**
+- `CurrentRoute::getArgument('id')` returns `?string` — a missing route argument yields `null` (or the caller-provided default), never an exception.
+- With `#[RouteArgument('id')]`, a missing argument makes the attribute resolver fail: the action parameter keeps its declared default value (as above), or hydration fails when no default is declared.
+- `UrlGeneratorInterface::generate()` on an unknown route name throws `Yiisoft\Router\RouteNotFoundException`.
+
 **Parameter Resolution Rules:**
-- Parameters of action methods are resolved using `CompositeParametersResolver`:
-  - `ServerRequestInterface` and `RequestHandlerInterface` are passed automatically.
-  - DTO parameters extending `AbstractInput` are resolved by `RequestInputParametersResolver` (`yiisoft/input-http`).
-  - Route arguments can be injected into action parameters via `#[RouteArgument('id')]` (`Yiisoft\Router\HydratorAttribute\RouteArgument`, shipped in `yiisoft/router`).
-  - All other typed dependencies are resolved from the DI container via `Yiisoft\Injector\Injector`.
-- **Return Type Requirement:** The return value MUST implement `Psr\Http\Message\ResponseInterface`. Returning `null`, `void`, `array`, `string`, or `int` immediately throws `InvalidMiddlewareDefinitionException`.
+- `Yiisoft\Middleware\Dispatcher\MiddlewareFactory` itself passes `ServerRequestInterface` and `RequestHandlerInterface` into every action invocation — they are provided automatically by the factory wrappers, never by the parameters resolver chain.
+- Remaining named parameters are resolved by the application's `CompositeParametersResolver` (`Yiisoft\Middleware\Dispatcher\CompositeParametersResolver`), composed of `HydratorAttributeParametersResolver` and `RequestInputParametersResolver` (both from `yiisoft/input-http`):
+  - Parameters carrying hydrator parameter attributes (e.g. `#[RouteArgument('id')]`) are resolved by `HydratorAttributeParametersResolver`.
+  - DTO parameters implementing `RequestInputInterface` (e.g. `AbstractInput` subclasses) are resolved by `RequestInputParametersResolver`.
+  - All other class-typed dependencies are resolved from the DI container via `Yiisoft\Injector\Injector` — builtin-typed parameters are never container-resolved.
+- **Return Type Requirement:** Action methods MUST return `Psr\Http\Message\ResponseInterface`. The returned value is checked after execution (inside the middleware wrapper's `process()`): returning `null`, `void`, `array`, `string`, or `int` from an action method throws `Yiisoft\Middleware\Dispatcher\InvalidMiddlewareDefinitionException`. Plain callables registered as middleware may also legally return `MiddlewareInterface` or `RequestHandlerInterface`; action methods may not.
+
+> [!TIP]
+> **Error Handling & Exception Propagation:**
+> If an action or domain service throws an unhandled exception, it is caught by `Yiisoft\ErrorHandler\Middleware\ErrorCatcher` (package `yiisoft/error-handler`) and converted into an appropriate HTTP response. For exception responders and error templates, see [Error Handling Guide](error-handling.md).
 
 ---
 
@@ -908,19 +1041,34 @@ Yii3 executes actions through `Yiisoft\Middleware\Dispatcher\MiddlewareFactory`.
 | Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
 |---|---|---|
 | ❌ `class SiteController extends Controller` with `actionIndex()` | Yii3 does not have a monolithic `yii\web\Controller` base class. Actions are standalone handlers or PSR-15 middlewares. | ✅ Create a single-action invokable class: `final readonly class IndexAction { public function __invoke(ServerRequestInterface $request): ResponseInterface { ... } }`. |
-| ❌ Returning `array`, `string`, or `void` from Action | Yii3's `MiddlewareFactory` strictly expects `Psr\Http\Message\ResponseInterface`. Returning anything else throws `InvalidMiddlewareDefinitionException`. | ✅ Always return a PSR-7 `ResponseInterface` via `DataResponseFactoryInterface`, `ViewRenderer`, `WebViewRenderer`, or `ResponseFactoryInterface`. |
-| ❌ Injecting deprecated `Yiisoft\DataResponse\DataResponseFactoryInterface` or registering `Yiisoft\DataResponse\Middleware\ContentNegotiator` | Both are marked `@deprecated` in `yiisoft/data-response` and will be removed in a future release. | ✅ Inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` and use `Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware` with `JsonFormatter` / `XmlFormatter`. |
+| ❌ Returning `array`, `string`, or `void` from Action | Yii3's `MiddlewareFactory` strictly expects `Psr\Http\Message\ResponseInterface`. Returning anything else from an action method throws `InvalidMiddlewareDefinitionException` when the returned value is checked after execution. | ✅ Always return a PSR-7 `ResponseInterface` via `DataResponseFactoryInterface`, `WebViewRenderer`, or `ResponseFactoryInterface`. |
+| ❌ Injecting deprecated `Yiisoft\DataResponse\DataResponseFactoryInterface` or registering `Yiisoft\DataResponse\Middleware\ContentNegotiator` | Both are marked `@deprecated` in `yiisoft/data-response` and will be removed in a future version. | ✅ Inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` and use `Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware` with `JsonFormatter` / `XmlFormatter`. |
 | ❌ Calling `Yii::$app->...` anywhere in the Action | Yii3 completely eliminated global static service locators and `Yii::$app`. | ✅ Inject all dependencies explicitly via the Action constructor (`CurrentRoute`, `DataResponseFactoryInterface`, etc.). |
 | ❌ Reading route arguments via `$_GET['id']` or `$request->getAttribute('id')` | Route parameters in `yiisoft/router` are stored in `CurrentRoute`, not in `$_GET` or default request attributes. | ✅ Inject `Yiisoft\Router\CurrentRoute` and call `$currentRoute->getArgument('id')`. |
 | ❌ Instantiating cookies with nonexistent `Cookie::create(...)` | `Cookie::create()` does not exist in `yiisoft/cookies` and causes `Error: Call to undefined method`. | ✅ Instantiate via constructor: `new Cookie('name', 'val')` and mutate with `withMaxAge()`, `withPath()`, etc. |
 | ❌ Importing nonexistent enum `use Yiisoft\Cookies\SameSite;` | There is no `SameSite` class or enum in `yiisoft/cookies`. | ✅ Use class constants on `Cookie`: `Cookie::SAME_SITE_LAX`, `Cookie::SAME_SITE_STRICT`, `Cookie::SAME_SITE_NONE`. |
-| ❌ Calling nonexistent `TokenFactoryInterface::createToken(...)` | In `yiisoft/auth-jwt`, the method is `create(array $payload, string $format, ?int $signatureIndex = null)`. Calling `createToken()` causes a Fatal Error. | ✅ Call `$tokenFactory->create(['sub' => $id], 'jws_compact')`. |
+| ❌ Registering deprecated `Yiisoft\Csrf\CsrfMiddleware` | `CsrfMiddleware` is marked `@deprecated` in `yiisoft/csrf`. | ✅ Use `Yiisoft\Csrf\CsrfTokenMiddleware` (parsed body parameter `_csrf`, header `X-CSRF-Token`). |
+| ❌ Calling nonexistent `TokenFactoryInterface::createToken(...)` | In `yiisoft/auth-jwt`, the method is `create(array $payload, string $format, ?int $signatureIndex = null)`. Calling `createToken()` causes a Fatal Error. | ✅ Call `$tokenFactory->create(['sub' => $id], CompactSerializer::NAME)`. |
 | ❌ Calling nonexistent `DownloadResponseFactory::sendStream(...)` or `send(...)` | `DownloadResponseFactory` only exposes `sendStreamAsFile()`, `sendContentAsFile()`, `sendFile()`, and `xSendFile()`. Shorthand names cause Fatal Errors. | ✅ Call `$downloadFactory->sendStreamAsFile($stream, $name)` or `$downloadFactory->sendContentAsFile($content, $name)`. |
-| ❌ Calling `$this->viewRenderer->withStatus(404)->render(...)` | `ViewRenderer` and `WebViewRenderer` do not have a `withStatus()` method. | ✅ Call `withStatus()` on the returned response: `$this->viewRenderer->render(...)->withStatus(Status::NOT_FOUND)`. |
-| ❌ Forgetting `$form->getFormName()` scope in `populateFromPostAndValidate()` | By default, `FormModel::getFormName()` expects nested body data: `$body['FormName']['field']`. Flat form inputs will silently fail hydration. | ✅ If using flat form inputs, override `getFormName(): string { return ''; }` in the form model or pass `scope: ''` to `populateFromPostAndValidate()`. |
+| ❌ Calling `$this->webViewRenderer->withStatus(404)->render(...)` | `WebViewRenderer` and the deprecated `ViewRenderer` do not have a `withStatus()` method. | ✅ Call `withStatus()` on the returned response: `$this->webViewRenderer->render(...)->withStatus(Status::NOT_FOUND)`. |
+| ❌ Forgetting `$form->getFormName()` scope in `populateFromPostAndValidate()` | By default, `FormModel::getFormName()` expects nested body data: `$body['FormName']['field']`. When the scope key is missing from the parsed body, `populateFromPostAndValidate()` deterministically returns `false` and validation is skipped. | ✅ If using flat form inputs, override `getFormName(): string { return ''; }` in the form model or pass `scope: ''` to `populateFromPostAndValidate()`, and always branch on the returned `bool`. |
 | ❌ Direct SQL or Active Record / Cycle queries inside Actions | Violates Presentation Layer separation of concerns and bypasses business logic encapsulation. | ✅ Delegate all data fetching and persistence to Application Use Cases or Repository interfaces. |
 | ❌ Managing database transactions (`$db->transaction()`) inside Actions | Presentation layer should never control database transaction lifecycles. | ✅ Manage transaction boundaries inside Application Use Cases or Unit of Work services. |
 | ❌ Assuming JSON request bodies are parsed without `RequestBodyParser` middleware | PSR-7 does not decode JSON payloads natively; `$request->getParsedBody()` returns `null` without parsing middleware. | ✅ Add `Yiisoft\Request\Body\RequestBodyParser` middleware to the route group or application pipeline. |
 | ❌ Passing named parameter `params:` to `TranslatorInterface::translate()` | The parameter name in `TranslatorInterface::translate()` is `$parameters`. In PHP 8, passing `params:` throws an `Unknown named parameter` Fatal Error. | ✅ Call `$this->translator->translate($id, parameters: ['user' => $name])`. |
 | ❌ Ignoring `PageNotFoundException` when reading `OffsetPaginator` | When `$page > $paginator->getTotalPages()`, `$paginator->read()` throws `PageNotFoundException`. An unhandled exception yields a 500 server error. | ✅ Wrap `$paginator->read()` in `try ... catch (PageNotFoundException)` and return HTTP 404 or redirect. |
 | ❌ Using Yii2 `$model->load($_POST)` or `$model->validate()` on DTOs | Yii3 DTOs do not extend `yii\base\Model` and do not have `load()` or `validate()` methods. | ✅ Use `HydratorInterface::create(Dto::class, (array) $request->getParsedBody())` and `ValidatorInterface::validate($dto)`. |
+
+---
+
+## 5. Related Topic Guides
+
+- [Routing Guide](routes.md) — Route definition, FastRoute patterns, and URL generation.
+- [PSR-15 Middlewares Guide](middlewares.md) — Middleware pipeline ordering, authentication guards, and request manipulation.
+- [Views, Layouts & Widgets Guide](views-and-widgets.md) — HTML view templates, layouts, asset bundles, and DataView widgets.
+- [Error Handling Guide](error-handling.md) — Exception catching, status code responders, and error presentation formats.
+- [Validation & Forms Guide](validation-and-forms.md) — Input validation, FormModel hydration, and DTO rules.
+- [OpenAPI & Swagger Guide](openapi-swagger.md) — Documenting API action endpoints, request bodies, and schemas with PHP 8 attributes.
+- [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and CSRF state management in depth.
+- [i18n & Translation Guide](i18n-translation.md) — Message sources, categories, plural forms, and locale handling.
+

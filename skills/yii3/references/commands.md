@@ -1,10 +1,12 @@
 # Yii3 Console Commands Guide
 
 > Practical guide and implementation recipes for CLI commands, interactive terminal UX, lazy registration, argument parsing, error handling, and automated testing using `yiisoft/yii-console`, `yiisoft/yii-runner-console`, and `symfony/console`.
->
-> **Source of Truth & Verification Rule for AI Models:**
-> In projects using this extension, always verify exact method signatures, constructor arguments, and options directly in `vendor/yiisoft/<package>/src/` for installed packages.
-> When generating code, if an installed package's method signature or property is unfamiliar or in doubt, **read its source files in `vendor/yiisoft/<package>/src/`** rather than guessing or relying on Yii2 habits.
+
+**Installation** (bare project):
+```bash
+composer require yiisoft/yii-console yiisoft/yii-runner-console
+```
+Requiring `yiisoft/yii-runner-console` alone is sufficient — it pulls in `yiisoft/yii-console` and `yiisoft/yii-runner` transitively. The console application template (`yiisoft/app-console`) already includes both.
 
 ---
 
@@ -19,6 +21,7 @@
 - [8. Testing Console Commands (CommandTester)](#8-testing-console-commands-commandtester)
 - [9. Built-in Ecosystem Commands](#9-built-in-ecosystem-commands)
 - [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
+- [11. Related Topic Guides](#11-related-topic-guides)
 
 ---
 
@@ -31,17 +34,20 @@ CLI Invocation (`./yii user:create admin@example.com "Super Admin" --role=admin`
        │
        ▼
 ConsoleApplicationRunner (`Yiisoft\Yii\Runner\Console\ConsoleApplicationRunner`)
-       │ Boots DI container, merges params-console, di-console, events-console
+       │ Boots DI container; yiisoft/config merges the seven console config groups
+       │ (params-console, di-console, events-console, bootstrap-console,
+       │  di-providers-console, di-delegates-console, di-tags-console)
        ▼
 Application (`Yiisoft\Yii\Console\Application` extends Symfony Console Application)
        │ Dispatches `Yiisoft\Yii\Console\Event\ApplicationStartup`
        ▼
 CommandLoader (`Yiisoft\Yii\Console\CommandLoader` implements CommandLoaderInterface)
-       │ Lazy-resolves command instance from PSR-11 Container only upon execution
+       │ Resolves command from PSR-11 Container — lazily when a description
+       │ exists (LazyCommand), eagerly otherwise
        ▼
 Command (`Symfony\Component\Console\Command\Command`)
        │ 1. Parses & validates CLI input ($input->getArgument(), $input->getOption())
-       │ 2. Prompts interactive input ($io->ask(), $io->confirm()) if interactive
+       │ 2. Prompts interactive input ($io->confirm(), QuestionHelper) if interactive
        │ 3. Delegates business logic to Application Use Case / Handler DTO
        ▼
 Application Layer (Use Case / Domain Service / Command Handler)
@@ -62,9 +68,9 @@ Operating System Process Exit ($exitCode)
 | Permitted in Commands (Presentation) | Strictly Forbidden in Commands (Domain Leaks) |
 |---|---|
 | Parse CLI arguments, options, and environmental flags | ❌ Direct SQL queries, Cycle ORM or persistence layer calls |
-| Interactive user confirmation, secret inputs, choice prompts | ❌ Database transaction management (`$db->transaction()`) |
+| Interactive user confirmation and question prompts (`confirm()`, `QuestionHelper`) | ❌ Database transaction management (`$db->transaction()`) |
 | Syntax validation and argument type coercion | ❌ Business rules, domain invariants, core calculations |
-| Progress bars, status spinners, formatted tables, listings | ❌ Calling `exit()` or `die()` directly (skips events & runners) |
+| Formatted tables, status banners, verbosity-scoped output | ❌ Calling `exit()` or `die()` directly (skips events & runners) |
 | Invoking Application Use Cases / CQRS Command Handlers | ❌ Direct `echo`, `print`, or raw unbuffered terminal writes |
 | Translating domain exceptions into friendly CLI error messages | ❌ Hardcoding raw magic integers as exit codes (e.g. `return 1;`) |
 
@@ -75,6 +81,43 @@ Yii3 console dispatches explicit lifecycle events during execution:
 2. `Yiisoft\Yii\Console\Event\ApplicationShutdown`: Dispatched in the `finally` block of `ConsoleApplicationRunner`. Carries `getExitCode(): int` before the PHP process exits.
 3. Symfony Console Events: Standard Symfony events (`ConsoleCommandEvent`, `ConsoleErrorEvent`, `ConsoleTerminateEvent`) are bridged to the PSR-14 event dispatcher via `Yiisoft\Yii\Console\SymfonyEventDispatcher`.
 
+### Subscribing to Lifecycle Events
+
+Listeners are registered in the `events-console` configuration group — a `config/events-console.php` file returning a map of event class to listener list:
+
+```php
+// config/events-console.php
+declare(strict_types=1);
+
+use App\Application\Console\AuditTrailListener;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
+use Yiisoft\Yii\Console\Event\ApplicationShutdown;
+use Yiisoft\Yii\Console\Event\ApplicationStartup;
+
+return [
+    ApplicationStartup::class => [
+        [AuditTrailListener::class, 'onStartup'],
+    ],
+    ApplicationShutdown::class => [
+        [AuditTrailListener::class, 'onShutdown'],
+    ],
+    ConsoleTerminateEvent::class => [
+        // Closures are supported too; closure parameters are resolved from the DI container.
+        static function (LoggerInterface $logger): void {
+            // e.g. flush buffered log messages on termination
+        },
+    ],
+];
+```
+
+Wiring details:
+
+- Listener formats: `[Class::class, 'method']` (called from the container instance or statically) and closures/invokables. The events are collected from the `events-console` group (plus its nested `events` groups) and converted into a PSR-14 listener collection by `yiisoft/yii-event`.
+- The dispatcher is wired automatically by `yiisoft/yii-console`: its default `di-console.php` sets `Yiisoft\Yii\Console\SymfonyEventDispatcher` on the `Application`, which delegates every dispatch to the PSR-14 dispatcher. Without a dispatcher configured, lifecycle events are not dispatched at all.
+- Real-world examples: `yiisoft/yii-debug` subscribes `Debugger::start` to `ApplicationStartup` and `Debugger::stop` to `ApplicationShutdown` (see `vendor/yiisoft/yii-debug/config/events-console.php`); `yiisoft/log` registers a closure that flushes the logger on `ConsoleTerminateEvent` (see `vendor/yiisoft/log/config/events-console.php`).
+- Nuances: `ApplicationStartup` is dispatched only when the application `start()` receives CLI input, and it carries the first raw argv token (e.g. `serve`), not the resolved command name; `ApplicationShutdown` fires in the runner's `finally` block carrying the final exit code.
+
 ---
 
 ## 2. Command Class Anatomy & Constructor Injection
@@ -83,7 +126,7 @@ Yii3 console commands extend `Symfony\Component\Console\Command\Command`. All de
 
 > [!IMPORTANT]
 > **Mandatory Parent Constructor Call:**
-> In Symfony Console and Yii3, command constructors **must** invoke `parent::__construct()`. Failing to call `parent::__construct()` leaves the underlying command definition, helper set, and input definition uninitialized, causing fatal runtime crashes.
+> In Symfony Console and Yii3, command constructors **must** invoke `parent::__construct()`. Every command across the official `yiisoft/*` packages follows this rule (per Symfony Console documentation, skipping the call leaves the command definition, helper set, and input definition uninitialized).
 
 ### Zero-Shot Compilable Domain & Use Case Companion Classes
 
@@ -208,34 +251,26 @@ final class CreateUserCommand extends Command
             ->setHelp(
                 <<<'HELP'
                 The <info>user:create</info> command provisions a new system user:
-                  <comment>./yii user:create user@example.com "John Doe" --role=admin</comment>
+                  <info>./yii user:create user@example.com "John Doe" --role=admin</info>
 
                 To skip welcome notification delivery:
-                  <comment>./yii user:create user@example.com "John Doe" --no-welcome</comment>
+                  <info>./yii user:create user@example.com "John Doe" --no-welcome</info>
                 HELP,
             )
-            ->addArgument(
-                name: 'email',
-                mode: InputArgument::REQUIRED,
-                description: 'The unique email address of the user.',
-            )
-            ->addArgument(
-                name: 'name',
-                mode: InputArgument::REQUIRED,
-                description: 'The full display name of the user.',
+            ->addArgument('email', InputArgument::REQUIRED, 'The unique email address of the user.')
+            ->addArgument('name', InputArgument::REQUIRED, 'The full display name of the user.')
+            ->addOption(
+                'role',
+                'r',
+                InputOption::VALUE_OPTIONAL,
+                'User access role (admin, manager, user).',
+                'user',
             )
             ->addOption(
-                name: 'role',
-                shortcut: 'r',
-                mode: InputOption::VALUE_OPTIONAL,
-                description: 'User access role (admin, manager, user).',
-                default: 'user',
-            )
-            ->addOption(
-                name: 'no-welcome',
-                shortcut: null,
-                mode: InputOption::VALUE_NONE,
-                description: 'Suppress sending the welcome email to the user.',
+                'no-welcome',
+                null,
+                InputOption::VALUE_NONE,
+                'Suppress sending the welcome email to the user.',
             );
     }
 
@@ -262,7 +297,7 @@ final class CreateUserCommand extends Command
         $sendWelcome = !$input->getOption('no-welcome');
 
         $io->title('Provisioning User Account');
-        $io->text(sprintf('Email: <info>%s</info> | Name: <info>%s</info> | Role: <comment>%s</comment>', $email, $name, $role));
+        $io->writeln(sprintf('Email: <info>%s</info> | Name: <info>%s</info> | Role: %s', $email, $name, $role));
 
         // Basic syntax/input verification before invoking application domain
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -298,9 +333,8 @@ final class CreateUserCommand extends Command
             return ExitCode::UNSPECIFIED_ERROR;
         } catch (Throwable $e) {
             $io->error('Failed to create user account: ' . $e->getMessage());
-            if ($output->isVerbose()) {
-                $io->text($e->getTraceAsString());
-            }
+            // Shown only with -v / --verbose (OutputInterface::VERBOSITY_VERBOSE)
+            $output->writeln($e->getTraceAsString(), OutputInterface::VERBOSITY_VERBOSE);
             return ExitCode::UNSPECIFIED_ERROR;
         }
     }
@@ -315,88 +349,67 @@ Arguments and options define the command line interface contract.
 
 ### 3.1. Input Arguments (`InputArgument`)
 
-Method signature:
-```php
-public function addArgument(
-    string $name,
-    ?int $mode = null,
-    string $description = '',
-    mixed $default = null,
-): static
-```
-
-| Mode Constant | Value | Description |
-|---|---|---|
-| `InputArgument::REQUIRED` | `1` | Must be provided by the caller; throws runtime error if omitted. |
-| `InputArgument::OPTIONAL` | `2` | Optional value; falls back to `$default` when omitted. |
-| `InputArgument::IS_ARRAY` | `4` | Accepts multiple space-separated trailing arguments (returns `array<string>`). |
-| `InputArgument::OPTIONAL \| InputArgument::IS_ARRAY` | `6` | Optional array of arguments (e.g. `files...`). |
-| `InputArgument::REQUIRED \| InputArgument::IS_ARRAY` | `5` | Required array: must provide at least one item, accepts multiple. |
+`addArgument()` is defined by `Symfony\Component\Console\Command\Command` (see the Symfony Console documentation for the exact signature). Official packages call it in the **positional** form — name, mode, description, default:
 
 ```php
 $this
+    ->addArgument('target', InputArgument::REQUIRED, 'Primary deployment target environment.')
     ->addArgument(
-        name: 'target',
-        mode: InputArgument::REQUIRED,
-        description: 'Primary deployment target environment.',
-    )
-    ->addArgument(
-        name: 'services',
-        mode: InputArgument::IS_ARRAY | InputArgument::OPTIONAL,
-        description: 'Specific microservices to deploy (leave empty for all).',
-        default: [],
+        'services',
+        InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
+        'Specific microservices to deploy (leave empty for all).',
+        [],
     );
 ```
 
+| Mode Constant | Description |
+|---|---|
+| `InputArgument::REQUIRED` | Must be provided by the caller; throws runtime error if omitted. |
+| `InputArgument::OPTIONAL` | Optional value; falls back to the default when omitted. |
+| `InputArgument::IS_ARRAY` | Accepts multiple space-separated trailing arguments (returns an array of strings). |
+| `InputArgument::OPTIONAL \| InputArgument::IS_ARRAY` | Optional array of arguments with an empty-array default — the combination used by `yiisoft/queue` (`queue:run [queue...]`). |
+| `InputArgument::REQUIRED \| InputArgument::IS_ARRAY` | Required array: at least one item. Not used in official `yiisoft/*` package sources; see the Symfony Console documentation. |
+
 ### 3.2. Input Options (`InputOption`)
 
-Method signature:
-```php
-public function addOption(
-    string $name,
-    string|array|null $shortcut = null,
-    ?int $mode = null,
-    string $description = '',
-    mixed $default = null,
-): static
-```
+`addOption()` is defined by `Symfony\Component\Console\Command\Command` (see the Symfony Console documentation for the exact signature). Official packages call it in the **positional** form — name, shortcut, mode, description, default:
 
-| Mode Constant | Value | Description | CLI Usage Example |
-|---|---|---|---|
-| `InputOption::VALUE_NONE` | `1` | Boolean flag. Returns `true` if passed, `false` otherwise. | `--force`, `-f` |
-| `InputOption::VALUE_REQUIRED` | `2` | Must receive a value when option is specified. | `--limit=50`, `-l 50` |
-| `InputOption::VALUE_OPTIONAL` | `4` | Option may or may not have an explicit value. | `--output` or `--output=json` |
-| `InputOption::VALUE_IS_ARRAY` | `8` | Can be specified multiple times; values gathered into an array. | `--tag=v1 --tag=v2` |
-| `InputOption::VALUE_NEGATABLE` | `16` | Generates both `--foo` and `--no-foo` toggles automatically. | `--ansi` / `--no-ansi` |
+| Mode Constant | Description | CLI Usage Example |
+|---|---|---|
+| `InputOption::VALUE_NONE` | Boolean flag; the option carries no value. | `--force`, `-f` |
+| `InputOption::VALUE_REQUIRED` | Must receive a value when option is specified. | `--limit=50`, `-l 50` |
+| `InputOption::VALUE_OPTIONAL` | Option may or may not have an explicit value. | `--output` or `--output=json` |
+| `InputOption::VALUE_IS_ARRAY` | Can be specified multiple times; values gathered into an array (combine with `VALUE_REQUIRED` as in db-migration's `--path`). | `--path=a --path=b` |
+| `InputOption::VALUE_NEGATABLE` | Generates both `--foo` and `--no-foo` toggles automatically (documented in db-migration for `--transactional` / `--no-transactional`). | `--notifications` / `--no-notifications` |
 
 ```php
 $this
     ->addOption(
-        name: 'dry-run',
-        shortcut: 'd',
-        mode: InputOption::VALUE_NONE,
-        description: 'Simulate changes without persisting to the database.',
+        'dry-run',
+        'd',
+        InputOption::VALUE_NONE,
+        'Simulate changes without persisting to the database.',
     )
     ->addOption(
-        name: 'batch-size',
-        shortcut: 'b',
-        mode: InputOption::VALUE_REQUIRED,
-        description: 'Number of records processed per transaction chunk.',
-        default: 100,
+        'batch-size',
+        'b',
+        InputOption::VALUE_REQUIRED,
+        'Number of records processed per transaction chunk.',
+        100,
     )
     ->addOption(
-        name: 'exclude',
-        shortcut: 'x',
-        mode: InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
-        description: 'Exclude specific service keys from synchronization.',
-        default: [],
+        'exclude',
+        'x',
+        InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+        'Exclude specific service keys from synchronization.',
+        [],
     )
     ->addOption(
-        name: 'notifications',
-        shortcut: null,
-        mode: InputOption::VALUE_NEGATABLE,
-        description: 'Enable or disable outbound notifications (--notifications / --no-notifications).',
-        default: true,
+        'notifications',
+        null,
+        InputOption::VALUE_NEGATABLE,
+        'Enable or disable outbound notifications (--notifications / --no-notifications).',
+        true,
     );
 ```
 
@@ -418,6 +431,9 @@ public function complete(CompletionInput $input, CompletionSuggestions $suggesti
 }
 ```
 
+> [!NOTE]
+> The argument variant `mustSuggestArgumentValuesFor()` is exercised in official package sources (`vendor/yiisoft/yii-console/src/Command/Serve.php` uses it to complete the `serve` address argument). The option variant `mustSuggestOptionValuesFor()` belongs to the same Symfony Console completion API (see Symfony documentation).
+
 ---
 
 ## 4. Configuration & Lazy Command Registration
@@ -426,9 +442,9 @@ Yii3 avoids instantiating all command classes on every CLI launch. Commands are 
 
 ### 4.1. Configuration Syntax (`config/console/params.php`)
 
-In the official application templates, commands are registered in `config/console/params.php`. The
+In the official application templates, commands are registered in the params configuration. The web template (`yiisoft/app`) uses `config/console/params.php`; the console template (`yiisoft/app-console`) has no `console/` subdirectory and uses `config/params.php`. The
 `yiisoft/yii-console` package itself ships its defaults in a `params-console.php` config group
-(merged automatically by `yiisoft/config`) — override in the application's `config/console/params.php`,
+(merged automatically by `yiisoft/config`) — override in the application's params file,
 not in `vendor/`.
 
 Commands are configured under the `'yiisoft/yii-console' => ['commands' => [...]]` key:
@@ -462,19 +478,59 @@ return [
 
 ### 4.2. How `CommandLoader` Resolves Commands
 
-The `Yiisoft\Yii\Console\CommandLoader` handles lazy loading:
-1. **Description extraction without instantiation:** It inspects the `#[AsCommand]` attribute on the command class so that `./yii list` displays command descriptions without resolving command constructor dependencies from the DI container.
-2. **Name and aliases priority:** The command name, aliases, and hidden status defined in the `commands` array configuration **always override** names specified in the PHP class attribute.
-3. **Lazy instantiation:** The PSR-11 container only instantiates the command class when the user actually invokes that specific command.
+The `Yiisoft\Yii\Console\CommandLoader` handles loading:
+1. **Description extraction without instantiation:** It reads the `#[AsCommand]` attribute on the command class (on Symfony Console < 8, the legacy `getDefaultDescription()` method) so that `./yii list` displays command descriptions without resolving command constructor dependencies from the DI container.
+2. **Name and aliases priority:** The command name, aliases, and hidden status defined in the `commands` array configuration **always override** names specified in the PHP class attribute. Nuance: the hidden flag from the map is applied to the lazy command wrapper; it is not pushed onto eagerly instantiated command instances.
+3. **Lazy instantiation with an eager fallback:** When a description is available, the loader wraps the command in `Symfony\Component\Console\Command\LazyCommand` and resolves it from the PSR-11 container only when the user actually invokes that specific command. Without a description, the loader instantiates the command class immediately (including during `./yii list`).
 
 > [!WARNING]
 > **Avoid Eager Instantiation Pitfall:**
-> Always annotate your Command class with `#[AsCommand(description: '...')]`. If a command class lacks both `#[AsCommand]` description and legacy `getDefaultDescription()`, `CommandLoader` cannot construct a `Symfony\Component\Console\Command\LazyCommand`. It falls back to eagerly instantiating your command class immediately during `./yii list`, loading all injected database and network services prematurely.
+> Always annotate your Command class with `#[AsCommand(description: '...')]`. If `CommandLoader` cannot obtain a description (no `#[AsCommand]` description, or on Symfony Console < 8 no `getDefaultDescription()` method), it skips `LazyCommand` and eagerly instantiates your command class immediately during `./yii list`, loading all injected database and network services prematurely.
 
 > [!TIP]
 > Keep the `name` in `#[AsCommand(name: 'user:create')]` identical to the primary array key in `commands` configuration to prevent discrepancies across tools and static analyzers.
 
-### 4.3. Console Application Entry Point (`./yii`)
+### 4.3. Wiring Commands Through DI (`config/di-console.php`)
+
+Command names live in params, but the instances are created by the DI container. The package's default `di-console.php` binds `Symfony\Component\Console\CommandLoader\CommandLoaderInterface` to `Yiisoft\Yii\Console\CommandLoader` and feeds it the `commands` map from params:
+
+```php
+// Excerpt of the defaults shipped by yiisoft/yii-console (config/di-console.php)
+use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
+use Yiisoft\Yii\Console\CommandLoader;
+
+/** @var array $params */
+
+return [
+    CommandLoaderInterface::class => [
+        'class' => CommandLoader::class,
+        '__construct()' => [
+            'commandMap' => $params['yiisoft/yii-console']['commands'],
+        ],
+    ],
+];
+```
+
+Commands whose constructor only declares class-typed dependencies need no explicit definition — the container autowires them. When a command needs explicit constructor values, define it in `di-console.php` the same way the package defines its own `Serve` command:
+
+```php
+// Excerpt of the defaults shipped by yiisoft/yii-console (config/di-console.php)
+use Yiisoft\Yii\Console\Command\Serve;
+
+return [
+    Serve::class => [
+        'class' => Serve::class,
+        '__construct()' => [
+            'appRootPath' => $params['yiisoft/yii-console']['serve']['appRootPath'],
+            'options' => $params['yiisoft/yii-console']['serve']['options'],
+        ],
+    ],
+];
+```
+
+The `CommandLoader` resolves command classes through the PSR-11 container (`$container->get($commandClass)`), so explicit definitions, autowiring, and DI providers all apply to commands.
+
+### 4.4. Console Application Entry Point (`./yii`)
 
 In Yii3 applications, the CLI entry point runs via `Yiisoft\Yii\Runner\Console\ConsoleApplicationRunner`:
 
@@ -497,16 +553,43 @@ $runner = new ConsoleApplicationRunner(
 $runner->run();
 ```
 
+The official `yiisoft/app-console` template passes `debug: (bool) $_ENV['YII_DEBUG']` and `checkEvents: (bool) $_ENV['YII_DEBUG']` without `?? false` fallbacks: its `autoload.php` normalizes the environment, defaulting `YII_DEBUG` to `true` and `YII_ENV` to `null` when unset. The `?? false` fallbacks above are a defensive variant — keep the normalization consistent with your template.
+
+The full constructor of `ConsoleApplicationRunner` (every parameter except `rootPath` has a default):
+
+| Parameter | Default | Purpose |
+|---|---|---|
+| `string $rootPath` | *(required)* | Absolute path to the project root. |
+| `bool $debug` | `false` | Debug mode. |
+| `bool $checkEvents` | `false` | Validate events configuration at boot. |
+| `?string $environment` | `null` | Environment name. |
+| `string $bootstrapGroup` | `'bootstrap-console'` | Bootstrap config group. |
+| `string $eventsGroup` | `'events-console'` | Events config group. |
+| `string $diGroup` | `'di-console'` | Container definitions group. |
+| `string $diProvidersGroup` | `'di-providers-console'` | DI providers group. |
+| `string $diDelegatesGroup` | `'di-delegates-console'` | DI delegates group. |
+| `string $diTagsGroup` | `'di-tags-console'` | DI tags group. |
+| `string $paramsGroup` | `'params-console'` | Params config group. |
+| `array $nestedParamsGroups` | `['params']` | Groups nested into the params group. |
+| `array $nestedEventsGroups` | `['events']` | Groups nested into the events group. |
+| `array $configModifiers` | `[]` | Config modifiers. |
+| `string $configDirectory` | `'config'` | Config storage location (relative to root). |
+| `string $vendorDirectory` | `'vendor'` | Vendor directory (relative to root). |
+| `string $configMergePlanFile` | `'.merge-plan.php'` | Merge plan file (relative to config directory). |
+
+The runner has no logger parameter; loggers reach console components through DI (for example, `Yiisoft\Yii\Console\ErrorListener` accepts an optional PSR-3 logger in its constructor).
+
 Executing commands via CLI:
 ```bash
 ./yii user:create admin@example.com "Super Admin" --role=admin
 ```
 
 > [!NOTE]
-> `Yiisoft\Yii\Console\Application` automatically registers a built-in `--config` option (`di-console.php`), allowing you to switch configuration environments at runtime:
+> `Yiisoft\Yii\Console\Application` has a `--config` option registered by its default DI definition (an `InputOption` with `VALUE_REQUIRED` and the help text "Set alternative configuration name", added via `Application::addOptions()` in `di-console.php`, so it shows up in `./yii --help`):
 > ```bash
 > ./yii --config=testing user:create test@example.com "Tester"
 > ```
+> The option's value is not consumed by `yiisoft/yii-console` itself — wiring it to an alternative configuration name is up to the application (e.g. by reading it in a config modifier or a custom runner). Do not assume built-in runtime configuration switching.
 
 ---
 
@@ -525,41 +608,38 @@ $io = new SymfonyStyle($input, $output);
 $io->title('User Maintenance & Catalog Sync');
 $io->section('Phase 1: Validating Remote Endpoints');
 
-// Informational blocks
-$io->text('Starting background catalog fetch from vendor upstream.');
-$io->comment('API latency: 120ms.');
+// Informational output
+$io->writeln('Starting background catalog fetch from vendor upstream.');
 
 // Status banners
 $io->success('Catalog synchronized successfully.');
 $io->warning('3 product images failed to download.');
 $io->error('Database connection timed out.');
 $io->note('Run with --verbose for detailed payload dumps.');
-$io->caution('This operation cannot be undone.');
 
 // Spacing
-$io->newLine(2);
+$io->newLine();
 ```
 
-### 5.2. Tables & Structured Listings
+> [!NOTE]
+> `SymfonyStyle` offers more styling methods (`text()`, `comment()`, `caution()`, `newLine()` with an argument, `listing()` — see Symfony Console documentation). The methods shown above are the ones exercised across official `yiisoft/*` package sources; prefer them for proven behavior.
+
+### 5.2. Tables & Structured Output
 
 ```php
-// Render aligned ASCII table
+// Render aligned ASCII table (header cells may be null)
 $io->table(
-    headers: ['ID', 'Email', 'Role', 'Status', 'Created At'],
-    rows: [
-        ['1', 'admin@example.com', 'admin', '<fg=green>Active</>', '2026-01-15'],
-        ['2', 'manager@example.com', 'manager', '<fg=green>Active</>', '2026-02-01'],
-        ['3', 'guest@example.com', 'user', '<fg=yellow>Pending</>', '2026-03-10'],
+    ['ID', 'Email', 'Role', 'Status'],
+    [
+        ['1', 'admin@example.com', 'admin', '<fg=cyan>Active</>'],
+        ['2', 'manager@example.com', 'manager', '<fg=cyan>Active</>'],
+        ['3', 'guest@example.com', 'user', '<fg=yellow>Pending</>'],
+        ['4', 'bot@example.com', 'service', '<fg=red>Blocked</>'],
     ],
 );
-
-// Bulleted listing
-$io->listing([
-    'Step 1: Verified token permissions',
-    'Step 2: Cleaned orphaned schema records',
-    'Step 3: Rebuilt search indexes',
-]);
 ```
+
+Formatting tags verified in official package sources: `<info>`, `<error>`, `<fg=red>`, `<fg=yellow>`, `<fg=cyan>`, `<fg=magenta>`, `<fg=blue>` (see `vendor/yiisoft/yii-console/src/Application.php` and the yii-gii generate commands).
 
 ### 5.3. Interactive Prompts & Questions
 
@@ -567,98 +647,98 @@ $io->listing([
 > **Non-Interactive CI Safety:**
 > Always verify `$input->isInteractive()` or provide default values for unattended environments (Cron, Docker entrypoints, CI/CD pipelines). In automated runs, interactive prompts either block indefinitely or throw exceptions.
 
+Confirmation (both two-argument and one-argument forms are used in official packages):
+
 ```php
-// Standard text prompt
-$username = $io->ask(
-    question: 'Enter username',
-    default: 'guest',
-    validator: static function (?string $value): string {
-        if (empty($value) || strlen($value) < 3) {
-            throw new \RuntimeException('Username must be at least 3 characters.');
-        }
-        return $value;
-    },
-);
-
-// Hidden input for sensitive data (passwords, secret API tokens)
-$secretKey = $io->askHidden(
-    question: 'Enter API Secret Key:',
-    validator: static function (?string $value): string {
-        if (empty($value)) {
-            throw new \RuntimeException('Secret key cannot be empty.');
-        }
-        return $value;
-    },
-);
-
-// Confirmation prompt (yes/no)
-$confirmed = $io->confirm(
-    question: 'Do you want to truncate the audit log table?',
-    default: false,
-);
+$confirmed = $io->confirm('Do you want to truncate the audit log table?', false);
 
 if (!$confirmed) {
     $io->warning('Operation aborted by user.');
     return ExitCode::OK;
 }
-
-// Choice selection
-$environment = $io->choice(
-    question: 'Select deployment target',
-    choices: ['staging', 'production', 'testing'],
-    default: 'staging',
-);
 ```
 
-### 5.4. Progress Bars for Batch Processing
+A force flag instead of a prompt — the pattern used by `yiisoft/db-migration` (`--force-yes, -y`):
 
-For long-running tasks, render progress bars to prevent perceived freezing.
-
-#### Simple Progress Tracking
 ```php
-$io->progressStart(count($items));
-
-foreach ($items as $item) {
-    $this->processor->process($item);
-    $io->progressAdvance();
+if ($input->getOption('force-yes') || $io->confirm('Remove all migration history entries?', false)) {
+    // Proceed without asking; safe for CI when the flag is passed.
 }
-
-$io->progressFinish();
-$io->newLine();
-$io->success('All items processed successfully.');
 ```
 
-#### Detailed Progress Bar with Verbose Formatting
-```php
-$progressBar = $io->createProgressBar(count($records));
-$progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% (%elapsed:6s%/%estimated:-6s%) %memory:6s% -- %message%');
-$progressBar->setMessage('Initializing batch...');
-$progressBar->start();
+Prompt only when interactive — the pattern used by yii-gii and `yiisoft/yii-cycle` migrations:
 
+```php
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
+
+// ...
+
+if ($input->isInteractive()) {
+    $question = new ConfirmationQuestion('Apply the above migrations? (yes|no) ', false);
+    /** @var QuestionHelper $helper */
+    $helper = $this->getHelper('question');
+    if (!$helper->ask($input, $output, $question)) {
+        return ExitCode::OK;
+    }
+}
+```
+
+For richer questions (free-text, hidden input, choice lists), the helper API exercised across official packages is Symfony's `QuestionHelper` with `Question` / `ConfirmationQuestion` / `ChoiceQuestion`:
+
+```php
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Question\Question;
+
+/** @var QuestionHelper $helper */
+$helper = $this->getHelper('question');
+$question = new Question('Please enter a number between 0 and 100: ');
+$answer = $helper->ask($input, $output, $question);
+```
+
+> [!NOTE]
+> `SymfonyStyle` also exposes `ask()`, `askHidden()`, and `choice()` convenience methods (see Symfony Console documentation); they are not exercised in official `yiisoft/*` package sources, which use `confirm()` and the `QuestionHelper` API shown above.
+
+### 5.4. Long-Running Output & Non-Interactive Runs
+
+For long-running tasks, report progress with verbosity-scoped output so that normal runs stay quiet while `-v / --verbose` shows details (the pattern used by `yiisoft/yii-console`'s `Serve` command):
+
+```php
 foreach ($records as $record) {
-    $progressBar->setMessage(sprintf('Processing record ID #%d', $record->getId()));
     $this->processor->process($record);
-    $progressBar->advance();
+    $output->writeln(
+        sprintf('Processed record ID #%d', $record->getId()),
+        OutputInterface::VERBOSITY_VERBOSE,
+    );
 }
 
-$progressBar->setMessage('Completed');
-$progressBar->finish();
-$io->newLine(2);
 $io->success('Batch processing finished.');
 ```
+
+> [!NOTE]
+> `SymfonyStyle` also provides progress-bar methods (`progressStart()` / `progressAdvance()` / `progressFinish()`, `createProgressBar()` — see Symfony Console documentation). They are not exercised in official `yiisoft/*` package sources; prefer the verified verbosity-scoped output above.
+
+For unattended environments (CI/CD, Cron, Docker), combine three verified tools:
+
+1. The built-in `-n, --no-interaction` global option that the application template's `./yii` exposes (real invocation from the yii-gii documentation):
+   ```bash
+   ./yii gii:controller SampleController --actions=index --viewsPath=@runtime/gii-views --no-interaction
+   ```
+2. A force flag instead of a prompt (`--force-yes, -y` in db-migration — see §5.3).
+3. An explicit `$input->isInteractive()` guard around every prompt (see §5.3).
 
 ---
 
 ## 6. Standard Exit Codes (`Yiisoft\Yii\Console\ExitCode`)
 
-Never return arbitrary magic integers (`return 1;`, `return 2;`) or call `exit()`. Console exit codes follow the FreeBSD `sysexits(3)` standard via `Yiisoft\Yii\Console\ExitCode`.
+Never return arbitrary magic integers (`return 1;`, `return 2;`) or call `exit()`. Console exit codes follow the FreeBSD `sysexits(3)` standard via `Yiisoft\Yii\Console\ExitCode` (the class is marked `@final`).
 
 ### ExitCode Constants & Semantics
 
-| Constant | Code | Sysexits Meaning | Recommended Usage in Yii3 |
+| Constant | Code | Sysexits Name | Recommended Usage in Yii3 |
 |---|---|---|---|
 | `ExitCode::OK` | `0` | `EX_OK` | Successful termination. |
-| `ExitCode::UNSPECIFIED_ERROR` | `1` | `EX__BASE` | Generic unclassified runtime failure. |
+| `ExitCode::UNSPECIFIED_ERROR` | `1` | *(generic — not a sysexits code)* | Generic unclassified runtime failure. |
 | `ExitCode::USAGE` | `64` | `EX_USAGE` | Invalid CLI syntax, wrong number of arguments, illegal option flag. |
 | `ExitCode::DATAERR` | `65` | `EX_DATAERR` | Input data format error (e.g. invalid email format, schema parse failure). |
 | `ExitCode::NOINPUT` | `66` | `EX_NOINPUT` | Input file missing, corrupted, or unreadable. |
@@ -682,6 +762,11 @@ use Yiisoft\Yii\Console\ExitCode;
 // Returns human-readable explanation: "Input file not found or unreadable"
 $reason = ExitCode::getReason(ExitCode::NOINPUT);
 ```
+
+An unknown code yields `"Unknown exit code"`.
+
+> [!NOTE]
+> Not every ecosystem command maps failures onto `ExitCode`: the built-in `Serve` command returns its own constants (see §9.1), and some packages return `Command::SUCCESS` / `Command::FAILURE`. `ExitCode` remains the recommended vocabulary for your own commands.
 
 ---
 
@@ -713,16 +798,21 @@ final class DatabaseTablesNotMigratedException extends RuntimeException implemen
 }
 ```
 
-When thrown during command execution, `Application` formats:
-```
-  Database Schema Not Initialized
+When thrown during command execution, the runner catches the throwable and `Application::renderThrowable()` prints it. The rendering has two branches. In the real runner flow the output object is a buffered plain console output (not a `SymfonyStyle`), so the friendly exception reaches the terminal in the red/yellow branch followed by the stack trace:
 
-  ! [NOTE] Run "./yii migrate:up" to apply pending database migrations before creating users.
 ```
+Database Schema Not Initialized            <- printed with <fg=red>
+Run "./yii migrate:up" to apply pending
+database migrations before creating users. <- printed with <fg=yellow>
+
+#0 /app/... (stack trace is always appended)
+```
+
+The `! [NOTE]`-styled rendering (title + note) applies only when the output object implements `StyleInterface` — for example, when a command itself passes a `SymfonyStyle` instance to `renderThrowable()` (the pattern used by yii-console's own tests).
 
 ### 7.2. Global Console Error Logging (`ErrorListener`)
 
-`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` in `config/events-console.php`. When a command terminates with an uncaught exception, it logs the failure with full stack traces to the configured PSR-3 logger:
+`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` in `config/events-console.php`. When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application):
 
 ```php
 // config/events-console.php
@@ -742,7 +832,7 @@ return [
 
 Console commands must be covered by automated integration tests using `Symfony\Component\Console\Tester\CommandTester`.
 
-### Zero-Shot Compilable Command Test
+### 8.1. Zero-Shot Compilable Command Test
 
 ```php
 declare(strict_types=1);
@@ -785,7 +875,7 @@ final class CreateUserCommandTest extends TestCase
 
         self::assertSame(ExitCode::OK, $exitCode);
 
-        $display = $tester->getDisplay();
+        $display = $tester->getDisplay(true);
         self::assertStringContainsString('Provisioning User Account', $display);
         self::assertStringContainsString('User "Super Admin" created successfully (ID: usr_mock_123).', $display);
     }
@@ -804,7 +894,7 @@ final class CreateUserCommandTest extends TestCase
         ]);
 
         self::assertSame(ExitCode::DATAERR, $exitCode);
-        self::assertStringContainsString('Invalid email format: "invalid-email-string".', $tester->getDisplay());
+        self::assertStringContainsString('Invalid email format: "invalid-email-string".', $tester->getDisplay(true));
     }
 
     public function testExecuteHandlesDomainExceptionGracefully(): void
@@ -824,33 +914,75 @@ final class CreateUserCommandTest extends TestCase
         ]);
 
         self::assertSame(ExitCode::DATAERR, $exitCode);
-        self::assertStringContainsString('User with this email already exists.', $tester->getDisplay());
+        self::assertStringContainsString('User with this email already exists.', $tester->getDisplay(true));
     }
 
-    public function testExecuteWithInteractivePrompt(): void
+    public function testExecuteSuppressesInteractivity(): void
     {
         $handler = $this->createMock(CreateUserHandler::class);
         $handler
             ->expects(self::once())
             ->method('handle')
-            ->willReturn(new CreateUserResult(id: 'usr_mock_interactive', name: 'Interactive User'));
+            ->willReturn(new CreateUserResult(id: 'usr_mock_ci', name: 'CI User'));
 
         $command = new CreateUserCommand($handler);
         $tester = new CommandTester($command);
 
-        // Pre-fill simulated inputs for interactive prompts
-        $tester->setInputs(['interactive@example.com', 'Interactive User', 'user']);
-
+        // Explicitly disable interactivity for unattended test runs
         $exitCode = $tester->execute([
-            'email' => 'interactive@example.com',
-            'name' => 'Interactive User',
-        ]);
+            'email' => 'ci@example.com',
+            'name' => 'CI User',
+        ], ['interactive' => false]);
 
         self::assertSame(ExitCode::OK, $exitCode);
-        self::assertStringContainsString('User "Interactive User" created successfully', $tester->getDisplay());
+        self::assertStringContainsString('User "CI User" created successfully', $tester->getDisplay(true));
     }
 }
 ```
+
+Two testing notes:
+
+- `setInputs(['yes', ...])` pre-fills simulated answers for interactive prompts — use it only when the command under test actually prompts (the yii-console package's own `ServeTest` calls it before `execute()`). `CreateUserCommand` has no prompts, so the last test disables interactivity explicitly instead of feeding unused inputs.
+- The `interactive` option of `CommandTester::execute()` (second argument) suppresses prompts, mirroring the production `--no-interaction` flag.
+
+### 8.2. Assembling a Real `Application` Instance in Tests
+
+To test through the real `Yiisoft\Yii\Console\Application` (command lookup via `find()`, `CommandLoader` wiring, event bridging), assemble it manually and disable auto-exit. The yii-console package's own test suite uses this shape with doubles from `yiisoft/test-support`:
+
+```php
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Tester\CommandTester;
+use Yiisoft\Test\Support\Container\SimpleContainer;
+use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
+use Yiisoft\Yii\Console\Application;
+use Yiisoft\Yii\Console\CommandLoader;
+use Yiisoft\Yii\Console\SymfonyEventDispatcher;
+
+$dispatcher = new SymfonyEventDispatcher(new SimpleEventDispatcher());
+
+$application = new Application();
+$application->setAutoExit(false);
+$application->setDispatcher($dispatcher);
+$application->addOptions(
+    new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Set alternative configuration name'),
+);
+
+$commandLoader = new CommandLoader(
+    new SimpleContainer([
+        // $handler: your real or mocked CreateUserHandler
+        CreateUserCommand::class => new CreateUserCommand($handler),
+    ]),
+    [
+        'user:create' => CreateUserCommand::class,
+    ],
+);
+$application->setCommandLoader($commandLoader);
+
+$command = $application->find('user:create');
+$tester = new CommandTester($command);
+```
+
+Key points: `setAutoExit(false)` prevents the test process from terminating on a non-zero exit code; `SymfonyEventDispatcher` bridges Symfony events to the PSR-14 dispatcher double; `find()` resolves through `CommandLoader` exactly as in production. Shell-completion behavior is covered by `Symfony\Component\Console\Tester\CommandCompletionTester` — construct it with the command and call `complete($input)` to receive the suggestion array.
 
 ---
 
@@ -866,12 +998,27 @@ Packaged inside `yiisoft/yii-console`, `Yiisoft\Yii\Console\Command\Serve` start
 # Start on default 127.0.0.1:8080
 ./yii serve
 
-# Custom port and binding
+# Custom address binding, port (-p) and docroot (-t)
 ./yii serve 0.0.0.0 -p 9000 -t public
 
-# Multi-worker Linux execution with Xdebug support
+# Multi-worker execution with Xdebug support
 ./yii serve --workers=4 --xdebug
 ```
+
+Interface (all verified against the `Serve` command source):
+
+| Input | Kind | Default | Notes |
+|---|---|---|---|
+| `address` | argument (optional) | `127.0.0.1` | Completion suggestions: `localhost`, `127.0.0.1`, `0.0.0.0`. |
+| `--port, -p` | option | `8080` | |
+| `--docroot, -t` | option | `public` | Missing docroot exits with code `2` (`EXIT_CODE_NO_DOCUMENT_ROOT`). |
+| `--router, -r` | option | `public/index.php` | Missing router exits with code `3`. |
+| `--workers, -w` | option | `2` | Hardcoded default; honored on Linux only (via `PHP_CLI_SERVER_WORKERS`). |
+| `--env, -e` | option | — | Used for testing (`--env=test` short-circuits server launch). |
+| `--open, -o` | option | disabled | Passed bare (`--open`) to open the browser. |
+| `--xdebug, -x` | option | disabled | Takes effect only when passed **bare** (`--xdebug`, not `--xdebug 1`); requires the Xdebug extension and Linux. |
+
+An address already taken by another process exits with code `5` (`EXIT_CODE_ADDRESS_TAKEN_BY_ANOTHER_PROCESS`).
 
 Configuration in `config/console/params.php`:
 ```php
@@ -883,23 +1030,30 @@ Configuration in `config/console/params.php`:
             'port' => '8080',
             'docroot' => 'public',
             'router' => 'public/index.php',
-            'workers' => 2,
         ],
     ],
 ],
 ```
 
+These are the defaults shipped by the package. There is no default `workers` key — the worker count defaults to `2` inside `Serve` itself; adding a custom `'workers' => 4` entry under `options` is allowed and honored (on Linux).
+
 ### 9.2. Official Ecosystem Package Commands
 
 | Package | Registered Primary Command Name | Primary Purpose |
 |---|---|---|
-| `yiisoft/yii-console` | `./yii serve`, `./yii yii` | Built-in web server daemon and interactive console game |
+| `yiisoft/yii-console` | `./yii serve`, `./yii yii` (hidden) | Built-in web server daemon and hidden guessing-game command |
 | `yiisoft/db-migration` | `./yii migrate:up`, `./yii migrate:down`, `./yii migrate:create`, `./yii migrate:history`, `./yii migrate:new`, `./yii migrate:redo`, `./yii migrate:mark` | Database schema migrations, rollback, and state tracking |
 | `yiisoft/queue` | `./yii queue:listen`, `./yii queue:run`, `./yii queue:listen-all` | Queue worker daemons and batch job consumption |
 | `yiisoft/translator-extractor` | `./yii translator/extract` | Source code scanning for translation tokens |
 | `yiisoft/yii-cycle` | `./yii cycle:schema`, `./yii cycle:schema:php`, `./yii cycle:schema:clear`, `./yii cycle:schema:rebuild`, `./yii migrate:create`, `./yii migrate:generate`, `./yii migrate:up`, `./yii migrate:down`, `./yii migrate:list` | Cycle ORM schema compilation, migrations, and schema caching |
 | `yiisoft/yii-debug` | `./yii debug:reset` | Reset and clear collected debug tool panels and requests |
 | `yiisoft/yii-gii` | `./yii gii:controller`, `./yii gii:active-record` | Code generation CLI wizards for controllers and models |
+
+Ecosystem details worth knowing:
+
+- `./yii yii` is the hidden `Yiisoft\Yii\Console\Command\Game` command (registered as `'|yii'` in the default `params-console.php`, therefore excluded from `./yii list`): an interactive number-guessing game over a random integer in 0–100, built with `QuestionHelper` — a compact live sample of question-helper usage.
+- For `migrate:up` the implementing class in `yiisoft/db-migration` is `UpdateCommand` (not "UpCommand").
+- Notable non-interactive options across packages: db-migration offers `--force-yes, -y` (accept all questions) and `migrate:create --transactional / --no-transactional` (a negatable option); queue commands accept a queue-name list plus `--limit, -m` (`queue:run`, `queue:listen-all`) and `--pause, -p` (`queue:listen-all`); `translator/extract` accepts `--languages, -L` (default `en`), `--category, -C` (default `app`), `--except, -E`, `--only, -O`.
 
 ---
 
@@ -912,11 +1066,20 @@ Configuration in `config/console/params.php`:
 | **Omitting `parent::__construct()` in Command** | Leaves Symfony Command's internal definition, helper set, and configuration uninitialized; causes fatal errors during configuration. | Always invoke `parent::__construct();` inside the command constructor. |
 | **Calling `exit($code)` or `die()` in command** | Forcefully terminates the PHP process, skipping `ApplicationShutdown` events, output flushing, and runner cleanup. | Return integer code from `execute()` (e.g. `return ExitCode::OK;`). |
 | **Direct DB queries or persistence in Command** | Violates Presentation Layer separation; couples CLI interface to persistence, preventing unit testing. | Inject Application Use Cases or CQRS Handlers via DI constructor. |
-| **Raw `echo "text\n"` or `print()` output** | Bypasses output buffering, breaks CI runner formatting, and corrupts headless tests. | Wrap `$input` and `$output` into `SymfonyStyle` and use `$io->text()`, `$io->table()`, etc. |
+| **Raw `echo "text\n"` or `print()` output** | Bypasses output buffering, breaks CI runner formatting, and corrupts headless tests. | Wrap `$input` and `$output` into `SymfonyStyle` and use `$io->writeln()`, `$io->table()`, etc. |
 | **Unconditional interactive prompts in automated runs** | Blocks indefinitely in automated background jobs, Docker containers, Cron, and CI/CD pipelines. | Check `$input->isInteractive()` or provide default values for non-interactive invocations. |
 | **Returning magic numeric integers (e.g. `return 0;`, `return 1;`)** | Obscures failure root causes across shell scripts, Kubernetes probes, and monitoring tools. | Return explicit semantic constants from `Yiisoft\Yii\Console\ExitCode`. |
 | **Hardcoding command name exclusively in `#[AsCommand]` while omitting configuration** | Command won't be registered in `CommandLoader` and won't appear in `./yii list`. | Register the command in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`. |
 | **Omitting `description` from `#[AsCommand]`** | Forces `CommandLoader` to eagerly instantiate the command class during `./yii list`, loading heavy DI dependencies prematurely. | Always provide `description` in `#[AsCommand(description: '...')]` to allow `CommandLoader` to use `LazyCommand`. |
-| **Empty aliases or names in pipe config (e.g. `'user:list\|\|ul'` or `'\|'`)** | Throws `RuntimeException('Do not allow empty command name or alias.')` during container bootstrap. | Use single pipes to separate valid non-empty alias tokens (e.g. `'user:list\|ul\|u:l'`). |
+| **Empty aliases or names in pipe config (e.g. `'user:list\|\|ul'` or `'\|'`)** | Throws `RuntimeException('Do not allow empty command name or alias.')` when `CommandLoader` is first instantiated (i.e. when the DI container builds the `CommandLoaderInterface` definition). | Use single pipes to separate valid non-empty alias tokens (e.g. `'user:list\|ul\|u:l'`). |
 | **Reading `$_SERVER['argv']` or `$_GET` directly** | Couples command to global state; breaks in test environments (`CommandTester`) and sub-process runners. | Access inputs strictly through `$input->getArgument('name')` and `$input->getOption('name')`. |
 | **Catching `\Throwable` and silently returning `ExitCode::OK`** | Hides critical system failures; shell pipelines believe the job succeeded when data was not processed. | Log the error, output an explanation via `$io->error()`, and return `ExitCode::UNSPECIFIED_ERROR` or specific BSD code. |
+
+---
+
+## 11. Related Topic Guides
+
+- [Runners & Runtimes Guide](runners-and-runtimes.md) — Application runner architecture, `ConsoleApplicationRunner`, and entry points.
+- [DI & Configuration Guide](di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
+- [Queue & Asynchronous Jobs Guide](queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
+- [Error Handling Guide](error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.

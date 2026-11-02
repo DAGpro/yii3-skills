@@ -46,7 +46,6 @@
     }
   ],
   "skills": [
-    "skills/yii3",
-    "skills/yii3-v2"
+    "skills/yii3"
   ]
 }

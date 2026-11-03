@@ -24,6 +24,7 @@
   - [5.3. Forms & AJAX Usage](#53-forms--ajax-usage)
 - [6. Worker Mode Notes](#6-worker-mode-notes)
 - [7. Anti-Pattern Matrix](#7-anti-pattern-matrix)
+- [8. Related Topic Guides](#8-related-topic-guides)
 
 ---
 
@@ -466,3 +467,12 @@ Under long-running runners (RoadRunner, FrankenPHP — see [Package Catalog](pac
 | Regenerating the session id only at login setup, never after privilege change | Session fixation remains possible | Call `$session->regenerateId()` after every privilege escalation (general security practice — OWASP-style guidance, not prescribed by the packages) (§2.5) |
 | Keeping `cookie_secure: 0` in production | Session cookie travels over HTTP | Set `'cookie_secure' => 1` for HTTPS deployments (the middleware enforces scheme consistency) (§2.2, §2.3) |
 | Rendering CSRF hidden inputs with a wrong parameter name after renaming the middleware | Token mismatch → every POST is 422 | Keep name and middleware config in sync — read the name via `CsrfTokenMiddleware::PARAMETER_NAME` / `$middleware->getParameterName()` and the value via `$csrfToken->getValue()` (`_csrf` default) (§5.3) |
+
+---
+
+## 8. Related Topic Guides
+
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Cookie attachments, session reads, and flash messages inside Presentation Actions.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Middleware pipeline ordering for SessionMiddleware and CsrfTokenMiddleware.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — User login/logout session state lifecycle and remember-me cookies.
+- [Validation & Forms Guide](http-validation-and-forms.md) — CSRF token embedding in web forms and PRG redirect flows.

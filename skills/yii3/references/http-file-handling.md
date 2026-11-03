@@ -21,6 +21,7 @@
   - [4.2. Image Dimension Rules (`Rule\Image\Image`)](#42-image-dimension-rules-ruleimageimage)
 - [5. Placement & Wiring](#5-placement--wiring)
 - [6. Anti-Pattern Matrix](#6-anti-pattern-matrix)
+- [7. Related Topic Guides](#7-related-topic-guides)
 
 ---
 
@@ -575,6 +576,8 @@ return [
 
 ---
 
-## Related Topic Guides
+## 7. Related Topic Guides
 
 - [Utility Packages Guide](core-utilities.md) — `ArrayHelper`, `StringHelper`, `Json`, `VarDumper`, `Classifier`, and IP/DNS helpers.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Streaming downloads and binary responses from Presentation Actions.
+- [Validation & Forms Guide](http-validation-and-forms.md) — UploadedFile validation, multi-file rules, and image constraints.

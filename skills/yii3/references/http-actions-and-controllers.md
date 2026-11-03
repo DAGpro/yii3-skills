@@ -135,6 +135,9 @@ final readonly class ViewUserAction
   `generateAbsolute(string $name, array $arguments = [], array $queryParameters = [], ?string $hash = null, ?string $scheme = null, ?string $host = null): string`.
 - For redirects, always use `Status::FOUND` (302) for standard GET redirects or `Status::SEE_OTHER` (303) after POST submissions, along with `Header::LOCATION`.
 
+> [!NOTE]
+> FastRoute pattern syntax, route groups, reverse URL generation, and long-running worker resets are owned by the [Routing Guide](http-routes.md).
+
 ---
 
 ### 3.2. Request Parsing & DTO Hydration (`yiisoft/hydrator`, `yiisoft/input-http`, `yiisoft/validator`)
@@ -298,28 +301,7 @@ final readonly class CreatePostAutoAction
 ```
 
 > [!NOTE]
-> In `RequestInputParametersResolver`, if `$throwInputValidationException = true`, invalid inputs automatically throw `Yiisoft\Input\Http\InputValidationException` instead of entering the action. If `false` (default), the action checks `$input->getValidationResult()`. The exception path applies only when the resolved input implements `ValidatedInputInterface` (which `AbstractInput` does).
-
-**Query Parameters via `#[FromQuery]`:**
-```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Post\Input;
-
-use Yiisoft\Input\Http\AbstractInput;
-use Yiisoft\Input\Http\Attribute\Data\FromQuery;
-
-#[FromQuery]
-final class PostListInput extends AbstractInput
-{
-    public int $page = 1;
-    public int $pageSize = 20;
-}
-```
-`RequestInputParametersResolver` injects it into the action exactly like a `#[FromBody]` input (`__invoke(PostListInput $input): ResponseInterface`), populating the properties from `$request->getQueryParams()`.
-
-> [!IMPORTANT]
-> `yiisoft/input-http` ships only two class-level data attributes: `#[FromBody]` and `#[FromQuery]` — there are no `#[FromHeader]`, `#[FromCookie]`, or `#[FromRoute]` data attributes. For binding individual method parameters it provides the parameter attributes `#[Body]`, `#[Query]`, `#[Request]`, and `#[UploadedFiles]` (namespace `Yiisoft\Input\Http\Attribute\Parameter`).
+> Class data attributes (`#[FromBody]`, `#[FromQuery]`), individual parameter attributes (`#[Body]`, `#[Query]`, `#[Request]`), exception-driven flow (`throwInputValidationException`), and RFC 7807 problem details are owned by the [Validation & Forms Guide](http-validation-and-forms.md), section 10.
 
 ---
 
@@ -365,31 +347,11 @@ if (!$result->isValid()) {
 
 Use `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` to generate structured API responses. Content negotiation middleware (`Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware`) automatically formats the data stream to JSON or XML according to the client's `Accept` header:
 
-```php
-declare(strict_types=1);
-
-use Yiisoft\DataResponse\Formatter\JsonFormatter;
-use Yiisoft\DataResponse\Formatter\XmlFormatter;
-use Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware;
-
-$contentNegotiator = new ContentNegotiatorDataResponseMiddleware([
-    'application/json' => new JsonFormatter(),
-    'application/xml' => new XmlFormatter(),
-]);
-```
-
-**Full Constructor Signature:**
-```php
-public function __construct(
-    array $formatters = [],
-    FormatterInterface|RequestHandlerInterface|null $fallback = null,
-) {}
-```
-The optional `$fallback` handler is a `RequestHandlerInterface` invoked when no formatter matches the client's `Accept` header; the package's default DI wiring registers a fallback handler that responds with `406 Not Acceptable`.
-
 > [!IMPORTANT]
-> 1. Always inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface`. The old interface `Yiisoft\DataResponse\DataResponseFactoryInterface` is deprecated.
-> 2. The old middleware `Yiisoft\DataResponse\Middleware\ContentNegotiator` is also deprecated. Use `ContentNegotiatorDataResponseMiddleware` with a formatter map (`Yiisoft\DataResponse\Formatter\JsonFormatter`, `Yiisoft\DataResponse\Formatter\XmlFormatter`).
+> Always inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface`. The legacy interface `Yiisoft\DataResponse\DataResponseFactoryInterface` and the old middleware `Yiisoft\DataResponse\Middleware\ContentNegotiator` are deprecated.
+
+> [!NOTE]
+> Pipeline content negotiation via `ContentNegotiatorDataResponseMiddleware` (with `JsonFormatter` / `XmlFormatter`), formatter maps, and `Accept` header fallback handlers are owned by the [PSR-15 Middlewares Guide](http-middlewares.md), section 5.
 
 ```php
 declare(strict_types=1);
@@ -542,7 +504,8 @@ final readonly class DownloadReportAction
 }
 ```
 
-**Method reference:** the four factory methods (`sendFile()`, `sendStreamAsFile()`, `sendContentAsFile()`, `xSendFile()`) and their verbatim signatures live in the [File Handling Guide, §3.1](http-file-handling.md). Traps: there are no `sendStream()`/`send()` shortcuts (calling them throws a fatal `Error`), and `$mimeType` is non-nullable in `sendStreamAsFile()` (passing `mimeType: null` throws `TypeError: ... must be of type string, null given`).
+> [!NOTE]
+> The four download factory methods (`sendFile()`, `sendStreamAsFile()`, `sendContentAsFile()`, `xSendFile()`), web server `X-Sendfile` acceleration, and byte-range streaming are owned by the [File Handling Guide](http-file-handling.md), section 3. Traps: there are no `sendStream()`/`send()` shortcuts (calling them throws a fatal `Error`), and `$mimeType` is non-nullable in `sendStreamAsFile()` (passing `mimeType: null` throws `TypeError: ... must be of type string, null given`).
 
 ---
 
@@ -688,44 +651,19 @@ final readonly class DeletePostAction
   // Exact signature: create(array $payload, string $format, ?int $signatureIndex = null): string
   $token = $this->tokenFactory->create(['sub' => $identity->getId()], CompactSerializer::NAME);
   ```
-  > [!CAUTION]
-  > The method on `TokenFactoryInterface` is `create()`, NOT `createToken()`. The `$format` argument must match the name of a serializer registered in `JWSSerializerManager`. The package's default config registers `Jose\Component\Signature\Serializer\CompactSerializer::class`, so pass its `CompactSerializer::NAME` constant — never hardcode a serializer name string. If you register additional serializers (e.g. flattened/general JSON), pass their `NAME` constants instead.
+  > [!NOTE]
+  > The method on `TokenFactoryInterface` is `create()` (NOT `createToken()`), requiring `CompactSerializer::NAME`. Full JWT issuer recipes, key algorithms, token parsing, and auth-pipeline middleware wiring are owned by the [Authentication & RBAC Guide](infra-auth-and-rbac.md), section 5.2.
 
 #### CSRF Token (`yiisoft/csrf`)
 
-Inject `Yiisoft\Csrf\CsrfTokenInterface` to obtain the current CSRF token for embedding into forms or AJAX request headers:
-
+Inject `Yiisoft\Csrf\CsrfTokenInterface` into presentation actions or form handlers to obtain the masked token:
 ```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Web\Comment;
-
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Csrf\CsrfTokenInterface;
-use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
-
-final readonly class CommentFormAction
-{
-    public function __construct(
-        private CsrfTokenInterface $csrfToken,
-        private DataResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        return $this->responseFactory->createResponse([
-            'csrfToken' => $this->csrfToken->getValue(),
-        ]);
-    }
-}
+$csrfToken = $this->csrfToken->getValue();
 ```
+The token is obtained **only** through `CsrfTokenInterface::getValue(): string` (it is not exposed as a request attribute).
 
-**Key facts:**
-- The token is obtained **only** through the injected `CsrfTokenInterface::getValue(): string` — it is not exposed as a request attribute.
-- Validation is performed by the PSR-15 middleware `Yiisoft\Csrf\CsrfTokenMiddleware` (the old `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated`) placed before the action in the pipeline.
-- The token is read from the parsed body parameter `_csrf` first, then from the `X-CSRF-Token` header. Safe methods (`GET`, `HEAD`, `OPTIONS`) skip validation.
-- Failed validation produces a `422 Unprocessable Entity` response (or delegates to the custom failure handler passed to the middleware constructor).
+> [!NOTE]
+> Pipeline validation via `CsrfTokenMiddleware` (`CsrfMiddleware` is `@deprecated`), masked tokens, AJAX/cookie double-submit flows, and 422 failure handlers are owned by the [HTTP State Guide](http-state.md), section 5.
 
 ---
 
@@ -787,7 +725,8 @@ $theme = $cookies['preferred_theme'] ?? 'light';
 ```php
 return (new Cookie('preferred_theme'))->expire()->addToResponse($response);
 ```
-For object-oriented access to request cookies, build a `Yiisoft\Cookies\CookieCollection` from `$request->getCookieParams()`. For tamper-proof values, the package provides `CookieSigner` and `CookieEncryptor` — consult the package README before wiring them into the DI config.
+> [!NOTE]
+> Cookie collections (`CookieCollection`), signing (`CookieSigner`), encryption (`CookieEncryptor`), session middleware ordering, and custom session storage engines are owned by the [HTTP State Guide](http-state.md), sections 2–4.
 
 **Session & Flash Messages (`yiisoft/session`):**
 ```php
@@ -846,8 +785,8 @@ final readonly class NotifyUserAction
 > [!TIP]
 > Notice the named argument is `parameters:`, NOT `params:`. Passing `params:` produces an `Unknown named parameter $params` fatal error — this is the PHP language consequence of a wrong named parameter, not a framework-level check.
 
-> [!TIP]
-> The default category is `app` and the default locale is `en-US`. Translating via an unregistered category does not throw — the raw message ID is returned as-is. For message sources, plural forms, locale switching, and category configuration, see [i18n & Translation Guide](http-i18n-translation.md).
+> [!NOTE]
+> Message source backends (PHP files, Gettext, DB), category sources, plural rules, and locale-detecting middleware are owned by the [i18n & Translation Guide](http-i18n-translation.md). Translating via an unregistered category returns the raw message ID as-is.
 
 ---
 
@@ -955,4 +894,6 @@ final readonly class ShowUserAction
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting API action endpoints, request bodies, and schemas with PHP 8 attributes.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and CSRF state management in depth.
 - [i18n & Translation Guide](http-i18n-translation.md) — Message sources, categories, plural forms, and locale handling.
+- [Authentication & RBAC Guide](infra-auth-and-rbac.md) — CurrentUser identity, permissions checking, and JWT issuance.
+- [File Handling Guide](http-file-handling.md) — Streamed file downloads, X-Sendfile acceleration, and uploaded files.
 

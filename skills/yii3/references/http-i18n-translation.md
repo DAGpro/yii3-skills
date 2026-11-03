@@ -27,6 +27,7 @@
 - [8. Ecosystem Integration Boundaries](#8-ecosystem-integration-boundaries)
 - [9. Testing the Translator](#9-testing-the-translator)
 - [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
+- [11. Related Topic Guides](#11-related-topic-guides)
 
 ---
 
@@ -999,3 +1000,12 @@ plain strings internally.
 | Storing translator locale in static state / globals | No statics in Yii3; breaks worker-mode isolation | Use `TranslatorInterface::setLocale()` per request, driven by middleware events; `LocaleProvider` for other services (§2.2, §7) |
 | Using an undefined `@messages` alias for message paths | No translation package defines or resolves it | Pass a literal / params-derived path, or define the alias yourself with `yiisoft/aliases` (§4.1) |
 | Ignoring `MissingTranslationEvent` | Untranslated strings surface to users as raw ids | Log gaps via a listener (§7); set `fallbackLocale` sensibly (§2.2) |
+
+---
+
+## 11. Related Topic Guides
+
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Injecting TranslatorInterface into Presentation Actions for flash and error messages.
+- [Validation & Forms Guide](http-validation-and-forms.md) — Translating validation rule messages and attribute labels.
+- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — Localization inside templates and view injections.
+- [Events & Listeners Guide](core-events-and-listeners.md) — Handling SetLocaleEvent and MissingTranslationEvent.

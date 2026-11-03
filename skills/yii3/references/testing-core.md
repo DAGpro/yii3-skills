@@ -1485,7 +1485,7 @@ final class UniqueEmailRuleTest extends TestCase
 Per `package-catalog.md`, `yiisoft/factory` is the recommended tool to assemble domain fixtures and complex object graphs without hand-wiring repetitive constructors.
 
 #### Key Invariant: Unshared Instances
-Unlike a PSR-11 container, which caches instances as singletons, `Factory::create(...)` always returns a **fresh, unshared instance** (`assertNotSame($obj1, $obj2)`), preventing cross-test state pollution.
+Unlike a PSR-11 container, which caches instances as singletons, `Factory::create(...)` always returns a **fresh, unshared instance** (`assertNotSame($obj1, $obj2)`), preventing cross-test state pollution. Full `Factory` / `StrictFactory` semantics (constructor argument order, definition-map rules, exception behavior) are owned by the [DI & Configuration Guide](core-di-and-config.md), section 6.2.
 
 ```php
 declare(strict_types=1);
@@ -1597,7 +1597,7 @@ final class CustomerFixtureTest extends TestCase
 
 In long-running integration test suites where the PSR-11 container is booted once (`setUpBeforeClass()`) for performance, stateful services leak data into subsequent tests.
 
-`Yiisoft\Di\StateResetter` resets stateful singletons between tests via closures bound directly to the object's class scope:
+`Yiisoft\Di\StateResetter` resets stateful singletons between tests via the definition-level `'reset'` closures (binding mechanics and caveats are owned by the [DI & Configuration Guide](core-di-and-config.md), section 5.2):
 
 ```php
 declare(strict_types=1);
@@ -1634,8 +1634,7 @@ final class StateIsolationTest extends TestCase
         $config = ContainerConfig::create()->withDefinitions([
             InMemoryBuffer::class => [
                 'class' => InMemoryBuffer::class,
-                // Reserved 'reset' key: closure is bound directly to the instance!
-                // It can access and clear private properties:
+                // Reserved 'reset' key — closure bound to the instance (DI guide §5.2)
                 'reset' => function () {
                     $this->buffer = [];
                 },

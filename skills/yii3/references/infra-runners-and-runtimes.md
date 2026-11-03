@@ -280,7 +280,7 @@ $runner = new HttpApplicationRunner(
     environment: Environment::appEnv(),
     temporaryErrorHandler: new ErrorHandler(
         new Logger([
-            (new StreamTarget())->setLevels([
+            new StreamTarget(levels: [
                 LogLevel::EMERGENCY,
                 LogLevel::ERROR,
                 LogLevel::WARNING,
@@ -873,7 +873,7 @@ $runner = new FrankenPHPApplicationRunner(
     environment: Environment::appEnv(),
     temporaryErrorHandler: new ErrorHandler(
         new Logger([
-            (new StreamTarget('php://stderr'))->setLevels([
+            new StreamTarget('php://stderr', levels: [
                 LogLevel::EMERGENCY,
                 LogLevel::ERROR,
                 LogLevel::WARNING,

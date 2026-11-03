@@ -200,7 +200,7 @@ composer require yiisoft/yii-auth-client yiisoft/user yiisoft/session
 The full dependency gate — existing-installation check, install authorization, wiring verification, and package source inspection — lives in the [Dependency Protocol](core-dependency-protocol.md). When working from this catalog, additionally:
 
 1. Resolve every capability through §1 of this catalog first, and never propose `composer require` for a package already present in `composer.json`.
-2. Mind the Category A/B distinction from [Dependency Protocol §4](core-dependency-protocol.md): only packages declaring `extra.config-plugin` (e.g. `yiisoft/router`, `yiisoft/db`, `yiisoft/cache-file`) appear in `config/.merge-plan.php` — driver packages (`yiisoft/db-mysql`, `yiisoft/cache-redis`, ...) never do and require manual DI definitions.
+2. Mind the Category A/B distinction from [Dependency Protocol §4](core-dependency-protocol.md) when deciding whether a package needs manual DI wiring (the merge-plan mechanics behind it are owned by the [DI & Configuration Guide](core-di-and-config.md), sections 2 and 2.3).
 3. Before overriding a package's parameters, read its shipped defaults in `vendor/yiisoft/<pkg>/config/params.php`.
 
 ---

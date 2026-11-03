@@ -716,24 +716,11 @@ return [
 ];
 ```
 
-**Where app event maps live.** `yiisoft/yii-event` reads the listener map from its params group (`'yiisoft/yii-event' => ['eventsConfigGroup' => ...]`), defaulting to the `events-web` group (web) and `events-console` group (console). The canonical app template declares `'events' => [], 'events-web' => ['$events'], 'events-console' => ['$events']` in `config/configuration.php` and ships no events file of its own — register your `config/common/events.php` under the shared `events` group in `config/configuration.php`, and the base runner reverse-merges it into `events-web` and `events-console`:
+**Where app event maps live.** `yiisoft/yii-event` reads the listener map from its params group (`'yiisoft/yii-event' => ['eventsConfigGroup' => ...]`), defaulting to the `events-web` group (web) and `events-console` group (console). Group declarations, the `$events` reference wiring, merge modifiers, and the full listener-format table are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4 — register your `config/common/events.php` under the shared `events` group there; error-handling-specific listeners follow the exact same mechanics.
 
-```php
-<?php
-
-declare(strict_types=1);
-
-return [
-    'events' => ['common/events.php'],
-    'events-web' => ['$events'],
-    'events-console' => ['$events'],
-];
-```
-
-Failure timing and validation:
+Failure timing and validation (details and the complete six-form table: [Events & Listeners Guide](core-events-and-listeners.md), section 4.2):
 
 - Invalid listener **format** throws when the DI container first resolves `ListenerCollection::class` (i.e. when the PSR-14 dispatcher is constructed) — not at event-dispatch time.
-- Valid listener forms: closures; `[SomeClass::class, 'staticMethodName']`; `[SomeClass::class, 'methodName']` (non-static, instantiated via DI); invokable object instances; invokable class-strings resolved from the container; container alias strings.
 - When a runner is constructed with `checkEvents: true`, it runs `Yiisoft\Yii\Event\ListenerConfigurationChecker::check()` over the events group, eagerly validating the whole map (dev/tests only — resource-greedy).
 
 > [!WARNING]

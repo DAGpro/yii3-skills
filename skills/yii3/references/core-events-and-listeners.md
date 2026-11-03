@@ -265,7 +265,7 @@ final readonly class LogOrderPlacementListener
 `yiisoft/yii-event` coordinates `CallableFactory` and `Yiisoft\Injector\Injector` to resolve listener dependencies:
 
 1. **Constructor Injection (Recommended):** Inject services, mailers, and repositories via `__construct()`. Listeners are resolved from the PSR-11 container.
-2. **Method Invocation:** In `ListenerCollectionFactory`, each configured listener is wrapped as `fn(object $event): mixed => $this->injector->invoke($this->callableFactory->create($callable), [$event])` (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`). The event instance is passed in the **positional arguments array**, and the `Injector` binds it to a parameter **by type** (`instanceof` check), **not by positional index** (`vendor/yiisoft/injector/src/ResolvingState.php`). Remaining parameters resolve in order: named argument → positional object match → container lookup for class types → default value → `null` for nullable types → `MissingRequiredArgumentException`. `Injector::invoke()` returns `mixed` (docblock only; no native return type is declared).
+2. **Method Invocation:** In `ListenerCollectionFactory`, each configured listener is wrapped as `fn(object $event): mixed => $this->injector->invoke($this->callableFactory->create($callable), [$event])` (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`). The event instance is passed in the **positional arguments array**, and the `Injector` binds it to a parameter **by type** (`instanceof` check), **not by positional index** (`vendor/yiisoft/injector/src/ResolvingState.php`). The full argument-resolution order and exception map (`MissingRequiredArgumentException`, positional-objects rule, nullable handling) are owned by the [DI & Configuration Guide](core-di-and-config.md), sections 6.1 and 7.9 — listeners follow them unchanged; `Injector::invoke()` returns `mixed` (docblock only; no native return type is declared).
 3. **Statelessness Invariant:** In worker-based runtimes (RoadRunner, FrankenPHP, Swoole), listener instances may persist across multiple requests. Listeners must remain strictly stateless and never store request-specific state in class properties.
 
 ### 3.3. Listener Ordering (No Priority Mechanism)
@@ -323,27 +323,7 @@ The group names `events`, `events-web`, and `events-console` are official, **but
 
 After editing `config/configuration.php`, rebuild the merge plan with `composer yii-config-rebuild`. The shared file's content then reaches **both** environment groups via the `$events` reference.
 
-**Merge modifiers (official recipe for events).** By default, arrays in configuration files are **not merged recursively** — later files overwrite whole array keys instead of merging. For events, enable both modifiers in the application's `Config` definition:
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\Config\Config;
-use Yiisoft\Config\ConfigPaths;
-use Yiisoft\Config\Modifier\RecursiveMerge;
-use Yiisoft\Config\Modifier\ReverseMerge;
-
-$config = new Config(
-    new ConfigPaths(dirname(__DIR__)),
-    'dev',
-    [
-        RecursiveMerge::groups('params', 'events', 'events-web', 'events-console'),
-        ReverseMerge::groups('events', 'events-web', 'events-console'),
-    ],
-);
-```
-
-Source: `vendor/yiisoft/config/README.md` (Configuration modifiers). Reverse merge gives module-level event configs higher priority than the base config.
+**Merge modifiers (official recipe for events).** Merge semantics and the modifier APIs (`ReverseMerge::groups(...)`, `RecursiveMerge::groups(...)`, `RecursiveMerge::groupsWithDepth(...)`) are owned by the [DI & Configuration Guide](core-di-and-config.md), section 2.5. For events you normally write no modifier code at all: the HTTP and console runners already apply `RecursiveMerge` + `ReverseMerge` to the `params*` and `events*` groups out of the box via `createDefaultConfig()`. Only a hand-constructed `Yiisoft\Config\Config` instance (custom entrypoint, test bootstrap) needs the explicit `RecursiveMerge::groups('params', 'events', 'events-web', 'events-console')` + `ReverseMerge::groups('events', 'events-web', 'events-console')` modifiers. Reverse merge gives module-level event configs higher priority than the base config.
 
 **Custom group.** To isolate a module's events, redefine the parameter:
 

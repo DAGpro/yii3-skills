@@ -1000,7 +1000,10 @@ All five driver packages declare `"provide": {"yiisoft/db-implementation": "1.0.
 
 ### 6.2. Canonical Connection Configuration
 
-Each driver ships typed DSN value objects (`Yiisoft\Db\<Dialect>\Dsn`) that render the PDO DSN string. Canonical configuration in `config/common/params.php`:
+Each driver ships typed DSN value objects (`Yiisoft\Db\<Dialect>\Dsn`) that render the PDO DSN string. Canonical configuration in `config/common/params.php` (this is the official shape from the `yiisoft/db` docs; the companion `ConnectionInterface` DI definition is shown in [core-di-and-config.md](core-di-and-config.md), section 4.9):
+
+> [!NOTE]
+> `username` / `password` below are schema placeholders. In real applications read them from the environment — `(string) ($_ENV['DB_USERNAME'] ?? '')` / `(string) ($_ENV['DB_PASSWORD'] ?? '')` — never hardcode credentials in params (see the DI & Configuration Guide's anti-pattern matrix).
 
 ```php
 // 1. MySQL / MariaDB (renders: mysql:host=127.0.0.1;dbname=yiitest;port=3306;charset=utf8mb4)
@@ -1008,8 +1011,8 @@ use Yiisoft\Db\Mysql\Dsn as MysqlDsn;
 
 'yiisoft/db-mysql' => [
     'dsn' => new MysqlDsn('mysql', '127.0.0.1', 'yiitest', '3306', ['charset' => 'utf8mb4']),
-    'username' => 'user',
-    'password' => 'secret',
+    'username' => 'user',       // placeholder — use $_ENV
+    'password' => 'secret',     // placeholder — use $_ENV
 ],
 
 // 2. MySQL Unix Socket (renders: mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=yiitest)
@@ -1017,8 +1020,8 @@ use Yiisoft\Db\Mysql\DsnSocket;
 
 'yiisoft/db-mysql' => [
     'dsn' => new DsnSocket('mysql', '/var/run/mysqld/mysqld.sock', 'yiitest'),
-    'username' => 'user',
-    'password' => 'secret',
+    'username' => 'user',       // placeholder — use $_ENV
+    'password' => 'secret',     // placeholder — use $_ENV
 ],
 
 // 3. PostgreSQL (renders: pgsql:host=127.0.0.1;dbname=yiitest;port=5432)
@@ -1026,8 +1029,8 @@ use Yiisoft\Db\Pgsql\Dsn as PgsqlDsn;
 
 'yiisoft/db-pgsql' => [
     'dsn' => new PgsqlDsn('pgsql', '127.0.0.1', 'yiitest', '5432'),
-    'username' => 'postgres',
-    'password' => 'secret',
+    'username' => 'postgres',   // placeholder — use $_ENV
+    'password' => 'secret',     // placeholder — use $_ENV
 ],
 
 // 4. SQLite: In-Memory (for CI/Testing, renders: sqlite::memory:)
@@ -1048,8 +1051,8 @@ use Yiisoft\Db\Mssql\Dsn as MssqlDsn;
 
 'yiisoft/db-mssql' => [
     'dsn' => new MssqlDsn('sqlsrv', 'localhost', 'yiitest', '1433'),
-    'username' => 'sa',
-    'password' => 'secret',
+    'username' => 'sa',         // placeholder — use $_ENV
+    'password' => 'secret',     // placeholder — use $_ENV
 ],
 
 // 6. Oracle Database (renders: oci:dbname=localhost:1521/XE;charset=AL32UTF8)
@@ -1057,12 +1060,12 @@ use Yiisoft\Db\Oracle\Dsn as OracleDsn;
 
 'yiisoft/db-oracle' => [
     'dsn' => new OracleDsn('oci', 'localhost', 'XE', '1521', ['charset' => 'AL32UTF8']),
-    'username' => 'system',
-    'password' => 'secret',
+    'username' => 'system',     // placeholder — use $_ENV
+    'password' => 'secret',     // placeholder — use $_ENV
 ],
 ```
 
-The driver packages ship **no** DI config-plugin of their own. The DI definition mapping `ConnectionInterface::class` to the driver's `Connection` lives in the application (e.g. `config/common/di/db.php` consuming `$params['yiisoft/db-<driver>']`).
+The driver packages ship **no** DI config-plugin of their own. The DI definition mapping `ConnectionInterface::class` to the driver's `Connection` lives in the application (`config/common/di/db-<driver>.php` consuming `$params['yiisoft/db-<driver>']`) — the canonical definition is shown in [core-di-and-config.md](core-di-and-config.md), section 4.9.
 
 ### 6.3. Driver-Specific Nuances & Version Support
 

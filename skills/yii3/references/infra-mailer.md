@@ -80,8 +80,8 @@ return [
             'scheme' => 'smtps', // "smtps" = using TLS; "smtp" = without using TLS
             'host' => 'smtp.example.com',
             'port' => 465,
-            'username' => 'apikey',
-            'password' => 'secret-smtp-password',
+            'username' => (string) ($_ENV['MAILER_USERNAME'] ?? 'apikey'),
+            'password' => (string) ($_ENV['MAILER_PASSWORD'] ?? ''), // never hardcode SMTP credentials
             'options' => [], // Free-form options array forwarded to the transport Dsn (TLS peer verification per the package comment)
         ],
         'messageSettings' => [
@@ -1008,14 +1008,14 @@ return [
 > [!WARNING]
 > Do **not** double-nest the map (`Event::class => [[Listener::class]]`). The inner array is not a valid listener definition; it throws `InvalidListenerConfigurationException` at the first dispatch of that event.
 
-Valid listener definitions per event key: closures; `[Class::class, 'method']` (static or non-static — the class is instantiated via DI); first-class callables; invokable objects; invokable class-strings (`InvokableClass::class` — instantiated by DI, must define `__invoke`); DI alias strings. The event object is passed as the first argument; additional parameters are DI-resolved at call time; return values are discarded (`: void` is convention). Map keys must reference existing classes.
+Valid listener definitions per event key: the full six-form table is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2. The event object is passed as the first argument; additional parameters are DI-resolved at call time; return values are discarded (`: void` is convention). Map keys must reference existing classes.
 
 Wiring steps (the app template ships `'events' => []` and no events file):
 
 1. Create `config/common/events.php` with the single-nested map.
 2. Register it in `config/configuration.php`: `'events' => ['common/events.php']`.
 3. Run `composer yii-config-rebuild`.
-4. Install the dispatcher: `composer require yiisoft/yii-event` — its package config auto-binds `Psr\EventDispatcher\EventDispatcherInterface::class => Yiisoft\EventDispatcher\Dispatcher\Dispatcher::class` and `Psr\EventDispatcher\ListenerProviderInterface::class => Yiisoft\EventDispatcher\Provider\Provider::class`. Without a bound dispatcher, dispatched events are silently dropped (see §7).
+4. Install the dispatcher: `composer require yiisoft/yii-event` — see §7 for what it binds and why mailer events are silently skipped without it.
 
 ---
 
@@ -1121,7 +1121,7 @@ return [
 
 Register the file as described in §6.5 (create `config/common/events.php`, add `'events' => ['common/events.php']` to `config/configuration.php`, run `composer yii-config-rebuild`, and install `yiisoft/yii-event`). Map keys must reference existing classes — `BeforeSend` and `AfterSend` are final classes with no marker interfaces to register against.
 
-Development validation: `Yiisoft\Yii\Event\ListenerConfigurationChecker::check($config->get('events-web'))` eagerly resolves every listener definition and catches bad format, non-existent event classes, and non-callable listeners — run it in dev/test only.
+Development validation: run `Yiisoft\Yii\Event\ListenerConfigurationChecker::check($config->get('events-web'))` — it eagerly resolves every listener definition and catches bad format, non-existent event classes, and non-callable listeners (dev/test only; mechanics in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.3).
 
 To deliver application log records by email through the same `MailerInterface`, `yiisoft/log-target-email` provides `EmailTarget` (constructor `(MailerInterface $mailer, array|string $emailTo, string $subjectEmail = '', array $levels = [])`; default subject `'Application Log'`; it sends a `Message` with a word-wrapped plain-text body).
 

@@ -200,24 +200,15 @@ Once installed, a dependency must be correctly integrated into the application's
 
 ### 4.2. `yiisoft/config` Composer Commands
 
-Use the official Composer plugin commands provided by `yiisoft/config` to inspect and manage configuration plans:
+The plugin commands — `composer yii-config-rebuild` (regenerate the merge plan), `composer yii-config-info [package]` (inspect groups/files), `composer yii-config-copy <package> [target] [files...]` — are documented with full semantics in the [DI & Config Guide, §2.3](core-di-and-config.md). The verification loop in this protocol mostly needs:
 
 ```bash
 # Crawl configuration files and regenerate config/.merge-plan.php
 composer yii-config-rebuild
-
-# Display configuration groups and participating files
-composer yii-config-info
-
-# Inspect configuration details of a specific package
-composer yii-config-info yiisoft/router
-
-# Safely copy vendor configuration files into application directory
-composer yii-config-copy yiisoft/router config/packages/
 ```
 
 > [!NOTE]
-> `config/.merge-plan.php` is an entirely generated file. **NEVER edit it manually.** Its contents are overwritten whenever Composer runs or `yii-config-rebuild` is invoked.
+> `config/.merge-plan.php` is an entirely generated file — **never edit it manually** ([DI & Config Guide, §2.2](core-di-and-config.md)).
 
 ### 4.3. Configuration Layering & Key Collisions
 
@@ -234,7 +225,7 @@ All definitions must be written in strict PHP without missing dependencies or pl
 
 | Wiring Topic | Canonical Recipe Location |
 | :--- | :--- |
-| Database connection (`config/common/di/db.php`) + DSN params | [DI & Config Guide](core-di-and-config.md) |
+| Database connection (`config/common/di/db-<driver>.php`) + DSN params | [DI & Config Guide, §4.9](core-di-and-config.md) |
 | Cache storage binding (`CacheInterface` → driver) | [DI & Config Guide](core-di-and-config.md) |
 | Logger & multiple targets | [Logging Guide, §2](infra-logging.md) |
 | RBAC storages (`config/common/di/rbac.php`) | [Auth & RBAC Guide, §8](infra-auth-and-rbac.md) |

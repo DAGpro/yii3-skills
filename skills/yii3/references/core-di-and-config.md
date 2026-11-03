@@ -303,7 +303,7 @@ Full constructor signature (`Yiisoft\Config\Config`):
 Parameters are primitive values (strings, integers, floats, booleans, arrays) consumed by service definitions.
 
 ### 3.1. Rules for Parameters
-1. **Primitives Only (convention):** Keep parameters primitive — scalars and plain arrays; class-string values (`Formatter::class`) are acceptable and idiomatic. Do not put closures, anonymous functions, or instantiated service objects in `params.php`: parameters are merged across packages and environments, shared with DI files, and should remain introspectable and overridable. Factories belong in `config/*/di/*.php`, not in params.
+1. **Primitives Only (convention):** Keep parameters primitive — scalars and plain arrays; class-string values (`Formatter::class`) are acceptable and idiomatic. Do not put closures, anonymous functions, or instantiated service objects in `params.php`: parameters are merged across packages and environments, shared with DI files, and should remain introspectable and overridable. Factories belong in `config/*/di/*.php`, not in params. Vendor-defined keys that carry *definitions* or immutable value objects are the documented exceptions: `yiisoft/queue`'s `middlewares-push` / `middlewares-consume` / `middlewares-fail` (fed into middleware dispatcher constructors, closures allowed) and the `yiisoft/db-<driver>` `dsn` (a `Dsn` value object, see 4.9).
 2. **Package Namespacing:** Always namespace third-party package configuration under the vendor/package key (e.g. `'yiisoft/view'`, `'yiisoft/yii-view-renderer'`) — every vendor package ships its params under its own composer name. The application layer overrides package defaults for the same string key (later layers win, see 2.1).
 3. **Environment Separation:** Read sensitive secrets or deployment-specific values from `$_ENV`. In the `yiisoft/app` template, `.env` loading is a **dev convenience only**: `vlucas/phpdotenv` is a `require-dev` dependency loaded through a guarded `Dotenv::createImmutable(...)->safeLoad()`. Production values come from the server/container environment — do not treat `.env` files as a production secrets mechanism.
 4. **Local Scope Variables:** When `Config` builds a configuration file, it evaluates the file with two variables available in the local scope: `$params` (the merged parameters group, e.g. `params-web`; an empty array if no params group is configured) and `$config` (the `Yiisoft\Config\Config` instance itself, usable for `$config->has(...)` / `$config->get(...)` of other groups).
@@ -355,7 +355,7 @@ return [
 ```
 
 > [!NOTE]
-> **`yiisoft/yii-view-renderer` schema:** the package default is `['viewPath' => null, 'layout' => null, 'injections' => []]`. `viewPath: null` disables relative view paths (reading the view path then throws `The view path is not set.`); `layout: null` means no layout. The template also fills `injections` (e.g. `Reference::to(CsrfViewInjection::class)`).
+> **`yiisoft/yii-view-renderer` schema:** the package default is `['viewPath' => null, 'layout' => null, 'injections' => []]`. `viewPath: null` disables relative view paths (reading the view path then throws `The view path is not set.`); `layout: null` means no layout. The template also fills `injections` (e.g. `Reference::to(CsrfViewInjection::class)`). View-domain coverage of this schema (renderers, layout injections, Twig) belongs to the [Views & Widgets Guide](http-views-and-widgets.md).
 >
 > **Deprecated API note:** the three `Yiisoft\DataResponse\Formatter\*DataResponseFormatter` classes and `Yiisoft\DataResponse\Middleware\ContentNegotiator` are `@deprecated`. The replacement is `DataStream` together with `Yiisoft\DataResponse\Formatter\HtmlFormatter` / `JsonFormatter` / `XmlFormatter` and the `ContentNegotiatorDataResponseMiddleware` middleware. They remain the package's shipped defaults, so the block above keeps working as-is.
 
@@ -647,7 +647,7 @@ The closure is a `CallableDefinition`; the container invokes it and shares the r
 
 ### 4.9. Database Connection Recipe (`yiisoft/db` 2.x)
 
-`yiisoft/db` requires a driver package at the Composer level (the virtual package `yiisoft/db-implementation` is provided by `yiisoft/db-mysql`, `yiisoft/db-sqlite`, `yiisoft/db-pgsql`, `yiisoft/db-mssql`, `yiisoft/db-oracle` — pick exactly one). The design is driver-first: credentials live on the Driver object, and the Connection wraps it.
+`yiisoft/db` requires a driver package at the Composer level (the virtual package `yiisoft/db-implementation` is provided by `yiisoft/db-mysql`, `yiisoft/db-sqlite`, `yiisoft/db-pgsql`, `yiisoft/db-mssql`, `yiisoft/db-oracle` — pick exactly one). The design is driver-first: credentials live on the Driver object, and the Connection wraps it. The shape below mirrors the official recipe from the `yiisoft/db` docs — the driver's `Dsn` value object lives in params, and the DI file only wires `Driver` + `Connection`.
 
 `config/common/params.php`:
 
@@ -656,18 +656,24 @@ The closure is a `CallableDefinition`; the container invokes it and shares the r
 
 declare(strict_types=1);
 
+use Yiisoft\Db\Mysql\Dsn;
+
 return [
     'yiisoft/db-mysql' => [
-        'host' => (string) ($_ENV['DB_HOST'] ?? '127.0.0.1'),
-        'port' => (string) ($_ENV['DB_PORT'] ?? '3306'),
-        'database' => (string) ($_ENV['DB_NAME'] ?? 'yiitest'),
+        'dsn' => new Dsn(
+            'mysql',
+            (string) ($_ENV['DB_HOST'] ?? '127.0.0.1'),
+            (string) ($_ENV['DB_NAME'] ?? 'yiitest'),
+            (string) ($_ENV['DB_PORT'] ?? '3306'),
+            ['charset' => 'utf8mb4'],
+        ),
         'username' => (string) ($_ENV['DB_USERNAME'] ?? ''),
         'password' => (string) ($_ENV['DB_PASSWORD'] ?? ''),
     ],
 ];
 ```
 
-`config/common/di/db.php` (picked up by the `'di' => 'common/di/*.php'` wildcard):
+`config/common/di/db-mysql.php` (picked up by the `'di' => 'common/di/*.php'` wildcard):
 
 ```php
 <?php
@@ -677,7 +683,6 @@ declare(strict_types=1);
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Mysql\Connection;
 use Yiisoft\Db\Mysql\Driver;
-use Yiisoft\Db\Mysql\Dsn;
 
 /** @var array $params */
 
@@ -686,13 +691,7 @@ return [
         'class' => Connection::class,
         '__construct()' => [
             'driver' => new Driver(
-                new Dsn(
-                    'mysql',
-                    $params['yiisoft/db-mysql']['host'],
-                    $params['yiisoft/db-mysql']['database'],
-                    $params['yiisoft/db-mysql']['port'],
-                    ['charset' => 'utf8mb4'],
-                ),
+                $params['yiisoft/db-mysql']['dsn'],
                 $params['yiisoft/db-mysql']['username'],
                 $params['yiisoft/db-mysql']['password'],
             ),
@@ -703,8 +702,10 @@ return [
 
 > [!NOTE]
 > - Signatures shown target `yiisoft/db` **2.x** (`AbstractPdoDriver::__construct(string|Stringable $dsn, string $username = '', string $password = '', array $attributes = [])`; `AbstractPdoConnection::__construct(PdoDriverInterface $driver, SchemaCache $schemaCache = new SchemaCache(), ?ColumnFactoryInterface $columnFactory = null)`). Always verify the exact classes in `vendor/yiisoft/db-<driver>/src/`.
+> - **`Dsn` in params is the documented vendor shape** (immutable value object, not a service) — an explicit exception to the primitives-only convention in [3.1](#31-rules-for-parameters). Credentials themselves still come from `$_ENV`, never hardcoded (see the anti-pattern matrix in 8).
 > - **`charset()` is a method, not a constructor parameter** — pass the charset via the Dsn attributes (as above) or call `charset()` on the driver; `'charset' => ...` inside the Driver constructor arguments is an error.
 > - The `Dsn` is an immutable `Stringable` object: per-environment overrides must replace the whole value, not a fragment. For SQLite (`yiisoft/db-sqlite`), the same shape applies with that package's `Dsn`: `new Dsn('sqlite', '/path/to/app.db')` (constructor `__construct(string $driver = 'sqlite', string $databaseName = '')`).
+> - Per-driver `Dsn` variants (`DsnSocket`, PostgreSQL, SQLite in-memory/file, MSSQL, Oracle) are catalogued in the [Databases Guide](persistence-db.md), section 6.2.
 > - **Schema caching:** the default `new SchemaCache()` falls back to `NullCache` (no caching). For production, pass a `SchemaCache` built over your PSR-16 cache as the `schemaCache` constructor argument.
 
 ---

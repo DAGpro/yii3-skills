@@ -773,25 +773,15 @@ final class Container implements ContainerInterface
 > Notes:
 > - Type-hint generated constructors with `Psr\Container\ContainerInterface` (PSR-11), NOT `Yiisoft\Di\Container`. The verbatim PSR-11 interface declaration is not reproduced here — verify it in `vendor/psr/container/src/ContainerInterface.php`.
 > - `#[Injectable]` does NOT exist in `yiisoft/di` — constructor autowiring is implicit; never generate this attribute.
-> - Definition-array forms: class-string map, array definition (`'class'`, `'__construct()'` with named arguments, `'$property'`, `'method()'`), closures, objects. The key is `'class'` (there is no `'__class'` key); a definition missing `'class'` throws `InvalidConfigException`.
-> - `Reference::to()` / `Reference::optional()` live in `Yiisoft\Definitions\Reference` (package `yiisoft/definitions`), not in `yiisoft/di`.
-> - `ContainerConfig` has a private constructor — start with `ContainerConfig::create()` and chain `withDefinitions()`, `withProviders()`, `withTags()`, `withValidate()`, `withDelegates()`, `withStrictMode()`.
+> - Definition-array syntax, `Reference::to()` / `Reference::optional()` namespaces, and the full `ContainerConfig` API table are owned by the [DI & Configuration Guide](core-di-and-config.md), sections 4 and 5.4 — consult it before generating any wiring code.
 
 **Usage:**
 ```php
 declare(strict_types=1);
 
-use Yiisoft\Di\Container;
-use Yiisoft\Di\ContainerConfig;
-use Yiisoft\Validator\Validator;
-use Yiisoft\Validator\ValidatorInterface;
+use Psr\Container\ContainerInterface;
 
-$config = ContainerConfig::create()
-    ->withDefinitions([
-        ValidatorInterface::class => Validator::class,
-    ]);
-
-$container = new Container($config);
+/** @var ContainerInterface $container Resolved instances are cached — one shared instance per container. */
 $validator = $container->get(ValidatorInterface::class);
 ```
 
@@ -1062,7 +1052,7 @@ final class MiddlewareDispatcher
 > - `withMiddlewares()` is `@deprecated` since 5.5.0 — pass middleware definitions to the constructor. An empty pipeline throws `RuntimeException` ("Stack is empty.").
 > - `MiddlewareFactory::create(array|callable|string $middlewareDefinition): MiddlewareInterface` accepts PSR-15 class names, handler/invokable class names, callables (including `[Controller::class, 'action']`), array definitions, and container aliases; an invalid definition throws `InvalidMiddlewareDefinitionException`.
 > - The first-specified middleware executes first; a middleware that does not call `$handler->handle($request)` short-circuits the pipeline.
-> - Actions and callables are invoked through `Yiisoft\Injector\Injector`: `(new Injector($container))->invoke($callback, $parameters)`. `invoke()` has NO native return type — do not write `: mixed`; `Injector::make(string $class, array $arguments = []): object`.
+> - Actions and callables are invoked through `Yiisoft\Injector\Injector` — argument-resolution rules, the `make()`/`invoke()` distinction, and the exception map are owned by the [DI & Configuration Guide](core-di-and-config.md), section 6; `invoke()` has NO native return type — do not write `: mixed`.
 
 **Usage:**
 ```php

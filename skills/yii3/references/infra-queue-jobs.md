@@ -586,6 +586,9 @@ When a message handler throws a `Throwable`, `Worker::process()` catches it, con
 
 ### Complete Middleware Configuration (`config/params.php`)
 
+> [!NOTE]
+> **Vendor exception to the primitives-only params rule:** the `middlewares-push` / `middlewares-consume` / `middlewares-fail` keys ship as `[]` in `vendor/yiisoft/queue/config/params.php`, and the package's own `config/di.php` feeds them into the `MiddlewareDispatcher` / `FailureMiddlewareDispatcher` constructors, whose factories create middleware from *definitions* — arrays, class strings, or **closures** (the constructor docblock type is `array[][]|callable[][]|...[][]`). Closures inside these specific keys are therefore the documented vendor pattern, not a violation of the DI & Configuration Guide's params rules (see [core-di-and-config.md](core-di-and-config.md), section 3.1). Do not copy the pattern into custom, non-`middlewares-*` params keys.
+
 ```php
 declare(strict_types=1);
 

@@ -1020,7 +1020,7 @@ public function __construct(
 3. **Alias Registration:** It registers the detected base path with `Yiisoft\Aliases\Aliases` under `@baseUrl` (`$aliases->set('@baseUrl', $baseUrl)`), making it available to asset publishers and template helpers.
 4. **Auto-Detection Mode:** If `$prefix` is omitted (`null`), `Subfolder` automatically derives the web path from `$_SERVER` environment variables (`SCRIPT_FILENAME`, `PHP_SELF`, `ORIG_SCRIPT_NAME`, `DOCUMENT_ROOT`).
 
-Register `Subfolder` in the HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via `withMiddlewares()` on `MiddlewareDispatcher` (see [error-handling.md](infra-error-handling.md), section 2):
+Register `Subfolder` in the HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via the `MiddlewareDispatcher` constructor argument `middlewareDefinitions` (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [middlewares.md](http-middlewares.md), [error-handling.md](infra-error-handling.md), section 2):
 
 ```php
 declare(strict_types=1);
@@ -1038,8 +1038,8 @@ return [
         '__construct()' => [
             'dispatcher' => DynamicReference::to([
                 'class' => MiddlewareDispatcher::class,
-                'withMiddlewares()' => [
-                    [
+                '__construct()' => [
+                    'middlewareDefinitions' => [
                         ErrorCatcher::class,
                         Subfolder::class, // MUST precede Router middleware
                         Router::class,

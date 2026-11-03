@@ -454,45 +454,10 @@ The dependency packages and their wiring:
 #### Database connection (`yiisoft/db`)
 
 `ConnectionInterface` lives in `vendor/yiisoft/db/src/Connection/ConnectionInterface.php`. Exactly one driver
-package must be installed (`yiisoft/db-mysql`, `-pgsql`, `-sqlite`, `-mssql`, `-oracle`). Official DI recipe
-(from the `yiisoft/db` docs, `docs/guide/en/connection/mysql.md`):
+package must be installed (`yiisoft/db-mysql`, `-pgsql`, `-sqlite`, `-mssql`, `-oracle`).
 
-```php
-// config/common/di/db-mysql.php
-declare(strict_types=1);
-
-use Yiisoft\Db\Connection\ConnectionInterface;
-use Yiisoft\Db\Mysql\Connection;
-use Yiisoft\Db\Mysql\Driver;
-
-/** @var array $params */
-
-return [
-    ConnectionInterface::class => [
-        'class' => Connection::class,
-        '__construct()' => [
-            'driver' => new Driver(
-                $params['yiisoft/db-mysql']['dsn'],
-                $params['yiisoft/db-mysql']['username'],
-                $params['yiisoft/db-mysql']['password'],
-            ),
-        ],
-    ],
-];
-```
-
-```php
-// config/common/params.php
-use Yiisoft\Db\Mysql\Dsn;
-
-return [
-    'yiisoft/db-mysql' => [
-        'dsn' => new Dsn('mysql', '127.0.0.1', 'yiitest', '3306', ['charset' => 'utf8mb4']),
-        'username' => 'user',
-        'password' => 'password',
-    ],
-];
-```
+> [!NOTE]
+> The canonical connection recipe — the `config/common/params.php` block with the driver's `Dsn` value object and the `config/common/di/db-mysql.php` definition binding `ConnectionInterface::class` — is owned by the [DI & Configuration Guide](core-di-and-config.md), section 4.9, with per-driver `Dsn` variants in the [Databases Guide](persistence-db.md), section 6.2. Do not duplicate it here: once a single `ConnectionInterface` binding exists, the `MessageSource` below autowires it — no i18n-specific DB wiring is required.
 
 #### Cache wiring (`yiisoft/cache`)
 

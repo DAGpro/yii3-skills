@@ -559,7 +559,7 @@ All official packages (`yiisoft/user`, `yiisoft/session`, `yiisoft/router`, etc.
 **Custom stateful application services** declare a `'reset'` key directly on their own DI definition in `config/di-web.php` — full per-service examples: [Runners & Runtimes Guide, §6.3](infra-runners-and-runtimes.md).
 
 > [!CAUTION]
-> **Never define or override `StateResetter::class` in application DI configuration.** An app-level definition is treated as a full override, flips `useResettersFromMeta` to `false`, and silently disables every built-in package resetter — identity, session, route, and view state then leak across worker requests. Full analysis: [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md).
+> **Never define or override `StateResetter::class` in application DI configuration.** An app-level definition is treated as a full override and silently disables every built-in package resetter — identity, session, route, and view state then leak across worker requests. Internal mechanics and full analysis: [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md), and the DI & Configuration Guide's anti-pattern matrix.
 
 ### 4.5. Remember-Me Auto-Login Cookies (`CookieLogin`)
 
@@ -606,7 +606,7 @@ return [
 
 #### Attaching `CookieLoginMiddleware` to Pipeline
 
-There is **no** `"middlewares"` params key — no package consumes it. The middleware pipeline is wired through the `Application::class` DI definition in `config/web/di/application.php`, whose `dispatcher` constructor parameter receives a `MiddlewareDispatcher` configured via `withMiddlewares()` (see [error-handling.md](infra-error-handling.md), section 2). Register `CookieLoginMiddleware` immediately after `SessionMiddleware`:
+There is **no** `"middlewares"` params key — no package consumes it. The middleware pipeline is wired through the `Application::class` DI definition in `config/web/di/application.php`, whose `dispatcher` constructor parameter receives a `MiddlewareDispatcher` with middleware definitions passed to its constructor (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [error-handling.md](infra-error-handling.md), section 2). Register `CookieLoginMiddleware` immediately after `SessionMiddleware`:
 
 ```php
 // config/web/di/application.php
@@ -623,8 +623,8 @@ return [
         '__construct()' => [
             'dispatcher' => DynamicReference::to([
                 'class' => MiddlewareDispatcher::class,
-                'withMiddlewares()' => [
-                    [
+                '__construct()' => [
+                    'middlewareDefinitions' => [
                         ErrorCatcher::class,
                         SessionMiddleware::class,
                         CookieLoginMiddleware::class, // Auto-authenticates guest users from cookie
@@ -647,7 +647,7 @@ All state-changing web login forms must validate CSRF tokens using `Yiisoft\Csrf
 > [!WARNING]
 > `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated`. Always use `Yiisoft\Csrf\CsrfTokenMiddleware`.
 
-1. **Pipeline registration (`config/web/di/application.php`):** there is **no** `"middlewares"` params key — the stack is wired on the `Application::class` DI definition via `MiddlewareDispatcher` (see [error-handling.md](infra-error-handling.md), section 2):
+1. **Pipeline registration (`config/web/di/application.php`):** there is **no** `"middlewares"` params key — the stack is wired on the `Application::class` DI definition via the `MiddlewareDispatcher` constructor argument `middlewareDefinitions` (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [error-handling.md](infra-error-handling.md), section 2):
    ```php
    use Yiisoft\Csrf\CsrfTokenMiddleware;
    use Yiisoft\Definitions\DynamicReference;
@@ -662,8 +662,8 @@ All state-changing web login forms must validate CSRF tokens using `Yiisoft\Csrf
            '__construct()' => [
                'dispatcher' => DynamicReference::to([
                    'class' => MiddlewareDispatcher::class,
-                   'withMiddlewares()' => [
-                       [
+                   '__construct()' => [
+                       'middlewareDefinitions' => [
                            \Yiisoft\ErrorHandler\Middleware\ErrorCatcher::class,
                            SessionMiddleware::class,
                            CsrfTokenMiddleware::class,
@@ -1653,7 +1653,7 @@ final readonly class PostAuthorizationService
 | **8** | Omitting `withSuccessUrl()` in `AuthAction` | Callbacks returning `void` fall back to `$this->successUrl`. If omitted, PHP 8.2 throws an uninitialized typed property fatal error. | Always configure `withSuccessUrl()` and `withCancelUrl()`, or return a `ResponseInterface` from the callback. |
 | **9** | Using deprecated `CsrfMiddleware` or `UserAuth` | Both are `@deprecated` and scheduled for removal. | Use `Yiisoft\Csrf\CsrfTokenMiddleware` and `Yiisoft\User\Method\WebAuth`. |
 | **10** | Binding `AuthenticationMethodInterface` | Deprecated interface in `yiisoft/auth`. | Bind `AuthenticatorWithChallengeInterface` or `AuthenticatorInterface`. |
-| **11** | Defining `StateResetter::class` in DI (or omitting worker state reset) | `CurrentUser` cached identity bleeds into subsequent worker requests in RoadRunner/FrankenPHP; worse, an application-level `StateResetter::class` definition flips `useResettersFromMeta` to `false` and silently disables **all** built-in package resetters. | Rely on built-in package resetters (catalog: [runners-and-runtimes.md](infra-runners-and-runtimes.md) §6.4); for custom services use the per-service `'reset'` definition key (§6.3). `yiisoft/user` already ships `'reset' => $this->clear()` for `CurrentUser`. |
+| **11** | Defining `StateResetter::class` in DI (or omitting worker state reset) | `CurrentUser` cached identity bleeds into subsequent worker requests in RoadRunner/FrankenPHP; worse, an application-level `StateResetter::class` definition acts as a full override and silently disables **all** built-in package resetters. | Rely on built-in package resetters (catalog: [runners-and-runtimes.md](infra-runners-and-runtimes.md) §6.4); for custom services use the per-service `'reset'` definition key (§6.3). `yiisoft/user` already ships `'reset' => $this->clear()` for `CurrentUser`. |
 | **12** | Missing `signatureKey` for `CookieLogin` | Remember-me cookies are unsigned, allowing attackers to forge user IDs. | Always set a strong, random `signatureKey` in `CookieLogin` configuration. |
 | **13** | Mutating state in `RuleInterface::execute()` | Rules are executed during evaluation checks and must remain pure and side-effect free. | Only return `bool`. Perform state mutations in Application Use Cases. |
 | **14** | Storing plaintext tokens or passwords | Severe security vulnerability. | Hash passwords with `PasswordHasher` and sign tokens with cryptographic HMAC or asymmetric keys. |

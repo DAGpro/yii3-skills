@@ -1,7 +1,7 @@
 ---
 name: yii3
 description: >-
-  Architectural guide, code generator, and verification suite for modern Yii 3 applications (PHP 8.2+, yiisoft/* packages; strict zero-Yii2 policy). Provides conventions, package catalogs, layer decomposition, deterministic AST validation scripts, and vertical slice templates. Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "add repository", "add use case", "add event", "add listener", "add middleware", "configure DI", "register route", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3 form", "validation rules", "form model", "PHPUnit", "cache", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC", "oauth", "sqlite", "error handling", "PSR-3 logging", "i18n", "flash message", "CSRF", "file upload", "download file", "swagger", "openapi", "layered architecture", "vertical slices".
+  Architectural guide, code generator, and verification suite for modern Yii 3 applications (PHP 8.2+, yiisoft/* packages; strict zero-Yii2 policy). Provides conventions, package catalogs, layer decomposition, deterministic AST validation scripts, and vertical slice templates. Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "add repository", "add use case", "add event", "add listener", "add middleware", "configure DI", "register route", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3 form", "validation rules", "custom rule", "form model", "PHPUnit", "cache", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC", "oauth", "sqlite", "error handling", "PSR-3 logging", "i18n", "flash message", "CSRF", "file upload", "download file", "swagger", "openapi", "layered architecture", "vertical slices".
 ---
 
 # Yii3 development
@@ -88,7 +88,7 @@ Load only the targeted reference guides required for the active task archetype:
 | **Database & Schema Migrations** | `references/persistence-migrations.md`<br>`references/persistence-db.md` (or `persistence-cycle-orm.md`) | `references/core-di-and-config.md`<br>`references/persistence-caching.md` | `examples/crud-slice/Migration` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/package-catalog.md` | `examples/crud-slice/README.md` |
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md` | `check-di-syntax.php` |
-| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md` | `check-di-syntax.php` |
+| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` | `check-di-syntax.php` |
 | **i18n / Localization** | `references/http-i18n-translation.md` | `references/http-routes.md`<br>`references/core-di-and-config.md` | `verify-actions.php` |
 | **API Docs (OpenAPI / Swagger)** | `references/http-openapi-swagger.md` | `references/http-routes.md`<br>`references/http-actions-and-controllers.md` | `verify-routes.php` |
 | **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md`<br>`references/infra-commands.md` | `check-di-syntax.php` |
@@ -111,7 +111,8 @@ Load only the targeted reference guides required for the active task archetype:
 - `references/http-middlewares.md` — PSR-15 HTTP middleware pipeline, request pre-processing, security post-processing, auth short-circuiting, and official middleware catalog
 - `references/http-actions-and-controllers.md` — package usage recommendations in actions/controllers, HTTP request parsing, DTO hydration, validation, security, data-response, and view rendering
 - `references/http-openapi-swagger.md` — OpenAPI specification generation with yiisoft/yii-swagger, PHP 8 attributes (OA), Swagger UI asset rendering, and route integration
-- `references/http-validation-and-forms.md` — built-in and custom validator rules, skipOnEmpty/when modifiers, message translation, FormModel + FormHydrator, validating hydrator DTOs, and input-http request inputs
+- `references/http-validation-and-forms.md` — built-in validator rules, skipOnEmpty/when modifiers, message translation, FormModel + FormHydrator, validating hydrator DTOs, and input-http request inputs
+- `references/http-validation-custom-rules.md` — custom validation rules (RuleInterface), service handlers (RuleHandlerInterface), DI wiring with RuleHandlerContainer, compound rules, and isolated unit testing
 - `references/http-views-and-widgets.md` — view placement (colocated action templates or central views directory), PHP view templates, mandatory XSS escaping, layouts, asset bundles, custom widgets, CSS-framework widget drivers (yiisoft/bootstrap5, yiisoft/yii-bulma), HTML forms, and DataView widgets (GridView, ListView, DetailView)
 - `references/http-state.md` — sessions and session middleware, flash messages, cookie handling with signing/encryption, and CSRF token implementations with middleware wiring
 - `references/http-file-handling.md` — FileHelper filesystem utilities, download responses (sendFile, x-sendfile, byte ranges), and the PSR-7 upload flow with file validation rules

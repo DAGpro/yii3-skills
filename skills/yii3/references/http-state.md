@@ -455,7 +455,7 @@ Under long-running runners (RoadRunner, FrankenPHP — see [Package Catalog](pac
 | Forbidden Anti-Pattern | Why it breaks | Idiomatic Yii3 Solution |
 |---|---|---|
 | Yii2-style `Yii::$app->session` / `Yii::$app->response->cookies` | No service locator in Yii3 | Inject `SessionInterface` / use `Cookie` + response (§2.1, §4.1) |
-| Calling `$session->flash('key', $value)` | `Session` has no flash methods | Inject `FlashInterface` (`Yiisoft\Session\Flash\Flash`) (§3) |
+| Calling non-existent `$session->getFlash()`, `$session->setFlash()`, or `$session->flash()` | `SessionInterface` has no flash methods in Yii3 | Inject `FlashInterface` (`Yiisoft\Session\Flash\Flash`) (§3) |
 | Type-hinting `Yiisoft\Session\Session` (concrete) | Blocks `NullSession` in tests and stateless contexts | Hint `SessionInterface` (§2.2) |
 | Inventing `SessionConfiguration` / `RequestCookies` / `ResponseCookies` / `CsrfToken` classes | None of them exist in the current packages | Use the options array, `CookieCollection`, and `CsrfTokenInterface` (§2, §4, §5.1) |
 | Writing cookies by manually building `Set-Cookie` strings | Easy to break encoding/attributes | Use `Cookie::addToResponse()` / `CookieCollection::setToResponse()` (§4) |

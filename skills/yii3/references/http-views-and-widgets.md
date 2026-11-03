@@ -52,7 +52,7 @@
   - [7.6. Comparison Matrix: Bootstrap 5 vs Bulma Drivers](#76-comparison-matrix-bootstrap-5-vs-bulma-drivers)
 - [8. HTML Form Rendering (yiisoft/html, yiisoft/form-model, yiisoft/form)](#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform)
   - [8.1. Form Architecture: Tag Builders vs Field Binding](#81-form-architecture-tag-builders-vs-field-binding)
-  - [8.2. Form Model Definition (FormModel, Rules & Attributes)](#82-form-model-definition-formmodel-rules--attributes)
+  - [8.2. Form Model Definition for Widgets (FormModel & UI Attributes)](#82-form-model-definition-for-widgets-formmodel--ui-attributes)
   - [8.3. Form Template Example](#83-form-template-example)
   - [8.4. Comprehensive Field Catalog (Yiisoft\FormModel\Field)](#84-comprehensive-field-catalog-yiisoftformmodelfield)
   - [8.5. Automatic Validation Rules Enrichment (ValidationRulesEnricher)](#85-automatic-validation-rules-enrichment-validationrulesenricher)
@@ -1456,7 +1456,7 @@ In Yii3, forms are divided into two distinct components:
 - Forms are opened via `Html::form($action)->post()->csrf($csrf)->open()`.
 - Form fields are generated via static factory methods on `Yiisoft\FormModel\Field`.
 
-### 8.2. Form Model Definition (`FormModel`, Rules & Attributes)
+### 8.2. Form Model Definition for Widgets (`FormModel` & UI Attributes)
 
 ```php
 declare(strict_types=1);
@@ -1468,15 +1468,12 @@ use Yiisoft\FormModel\Attribute\Placeholder;
 use Yiisoft\FormModel\Attribute\Safe;
 use Yiisoft\FormModel\FormModel;
 use Yiisoft\Validator\Label;
-use Yiisoft\Validator\Rule\Email;
-use Yiisoft\Validator\Rule\Length;
-use Yiisoft\Validator\Rule\Required;
-use Yiisoft\Validator\RulesProviderInterface;
 
-final class RegistrationForm extends FormModel implements RulesProviderInterface
+final class RegistrationForm extends FormModel
 {
     #[Label('Username')]
     #[Placeholder('Choose a unique username')]
+    #[Hint('Your public display name on the platform.')]
     private string $username = '';
 
     #[Label('Email Address')]
@@ -1511,21 +1508,13 @@ final class RegistrationForm extends FormModel implements RulesProviderInterface
     {
         return $this->acceptTerms;
     }
-
-    public function getRules(): array
-    {
-        return [
-            'username' => [new Required(), new Length(min: 3, max: 30)],
-            'email' => [new Required(), new Email()],
-            'password' => [new Required(), new Length(min: 8)],
-            'acceptTerms' => [new Required()],
-        ];
-    }
 }
 ```
 
 > [!NOTE]
-> Labels are declared using `#[Yiisoft\Validator\Label]`. The attribute `Yiisoft\FormModel\Attribute\Label` does **not** exist.
+> - Labels are declared using `#[Yiisoft\Validator\Label]`. The attribute `Yiisoft\FormModel\Attribute\Label` does **not** exist.
+> - Hints (`#[Hint]`), placeholders (`#[Placeholder]`), and safe markers (`#[Safe]`) are provided by `yiisoft/form-model`.
+> - For form validation rules (`#[Required]`, `#[Email]`, `RulesProviderInterface`, `getRules()`), validator execution, and hydrator binding, see [Validation & Forms Guide](http-validation-and-forms.md).
 
 ### 8.3. Form Template Example
 
@@ -1998,7 +1987,7 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 | **`ActiveForm::begin()`** | Yii2 legacy class; does not exist in Yii3. | `Html::form('/action')->post()->csrf($token)->open()` + `Field::text($formModel, 'prop')`. |
 | **`Yiisoft\Form\Widget\Form`** | Phantom class; doesn't exist in `yiisoft/form` or `yiisoft/form-model`. | Use `Yiisoft\Html\Html::form()->open()` and `Html::form()->close()`. |
 | **`Field::widget()->text(...)`** | Incorrect instance invocation on static helper. | Use static factory `Yiisoft\FormModel\Field::text($formModel, 'prop')`. |
-| **`Field::tel(...)`** | Method does not exist. Causes fatal error. | Call `Field::telephone($formModel, 'prop')`. |
+| **Calling non-existent `Field::submit()`, `Field::radio()`, `Field::reset()`, `Field::tel()`** | These method names do not exist on `Yiisoft\FormModel\Field` and cause fatal `Call to undefined method` errors. | Use `Field::submitButton()`, `Field::radioList()`, `Field::resetButton()`, and `Field::telephone()`. |
 | **`Field::submitButton('Sign In', ['class' => 'btn'])`** | Second parameter is `$config` (DI definitions), not HTML attributes. | Call `Field::submitButton('Sign In')->buttonAttributes(['class' => 'btn btn-primary'])` or `->buttonClass(...)`. |
 | **`$params['yiisoft/form']['defaultConfig'] = '...'`** | Bootstrap file reads `'defaultTheme'`. Causes `Undefined array key "defaultTheme"`. | Set `$params['yiisoft/form']['defaultTheme'] = 'bootstrap5-vertical'`. |
 | **`WebViewRenderer::withStatus($code)`** | `WebViewRenderer` does not have `withStatus()`; it returns a PSR-7 `ResponseInterface`. | Chain `->withStatus($code)` on the returned response: `$this->viewRenderer->render(...)->withStatus(Status::NOT_FOUND)`. |

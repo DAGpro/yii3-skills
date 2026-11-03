@@ -1396,65 +1396,17 @@ final class RegisterUserDtoTest extends TestCase
 ```
 
 #### 2. Custom Validation Rule & Handler Testing
-Testing a custom rule requiring external service dependencies using `SimpleRuleHandlerContainer`:
+
+Custom validation rules decouple definition (`RuleInterface`) from execution (`RuleHandlerInterface`). In tests, rule handlers with service dependencies can be tested in isolation (by instantiating the handler and calling `validate()` directly) or integrated with `Validator` via `SimpleRuleHandlerContainer`:
 
 ```php
 declare(strict_types=1);
 
 namespace App\Tests\Unit\Validation;
 
-use Attribute;
 use PHPUnit\Framework\TestCase;
-use Yiisoft\Validator\Exception\UnexpectedRuleException;
-use Yiisoft\Validator\Result;
-use Yiisoft\Validator\RuleHandlerInterface;
 use Yiisoft\Validator\RuleHandlerResolver\SimpleRuleHandlerContainer;
-use Yiisoft\Validator\RuleInterface;
-use Yiisoft\Validator\ValidationContext;
 use Yiisoft\Validator\Validator;
-
-interface UserCheckRepositoryInterface
-{
-    public function isEmailTaken(string $email): bool;
-}
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-final class UniqueEmail implements RuleInterface
-{
-    public function __construct(
-        public readonly string $message = 'This email is already registered.',
-    ) {}
-
-    public function getHandler(): string
-    {
-        return UniqueEmailHandler::class;
-    }
-}
-
-final class UniqueEmailHandler implements RuleHandlerInterface
-{
-    public function __construct(
-        private UserCheckRepositoryInterface $repository,
-    ) {}
-
-    public function validate(mixed $value, RuleInterface $rule, ValidationContext $context): Result
-    {
-        if (!$rule instanceof UniqueEmail) {
-            throw new UnexpectedRuleException(UniqueEmail::class, $rule);
-        }
-
-        $result = new Result();
-        if (!is_string($value) || $value === '') {
-            return $result;
-        }
-
-        if ($this->repository->isEmailTaken($value)) {
-            $result->addError($rule->message);
-        }
-
-        return $result;
-    }
-}
 
 final class UniqueEmailRuleTest extends TestCase
 {
@@ -1466,7 +1418,7 @@ final class UniqueEmailRuleTest extends TestCase
             ->with('taken@example.com')
             ->willReturn(true);
 
-        // Inject handler mock dependencies into SimpleRuleHandlerContainer
+        // Supply mock dependencies into SimpleRuleHandlerContainer
         $handlerContainer = new SimpleRuleHandlerContainer([
             UniqueEmailHandler::class => new UniqueEmailHandler($mockRepo),
         ]);
@@ -1479,6 +1431,10 @@ final class UniqueEmailRuleTest extends TestCase
     }
 }
 ```
+
+> [!TIP]
+> **Complete Custom Validation Guide & Isolated Testing:**
+> For `RuleInterface`, `RuleHandlerInterface`, `ValidationContext` inspection, composite rules, testing cross-property rules via `ArrayDataSet`, handling `UnexpectedRuleException`, and isolated handler unit tests without the validator engine, see [Custom Validation Rules & Testing](http-validation-custom-rules.md).
 
 ---
 
@@ -2095,6 +2051,7 @@ Below is a master reference of exact parameter names and signatures for key test
 ---
 
 ## 9. Related Guides
+- [`http-validation-custom-rules.md`](http-validation-custom-rules.md) — Custom validation rules, RuleHandlerInterface, and isolated unit testing.
 - [`testing-http.md`](testing-http.md) — Functional HTTP testing, middleware pipelines, endpoints, sessions, and `ResponseAccessor`.
 - [`testing-database.md`](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
 - [`infra-commands.md`](infra-commands.md) — Console command definition, input arguments/options, and execution lifecycle.

@@ -300,8 +300,125 @@ final readonly class CreatePostAutoAction
 }
 ```
 
-> [!NOTE]
-> Class data attributes (`#[FromBody]`, `#[FromQuery]`), individual parameter attributes (`#[Body]`, `#[Query]`, `#[Request]`), exception-driven flow (`throwInputValidationException`), and RFC 7807 problem details are owned by the [Validation & Forms Guide](http-validation-and-forms.md), section 10.
+##### 1. Class Data Attributes: `#[FromBody]` & `#[FromQuery]`
+
+`yiisoft/input-http` resolves action method parameters implementing `Yiisoft\Input\Http\RequestInputInterface` (or extending `Yiisoft\Input\Http\AbstractInput`).
+
+Class-level data attributes (`Yiisoft\Input\Http\Attribute\Data\*`):
+- `#[FromBody(name: null, map: [], strict: false)]` &rarr; reads from `$request->getParsedBody()`.
+- `#[FromQuery(name: null, map: [], strict: false)]` &rarr; reads from `$request->getQueryParams()`.
+
+Setting `$name = 'user'` extracts a nested key from the body or query parameters.
+
+> [!WARNING]
+> There are strictly **NO** `#[FromRoute]`, `#[FromHeader]`, or `#[FromCookie]` class data attributes in `yiisoft/input-http`. Route parameters are retrieved via `Yiisoft\Router\CurrentRoute` or `#[Request]`. Headers are retrieved via PSR-7 `$request->getHeaderLine()`.
+
+##### 2. Parameter Attributes: `#[Body]`, `#[Query]`, `#[Request]`, `#[UploadedFiles]`
+
+Parameter attributes (`Yiisoft\Input\Http\Attribute\Parameter\*`) pull specific request segments into DTO properties or directly into action parameters:
+- `#[Body('title')]` &rarr; extracts a single property from the request body.
+- `#[Query('page')]` &rarr; extracts a query parameter.
+- `#[UploadedFiles('avatar')]` &rarr; extracts an uploaded file from `$request->getUploadedFiles()`.
+- **`#[Request('attributeName')]`:** Reads from **PSR-7 request attributes** (`$request->getAttributes()`), such as router match parameters or middleware context. **It does NOT read HTTP headers.**
+
+##### 3. Direct Action Parameter Resolution (`HydratorAttributeParametersResolver`)
+
+`yiisoft/input-http` provides two parameter resolvers implementing `Yiisoft\Middleware\Dispatcher\ParametersResolverInterface`:
+1. **`RequestInputParametersResolver`:** Resolves full DTOs extending `AbstractInput` or implementing `RequestInputInterface`.
+2. **`HydratorAttributeParametersResolver`:** Resolves **individual action method parameters** directly decorated with hydrator attributes, without requiring a separate DTO class!
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Api\Post;
+
+use Psr\Http\Message\ResponseInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+use Yiisoft\Input\Http\Attribute\Parameter\Query;
+
+final readonly class ListPostsAction
+{
+    public function __construct(
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    // HydratorAttributeParametersResolver injects $page, $limit, and $search directly:
+    public function __invoke(
+        #[Query('page')] int $page = 1,
+        #[Query('limit')] int $limit = 20,
+        #[Query('search')] ?string $search = null,
+    ): ResponseInterface {
+        $payload = [
+            'page' => $page,
+            'limit' => $limit,
+            'search' => $search,
+        ];
+
+        return $this->responseFactory->createResponse($payload);
+    }
+}
+```
+
+##### 4. Exception-Driven Flow (`throwInputValidationException`)
+
+In `config/common/params.php`:
+```php
+declare(strict_types=1);
+
+return [
+    'yiisoft/input-http' => [
+        'requestInputParametersResolver' => [
+            'throwInputValidationException' => true, // Default is false
+        ],
+    ],
+];
+```
+When set to `true`, invalid inputs throw `Yiisoft\Input\Http\InputValidationException` before the action executes, which can be handled centrally by an exception middleware.
+
+##### 5. RFC 7807 Problem Details Error Responder
+
+> [!CAUTION]
+> **`InputValidationException` API Invariant:**
+> `Yiisoft\Input\Http\InputValidationException` does **NOT** provide a `getResponse()` method. It encapsulates strictly `private Result $result`, accessible via `getResult(): Result`. Creating an RFC 7807 response is the explicit responsibility of your responder or exception handling middleware.
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Api\Shared;
+
+use Psr\Http\Message\ResponseInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+use Yiisoft\Http\Header;
+use Yiisoft\Http\Status;
+use Yiisoft\Input\Http\InputValidationException;
+use Yiisoft\Validator\Result;
+
+final readonly class ValidationProblemDetailsResponder
+{
+    public function __construct(
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function respond(Result|InputValidationException $validation): ResponseInterface
+    {
+        $result = $validation instanceof InputValidationException
+            ? $validation->getResult()
+            : $validation;
+
+        $payload = [
+            'type' => 'https://tools.ietf.org/html/rfc4918#section-11.2',
+            'title' => 'Validation Failed',
+            'status' => Status::UNPROCESSABLE_ENTITY,
+            'detail' => 'One or more parameters failed validation.',
+            'invalid-params' => $result->getErrorMessagesIndexedByPath(),
+        ];
+
+        return $this->responseFactory
+            ->createResponse($payload, Status::UNPROCESSABLE_ENTITY)
+            ->withHeader(Header::CONTENT_TYPE, 'application/problem+json');
+    }
+}
+```
 
 ---
 

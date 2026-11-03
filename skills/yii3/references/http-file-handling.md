@@ -561,7 +561,7 @@ return [
 
 | Forbidden Anti-Pattern | Why it breaks | Idiomatic Yii3 Solution |
 |---|---|---|
-| Calling `FileHelper::exists()` / `->touch()` / `pathCombine()` | These methods do not exist in `yiisoft/files` — fatal error | Use native `file_exists()`/`touch()`; combine paths with interpolation + `normalizePath()` |
+| Calling `FileHelper::createDirectory()`, `FileHelper::exists()`, `->touch()`, or `pathCombine()` | These methods do not exist in `yiisoft/files` — fatal error | Use `FileHelper::ensureDirectory()` to create directories; use native `file_exists()`/`touch()`; combine paths with interpolation + `normalizePath()` |
 | Treating `FileHelper` as an instance service | It is static-only, no constructor — DI autowiring has nothing to resolve | Call static methods; wrap your own storage service around them for testability |
 | Passing alias strings (`'@runtime/...'`, `'@uploads/...'`) into `FileHelper` methods | `FileHelper` never resolves aliases — the literal string is used as a path and fails with `InvalidArgumentException("... does not exist.")` | Inject `Yiisoft\Aliases\Aliases` and call `$aliases->get('@uploads/...')` first (§5) |
 | `validate($upload, ['field' => [...]])` on a bare upload | String-keyed rules read a property from the validated value — a bare `UploadedFileInterface` has none, so `Required` always fails | Key the data too: `validate(['field' => $upload], ['field' => [...]])` (§4) |

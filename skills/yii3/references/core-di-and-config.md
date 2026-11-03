@@ -1145,4 +1145,3 @@ php scripts/check-di-syntax.php [path-to-project]
 
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and RoadRunner/FrankenPHP workers with `StateResetter`.
 - [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 event mapping and listener registration in config groups.
-- [Conventions Guide](core-conventions.md) — Architectural invariants, configuration directories, and SSOT verification rule.

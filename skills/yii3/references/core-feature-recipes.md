@@ -514,26 +514,28 @@ $uploadedFile = $request->getUploadedFiles()['avatar'] ?? null;
 
 ## 2. Business Capability Inference
 
-Translate business terms in user requirements to corresponding Yii3 capabilities and packages:
+Translate business terms in user requirements to a Yii3 capability key, then resolve the required packages, driver choices, and key interfaces for that key in the [Package Catalog, §1 — Capability Quick-Lookup Matrix](package-catalog.md#1-capability-quick-lookup-matrix):
 
-| Business Need in User Prompt | Yii3 Capability Key | Required Packages | Key Interfaces & Classes |
-|---|---|---|---|
-| Passwords, hashing, tokens | `security` | `yiisoft/security` | `PasswordHasher`, `Random` |
-| Email notifications, confirmation | `mail`, `events` | `yiisoft/mailer`, `yiisoft/mailer-symfony` (ships the `MailerInterface` binding), `yiisoft/yii-event` | `MailerInterface`, `MessageInterface`, `EventDispatcherInterface` |
-| Tables, schema, DB storage | `db`, `migrations` | `yiisoft/db`, `yiisoft/db-migration`, plus ONE driver (`yiisoft/db-mysql` / `db-pgsql` / `db-sqlite` / `db-mssql` / `db-oracle`) | `ConnectionInterface`, `MigrationBuilder` |
-| Form validation, payload validation | `validation`, `hydrator` | `yiisoft/validator`, `yiisoft/hydrator`, `yiisoft/hydrator-validator`, `yiisoft/input-http` | `ValidatorInterface`, `HydratorInterface`, rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`) |
-| REST API, JSON output | `response` | `yiisoft/data-response` | `ResponseFactory\DataResponseFactoryInterface`, `ResponseFactory\*` factories (`DataStream`); root-namespace `DataResponse` is deprecated |
-| Data grids, pagination, sorting | `dataview`, `data` | `yiisoft/data`, `yiisoft/data-db` (DB-backed readers), `yiisoft/yii-dataview` | `OffsetPaginator`, `Sort`, `DataReaderInterface`, `GridView` |
-| Background tasks, deferred jobs | `queue` | `yiisoft/queue`, adapter (`yiisoft/queue-db` / `yiisoft/queue-redis` / `yiisoft/queue-amqp`) | `QueueProducerInterface`, `MessageInterface` |
-| Access control, permissions | `rbac`, `access` | `yiisoft/rbac`, `yiisoft/rbac-rules-container` (dynamic rules), `yiisoft/user` | `ManagerInterface`, `CurrentUser` |
-| External login ("sign in with ..."), OAuth2 / OIDC | `auth-client` | `yiisoft/yii-auth-client` | `Collection`, `AuthAction` (PSR-15 middleware), `Client\OpenIdConnect`, `Widget\AuthChoice` |
-| Console commands, CLI imports | `console` | `yiisoft/yii-console` | `Symfony\Component\Console\Command\Command`, `ExitCode` |
-| Session, flash messages | `session` | `yiisoft/session` | `SessionInterface`, `FlashInterface` (in the `Flash` sub-namespace) |
-| File download / export | `response-download` | `yiisoft/response-download` | `DownloadResponseFactory` |
-| File uploads & images | `validation` + PSR-7 upload contract | `yiisoft/validator`, `psr/http-message` | `UploadedFileInterface` (PSR-7), `#[File]`, `#[Image]` |
-| CSS-framework UI components (Bootstrap 5, Bulma) | `widgets` | `yiisoft/widget` (base + factory only, no concrete widgets), `yiisoft/yii-widgets`, `yiisoft/bootstrap5` or `yiisoft/yii-bulma` | `Alert` (`Yiisoft\Yii\Widgets\Alert`, `Yiisoft\Bootstrap5\Alert`), `NavBar` (Bootstrap5 + Bulma), `Tabs` (Bulma only; Bootstrap5 uses `Nav` + `NavStyle::TABS`; Bulma's alert analog is `Message`) |
-| Slugs, case conversion, deep array access, safe JSON | `utilities` | `yiisoft/strings`, `yiisoft/arrays`, `yiisoft/json` | `Inflector` (instance API), `StringHelper`, `ArrayHelper`, `Json` |
-| IP allow/deny lists, CIDR checks, DNS/email-domain validation | `network` | `yiisoft/network-utilities` | `IpHelper`, `IpRanges`, `DnsHelper` |
+| Business Need in User Prompt | Yii3 Capability Key(s) |
+|---|---|
+| Passwords, hashing, tokens | `security` |
+| Email notifications, confirmation | `mail`, `events` |
+| Tables, schema, DB storage | `db`, `migrations` |
+| Form validation, payload validation | `validation`, `hydrator` |
+| REST API, JSON output | `response` |
+| Data grids, pagination, sorting | `dataview`, `data` |
+| Background tasks, deferred jobs | `queue` |
+| Access control, permissions | `rbac`, `access` |
+| External login ("sign in with ..."), OAuth2 / OIDC | `auth-client` |
+| Console commands, CLI imports | `console` |
+| Session, flash messages | `session` |
+| File download / export | `download` |
+| File uploads & images | `validation` (PSR-7 upload contract) |
+| CSS-framework UI components (Bootstrap 5, Bulma) | `widgets` |
+| Slugs, case conversion, deep array access, safe JSON | `utilities` |
+| IP allow/deny lists, CIDR checks, DNS/email-domain validation | `network` |
+
+When a capability offers interchangeable driver backends (database, cache, queue, RBAC storage), select **exactly one** driver per the [Package Catalog, §3](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family) before writing code — see the [Dependency Protocol](core-dependency-protocol.md) for the full install/verify gate.
 
 ---
 

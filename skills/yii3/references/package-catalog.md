@@ -10,18 +10,17 @@
 - [1. Capability Quick-Lookup Matrix](#1-capability-quick-lookup-matrix)
 - [2. Architectural Layer Distribution (11 Extended Packages)](#2-architectural-layer-distribution-11-extended-packages)
 - [3. Driver & Storage Selection Rules (Pick Exactly ONE per Family)](#3-driver--storage-selection-rules-pick-exactly-one-per-family)
-- [4. Phantom Packages (Anti-Hallucination Guard)](#4-phantom-packages-anti-hallucination-guard)
-- [5. Minimal Package Sets per Feature Archetype](#5-minimal-package-sets-per-feature-archetype)
-  - [5.1. Web Core & Routing](#51-web-core--routing)
-  - [5.2. Database with Plain DB or Active Record](#52-database-with-plain-db-or-active-record)
-  - [5.3. Database with Cycle ORM](#53-database-with-cycle-orm)
-  - [5.4. REST API Endpoint with Validation](#54-rest-api-endpoint-with-validation)
-  - [5.5. CLI / Console Commands](#55-cli--console-commands)
-  - [5.6. Authentication & RBAC](#56-authentication--rbac)
-  - [5.7. Async Jobs & Queue](#57-async-jobs--queue)
-  - [5.8. HTML Web Form with Widgets](#58-html-web-form-with-widgets)
-  - [5.9. High-Performance Workers & OAuth](#59-high-performance-workers--oauth)
-- [6. Verification Protocol in Target Project](#6-verification-protocol-in-target-project)
+- [4. Minimal Package Sets per Feature Archetype](#4-minimal-package-sets-per-feature-archetype)
+  - [4.1. Web Core & Routing](#41-web-core--routing)
+  - [4.2. Database with Plain DB or Active Record](#42-database-with-plain-db-or-active-record)
+  - [4.3. Database with Cycle ORM](#43-database-with-cycle-orm)
+  - [4.4. REST API Endpoint with Validation](#44-rest-api-endpoint-with-validation)
+  - [4.5. CLI / Console Commands](#45-cli--console-commands)
+  - [4.6. Authentication & RBAC](#46-authentication--rbac)
+  - [4.7. Async Jobs & Queue](#47-async-jobs--queue)
+  - [4.8. HTML Web Form with Widgets](#48-html-web-form-with-widgets)
+  - [4.9. High-Performance Workers & OAuth](#49-high-performance-workers--oauth)
+- [5. Package Verification Rules](#5-package-verification-rules)
 
 ---
 
@@ -126,39 +125,16 @@ Every target application must pick a consistent storage driver for each infrastr
 
 ---
 
-## 4. Phantom Packages (Anti-Hallucination Guard)
-
-The following packages are commonly hallucinated by AI models but **DO NOT EXIST** as independent `yiisoft/*` packages:
-
-| Hallucinated Package Name | What Actually Implements It in Yii3 | Correct Action |
-|---|---|---|
-| ❌ `yiisoft/cors` | `yiisoft/http-middleware` | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware` from `yiisoft/http-middleware` or configure CORS headers in middleware stack. |
-| ❌ `yiisoft/http-client` | No official Yii3 HTTP client wrapper exists. | Install standard PSR-18 client: `composer require guzzlehttp/guzzle` or `symfony/http-client`. |
-| ❌ `yiisoft/testo` | The vendor is `testo`, not `yiisoft`. | Use `composer require --dev testo/testo`. |
-| ❌ `yiisoft/infection` | The vendor is `infection`, not `yiisoft`. | Use `composer require --dev infection/infection roave/infection-static-analysis-plugin`. |
-| ❌ `yiisoft/yii-queue` | Deprecated older package. | Use `composer require yiisoft/queue`. |
-| ❌ `yiisoft/yii-view` | Older template package. | Use `composer require yiisoft/view yiisoft/yii-view-renderer`. |
-| ❌ `yiisoft/rbac-rules` | Rules container is separate. | Use `composer require yiisoft/rbac-rules-container`. |
-| ❌ `yiisoft/rest` / `yiisoft/yii-rest` | Does NOT exist in Yii3. | REST is built via `yiisoft/router` + `yiisoft/data-response` + `yiisoft/input-http` + `yiisoft/validator`. |
-| ❌ `yiisoft/jwt` | Wrong package name. | Use `composer require yiisoft/auth-jwt`. |
-| ❌ `yiisoft/active-form` | Split into form and model packages. | Use `composer require yiisoft/form yiisoft/form-model`. |
-| ❌ `yiisoft/grid` | Dataview handles grid rendering. | Use `composer require yiisoft/yii-dataview`. |
-| ❌ `yiisoft/helpers` | Split into discrete standalone packages. | Use `yiisoft/arrays`, `yiisoft/strings`, `yiisoft/files`, `yiisoft/json`. |
-| ❌ `yiisoft/db-common` | Core database abstraction is unified. | Use `composer require yiisoft/db`. |
-| ❌ `yiisoft/i18n-message-php` / `yiisoft/i18n-message-gettext` | Composer names are `yiisoft/translator-message-php` / `yiisoft/translator-message-gettext` (the sources are identical); there is also no `GettextMessageFormatter` class. | Use `composer require yiisoft/translator-message-php` (or `-gettext` / `-db`); never `yiisoft/i18n-message-*`. |
-
----
-
-## 5. Minimal Package Sets per Feature Archetype
+## 4. Minimal Package Sets per Feature Archetype
 
 When implementing a new feature in a target project, require only the minimal set of missing packages:
 
-### 5.1. Web Core & Routing
+### 4.1. Web Core & Routing
 ```bash
 composer require yiisoft/di yiisoft/config yiisoft/router yiisoft/router-fastroute yiisoft/middleware-dispatcher yiisoft/yii-http yiisoft/yii-runner-http
 ```
 
-### 5.2. Database with Plain DB or Active Record
+### 4.2. Database with Plain DB or Active Record
 ```bash
 # Plain DB:
 composer require yiisoft/db yiisoft/db-migration yiisoft/db-mysql yiisoft/aliases
@@ -167,7 +143,7 @@ composer require yiisoft/db yiisoft/db-migration yiisoft/db-mysql yiisoft/aliase
 composer require yiisoft/db yiisoft/db-migration yiisoft/active-record yiisoft/db-mysql yiisoft/aliases
 ```
 
-### 5.3. Database with Cycle ORM
+### 4.3. Database with Cycle ORM
 ```bash
 # Core Cycle ORM integration, data readers, DBAL, and migrations:
 composer require yiisoft/yii-cycle yiisoft/data-cycle cycle/database cycle/migrations
@@ -179,32 +155,32 @@ composer require cycle/entity-behavior
 composer require yiisoft/rbac yiisoft/rbac-cycle-db
 ```
 
-### 5.4. REST API Endpoint with Validation
+### 4.4. REST API Endpoint with Validation
 ```bash
 composer require yiisoft/data-response yiisoft/input-http yiisoft/validator yiisoft/hydrator yiisoft/hydrator-validator
 ```
 
-### 5.5. CLI / Console Commands
+### 4.5. CLI / Console Commands
 ```bash
 composer require yiisoft/yii-console yiisoft/yii-runner-console
 ```
 
-### 5.6. Authentication & RBAC
+### 4.6. Authentication & RBAC
 ```bash
 composer require yiisoft/user yiisoft/auth yiisoft/session yiisoft/security yiisoft/rbac yiisoft/rbac-db
 ```
 
-### 5.7. Async Jobs & Queue
+### 4.7. Async Jobs & Queue
 ```bash
 composer require yiisoft/queue yiisoft/queue-db yiisoft/mutex yiisoft/mutex-pdo-mysql
 ```
 
-### 5.8. HTML Web Form with Widgets
+### 4.8. HTML Web Form with Widgets
 ```bash
 composer require yiisoft/form yiisoft/form-model yiisoft/html yiisoft/view yiisoft/yii-view-renderer yiisoft/assets yiisoft/csrf
 ```
 
-### 5.9. High-Performance Workers & OAuth
+### 4.9. High-Performance Workers & OAuth
 ```bash
 # RoadRunner Worker (spiral/roadrunner-http, -worker, -cli, -grpc arrive transitively;
 # after install run ./vendor/bin/rr get to download the rr binary, then ./rr serve):
@@ -219,10 +195,11 @@ composer require yiisoft/yii-auth-client yiisoft/user yiisoft/session
 
 ---
 
-## 6. Verification Protocol in Target Project
+## 5. Package Verification Rules
 
-1. Always check `composer.json` before proposing `composer require`.
-2. After installing, inspect `vendor/yiisoft/<pkg>/src/` for public methods, constructor arguments, and return types.
-3. Verify that `config/.merge-plan.php` was updated by `yiisoft/config`.
-4. Check package default parameters in `vendor/yiisoft/<pkg>/config/params.php` before overriding them in project configuration.
+The full dependency gate — existing-installation check, install authorization, wiring verification, and package source inspection — lives in the [Dependency Protocol](core-dependency-protocol.md). When working from this catalog, additionally:
+
+1. Resolve every capability through §1 of this catalog first, and never propose `composer require` for a package already present in `composer.json`.
+2. Mind the Category A/B distinction from [Dependency Protocol §4](core-dependency-protocol.md): only packages declaring `extra.config-plugin` (e.g. `yiisoft/router`, `yiisoft/db`, `yiisoft/cache-file`) appear in `config/.merge-plan.php` — driver packages (`yiisoft/db-mysql`, `yiisoft/cache-redis`, ...) never do and require manual DI definitions.
+3. Before overriding a package's parameters, read its shipped defaults in `vendor/yiisoft/<pkg>/config/params.php`.
 

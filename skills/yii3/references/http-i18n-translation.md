@@ -69,12 +69,6 @@ Formatters are **built into** `yiisoft/translator` — there are no separate for
 The core `Translator` also ships the in-code extractor classes (`Yiisoft\Translator\Extractor\*`), which need
 `ext-tokenizer` (a `suggest` of `yiisoft/translator`).
 
-> [!IMPORTANT]
-> `yiisoft/i18n-message-php` and `yiisoft/i18n-message-gettext` are **not separate packages** — their
-> `composer.json` declares the names `yiisoft/translator-message-php` / `yiisoft/translator-message-gettext`
-> (the sources are identical). Do not `composer require yiisoft/i18n-message-*`; there is also no
-> `GettextMessageFormatter` class anywhere.
-
 ## 2. Core Translation API (`yiisoft/translator`)
 
 ### 2.1. TranslatorInterface
@@ -1025,7 +1019,6 @@ plain strings internally.
 |---|---|---|
 | Yii2-style `Yii::t('app', 'Hello')` | Static facade does not exist in Yii3 | Inject `TranslatorInterface`; call `->translate('hello', [...], 'app')` (§2.1) |
 | Expecting `{placeholder}` substitution with default config | The default formatter is `NullMessageFormatter` — placeholders stay literal | Alias `MessageFormatterInterface::class` to `SimpleMessageFormatter` or `IntlMessageFormatter` (§3) |
-| `composer require yiisoft/i18n-message-php` | No such package name — `composer.json` declares `yiisoft/translator-message-php` | Require the `translator-message-*` names (§1) |
 | Inventing a `GettextMessageFormatter` class | Does not exist; gettext support is a message reader, not a formatter | Use the reader with any formatter (§4.3) |
 | Copying README/`config/di.php` examples positionally | Both shipped examples are stale: `Translator` 3rd positional is now `$defaultCategory` (TypeError with a dispatcher); `CategorySource` example swaps reader/formatter | Use named arguments; verify against `src/` (§2.2) |
 | Passing `Psr\SimpleCache\CacheInterface` as the DB source's `$cache` | The parameter is `Yiisoft\Cache\CacheInterface` — a PSR-16 wrapper, not PSR-16 itself | Wire `Yiisoft\Cache\CacheInterface => Cache` (shipped by `yiisoft/cache`) or install `yiisoft/cache`'s default config (§4.2) |

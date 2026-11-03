@@ -21,23 +21,48 @@ description: >-
 ---
 
 ## Core rules
-1. **Yii3 is not Yii2.** No `Yii::$app`, no `yii\` namespace, no static facades. PSR-based, injected.
-2. **Source of Truth & Verification Rule (Single Source of Truth / SSOT):**
-   - **Resolution order:** existing project code (`src/`, `config/`) → `vendor/yiisoft/<pkg>/src/` (installed version) → skill reference documentation (`references/core-conventions.md`, `references/package-catalog.md`, `references/core-api-signatures.md`, etc.).
+1. **Yii3 is not Yii2.** No `Yii::$app`, no `yii\` namespace, no static facades (`Yii::getAlias()`, `Yii::info()`, `ActiveRecord::find()`), no behaviors (`TimestampBehavior`), no `rules()` / `behaviors()` on persistence models. PSR-based, injected.
+2. **Source of Truth & Verification Rule (Single Source of Truth / SSOT) — three-tier resolution hierarchy:**
+   - **Tier 1 — Target Project Codebase (supreme authority):** `src/`, `config/`, `composer.json`, and the active architecture artifact (`.ai-factory/ARCHITECTURE.md` when present).
+   - **Tier 2 — Installed Package Sources (API authority):** `vendor/yiisoft/<pkg>/src/` — exact class names, interfaces, method signatures, argument order, types, and configuration defaults.
+   - **Tier 3 — Skill Reference Guides (fallback):** `references/*.md` (authoring synthesis and recipes, e.g. `references/package-catalog.md`, `references/core-api-signatures.md`).
    - In target projects, always verify exact method signatures, constructor arguments, and configuration options directly in `vendor/yiisoft/<package>/src/` for installed packages.
    - When generating or refactoring code, if an installed package's method signature or property is unfamiliar or in doubt, **read its source files in `vendor/yiisoft/<package>/src/`** rather than guessing or relying on legacy Yii2 habits.
    - Zero-hallucination policy: never invent method signatures, configuration keys, or assume Yii2 syntax.
+   - **Package version awareness:** inspect `composer.lock` for the installed versions — newer majors change syntax (constructor-based routes in `yiisoft/router` 4.0+ vs older static factories; `WebViewRenderer` vs the deprecated `ViewRenderer`).
 3. **Architecture decides placement:** `/aif-architecture` artifact if it exists, otherwise the project's real structure
    (`src/`, `config/` + similar existing features). See `references/core-architecture-alignment.md`.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
+
+### Cross-Cutting Yii 2 Bans (Quick Guard List)
+
+The complete matrices with grounding rationale live in each topic guide's Anti-Pattern Matrix; the deterministic scripts (below) catch the mechanical violations. The most frequent ones:
+
+| # | Forbidden Legacy / Anti-Pattern | Mandatory Idiomatic Yii 3 Replacement |
+|---|---|---|
+| 1 | `Yii::$app->...` or any static facade | Inject PSR / Yiisoft interfaces via constructor DI |
+| 2 | `class SiteController extends Controller` with `actionIndex()` | `final readonly class IndexAction` with `__invoke()` |
+| 3 | `$this->render('index', $data)` inside controllers | Inject `WebViewRenderer` and return `$this->viewRenderer->render(...)` |
+| 4 | `$request->post('name')` / `$request->get('id')` | PSR-7 `getParsedBody()` or typed DTOs via `yiisoft/input-http`; route args via `CurrentRoute` |
+| 5 | `rules()` and `behaviors()` on ActiveRecord models | Validation attributes on DTOs; PSR-14 events replace behaviors |
+| 6 | `ActiveForm::begin()` in templates | `Html::form()->post()->csrf($csrf)->open()` and `Field::text(...)` |
+| 7 | `Route::get('/path')` / `Group::create()` (router ≥ 4.0.3) | `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Group()` |
+| 8 | `./yii migrate/up` (slash separator) | `./yii migrate:up` (colon separator) |
+| 9 | Editing `vendor/` or `config/.merge-plan.php` | Edit `config/**/params.php` / `di/*.php`, then `composer yii-config-rebuild` |
+| 10 | `echo`, `print`, `die()`, `exit()` in actions | Return a PSR-7 `ResponseInterface` instance |
+| 11 | Mixing Active Record and Cycle ORM | Choose strictly one persistence stack |
+| 12 | `$session->getFlash(...)` / `$session->setFlash(...)` | Inject `FlashInterface` separately |
+| 13 | `if ($currentUser->getIdentity() === null)` | `$currentUser->isGuest()` — `getIdentity()` never returns null |
+| 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` |
+| 15 | `#[Override]` attribute on methods | Omit it — forbidden by Yii 3 conventions, stripped by Rector (`RemoveOverrideAttributeRector`) |
 
 ## Workflow per task
 0. Resolve architecture: check `.ai-factory/ARCHITECTURE.md` (or configured path), otherwise inspect existing `src/` and `config/`.
 1. Check `composer.json` for installed packages; consult `references/package-catalog.md` and `references/core-feature-recipes.md` for required packages and drivers.
 2. For business feature requests, decompose into full artifact graph (Domain, Persistence, Use Case, Presentation, Wiring) via `references/core-feature-recipes.md`; check the Chain Integrity Checklist (§6) there before writing code, and use the canonical slice `examples/crud-slice/README.md` as the decomposition reference.
 3. Install/wire missing packages per `references/core-dependency-protocol.md`.
-4. Place and write code: architecture source first, then `references/core-conventions.md`; for file placement and format follow the canonical example `examples/crud-slice/README.md`.
-5. Verify: run project tests and linters (Psalm/PHPStan, Rector, CS-Fixer, PHPUnit). Then run the deterministic gate — the unified validation suite (or individual verifiers, see "Deterministic tooling & validation scripts" below) against the changed scope: fix every reported error and rerun until all exit 0. Exit 2 means a misconfigured invocation (wrong path or PHP guard) — fix the invocation, never treat it as a pass. Warnings exit 0 — report them separately, do not block. Report added packages and changed config files.
+4. Place and write code: architecture source first (rule 3); for file placement and format follow the canonical example `examples/crud-slice/README.md` and the targeted topic guide from the routing matrix below.
+5. Verify: run project tests and linters — typically `composer test`, `composer cs-fix`, `./vendor/bin/psalm --no-cache` (or PHPStan), and `./vendor/bin/composer-dependency-analyser` (missing/unused dependencies); Rector where configured. Then run the deterministic gate — the unified validation suite (or individual verifiers, see "Deterministic tooling & validation scripts" below) against the changed scope: fix every reported error and rerun until all exit 0. Exit 2 means a misconfigured invocation (wrong path or PHP guard) — fix the invocation, never treat it as a pass. Warnings exit 0 — report them separately, do not block. Report added packages and changed config files.
 
    Step-5 verification report (compact template):
 
@@ -64,14 +89,13 @@ Load only the targeted reference guides required for the active task archetype:
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/package-catalog.md` | `examples/crud-slice/README.md` |
 
 ### Core & Architecture
-- `references/core-conventions.md` — layout, config, DI, actions, routes, anti-patterns, SSOT verification rule
-- `references/core-architecture-alignment.md` — where code goes + per-pattern placement tables and dependency rules
-- `references/core-feature-recipes.md` — feature archetypes, decomposition into layers, capability inference, wiring checklist
+- `references/core-architecture-alignment.md` — framework & vendor boundary isolation, layer placement, and composition root wiring
+- `references/core-feature-recipes.md` — feature archetypes, decomposition into layers, directory placement styles (vertical slice vs layered), capability inference, wiring checklist
 - `references/core-dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
 - `references/core-api-signatures.md` — exact signatures for the most-used Yii3 interfaces and classes
 - `references/core-utilities.md` — standalone helper packages: ArrayHelper array access and transformation, StringHelper + Inflector, exception-safe Json, VarDumper/ClosureExporter, Classifier class discovery, and IP/DNS utilities
-- `references/core-di-and-config.md` — PSR-11 container, config directory separation, definition syntax recipes, parameter inheritance, and environment overrides
+- `references/core-di-and-config.md` — PSR-11 container, config directory separation, canonical app skeleton & `config/` tree, definition syntax recipes, parameter inheritance, and environment overrides
 - `references/core-events-and-listeners.md` — PSR-14 event architecture, immutable domain event DTOs, listener design, event mapping configuration, and post-commit dispatching
 
 ### HTTP & Presentation

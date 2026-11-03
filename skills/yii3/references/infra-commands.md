@@ -83,10 +83,10 @@ Yii3 console dispatches explicit lifecycle events during execution:
 
 ### Subscribing to Lifecycle Events
 
-Listeners are registered in the `events-console` configuration group — a `config/events-console.php` file returning a map of event class to listener list:
+Listeners are registered in the `events-console` configuration group. Create an app-level `config/common/events.php` file returning a map of event class to listener list and map it into the shared `events` group in `config/configuration.php` (`'events' => 'common/events.php'`) — the base runner reverse-merges `events` into `events-web` and `events-console`, so the file reaches console listeners too (see [Events Guide, §4.1](core-events-and-listeners.md)):
 
 ```php
-// config/events-console.php
+// config/common/events.php
 declare(strict_types=1);
 
 use App\Application\Console\AuditTrailListener;
@@ -555,27 +555,7 @@ $runner->run();
 
 The official `yiisoft/app-console` template passes `debug: (bool) $_ENV['YII_DEBUG']` and `checkEvents: (bool) $_ENV['YII_DEBUG']` without `?? false` fallbacks: its `autoload.php` normalizes the environment, defaulting `YII_DEBUG` to `true` and `YII_ENV` to `null` when unset. The `?? false` fallbacks above are a defensive variant — keep the normalization consistent with your template.
 
-The full constructor of `ConsoleApplicationRunner` (every parameter except `rootPath` has a default):
-
-| Parameter | Default | Purpose |
-|---|---|---|
-| `string $rootPath` | *(required)* | Absolute path to the project root. |
-| `bool $debug` | `false` | Debug mode. |
-| `bool $checkEvents` | `false` | Validate events configuration at boot. |
-| `?string $environment` | `null` | Environment name. |
-| `string $bootstrapGroup` | `'bootstrap-console'` | Bootstrap config group. |
-| `string $eventsGroup` | `'events-console'` | Events config group. |
-| `string $diGroup` | `'di-console'` | Container definitions group. |
-| `string $diProvidersGroup` | `'di-providers-console'` | DI providers group. |
-| `string $diDelegatesGroup` | `'di-delegates-console'` | DI delegates group. |
-| `string $diTagsGroup` | `'di-tags-console'` | DI tags group. |
-| `string $paramsGroup` | `'params-console'` | Params config group. |
-| `array $nestedParamsGroups` | `['params']` | Groups nested into the params group. |
-| `array $nestedEventsGroups` | `['events']` | Groups nested into the events group. |
-| `array $configModifiers` | `[]` | Config modifiers. |
-| `string $configDirectory` | `'config'` | Config storage location (relative to root). |
-| `string $vendorDirectory` | `'vendor'` | Vendor directory (relative to root). |
-| `string $configMergePlanFile` | `'.merge-plan.php'` | Merge plan file (relative to config directory). |
+The full 17-parameter constructor with per-subclass defaults is documented in the [Runners & Runtimes Guide, §1.2](infra-runners-and-runtimes.md). Console specifics: `$rootPath` is required; every other parameter has a default (`debug: false`, `bootstrapGroup: 'bootstrap-console'`, `eventsGroup: 'events-console'`, `diGroup: 'di-console'`, `$configMergePlanFile: '.merge-plan.php'`).
 
 The runner has no logger parameter; loggers reach console components through DI (for example, `Yiisoft\Yii\Console\ErrorListener` accepts an optional PSR-3 logger in its constructor).
 
@@ -812,10 +792,10 @@ The `! [NOTE]`-styled rendering (title + note) applies only when the output obje
 
 ### 7.2. Global Console Error Logging (`ErrorListener`)
 
-`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` in `config/events-console.php`. When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application):
+`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` via the package-shipped `vendor/yiisoft/yii-console/config/events-console.php` (no application wiring needed). When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application):
 
 ```php
-// config/events-console.php
+// vendor/yiisoft/yii-console/config/events-console.php (shipped by the package)
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Yiisoft\Yii\Console\ErrorListener;
 

@@ -103,7 +103,7 @@ Detailed architectural breakdown of the 11 specialized packages incorporated fro
 | **DevTools & Profiling** | `yiisoft/profiler` | High-performance execution profiler measuring execution time and memory deltas between code checkpoints with pluggable storage targets | `Yiisoft\Profiler\Profiler`, `Yiisoft\Profiler\ProfilerInterface`, `Yiisoft\Profiler\Target\TargetInterface`, `Yiisoft\Profiler\Target\FileTarget`, `Yiisoft\Profiler\Target\LogTarget` | `Infrastructure/` (ports wired to app services / `require-dev`) |
 | **Utilities & Discovery** | `yiisoft/classifier` | Filesystem class discovery tool locating classes by PHP 8 attributes, interfaces, or parent inheritance without autoloading reflection overhead | `Yiisoft\Classifier\Classifier` | `Infrastructure/` / Console command discovery |
 | **Utilities & Discovery** | `yiisoft/network-utilities` | Network and IP manipulation utilities providing IPv4/IPv6 validation, CIDR subnet matching, IP range aliases, and DNS lookups | `Yiisoft\NetworkUtilities\IpHelper`, `Yiisoft\NetworkUtilities\DnsHelper`, `Yiisoft\NetworkUtilities\IpRanges` | `Infrastructure/Utils/` or shared library |
-| **Utilities & Discovery** | `yiisoft/var-dumper` | Advanced variable dumping and closure serialization with recursion detection, depth limiting, and CLI/HTML syntax highlighting | `Yiisoft\VarDumper\VarDumper`, `Yiisoft\VarDumper\ClosureExporter`, `Yiisoft\VarDumper\Handler\EchoHandler`, `Yiisoft\VarDumper\Handler\StreamHandler` | `Infrastructure/` / Dev tooling (`require-dev`) |
+| **Utilities & Discovery** | `yiisoft/var-dumper` | Advanced variable dumping and closure serialization with recursion detection, depth limiting, and CLI/HTML syntax highlighting | `Yiisoft\VarDumper\VarDumper`, `Yiisoft\VarDumper\ClosureExporter`, `Yiisoft\VarDumper\Handler\EchoHandler`, `Yiisoft\VarDumper\Handler\StreamHandler` | `Infrastructure/` / Utilities (runtime — `yiisoft/rbac-php` uses `VarDumper::export()`; also useful in dev) |
 
 ---
 
@@ -202,4 +202,33 @@ The full dependency gate — existing-installation check, install authorization,
 1. Resolve every capability through §1 of this catalog first, and never propose `composer require` for a package already present in `composer.json`.
 2. Mind the Category A/B distinction from [Dependency Protocol §4](core-dependency-protocol.md): only packages declaring `extra.config-plugin` (e.g. `yiisoft/router`, `yiisoft/db`, `yiisoft/cache-file`) appear in `config/.merge-plan.php` — driver packages (`yiisoft/db-mysql`, `yiisoft/cache-redis`, ...) never do and require manual DI definitions.
 3. Before overriding a package's parameters, read its shipped defaults in `vendor/yiisoft/<pkg>/config/params.php`.
+
+---
+
+## Appendix: Third-Party Packages Referenced by Guides
+
+Packages below are prescribed or used by topic guides but are not part of the yiisoft capability tables above (cascade requirement: every package a guide recommends must be findable from this catalog). Roles follow the referencing guides.
+
+| Package | Role per guides | Referenced by |
+|---|---|---|
+| `psr/container` | PSR-11 container contract (`ContainerInterface`) | core-di-and-config, core-api-signatures |
+| `psr/http-message` | PSR-7 contract (`UploadedFileInterface`, request/response interfaces) | core-api-signatures, core-architecture-alignment, core-feature-recipes |
+| `olvlvl/composer-attribute-collector` | Composer plugin scanning classes for attribute routing | core-dependency-protocol, http-routes |
+| `vlucas/phpdotenv` | `.env` loading (`require-dev` convenience in `yiisoft/app`; not a production secrets mechanism) | core-di-and-config |
+| `predis/predis` | Redis client for `RedisCache` / `RedisMutexFactory` (strictly required — no PECL `\Redis`) | persistence-caching, infra-queue-jobs |
+| `symfony/mailer` | Transport layer behind the `yiisoft/mailer-symfony` bridge (`^6.0\|\|^7.0\|\|^8.0`) | infra-mailer |
+| `symfony/finder` | Directory scanning behind `yiisoft/classifier` | core-utilities |
+| `sentry/sentry` | Sentry SDK behind `yiisoft/yii-sentry` (version-gated options) | infra-error-handling |
+| `zircote/swagger-php` | PHP 8 attribute-based OpenAPI specification generation (v5+) | http-openapi-swagger |
+| `swagger-api/swagger-ui` | Swagger UI static assets published by `SwaggerUiAsset` | http-openapi-swagger |
+| `spiral/roadrunner-worker` | Base Goridge payload protocol for RoadRunner workers | infra-runners-and-runtimes |
+| `spiral/roadrunner-cli` | `./vendor/bin/rr` binary download and runner | infra-runners-and-runtimes |
+| `spiral/roadrunner-grpc` | gRPC worker support | infra-runners-and-runtimes |
+| `temporal/sdk` | Temporal workflow SDK (RoadRunner workflows) | infra-runners-and-runtimes |
+| `cycle/schema-migrations-generator` | Cycle CLI schema migrations (with `cycle/migrations`) | persistence-cycle-orm |
+| `mockery/mockery` | Mocking framework (via `php-testo/bridge-mockery`) | testing-core |
+| `infection/extension-installer` | Infection Composer extension installer | testing-core |
+| `roave/infection-static-analysis-plugin` | Static-analysis-filtered mutation testing | testing-core |
+| `codeception/module-asserts`, `module-cli`, `module-rest`, `module-phpbrowser`, `lib-innerbrowser` | Codeception suites (REST module requires `module-phpbrowser` + `lib-innerbrowser` and a live served application) | testing-core, testing-http |
+| `phpstan/phpstan`, `vimeo/psalm` | Static analysis linters (allowed `require-dev` per Dependency Protocol §3.2) | core-dependency-protocol |
 

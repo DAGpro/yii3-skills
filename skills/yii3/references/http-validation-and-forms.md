@@ -324,7 +324,7 @@ final class CreatePostInput
 The validator automatically extracts attributes via `Yiisoft\Validator\RulesProvider\AttributesRulesProvider`.
 
 > [!WARNING]
-> Always place `#[Required]` **first** in the attribute stack. Subsequent rules implement `SkipOnEmptyInterface` and skip validation if the value is empty (`""` or `null`). If `#[Required]` is missing or placed after other rules, empty inputs will bypass validation and pass cleanly.
+> Always place `#[Required]` **first** in the attribute stack. By default, package rules do **not** skip empty values: their `skipOnEmpty` option defaults to `null`, which resolves to `EmptyCondition\NeverEmpty` (`vendor/yiisoft/validator`, `Helper/SkipOnEmptyNormalizer.php`). An empty input (`""`, `null`) therefore still fails the subsequent rules with their own messages (e.g. `Length` reports a length error instead of a required-value error). `#[Required]` first guarantees the proper required-value error for empty input. To make a property truly optional, pass `skipOnEmpty: true` on each rule (or configure the validator with `defaultSkipOnEmpty`) — see the option table in §3.3.
 
 ### 3.2. Ad-Hoc Rules, Class Strings & RulesProviderInterface
 
@@ -375,7 +375,7 @@ All rules (with the noted exception of `Required` regarding `skipOnEmpty`) suppo
 
 #### 1. `skipOnEmpty: bool|callable|null`
 Controls whether empty values bypass the rule:
-- `null` (default): uses the validator's global default.
+- `null` (default): falls back to the validator's `defaultSkipOnEmpty`; the out-of-the-box default is `NeverEmpty`, i.e. rules run on empty values.
 - `false`: the rule runs even if the value is empty.
 - `true`: skips validation if the value is `null`, empty string `""`, or an empty array.
 - `callable`: a custom empty condition. Yii 3 ships four built-in condition classes in `Yiisoft\Validator\EmptyCondition\*`:
@@ -1206,7 +1206,7 @@ final readonly class ContactAction
             $this->flash->add('success', 'Your inquiry has been submitted successfully.');
 
             return $this->responseFactory
-                ->createResponse(Status::FOUND)
+                ->createResponse(Status::SEE_OTHER)
                 ->withHeader(Header::LOCATION, '/contact');
         }
 
@@ -1275,35 +1275,15 @@ $this->setTitle('Contact Us');
 
 `Yiisoft\FormModel\Field` is a static shortcut factory that binds form properties to `yiisoft/form` widgets:
 
-| Field Method | Rendered HTML Widget | Notes |
-|---|---|---|
-| `Field::text($form, 'name')` | `<input type="text">` | Automatically receives HTML5 `required`, `minlength`, `maxlength` |
-| `Field::password($form, 'password')` | `<input type="password">` | Client-side attribute enrichment |
-| `Field::hidden($form, 'id')` | `<input type="hidden">` | Rendered without label/hint wrappers |
-| `Field::textarea($form, 'message')` | `<textarea>` | Uses `minlength` and `maxlength` from `Length` |
-| `Field::email($form, 'email')` | `<input type="email">` | Type set to email |
-| `Field::telephone($form, 'phone')` | `<input type="tel">` | Method is `telephone()`, NOT `tel()` |
-| `Field::number($form, 'quantity')` | `<input type="number">` | Derives `min`/`max` from `Integer` or `Number` |
-| `Field::range($form, 'volume')` | `<input type="range">` | Slider input with optional min/max/step |
-| `Field::color($form, 'accentColor')` | `<input type="color">` | Color picker input |
-| `Field::date($form, 'birthday')` | `<input type="date">` | Date picker widget |
-| `Field::dateTimeLocal($form, 'eventAt')` | `<input type="datetime-local">` | Local date and time input |
-| `Field::time($form, 'startTime')` | `<input type="time">` | Time picker input |
-| `Field::checkbox($form, 'agree')` | `<input type="checkbox">` | Boolean binding |
-| `Field::checkboxList($form, 'roles')` | Checkbox collection | Set items via `->items(['admin' => 'Admin'])` |
-| `Field::radioList($form, 'status')` | Radio buttons list | **Method is `radioList()`; there is NO `Field::radio()`** |
-| `Field::select($form, 'country')` | `<select>` dropdown | Set options via `->optionsData(['US' => 'USA'])` |
-| `Field::file($form, 'document')` | `<input type="file">` | Multi-file or single-file input |
-| `Field::image(?string $url = null)` | `<input type="image">` / `<img>` | Graphical submit or image field |
-| `Field::fieldset()` | `<fieldset>` container | Groups nested fields |
-| `Field::buttonGroup()` | `<div>` button group | Groups multiple buttons |
-| `Field::label($form, 'prop')` | Standalone `<label>` | Standalone label part |
-| `Field::hint($form, 'prop')` | Standalone hint `<div>` | Standalone hint part |
-| `Field::error($form, 'prop')` | Standalone error message | Standalone error part |
-| `Field::submitButton('Save')` | `<button type="submit">` | **Method is `submitButton()`; there is NO `Field::submit()`** |
-| `Field::resetButton('Reset')` | `<button type="reset">` | **Method is `resetButton()`; there is NO `Field::reset()`** |
-| `Field::button('Click')` | `<button type="button">` | Plain button |
-| `Field::errorSummary($form)` | Alert box of all errors | Renders list of first property errors |
+The full factory catalog (all `Field::*` methods with HTML widgets and configuration methods) lives in the [Views & Widgets Guide, §8.4](http-views-and-widgets.md). Validation-specific notes:
+
+| Field Method | Validation Integration |
+|---|---|
+| `Field::text($form, 'name')` | Automatically receives HTML5 `required`, `minlength`, `maxlength` |
+| `Field::textarea($form, 'message')` | Uses `minlength` and `maxlength` from `Length` |
+| `Field::number($form, 'quantity')` | Derives `min`/`max` from `Integer` or `Number` |
+| `Field::radioList($form, 'status')` | **Method is `radioList()`; there is NO `Field::radio()`** |
+| `Field::submitButton('Save')` / `Field::resetButton('Reset')` | **NO `Field::submit()` / `Field::reset()`** |
 
 #### Theme-Aware DI: `FieldFactory`
 When your application relies on customizable form themes (e.g. Bootstrap 5, Tailwind CSS), inject `Yiisoft\FormModel\FieldFactory` rather than calling the static facade `Field`:
@@ -1628,7 +1608,7 @@ declare(strict_types=1);
 namespace App\Presentation\Api\Post;
 
 use Psr\Http\Message\ResponseInterface;
-use Yiisoft\DataResponse\DataResponseFactoryInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
 use Yiisoft\Input\Http\Attribute\Parameter\Query;
 
 final readonly class ListPostsAction
@@ -1719,7 +1699,7 @@ declare(strict_types=1);
 namespace App\Presentation\Api\Shared;
 
 use Psr\Http\Message\ResponseInterface;
-use Yiisoft\DataResponse\DataResponseFactoryInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
 use Yiisoft\Http\Header;
 use Yiisoft\Http\Status;
 use Yiisoft\Input\Http\InputValidationException;
@@ -1742,7 +1722,7 @@ final readonly class ValidationProblemDetailsResponder
             'title' => 'Validation Failed',
             'status' => Status::UNPROCESSABLE_ENTITY,
             'detail' => 'One or more parameters failed validation.',
-            'invalid_params' => $result->getErrorMessagesIndexedByPath(),
+            'invalid-params' => $result->getErrorMessagesIndexedByPath(),
         ];
 
         return $this->responseFactory

@@ -579,27 +579,7 @@ return [
 
 ### 3.4. Semantic Exit Codes (`ExitCode`)
 
-`Yiisoft\Yii\Console\ExitCode` defines 17 standard semantic status codes based on FreeBSD's `sysexits(3)`:
-
-| Constant | Value | Reason (`ExitCode::getReason($code)`) | Semantic Usage |
-|:---|:---:|:---|:---|
-| `ExitCode::OK` | `0` | `'Success'` | Successful termination. |
-| `ExitCode::UNSPECIFIED_ERROR` | `1` | `'Unspecified error'` | Generic failure. |
-| `ExitCode::USAGE` | `64` | `'Incorrect usage, argument or option error'` | Syntax error, missing or invalid CLI argument. |
-| `ExitCode::DATAERR` | `65` | `'Error in input data'` | User-supplied data format invalid. |
-| `ExitCode::NOINPUT` | `66` | `'Input file not found or unreadable'` | Missing input file. |
-| `ExitCode::NOUSER` | `67` | `'User not found'` | User identity does not exist. |
-| `ExitCode::NOHOST` | `68` | `'Host not found'` | Remote host unreachable. |
-| `ExitCode::UNAVAILABLE` | `69` | `'A required service is unavailable'` | External service or dependency is down. |
-| `ExitCode::SOFTWARE` | `70` | `'Internal error'` | Internal software exception or logic bug. |
-| `ExitCode::OSERR` | `71` | `'Error making system call or using OS service'` | OS syscall failure (cannot fork, pipe error). |
-| `ExitCode::OSFILE` | `72` | `'Error accessing system file'` | System file missing or unreadable. |
-| `ExitCode::CANTCREAT` | `73` | `'Cannot create output file'` | Target output file cannot be created. |
-| `ExitCode::IOERR` | `74` | `'I/O error'` | Hardware or disk I/O error. |
-| `ExitCode::TEMPFAIL` | `75` | `'Temporary failure'` | Temporary issue; caller should retry. |
-| `ExitCode::PROTOCOL` | `76` | `'Unexpected remote service behavior'` | Remote network protocol error. |
-| `ExitCode::NOPERM` | `77` | `'Insufficient permissions'` | Permission denied. |
-| `ExitCode::CONFIG` | `78` | `'Configuration error'` | Misconfiguration detected. |
+`Yiisoft\Yii\Console\ExitCode` defines 17 standard semantic status codes based on FreeBSD's `sysexits(3)`. For the full constant table (sysexits names and recommended usage), see [Commands Guide, §6](infra-commands.md). Runtime descriptions are available via `ExitCode::getReason(int $code): string` (e.g. `getReason(ExitCode::NOINPUT)` returns `'Input file not found or unreadable'`).
 
 ---
 

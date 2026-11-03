@@ -142,7 +142,7 @@ final readonly class ViewUserAction
 In Yii3, request bodies and query parameters should be converted into strongly-typed DTOs rather than reading raw associative arrays across the action.
 
 > [!IMPORTANT]
-> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from package `yiisoft/request-body-parser` MUST be added to the middleware pipeline before the action. Otherwise, `$request->getParsedBody()` returns `null` for JSON payloads. Note that the package ships only a JSON parser out of the box; parsing other body formats requires a custom `ParserInterface` implementation.
+> To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from package `yiisoft/request-body-parser` MUST be added to the middleware pipeline before the action. Otherwise, `$request->getParsedBody()` returns `null` for JSON payloads. Note that the package ships only a JSON parser out of the box; parsing other body formats requires a custom `ParserInterface` implementation. Canonical description and pipeline placement: [PSR-15 Middlewares Guide](http-middlewares.md).
 
 #### Approach A: Manual Hydration via `HydratorInterface` + `ValidatorInterface`
 Suitable for any DTO class without framework dependencies.
@@ -465,17 +465,9 @@ public function createResponse(
 
 For full-page web applications, inject `Yiisoft\Yii\View\Renderer\WebViewRenderer` — the current renderer (the older `ViewRenderer` is `@deprecated`, see the note at the end of this section) — for template rendering, and `FormHydrator` for populating and validating HTML forms.
 
-**The Form Model:**
+**The Form Model** (compact skeleton; the full lifecycle example — hydration → validation → redirect — lives in the [Validation & Forms Guide, §8.3](http-validation-and-forms.md)):
+
 ```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Web\Contact\Form;
-
-use Yiisoft\FormModel\FormModel;
-use Yiisoft\Validator\Rule\Email;
-use Yiisoft\Validator\Rule\Length;
-use Yiisoft\Validator\Rule\Required;
-
 final class ContactForm extends FormModel
 {
     #[Required]
@@ -492,76 +484,10 @@ final class ContactForm extends FormModel
 }
 ```
 
-**The Action Handler:**
-```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Web\Contact;
-
-use App\Application\Contact\ContactDto;
-use App\Application\Contact\ContactUseCase;
-use App\Presentation\Action\Web\Contact\Form\ContactForm;
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\FormModel\FormHydrator;
-use Yiisoft\Http\Header;
-use Yiisoft\Http\Status;
-use Yiisoft\Router\UrlGeneratorInterface;
-use Yiisoft\Session\Flash\FlashInterface;
-use Yiisoft\Yii\View\Renderer\WebViewRenderer;
-
-final readonly class ContactAction
-{
-    public function __construct(
-        private WebViewRenderer $webViewRenderer,
-        private FormHydrator $formHydrator,
-        private ContactUseCase $useCase,
-        private FlashInterface $flash,
-        private UrlGeneratorInterface $urlGenerator,
-        private ResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $form = new ContactForm();
-
-        // Automatically detects POST, populates from parsed body, and validates
-        if ($this->formHydrator->populateFromPostAndValidate($form, $request)) {
-            $this->useCase->execute(new ContactDto(
-                name: $form->name,
-                email: $form->email,
-                message: $form->message,
-            ));
-            
-            $this->flash->add('success', 'Your message has been sent successfully.');
-            
-            $redirectUrl = $this->urlGenerator->generate('contact/index');
-            return $this->responseFactory
-                ->createResponse(Status::FOUND)
-                ->withHeader(Header::LOCATION, $redirectUrl);
-        }
-
-        // Render HTML view with the form model
-        // If POST failed validation, return 422 Unprocessable Entity
-        $response = $this->webViewRenderer->render('contact/index', [
-            'form' => $form,
-        ]);
-
-        if ($request->getMethod() === 'POST' && !$form->isValid()) {
-            return $response->withStatus(Status::UNPROCESSABLE_ENTITY);
-        }
-
-        return $response;
-    }
-}
-```
+**The Action Handler** — thin invokable: `populateFromPostAndValidate($form, $request)` → on success delegate to the use case (`$this->useCase->execute(new ContactDto(...))`), add a flash message, and redirect via `UrlGeneratorInterface`; on failure render the view with `WebViewRenderer` and return 422 when the request was POST and `$form->isValid()` is `false`.
 
 > [!WARNING]
-> **The Form Name / Scope Trap:**
-> `populateFromPostAndValidate()` accepts an optional `?string $scope = null` parameter. When omitted (`null`), the scope falls back to `FormModel::getFormName()`, which returns the short class name (e.g. `'ContactForm'`), so the hydrator looks for nested data: `$request->getParsedBody()['ContactForm']`.
-> If your HTML inputs are flat (e.g. `<input name="email">` instead of `<input name="ContactForm[email]">`), pass `scope: ''` — the empty string is the deliberate value meaning "use the whole parsed body array" — or override `getFormName(): string { return ''; }` in your form model.
-> Missing scope data is not silent: `populateFromPostAndValidate()` then deterministically returns `false` and validation is skipped. Always branch on the returned `bool` — that is the detection mechanism.
+> **The Form Name / Scope Trap:** with no explicit `scope`, `populateFromPostAndValidate()` falls back to `FormModel::getFormName()` — the hydrator looks for nested data `$request->getParsedBody()['ContactForm']`; pass `scope: ''` for flat inputs (or override `getFormName(): string { return ''; }`). Missing scope data is not silent: the method deterministically returns `false` — always branch on the returned `bool`. Full semantics: [Validation & Forms Guide, §8.2](http-validation-and-forms.md).
 
 > [!TIP]
 > For layout configurations, page lifecycle, asset bundles, custom widgets, and DataView components (`GridView`, `ListView`, `DetailView`), see [Views, Layouts & Widgets Guide](http-views-and-widgets.md).
@@ -616,49 +542,7 @@ final readonly class DownloadReportAction
 }
 ```
 
-**Real Method Signatures of `DownloadResponseFactory`:**
-```php
-// 1. Sends an existing file from disk
-public function sendFile(
-    string $filePath,
-    ?string $attachmentName = null,
-    string $disposition = ContentDispositionHeader::ATTACHMENT,
-    ?string $mimeType = null,
-    ?ServerRequestInterface $request = null,
-): ResponseInterface;
-
-// 2. Streams an in-memory PSR-7 StreamInterface to the client
-// Note: $mimeType is NON-nullable here (unlike sendFile()/sendContentAsFile()).
-public function sendStreamAsFile(
-    StreamInterface $stream,
-    string $attachmentName,
-    string $disposition = ContentDispositionHeader::ATTACHMENT,
-    string $mimeType = 'application/octet-stream',
-    ?ServerRequestInterface $request = null,
-): ResponseInterface;
-
-// 3. Sends raw string content as a downloadable file
-public function sendContentAsFile(
-    string $content,
-    string $attachmentName,
-    string $disposition = ContentDispositionHeader::ATTACHMENT,
-    ?string $mimeType = null,
-    ?ServerRequestInterface $request = null,
-): ResponseInterface;
-
-// 4. Delegates sending to Nginx/Apache/FrankenPHP acceleration headers
-public function xSendFile(
-    string $filePath,
-    ?string $attachmentName = null,
-    string $disposition = ContentDispositionHeader::ATTACHMENT,
-    ?string $mimeType = null,
-    string $xHeader = 'X-Sendfile', // or 'X-Accel-Redirect' for Nginx
-): ResponseInterface;
-```
-
-> [!CAUTION]
-> 1. Do NOT call `sendStream()` or `send()`. The actual method names are `sendStreamAsFile()` and `sendContentAsFile()`. Calling nonexistent shorthand names will cause fatal PHP errors.
-> 2. Mind the `$mimeType` asymmetry: in `sendFile()` and `sendContentAsFile()` it is `?string $mimeType = null` (guessed from content), but in `sendStreamAsFile()` it is a required-to-exist non-nullable `string $mimeType = 'application/octet-stream'`. Passing `mimeType: null` as a named argument to `sendStreamAsFile()` throws `TypeError: ... must be of type string, null given`.
+**Method reference:** the four factory methods (`sendFile()`, `sendStreamAsFile()`, `sendContentAsFile()`, `xSendFile()`) and their verbatim signatures live in the [File Handling Guide, §3.1](http-file-handling.md). Traps: there are no `sendStream()`/`send()` shortcuts (calling them throws a fatal `Error`), and `$mimeType` is non-nullable in `sendStreamAsFile()` (passing `mimeType: null` throws `TypeError: ... must be of type string, null given`).
 
 ---
 

@@ -105,5 +105,5 @@ When asked to create a new Yii 3 feature (e.g. `User`, `Product`, `Order`), foll
 4. Implement the repository using `ConnectionInterface` and `Query`.
 5. Create the input DTO with PHP 8 validator attributes.
 6. Create thin single-action invokable classes returning `ResponseInterface`.
-7. Register the repository in `config/common/di/*.php` and routes in `config/routes.php`.
+7. Register the repository in `config/common/di/*.php` and routes in `config/common/routes.php`.
 8. Verify actions with `php scripts/verify-actions.php` and DI with `php scripts/check-di-syntax.php`.

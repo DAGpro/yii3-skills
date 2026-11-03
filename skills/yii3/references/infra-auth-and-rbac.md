@@ -556,20 +556,10 @@ CurrentUser::class => [
 
 All official packages (`yiisoft/user`, `yiisoft/session`, `yiisoft/router`, etc.) contribute their own `'reset'` callbacks automatically — see the ground-truth catalog in [runners-and-runtimes.md](infra-runners-and-runtimes.md), section 6.4. No application-level registration is required.
 
-**Custom stateful application services** declare a `'reset'` key directly on their own DI definition in `config/di-web.php` (see [runners-and-runtimes.md](infra-runners-and-runtimes.md), section 6.3):
-
-```php
-// config/di-web.php — per-service 'reset' key for YOUR stateful services:
-App\Infrastructure\IdentityMap::class => [
-    'reset' => function (): void {
-        /** @var \App\Infrastructure\IdentityMap $this */
-        $this->entities = []; // Custom cleanup between worker requests
-    },
-],
-```
+**Custom stateful application services** declare a `'reset'` key directly on their own DI definition in `config/di-web.php` — full per-service examples: [Runners & Runtimes Guide, §6.3](infra-runners-and-runtimes.md).
 
 > [!CAUTION]
-> **Never define or override `StateResetter::class` in application DI configuration** (e.g. registering `CurrentUser::class => fn () => $this->clear()` "in `StateResetter`"). `Yiisoft\Di\Container` treats any application-level `StateResetter::class` definition as a full override and flips its `useResettersFromMeta` flag to `false` (`Container.php:520–527`), which **silently disables every built-in package resetter** — identity, session, route, and view state then leak across worker requests. Details: [runners-and-runtimes.md](infra-runners-and-runtimes.md), section 6.2.
+> **Never define or override `StateResetter::class` in application DI configuration.** An app-level definition is treated as a full override, flips `useResettersFromMeta` to `false`, and silently disables every built-in package resetter — identity, session, route, and view state then leak across worker requests. Full analysis: [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md).
 
 ### 4.5. Remember-Me Auto-Login Cookies (`CookieLogin`)
 
@@ -754,7 +744,9 @@ Route::post('/auth/login')
 | `Yiisoft\User\Event\BeforeLogout` | Yes (`$event->invalidate()`) | `getIdentity(): IdentityInterface`<br>`isValid(): bool` | Confirm unsaved work, enforce mandatory workflow completion. |
 | `Yiisoft\User\Event\AfterLogout` | No | `getIdentity(): IdentityInterface` | Audit logging, revoke external API refresh tokens, purge caches. |
 
-#### Registering Event Listeners (`config/events-web.php`)
+#### Registering Event Listeners (`config/common/events.php`)
+
+Map the file into the shared `events` group in `config/configuration.php` (`'events' => 'common/events.php'`); the base runner reverse-merges it into `events-web` — see [Events Guide, §4.1](core-events-and-listeners.md):
 
 ```php
 declare(strict_types=1);

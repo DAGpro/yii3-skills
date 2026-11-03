@@ -100,7 +100,7 @@ Controllers, actions, view templates, and CLI commands must **never** perform da
 All dependency injection wiring, alias definitions, and environment parameters reside strictly in `config/`:
 - Common DI definitions: `config/common/di/*.php`.
 - Web-specific DI definitions: `config/web/di/*.php`.
-- Route registration: `config/common/routes.php` or `config/web/routes.php`.
+- Route registration: `config/common/routes.php` (the canonical template's only routes group; use `config/web/routes.php` only if a `routes-web` group is explicitly declared in the project's config plugin).
 - Application code inside `src/` must never configure or mutate the container at runtime.
 
 ### 3.4. One Mechanism per Concern

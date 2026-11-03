@@ -558,25 +558,7 @@ When a feature requires role-based or permission-based checks:
    - *Fail-closed pitfall:* `can()` returns `false` whenever no access checker is attached — the DI wiring must apply `CurrentUser::withAccessChecker(...)`. Guest requests have a `null` user id: either configure a guest role in the RBAC manager or the checks fail closed.
 2. **Dynamic Rule Implementation:**
    - Create class implementing `Yiisoft\Rbac\RuleInterface`.
-   - Notice exact Yii3 signature (never use Yii2 signatures):
-     ```php
-     declare(strict_types=1);
-
-     namespace App\User\Rbac;
-
-     use Yiisoft\Rbac\Item;
-     use Yiisoft\Rbac\RuleContext;
-     use Yiisoft\Rbac\RuleInterface;
-
-     final readonly class AuthorRule implements RuleInterface
-     {
-         public function execute(?string $userId, Item $item, RuleContext $context): bool
-         {
-             $authorId = $context->getParameterValue('authorId');
-             return $userId !== null && $userId === (string)$authorId;
-         }
-     }
-     ```
+   - Notice exact Yii3 signature (never use Yii2 signatures). The canonical `AuthorRule` skeleton — `execute(?string $userId, Item $item, RuleContext $context): bool` with the `authorId` parameter comparison — lives in the [API Signatures Guide, §14](core-api-signatures.md); copy it from there rather than retyping.
 3. **Wiring:**
    - Register rule in `config/common/params.php` under `'yiisoft/rbac-rules-container' => ['rules' => [...]]` (the package default params also carry `'validate' => true`; rule values are yiisoft/factory definitions — class-strings or alias maps).
    - Plan migration or RBAC seeder creating the Permission, attaching the Rule (`Item::withRuleName()`), and assigning to Roles (see the [Auth & RBAC Guide](infra-auth-and-rbac.md)).

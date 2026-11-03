@@ -277,19 +277,19 @@ declare(strict_types=1);
 
 use Yiisoft\DataResponse\Middleware\JsonDataResponseMiddleware;
 use Yiisoft\Router\Group;
-use Yiisoft\Router\Route;
+use Yiisoft\Router\Route\Get;
 use Yiisoft\Yii\Swagger\Action\SwaggerJson;
 use Yiisoft\Yii\Swagger\Action\SwaggerUi;
 
 return [
-    Group::create('/swagger')->routes(
+    (new Group('/swagger'))->routes(
         // 1. Swagger UI HTML Viewer
-        Route::get('')
+        (new Get(''))
             ->action(static fn (SwaggerUi $swaggerUi): SwaggerUi => $swaggerUi->withJsonUrl('/swagger/json-url'))
             ->name('swagger.ui'),
 
         // 2. OpenAPI JSON Specification Endpoint
-        Route::get('/json-url')
+        (new Get('/json-url'))
             ->middleware(JsonDataResponseMiddleware::class)
             ->action(SwaggerJson::class)
             ->name('swagger.json'),
@@ -302,10 +302,10 @@ Alternatively, you can use the direct constructor:
 ```php
 return [
     new Group('/swagger', [
-        Route::get('')
+        (new Get(''))
             ->action(static fn (SwaggerUi $swaggerUi): SwaggerUi => $swaggerUi->withJsonUrl('/swagger/json-url'))
             ->name('swagger.ui'),
-        Route::get('/json-url')
+        (new Get('/json-url'))
             ->middleware(JsonDataResponseMiddleware::class)
             ->action(SwaggerJson::class)
             ->name('swagger.json'),
@@ -330,7 +330,7 @@ Group::create('/swagger', [
 ]);
 ```
 
-The array of routes is completely ignored, resulting in an empty route group with zero endpoints. You **must** either chain `->routes(...)` or call `new Group('/swagger', [...])`.
+The array of routes is completely ignored, resulting in an empty route group with zero endpoints. You **must** call `new Group('/swagger', [...])` — note that the static factory `Group::create()` itself is `@deprecated` since router 4.0.3 (see the [Routing Guide](http-routes.md)).
 
 ### 4.3. The JSON Response Middleware Contract
 
@@ -626,8 +626,7 @@ final readonly class DeleteProductAction
 ### 5.4. Route Parameters: Injecting `CurrentRoute` vs Broken PSR-7 Attributes
 
 > [!CAUTION]
-> **Fatal Routing Trap:** In Yii 3, route match arguments (e.g. `{id}`, `{slug}`) are stored in `Yiisoft\Router\CurrentRoute`. The router does **not** inject them into PSR-7 request attributes.
-> Calling `$request->getAttribute('id')` will always evaluate to `null`!
+> **Fatal Routing Trap:** route match arguments (e.g. `{id}`, `{slug}`) are stored in `Yiisoft\Router\CurrentRoute`, not in PSR-7 request attributes — `$request->getAttribute('id')` always evaluates to `null`. See the [Routing Guide, Trap 1](http-routes.md).
 
 Always inject `Yiisoft\Router\CurrentRoute` into action methods or constructor:
 
@@ -1129,23 +1128,23 @@ declare(strict_types=1);
 
 use Yiisoft\DataResponse\Middleware\JsonDataResponseMiddleware;
 use Yiisoft\Router\Group;
-use Yiisoft\Router\Route;
+use Yiisoft\Router\Route\Get;
 use Yiisoft\Yii\Swagger\Action\SwaggerJson;
 use Yiisoft\Yii\Swagger\Action\SwaggerUi;
 
 return [
-    Group::create('/swagger')->routes(
+    (new Group('/swagger'))->routes(
         // Default Redirect to v1
-        Route::get('')
+        (new Get(''))
             ->action(static fn (SwaggerUi $ui): SwaggerUi => $ui->withJsonUrl('/swagger/v1/json'))
             ->name('swagger.root'),
 
         // API Version 1
-        Group::create('/v1')->routes(
-            Route::get('')
+        (new Group('/v1'))->routes(
+            (new Get(''))
                 ->action(static fn (SwaggerUi $ui): SwaggerUi => $ui->withJsonUrl('/swagger/v1/json'))
                 ->name('swagger.v1.ui'),
-            Route::get('/json')
+            (new Get('/json'))
                 ->middleware(JsonDataResponseMiddleware::class)
                 ->action(static fn (SwaggerJson $json): SwaggerJson => $json->withPaths(
                     '@src/Presentation/Action/Api/ApiDoc.php',
@@ -1156,11 +1155,11 @@ return [
         ),
 
         // API Version 2
-        Group::create('/v2')->routes(
-            Route::get('')
+        (new Group('/v2'))->routes(
+            (new Get(''))
                 ->action(static fn (SwaggerUi $ui): SwaggerUi => $ui->withJsonUrl('/swagger/v2/json'))
                 ->name('swagger.v2.ui'),
-            Route::get('/json')
+            (new Get('/json'))
                 ->middleware(JsonDataResponseMiddleware::class)
                 ->action(static fn (SwaggerJson $json): SwaggerJson => $json->withPaths(
                     '@src/Presentation/Action/Api/ApiDoc.php',
@@ -1473,7 +1472,7 @@ declare(strict_types=1);
 use Yiisoft\Router\Group;
 use Yiisoft\Yii\Middleware\IpFilter;
 
-Group::create('/swagger')->routes(
+(new Group('/swagger'))->routes(
     // ... routes
 )->middleware(IpFilter::class);
 ```
@@ -1488,7 +1487,7 @@ use Yiisoft\Router\Group;
 use Yiisoft\Validator\ValidatorInterface;
 use Yiisoft\Yii\Middleware\IpFilter;
 
-Group::create('/swagger')->routes(
+(new Group('/swagger'))->routes(
     // ... routes
 )->middleware(
     static fn (ResponseFactoryInterface $responseFactory, ValidatorInterface $validator): IpFilter =>
@@ -1508,7 +1507,7 @@ declare(strict_types=1);
 use App\Presentation\Middleware\AdminAuthMiddleware;
 use Yiisoft\Router\Group;
 
-Group::create('/swagger')->routes(
+(new Group('/swagger'))->routes(
     // ... routes
 )->middleware(AdminAuthMiddleware::class);
 ```
@@ -1520,7 +1519,7 @@ declare(strict_types=1);
 
 use Yiisoft\DataResponse\Middleware\JsonDataResponseMiddleware;
 use Yiisoft\Router\Group;
-use Yiisoft\Router\Route;
+use Yiisoft\Router\Route\Get;
 use Yiisoft\Yii\Swagger\Action\SwaggerJson;
 use Yiisoft\Yii\Swagger\Action\SwaggerUi;
 
@@ -1530,11 +1529,11 @@ $routes = [
 
 // Completely exclude Swagger routes in production environments if not desired
 if ($_ENV['APP_ENV'] !== 'prod') {
-    $routes[] = Group::create('/swagger')->routes(
-        Route::get('')
+    $routes[] = (new Group('/swagger'))->routes(
+        (new Get(''))
             ->action(static fn (SwaggerUi $ui): SwaggerUi => $ui->withJsonUrl('/swagger/json-url'))
             ->name('swagger.ui'),
-        Route::get('/json-url')
+        (new Get('/json-url'))
             ->middleware(JsonDataResponseMiddleware::class)
             ->action(SwaggerJson::class)
             ->name('swagger.json'),
@@ -1567,7 +1566,7 @@ When deploying new code releases in production:
 | 1 | **Setting `'cacheTTL' => null` in Dev** | `\array_key_exists('cacheTTL', $params)` activates caching with infinite TTL (`Ttl::forever()`). | Omit the `'cacheTTL'` key completely from `params.php` in development using conditional array spreading. |
 | 2 | **Attaching `FormatDataResponseAsHtml` to `SwaggerUi`** | `SwaggerUi` returns a standard PSR-7 `ResponseInterface` (`ViewResponse`), not a `DataStream`. The middleware is completely ignored. | Do not attach `FormatDataResponseAsHtml` to the Swagger UI route. |
 | 3 | **Using deprecated `FormatDataResponseAsJson`** | `FormatDataResponseAsJson` is deprecated. Omitting formatting entirely throws `LogicException: Formatter is not set.` | Attach modern `Yiisoft\DataResponse\Middleware\JsonDataResponseMiddleware::class` to `/swagger/json-url`. |
-| 4 | **Calling `Group::create('/swagger', [...])`** | `Group::create(?string $prefix = null)` takes only 1 argument. The array of routes is silently dropped by PHP. | Use fluent chaining `Group::create('/swagger')->routes(...)` or `new Group('/swagger', [...])`. |
+| 4 | **Calling `Group::create('/swagger', [...])`** | `Group::create(?string $prefix = null)` takes only 1 argument. The array of routes is silently dropped by PHP. | Use `new Group('/swagger', [...])` or `(new Group('/swagger'))->routes(...)` — the static factory `Group::create()` is `@deprecated` since router 4.0.3 (see the [Routing Guide](http-routes.md)). |
 | 5 | **Reading path parameters via `$request->getAttribute('id')`** | In Yii 3, route match arguments are stored in `CurrentRoute`, not PSR-7 request attributes. Always evaluates to `null`. | Inject `Yiisoft\Router\CurrentRoute $currentRoute` and call `$currentRoute->getArgument('id')` or use `#[RouteArgument('id')]`. |
 | 6 | **Writing custom DI factories in `config/web/di/swagger.php`** | `yiisoft/yii-swagger` already ships with `config/di-web.php` wiring `SwaggerService`, `SwaggerJson`, and `SwaggerUi`. | Configure `config/params.php` under `'yiisoft/yii-swagger'`. Avoid custom DI declarations. |
 | 7 | **Using phantom methods like `withAnnotationPaths()` or `withOptions()` on `SwaggerJson`** | These methods do not exist on `SwaggerJson`. Calling them throws a fatal `Error: Call to undefined method`. | Use `SwaggerJson::withPaths(string ...$paths)` and configure generator options in `params.php` or `SwaggerService`. |

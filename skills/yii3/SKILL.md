@@ -87,6 +87,14 @@ Load only the targeted reference guides required for the active task archetype:
 | **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-routes.md`<br>`references/http-state.md` | `verify-actions.php` |
 | **Database & Schema Migrations** | `references/persistence-migrations.md`<br>`references/persistence-db.md` (or `persistence-cycle-orm.md`) | `references/core-di-and-config.md`<br>`references/persistence-caching.md` | `examples/crud-slice/Migration` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/package-catalog.md` | `examples/crud-slice/README.md` |
+| **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md` | `check-di-syntax.php` |
+| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md` | `check-di-syntax.php` |
+| **i18n / Localization** | `references/http-i18n-translation.md` | `references/http-routes.md`<br>`references/core-di-and-config.md` | `verify-actions.php` |
+| **API Docs (OpenAPI / Swagger)** | `references/http-openapi-swagger.md` | `references/http-routes.md`<br>`references/http-actions-and-controllers.md` | `verify-routes.php` |
+| **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md`<br>`references/infra-commands.md` | `check-di-syntax.php` |
+| **Persistence via Active Record** | `references/persistence-active-record.md` | `references/persistence-db.md`<br>`references/persistence-migrations.md` | `examples/crud-slice/Migration` |
+| **App Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-queue-jobs.md` | `check-di-syntax.php` |
+| **Cross-cutting API / Helper Lookup** | `references/core-api-signatures.md`<br>`references/core-utilities.md` | `references/package-catalog.md` | — |
 
 ### Core & Architecture
 - `references/core-architecture-alignment.md` — framework & vendor boundary isolation, layer placement, and composition root wiring

@@ -964,18 +964,23 @@ Without `'middlewares-fail'`, a throwing handler is logged and rethrown as `Yiis
 
 declare(strict_types=1);
 
+use Yiisoft\Queue\Middleware\FailureHandling\FailureMiddlewareDispatcher;
 use Yiisoft\Queue\Middleware\FailureHandling\Implementation\ExponentialDelayMiddleware;
 use Yiisoft\Queue\Middleware\FailureHandling\Implementation\SendAgainMiddleware;
 
 return [
     'yiisoft/queue' => [
         'middlewares-fail' => [
-            SendAgainMiddleware::class,
-            ExponentialDelayMiddleware::class,
+            FailureMiddlewareDispatcher::DEFAULT_PIPELINE => [
+                SendAgainMiddleware::class,
+                ExponentialDelayMiddleware::class,
+            ],
         ],
     ],
 ];
 ```
+
+The `'middlewares-fail'` value feeds `FailureMiddlewareDispatcher::__construct()` directly (`vendor/yiisoft/queue/config/di.php`), so it is a **map of pipeline name → definitions** — a flat class-string list is silently ignored. Per-queue failure pipelines are keyed by queue name (see the [Queue Jobs Guide](infra-queue-jobs.md)).
 
 Handlers must be **idempotent** — for example, the Redis adapter deletes a message only after successful handling.
 

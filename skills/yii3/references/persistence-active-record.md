@@ -182,8 +182,14 @@ final readonly class ArUserRepository implements UserRepositoryInterface
             return null;
         }
 
+        // propertyValues() returns raw scalars; HydratorTypeCaster casts arrays to
+        // objects only — pre-instantiate the Value Object for object-typed properties
+        // (see Database Persistence Guide §1.5).
+        $data = $record->propertyValues();
+        $data['id'] = new UserId((string) $data['id']);
+
         // Hydrates constructor arguments and typed properties directly
-        return $this->hydrator->create(User::class, $record->propertyValues());
+        return $this->hydrator->create(User::class, $data);
     }
 
     public function save(User $user): void

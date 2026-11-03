@@ -393,8 +393,10 @@ requirements — verify the extension is available on your platform.
 The core package ships two targets (no external package needed):
 
 - `Yiisoft\Log\StreamTarget` — constructor: `__construct($stream = 'php://stdout', array $levels = [], /* Target params */)`
-  (`$stream` is untyped — docblock `resource|string`). Ideal for Docker/FrankenPHP/RoadRunner workers where logs
-  must go to stdout/stderr instead of files.
+  (`$stream` is untyped — docblock `resource|string`). Ideal for Docker/FrankenPHP containers where logs
+  must go to stdout/stderr instead of files. **RoadRunner exception:** under RoadRunner `stdout` is the Goridge
+  binary pipe between Go and PHP — writing unformatted log text to it breaks payload framing and crashes the
+  worker; log to `php://stderr` (or a file) instead — see [Runners & Runtimes Guide, §4.3](infra-runners-and-runtimes.md).
 - `Yiisoft\Log\PsrTarget` — constructor: `__construct(LoggerInterface $logger, array $levels = [], /* Target params */)`.
   On export every message is forwarded as `$logger->log($level, $message, $context)` — level, message, and the
   full context — which makes it the bridge to third-party PSR-3 loggers.
@@ -643,7 +645,7 @@ final class OrderProcessorTest extends TestCase
 | Writing to `DbTarget` before creating `{{%yii_log}}` | Every export fails with `RuntimeException`; the target gets disabled and logs disappear silently | Run the `sql/*-up.sql` scripts or `DbSchemaManager::ensureTable()` at deploy (§6.2) |
 | Assuming `EmailTarget` sends immediately | Export happens per batch (`exportInterval`, default 1000) | Set a low `exportInterval` for the email target; ensure a configured mailer with a working transport (§6.3) |
 | Expecting a "from" option on `EmailTarget` | The constructor has no from parameter | Configure the sender on the mailer level ([Mailer Guide](infra-mailer.md)) |
-| Logging to files in worker mode (RoadRunner/FrankenPHP) without stdout | `FileTarget` holds no open handle between exports, but the logger buffers in memory: a killed worker loses the buffered tail (final flush only in the `Logger` destructor), and copy+truncate rotation is uncoordinated between worker processes; containerized stdout is the expected sink | Use `StreamTarget('php://stdout')` for worker/container setups (§6.5) |
+| Logging to files in worker mode (RoadRunner/FrankenPHP) without stdout | `FileTarget` holds no open handle between exports, but the logger buffers in memory: a killed worker loses the buffered tail (final flush only in the `Logger` destructor), and copy+truncate rotation is uncoordinated between worker processes; containerized stdout is the expected sink | Use `StreamTarget('php://stdout')` for Docker/FrankenPHP setups; under RoadRunner use `StreamTarget('php://stderr')` — `stdout` is the Goridge pipe there (§6.5, [Runners Guide, §4.3](infra-runners-and-runtimes.md)) |
 | Relying on the `Logger` destructor to flush in long-running workers | The destructor never runs between tasks; buffered messages are lost when the worker is killed | Call `$logger->flush(true)` explicitly at task boundaries (§9) |
 | Constructing `new FileTarget('@runtime/logs/app.log')` manually | Aliases are resolved by the shipped package config (`Aliases::get()`), not by `FileTarget`; a literal `@runtime` directory is created | Wire the target through DI or resolve the alias yourself first (§6.1) |
 | String-building messages with `sprintf()` + full object dumps in context | Loses structured context; huge payloads in every sink | Use `{placeholder}` interpolation with scalar context; pass the `Throwable` under `'exception'` (§5) |

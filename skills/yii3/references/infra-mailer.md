@@ -1010,10 +1010,10 @@ return [
 
 Valid listener definitions per event key: the full six-form table is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2. The event object is passed as the first argument; additional parameters are DI-resolved at call time; return values are discarded (`: void` is convention). Map keys must reference existing classes.
 
-Wiring steps (the app template ships `'events' => []` and no events file):
+Wiring steps (the app template ships `'events' => []` and no events file; the full group-declaration and merge-plan recipe is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1):
 
 1. Create `config/common/events.php` with the single-nested map.
-2. Register it in `config/configuration.php`: `'events' => ['common/events.php']`.
+2. Register it in `config/configuration.php`: `'events' => 'common/events.php'`.
 3. Run `composer yii-config-rebuild`.
 4. Install the dispatcher: `composer require yiisoft/yii-event` — see §7 for what it binds and why mailer events are silently skipped without it.
 
@@ -1028,7 +1028,7 @@ Wiring steps (the app template ships `'events' => []` and no events file):
 The `BaseMailer::send()` pipeline: apply `MessageSettings` defaults → dispatch `BeforeSend` → check `$event->preventSendingMessage` → `sendMessage()` → dispatch `AfterSend`. Cancellation is an explicit `BaseMailer` check after dispatch — `BeforeSend` is a plain final class, not a `StoppableEventInterface`.
 
 > [!IMPORTANT]
-> **The dispatcher dependency is nullable.** `yiisoft/mailer-symfony` binds `TransportInterface` and `MailerInterface` but **not** `EventDispatcherInterface`. Without a bound dispatcher the events are silently skipped and mail still sends — your suppression and audit listeners never run, with no error. Install the wiring package: `composer require yiisoft/yii-event` (auto-binds `EventDispatcherInterface::class => Dispatcher::class` and `ListenerProviderInterface::class => Provider::class`).
+> **The dispatcher dependency is nullable.** `yiisoft/mailer-symfony` binds `TransportInterface` and `MailerInterface` but **not** `EventDispatcherInterface`. Without a bound dispatcher the events are silently skipped and mail still sends — your suppression and audit listeners never run, with no error. Install the wiring package: `composer require yiisoft/yii-event` — what it binds and why is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 1.
 
 ### 7.1. Suppressing Delivery via `BeforeSend`
 
@@ -1119,7 +1119,7 @@ return [
 ];
 ```
 
-Register the file as described in §6.5 (create `config/common/events.php`, add `'events' => ['common/events.php']` to `config/configuration.php`, run `composer yii-config-rebuild`, and install `yiisoft/yii-event`). Map keys must reference existing classes — `BeforeSend` and `AfterSend` are final classes with no marker interfaces to register against.
+Register the file as described in §6.5 and in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1. Map keys must reference existing classes — `BeforeSend` and `AfterSend` are final classes with no marker interfaces to register against.
 
 Development validation: run `Yiisoft\Yii\Event\ListenerConfigurationChecker::check($config->get('events-web'))` — it eagerly resolves every listener definition and catches bad format, non-existent event classes, and non-callable listeners (dev/test only; mechanics in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.3).
 
@@ -1184,7 +1184,7 @@ final class EmailNotificationServiceTest extends TestCase
 
 #### Asserting Lifecycle Events with `SimpleEventDispatcher`
 
-`Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` (constructor `(Closure ...$listeners)`) implements `EventDispatcherInterface` and records dispatched events: `getEvents(): array`, `getEventClasses(): array`, `isClassTriggered(string $class, ?int $times = null): bool`, and `clearEvents()`. This is the pattern the mailer package's own tests use for `BeforeSend` prevention:
+`Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` implements `EventDispatcherInterface` and records every dispatched event; its full API is owned by the [Testing Guide](testing-core.md), section 3.1. This is the pattern the mailer package's own tests use for `BeforeSend` prevention:
 
 ```php
 <?php

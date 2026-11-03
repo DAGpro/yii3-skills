@@ -701,6 +701,8 @@ Yii3 `ActiveRecord` contains **no validation engine**:
 > Base `ActiveRecord` does **NOT** dispatch events by default.
 > For lifecycle attributes (`#[SoftDelete]`, `#[DefaultDateTimeOnInsert]`, `#[SetDateTimeOnUpdate]`) to work, the model class **MUST** declare `use Yiisoft\ActiveRecord\Trait\EventsTrait;`.
 > Without `EventsTrait`, lifecycle attributes silently fail to execute!
+>
+> The full PSR-14 event side — all 14 event classes, emission mechanics, and the `EventDispatcherProvider` wiring paths — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.6.
 
 ```php
 declare(strict_types=1);
@@ -1270,3 +1272,4 @@ LazyLoadGuard::resetCounters();
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
 - [Validation & Forms Guide](http-validation-and-forms.md) — Form models, validation rules, and input DTOs.
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
+- [Events & Listeners Guide](core-events-and-listeners.md) — Active Record lifecycle events (`EventsTrait`, `EventDispatcherProvider`, all 14 event classes).

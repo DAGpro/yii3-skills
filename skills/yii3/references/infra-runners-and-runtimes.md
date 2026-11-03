@@ -202,24 +202,9 @@ final class BootstrapRunner implements RunnerInterface
 
 ### 1.4. Application Lifecycle Events (HTTP & Console)
 
-Yii3 applications dispatch PSR-14 events at critical lifecycle boundaries. The dispatch points and execution frequencies differ substantially between classic short-lived SAPI runtimes and persistent worker daemons.
+Yii3 applications dispatch PSR-14 events at critical lifecycle boundaries. The event classes, payloads, and exact dispatch points are owned by the [Events & Listeners Guide](core-events-and-listeners.md), sections 6.1 (HTTP: `ApplicationStartup`, `BeforeRequest`, `AfterRequest`, `AfterEmit`, `ApplicationShutdown`) and 6.2 (Console: `ApplicationStartup`, `ApplicationShutdown`) — subscribe to them exactly as described there.
 
-#### HTTP Application Lifecycle Events (`Yiisoft\Yii\Http\Event\*`)
-
-| Event FQCN | Readonly Payload | Dispatch Point & Frequency |
-|:---|:---|:---|
-| `Yiisoft\Yii\Http\Event\ApplicationStartup` | *(none, marker)* | Dispatched in `Application::start()`. In classic SAPI: **every request**. In persistent workers (RoadRunner / FrankenPHP): **once** on worker process boot. |
-| `Yiisoft\Yii\Http\Event\BeforeRequest` | `public readonly ServerRequestInterface $request` | Dispatched at the top of `Application::handle($request)` before entering the middleware pipeline. Runs on **every request**. |
-| `Yiisoft\Yii\Http\Event\AfterRequest` | `public readonly ?ResponseInterface $response` | Dispatched in the `finally` block of `Application::handle()`. Dispatched on **every request**, even if the middleware pipeline throws an unhandled exception (`$response === null`). |
-| `Yiisoft\Yii\Http\Event\AfterEmit` | `public readonly ?ResponseInterface $response` | Dispatched in `Application::afterEmit(?ResponseInterface $response)` after the runner has finished transmitting response headers and body to the client. Runs on **every request**. |
-| `Yiisoft\Yii\Http\Event\ApplicationShutdown` | *(none, marker)* | Dispatched in `Application::shutdown()`. In classic SAPI: **every request**. In persistent workers: **once** when the worker process terminates or recycles. |
-
-#### Console Application Lifecycle Events (`Yiisoft\Yii\Console\Event\*`)
-
-| Event FQCN | Payload & Accessors | Dispatch Point & Frequency |
-|:---|:---|:---|
-| `Yiisoft\Yii\Console\Event\ApplicationStartup` | `public ?string $commandName = null` | Dispatched in `Application::start(?ArgvInput $input)` before command execution. Runs **once per CLI command execution**. |
-| `Yiisoft\Yii\Console\Event\ApplicationShutdown` | `public function getExitCode(): int` | Dispatched in `Application::shutdown(int $exitCode)` inside `ConsoleApplicationRunner::run()`'s `finally` block. Runs **once per CLI command completion**. |
+What matters for runtime selection is the **execution frequency**, which differs substantially between classic short-lived SAPI runtimes and persistent worker daemons:
 
 #### Comparative Lifecycle Frequency Matrix
 
@@ -1237,3 +1222,4 @@ $this->resetters[] = $callback->bindTo($instance, $instance::class);
 - [Error Handling Guide](infra-error-handling.md) — ErrorCatcher middleware, friendly exceptions, and temporary error handlers.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, and CSRF token handling.
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — `CurrentUser` lifecycle and identity management.
+- [Events & Listeners Guide](core-events-and-listeners.md) — Application lifecycle event classes, payloads, and dispatch points (its sections 6.1–6.2).

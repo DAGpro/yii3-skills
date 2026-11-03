@@ -91,9 +91,6 @@ use DateTimeImmutable;
 
 final class User
 {
-    /** @var list<object> */
-    private array $recordedEvents = [];
-
     public function __construct(
         private UserId $id,
         private string $name,
@@ -119,18 +116,11 @@ final class User
         $this->email = mb_strtolower($newEmail);
         $this->updatedAt = new DateTimeImmutable();
     }
-
-    public function recordEvent(object $event): void { $this->recordedEvents[] = $event; }
-
-    /** @return list<object> */
-    public function releaseEvents(): array
-    {
-        $events = $this->recordedEvents;
-        $this->recordedEvents = [];
-        return $events;
-    }
 }
 ```
+
+> [!NOTE]
+> The example intentionally omits domain-event recording (`recordEvent()` / `releaseEvents()` members on the aggregate). That pattern — including the mandatory post-commit dispatch rule — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 5.
 
 ### 1.3. Domain Repository Contract (`src/Domain/Repository/UserRepositoryInterface.php`)
 
@@ -632,7 +622,6 @@ namespace App\Application\UseCase\Order;
 use App\Domain\Model\Order;
 use App\Domain\Repository\OrderRepositoryInterface;
 use App\Domain\Repository\ProductRepositoryInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Throwable;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Transaction\TransactionInterface;
@@ -643,7 +632,6 @@ final readonly class CreateOrderUseCase
         private ConnectionInterface $db,
         private OrderRepositoryInterface $orders,
         private ProductRepositoryInterface $products,
-        private EventDispatcherInterface $eventDispatcher,
     ) {}
 
     /**
@@ -670,15 +658,16 @@ final readonly class CreateOrderUseCase
             isolationLevel: TransactionInterface::READ_COMMITTED,
         );
 
-        // 2. CRITICAL: Dispatch external side effects strictly AFTER successful commit!
-        foreach ($order->releaseEvents() as $event) {
-            $this->eventDispatcher->dispatch($event);
-        }
+        // 2. Dispatch the aggregate's recorded events ONLY here — after transaction()
+        //    has returned, which is guaranteed post-commit (see note below).
 
         return $order;
     }
 }
 ```
+
+> [!IMPORTANT]
+> **Strict post-commit dispatch rule:** never send emails, trigger webhooks, or push jobs to external queues inside the transaction closure — if the transaction rolls back, external side effects cannot be recalled. Collect domain events on the aggregate (`recordEvent()`) and dispatch them strictly after `$db->transaction()` returns. The full aggregate event-recording pattern and the `transaction()` commit semantics that enforce it are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 5.
 
 ### 4.2. Manual Transactions & Savepoints
 
@@ -711,7 +700,7 @@ try {
    - `TransactionInterface::REPEATABLE_READ`
    - `TransactionInterface::SERIALIZABLE`
 2. **Nested Transactions & Savepoints:** If a transaction is already active, nested calls to `beginTransaction()` or `$db->transaction()` automatically create database savepoints (`SAVEPOINT LEVEL<n>`) when supported by the underlying driver (`$db->isSavepointEnabled()`).
-3. **Strict Post-Commit Rule:** Never send emails, trigger webhooks, or push jobs to external queues inside `$db->transaction()`. If the database rolls back, external side effects cannot be recalled. Always collect domain events on aggregates and dispatch them strictly post-commit.
+3. **Strict Post-Commit Rule:** Never dispatch external side effects (email, SMS, webhooks, queue jobs) inside `$db->transaction()` — collect domain events on aggregates and dispatch them strictly post-commit. Full pattern: [Events & Listeners Guide](core-events-and-listeners.md), section 5.
 
 ### 4.4. Deadlock Retries & Serialization Failures (`SerializationFailureException`)
 
@@ -1178,7 +1167,7 @@ $entity = $hydrator->create(class: User::class, data: $arrayData);
 | ❌ **Hallucinated Hydrator Attributes `#[Map]`, `#[DataParam]`** | Attributes do not exist in `yiisoft/hydrator`. Throws `ClassNotFoundException`. | Use canonical `#[Data('column_name')]` (`Yiisoft\Hydrator\Attribute\Parameter\Data`), `#[SkipHydration]`, or `ArrayData` mapping. |
 | ❌ **Using unsupported SQLite isolation levels** | SQLite driver only supports `SERIALIZABLE` and `READ_UNCOMMITTED`. Other levels throw `NotSupportedException`. | Restrict SQLite transactions to `TransactionInterface::SERIALIZABLE` or `READ_UNCOMMITTED`. |
 | ❌ **Calling `getLastInsertId()` without sequence in Postgres/Oracle** | PostgreSQL and Oracle require sequence names. Calling without one throws `InvalidArgumentException`. | Retrieve sequence from `$tableSchema->getSequenceName()` and pass to `$db->getLastInsertId($seq)`. |
-| ❌ **Dispatching events/queues inside `$db->transaction()`** | If transaction rolls back, side effects (emails, messages) cannot be revoked. | Collect domain events on aggregate (`recordEvent()`) and dispatch strictly post-commit. |
+| ❌ **Dispatching events/queues inside `$db->transaction()`** | If transaction rolls back, side effects (emails, messages) cannot be revoked. | Collect domain events on the aggregate and dispatch strictly post-commit — see [Events & Listeners Guide](core-events-and-listeners.md), section 5. |
 | ❌ **Executing DB queries inside HTTP Actions** | Violates architecture boundaries, making actions un-testable and tightly coupled to SQL. | Inject Domain Repositories or Application Use Cases into Action constructors. |
 | ❌ **Raw SQL concatenation (`WHERE id = ' . $id`)** | Severe SQL injection vulnerability. | Always use parameter binding (`[':id' => $id]`) or Query Builder condition arrays (`['id' => $id]`). |
 | ❌ **Hardcoding table names as plain strings `'user'`** | Prevents automatic table prefixing (`tbl_user`) and schema quoting. | Always use table prefix brackets: `'{{%user}}'`. Wrap column identifiers in `[[column]]`. |
@@ -1194,3 +1183,4 @@ $entity = $hydrator->create(class: User::class, data: $arrayData);
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
 - [Caching Guide](persistence-caching.md) — Query caching and cache invalidation strategies for repositories.
+- [Events & Listeners Guide](core-events-and-listeners.md) — Domain events, the aggregate event-recording pattern, and the post-commit dispatch rule.

@@ -656,7 +656,7 @@ final class ProductOutOfStockException extends DomainException
 When `ErrorCatcher` catches an uncaught exception, it dispatches the `Yiisoft\ErrorHandler\Event\ApplicationError` event — **but only if a PSR-14 dispatcher was injected** into `ErrorCatcher`'s optional second constructor parameter (`?EventDispatcherInterface $eventDispatcher = null`; the same applies to `ErrorHandler`). `Yiisoft\ErrorHandler\Event\ApplicationError` is a final event exposing `getThrowable(): Throwable`; it is dispatched from two sites: `ErrorCatcher::process()` and `ErrorHandler::renderThrowableAndTerminate()`.
 
 > [!IMPORTANT]
-> Installing `yiisoft/error-handler` alone provides **no** PSR-14 dispatcher (`psr/event-dispatcher` is only a `require-dev` dependency of the package). `yiisoft/yii-event` ships the actual wiring: `EventDispatcherInterface::class => Dispatcher::class` and `ListenerProviderInterface::class => Provider::class`. Without a dispatcher reaching `ErrorCatcher` / `ErrorHandler`, no `ApplicationError` listener ever runs.
+> Installing `yiisoft/error-handler` alone provides **no** PSR-14 dispatcher (`psr/event-dispatcher` is only a `require-dev` dependency of the package). The actual PSR-14 wiring ships with `yiisoft/yii-event` — the binding list is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 1. Without a dispatcher reaching `ErrorCatcher` / `ErrorHandler`, no `ApplicationError` listener ever runs.
 
 > [!TIP]
 > For logger DI wiring, targets (file/db/email/syslog/stream), categories, and placeholders, see [Logging Guide](infra-logging.md). Note that `yiisoft/log` ships its own listeners that flush the logger on `Yiisoft\Yii\Http\Event\AfterEmit` (web) and `ConsoleTerminateEvent` (console).
@@ -696,7 +696,7 @@ final readonly class LogApplicationErrorListener
 }
 ```
 
-Register the listener in `config/common/events.php`. The listener must be an **invokable class-string** (resolved from the DI container) or a two-element `[class, 'method']` array. A one-element array such as `[[LogApplicationErrorListener::class]]` throws `Yiisoft\Yii\Event\InvalidListenerConfigurationException`:
+Register the listener in `config/common/events.php`. The full listener-definition table is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2 — note the common mistake here: a one-element array such as `[[LogApplicationErrorListener::class]]` is **not** a valid definition and throws `Yiisoft\Yii\Event\InvalidListenerConfigurationException`:
 
 ```php
 <?php
@@ -853,22 +853,7 @@ Execution flow of `Yiisoft\Yii\Runner\Console\ConsoleApplicationRunner::run()`:
 3. In the `finally` block: `$application->shutdown($exitCode)` and `exit($exitCode)`. An escaping throwable leaves the exit code at its initial value `1` (`Yiisoft\Yii\Console\ExitCode::UNSPECIFIED_ERROR`).
 4. **`ConsoleErrorEvent` logging**: handled by `Yiisoft\Yii\Console\ErrorListener::onError(ConsoleErrorEvent $event)` — one PSR-3 `error()` entry with message `'%s: %s in %s:%s while running console command "%s".'` and context `['exception' => $exception]`. The listener's constructor takes `?LoggerInterface $logger = null` and returns early without a logger.
 
-Console error logging works **out of the box**: `yiisoft/yii-console` ships its own events map as the composer config-plugin group `events-console` — `return [ConsoleErrorEvent::class => [[ErrorListener::class, 'onError']]];` — which `yiisoft/config` auto-merges. The app template ships no events file of its own. Register an app-level file only to customize behavior (e.g. a different listener), and register it under the shared `events` group in `config/configuration.php` (see section 8.1):
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use Symfony\Component\Console\Event\ConsoleErrorEvent;
-use Yiisoft\Yii\Console\ErrorListener;
-
-return [
-    ConsoleErrorEvent::class => [
-        [ErrorListener::class, 'onError'],
-    ],
-];
-```
+Console error logging works **out of the box**: `yiisoft/yii-console` ships its own `events-console` group subscribing `ConsoleErrorEvent` to `[ErrorListener::class, 'onError']` (the shipped group is quoted in the [Events & Listeners Guide](core-events-and-listeners.md), section 6.2), which `yiisoft/config` auto-merges. The app template ships no events file of its own. Register an app-level file under the shared `events` group in `config/configuration.php` (see section 8.1) only to customize behavior — e.g. swapping in a different listener.
 
 ---
 
@@ -926,7 +911,7 @@ $errorHandler->register(); // Idempotent; once per process.
 | Configuring `HtmlRenderer` with `'templates' => [404 => ..., 500 => ...]` | `HtmlRenderer` does not support status code keyed template arrays. It only accepts `template` (production) and `verboseTemplate` (development). | Map exceptions to status codes via `ExceptionResponder`; pipeline-end 404s belong to the fallback request handler (e.g. the app template's `App\Web\NotFound\NotFoundHandler`). |
 | Calling `$errorData->getData()` | `ErrorData` does not have a `getData()` method. Calling it triggers a fatal runtime error. | Cast to string: `(string) $errorData` or `$errorData->__toString()`. |
 | Placing `ErrorCatcher` after other middlewares | Exceptions thrown before `ErrorCatcher` bypass `SentryMiddleware` capture and `ExceptionResponder` mapping, are handled only by the `yiisoft/yii-runner-http` safety net (re-processed through the container's `ErrorCatcher`), and under a custom runner escape to the global PHP error handler. `BeforeRequest` / `AfterRequest` observers see a `null` response in that path. | Place `ErrorCatcher` as the very first entry in the HTTP middleware stack. |
-| Registering listeners as one-element arrays (`ApplicationError::class => [[Listener::class]]`) | `yiisoft/yii-event`'s `CallableFactory` accepts only invokable class-strings, `[class, 'method']` two-element arrays, closures, and invokable objects; anything else throws `Yiisoft\Yii\Event\InvalidListenerConfigurationException`. | Use `ApplicationError::class => [Listener::class]` (invokable class-string) or `[[Listener::class, '__invoke']]`. |
+| Registering listeners as one-element arrays (`ApplicationError::class => [[Listener::class]]`) | A nested array is not a valid listener definition; `yiisoft/yii-event`'s `CallableFactory` throws `Yiisoft\Yii\Event\InvalidListenerConfigurationException` (full definition table: [Events & Listeners Guide](core-events-and-listeners.md), section 4.2). | Use `ApplicationError::class => [Listener::class]` (invokable class-string) or `[[Listener::class, '__invoke']]`. |
 | Configuring Sentry cron monitoring with snake_case keys (`monitor_slug`, `max_runtime`, `checkin_margin`) | Only `schedule` coincidentally matches; `monitor_slug` does not exist. Unknown array keys are ignored and a missing `slug` throws `InvalidArgumentException`. | Use the camelCase schema: `slug`, `schedule`, `timezone`, `checkinMargin`, `maxRuntime`, `failureIssueThreshold`, `recoveryThreshold` (see section 8.3). |
 | Overriding `ContentTypeRendererProvider::class` in DI to swap renderers | The shipped `di-web.php` constructs the provider directly inside its `DynamicReference::to()` closure, so a bare class override is never consumed. | Override the `rendererProvider` of `ThrowableResponseFactoryInterface` (see section 5.2); remember a custom `$renderers` map replaces the default map entirely. |
 | Referencing `Yiisoft\ErrorHandler\Factory\ThrowableResponseFactory` | Removed in `yiisoft/error-handler` 5.x. | Use `Yiisoft\ErrorHandler\ThrowableResponseFactory`. |

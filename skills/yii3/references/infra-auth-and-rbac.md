@@ -735,14 +735,7 @@ Route::post('/auth/login')
 
 ### 4.7. PSR-14 User Authentication Events
 
-`yiisoft/user` dispatches four PSR-14 events during the login and logout cycles:
-
-| Event Class | Cancellable | Payload Methods | Primary Use Cases |
-|---|---|---|---|
-| `Yiisoft\User\Event\BeforeLogin` | Yes (`$event->invalidate()`) | `getIdentity(): IdentityInterface`<br>`isValid(): bool` | Account suspension checks, maintenance lockouts, IP blacklists. |
-| `Yiisoft\User\Event\AfterLogin` | No | `getIdentity(): IdentityInterface` | Update `last_login_at` timestamp, write security audit log, reset brute-force counters. |
-| `Yiisoft\User\Event\BeforeLogout` | Yes (`$event->invalidate()`) | `getIdentity(): IdentityInterface`<br>`isValid(): bool` | Confirm unsaved work, enforce mandatory workflow completion. |
-| `Yiisoft\User\Event\AfterLogout` | No | `getIdentity(): IdentityInterface` | Audit logging, revoke external API refresh tokens, purge caches. |
+`yiisoft/user` dispatches four PSR-14 events during the login and logout cycles: `BeforeLogin`, `AfterLogin`, `BeforeLogout`, `AfterLogout`. The full event table — payload accessors, the `invalidate()` veto semantics, and the `Yiisoft\Auth\IdentityInterface` import note — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.3. Auth-specific use cases: `BeforeLogin`/`BeforeLogout` are cancellable via `$event->invalidate()` (account suspension checks, maintenance lockouts, IP blacklists, mandatory workflow completion); `AfterLogin`/`AfterLogout` are observational (audit logging, `last_login_at` updates, brute-force counter resets, refresh-token revocation, cache purging).
 
 #### Registering Event Listeners (`config/common/events.php`)
 

@@ -356,14 +356,7 @@ When rendering a view `user/profile`, `Theme::applyTo($file)` searches `@themes/
 
 ### 2.5. PSR-14 View Lifecycle Events
 
-`WebView` dispatches 7 PSR-14 events during the rendering process under `Yiisoft\View\Event\WebView\`:
-1. `BeforeRender` — dispatched before rendering a view file. Implements `StoppableEventInterface`; calling `$event->stopPropagation()` cancels rendering and returns an empty string.
-2. `AfterRender` — dispatched after rendering completes. Exposes `getResult(): string`.
-3. `PageBegin` — dispatched when `$this->beginPage()` starts page buffering.
-4. `Head` — dispatched when `$this->head()` outputs the head placeholder.
-5. `BodyBegin` — dispatched when `$this->beginBody()` outputs the body-start placeholder.
-6. `BodyEnd` — dispatched when `$this->endBody()` outputs the body-end placeholder.
-7. `PageEnd` — dispatched when `$this->endPage()` replaces placeholders and cleans the buffer.
+`WebView` dispatches 7 PSR-14 events during rendering under `Yiisoft\View\Event\WebView\`: `BeforeRender`, `AfterRender`, `PageBegin`, `Head`, `BodyBegin`, `BodyEnd`, `PageEnd`. The full event table with payload accessors, the stoppable-`BeforeRender` cancellation semantics, and the critical trap — the `Yiisoft\View\Event\View\*` group (plain `View`) and the `Yiisoft\View\Event\WebView\*` group are parallel: a listener registered for the wrong group **silently never fires** — are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.8.
 
 ---
 

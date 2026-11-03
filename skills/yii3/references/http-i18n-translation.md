@@ -834,9 +834,10 @@ return [
 
 ## 7. Missing Translation Events
 
-Events are **optional by design**: the translator's `$eventDispatcher` is nullable, the shipped DI wiring uses
-`Reference::optional(EventDispatcherInterface::class)`, and dispatch calls are null-safe. Without a configured
-dispatcher, translation still works — events simply do not fire.
+Events are **optional by design**: the translator's `$eventDispatcher` is nullable and the shipped DI wiring uses
+`Reference::optional(EventDispatcherInterface::class)`. The general null-safe dispatcher pitfall (events are
+silently skipped without a dispatcher) is owned by the [Events & Listeners Guide](core-events-and-listeners.md),
+section 6 intro — without a configured dispatcher, translation still works, events simply do not fire.
 
 When a message or category cannot be resolved **and** a dispatcher is configured:
 
@@ -845,9 +846,9 @@ When a message or category cannot be resolved **and** a dispatcher is configured
 | `Yiisoft\Translator\Event\MissingTranslationEvent` | `getCategory()`, `getLanguage()`, `getMessage()` | the id was not found in any source for that locale (fires per source per locale attempt, including fallback locales; note the getter is `getLanguage()`, not `getLocale()`) |
 | `Yiisoft\Translator\Event\MissingTranslationCategoryEvent` | `getCategory()` | no source registered for the category (fires **at most once per category per translator instance**) |
 
-Listener wiring follows the `yiisoft/yii-event` events configuration format (array keyed by event class name;
-parameters after the first — the event itself — are resolved from the DI container). A typical application
-pattern is logging gaps to a dedicated channel (e.g. `translation.missing` — see
+Listener wiring follows the standard `yiisoft/yii-event` events configuration — the declarative mapping format and
+the full listener-definition table are owned by the [Events & Listeners Guide](core-events-and-listeners.md),
+section 4.2. A typical application pattern is logging gaps to a dedicated channel (e.g. `translation.missing` — see
 [Logging Guide](infra-logging.md)) so untranslated strings surface in monitoring:
 
 ```php
@@ -927,9 +928,8 @@ localization from them:
 
 There is no translation-specific mock package. Doubles come from two places: `yiisoft/translator` itself ships
 `InMemoryMessageSource` (reader + writer), and `yiisoft/test-support` ships generic PSR doubles —
-`SimpleEventDispatcher` (records every dispatched event; `getEvents()`, `getEventClasses()`, `clearEvents()`,
-`isClassTriggered(string $class, ?int $times = null): bool`, ...), `SimpleLogger` (`getMessages()`), and
-`MemorySimpleCache`.
+`SimpleEventDispatcher` (full API owned by the [Testing Guide](testing-core.md), section 3.1),
+`SimpleLogger` (`getMessages()`), and `MemorySimpleCache`.
 
 A self-contained test setup (named arguments; `Translator` constructor verified in §2.2):
 

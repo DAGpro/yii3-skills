@@ -76,10 +76,7 @@ Operating System Process Exit ($exitCode)
 
 ### Console Lifecycle Events
 
-Yii3 console dispatches explicit lifecycle events during execution:
-1. `Yiisoft\Yii\Console\Event\ApplicationStartup`: Dispatched before running the resolved command. Carries `public ?string $commandName = null` containing the primary command token from CLI input.
-2. `Yiisoft\Yii\Console\Event\ApplicationShutdown`: Dispatched in the `finally` block of `ConsoleApplicationRunner`. Carries `getExitCode(): int` before the PHP process exits.
-3. Symfony Console Events: Standard Symfony events (`ConsoleCommandEvent`, `ConsoleErrorEvent`, `ConsoleTerminateEvent`) are bridged to the PSR-14 event dispatcher via `Yiisoft\Yii\Console\SymfonyEventDispatcher`.
+Yii3 console dispatches explicit lifecycle events during execution: `Yiisoft\Yii\Console\Event\ApplicationStartup`, `Yiisoft\Yii\Console\Event\ApplicationShutdown`, and — bridged to the PSR-14 event dispatcher via `Yiisoft\Yii\Console\SymfonyEventDispatcher` — standard Symfony events (`ConsoleCommandEvent`, `ConsoleErrorEvent`, `ConsoleTerminateEvent`). Payloads, dispatch points, and the bridge mechanics are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.2.
 
 ### Subscribing to Lifecycle Events
 
@@ -113,10 +110,10 @@ return [
 
 Wiring details:
 
-- Listener formats: `[Class::class, 'method']` (called from the container instance or statically) and closures/invokables. The events are collected from the `events-console` group (plus its nested `events` groups) and converted into a PSR-14 listener collection by `yiisoft/yii-event`.
-- The dispatcher is wired automatically by `yiisoft/yii-console`: its default `di-console.php` sets `Yiisoft\Yii\Console\SymfonyEventDispatcher` on the `Application`, which delegates every dispatch to the PSR-14 dispatcher. Without a dispatcher configured, lifecycle events are not dispatched at all.
+- Listener formats (`[Class::class, 'method']`, closures, invokables) and the config-to-collection pipeline are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2; group declaration and the `events` → `events-web`/`events-console` reverse-merge by its section 4.1.
+- The dispatcher is wired automatically by `yiisoft/yii-console` (its default `di-console.php` sets `Yiisoft\Yii\Console\SymfonyEventDispatcher` on the `Application` — [Events Guide, §6.2](core-events-and-listeners.md)). Without a dispatcher configured, lifecycle events are not dispatched at all.
 - Real-world examples: `yiisoft/yii-debug` subscribes `Debugger::start` to `ApplicationStartup` and `Debugger::stop` to `ApplicationShutdown` (see `vendor/yiisoft/yii-debug/config/events-console.php`); `yiisoft/log` registers a closure that flushes the logger on `ConsoleTerminateEvent` (see `vendor/yiisoft/log/config/events-console.php`).
-- Nuances: `ApplicationStartup` is dispatched only when the application `start()` receives CLI input, and it carries the first raw argv token (e.g. `serve`), not the resolved command name; `ApplicationShutdown` fires in the runner's `finally` block carrying the final exit code.
+- Nuances: `ApplicationStartup` carries the first raw argv token (e.g. `serve`), not the resolved command name — payload details in [Events Guide, §6.2](core-events-and-listeners.md).
 
 ---
 
@@ -792,19 +789,7 @@ The `! [NOTE]`-styled rendering (title + note) applies only when the output obje
 
 ### 7.2. Global Console Error Logging (`ErrorListener`)
 
-`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` via the package-shipped `vendor/yiisoft/yii-console/config/events-console.php` (no application wiring needed). When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application):
-
-```php
-// vendor/yiisoft/yii-console/config/events-console.php (shipped by the package)
-use Symfony\Component\Console\Event\ConsoleErrorEvent;
-use Yiisoft\Yii\Console\ErrorListener;
-
-return [
-    ConsoleErrorEvent::class => [
-        [ErrorListener::class, 'onError'],
-    ],
-];
-```
+`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` through the `events-console` group shipped by the package (`vendor/yiisoft/yii-console/config/events-console.php`; the shipped group contents are quoted in the [Events & Listeners Guide](core-events-and-listeners.md), section 6.2 — no application wiring needed). When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application).
 
 ---
 

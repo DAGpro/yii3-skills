@@ -383,7 +383,7 @@ Each listener is registered under the **explicit event class name used as the co
 ### 4.3. Verifying Event Configurations Ahead-of-Time
 
 > [!WARNING]
-> **Lazy resolution pitfall:** listener definitions are resolved at **dispatch time**, not at wiring time. An invalid definition (missing class, non-callable) fails only when the event actually fires (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`). Run the configuration checker in development environments and tests to catch broken definitions before production.
+> **Lazy resolution pitfall:** listener definitions are resolved at **dispatch time**, not at wiring time. An invalid definition (missing class, non-callable) fails only when the event actually fires — `CallableFactory::create()` is invoked inside the per-dispatch closure (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`). Only the map **format** (string event key, iterable listener list) is validated eagerly, when `ListenerCollectionFactory::create()` builds the collection — i.e. when the DI container first resolves `ListenerCollection::class`. Run the configuration checker in development environments and tests to catch broken definitions before production.
 
 `Yiisoft\Yii\Event\ListenerConfigurationChecker` validates that all configured listeners are valid callables and their target classes exist:
 
@@ -882,42 +882,14 @@ $checker->check(
 
 ### 8.1. SimpleEventDispatcher
 
-`Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` implements `EventDispatcherInterface`, records every dispatched event, and honors `StoppableEventInterface`. It is the same double used by the official packages' own test suites (`yiisoft/yii-event`, `yiisoft/mailer`, `yiisoft/active-record`).
+`Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` implements `EventDispatcherInterface`, records every dispatched event, and honors `StoppableEventInterface` (a stopped event is still recorded — stoppability only suppresses listener invocation). It is the same double used by the official packages' own test suites (`yiisoft/yii-event`, `yiisoft/mailer`, `yiisoft/active-record`).
 
-API:
+The full API reference — constructor, `getEvents()`, `getEventClasses()`, `clearEvents()`, and the `isClassTriggered()` / `isObjectTriggered()` / `isInstanceOfTriggered()` assertion family — is owned by the [Testing Guide](testing-core.md), section 3.1 (exact signatures: its section 7).
 
-| Member | Purpose |
-|---|---|
-| `new SimpleEventDispatcher(Closure ...$listeners)` | Constructs the dispatcher with optional inline listeners |
-| `getEvents(): object[]` | All dispatched event instances, in order |
-| `getEventClasses(): string[]` | Class names of all dispatched events, in order — ideal for order assertions |
-| `clearEvents(): void` | Resets the recorded events |
-| `isClassTriggered(string $class, ?int $times = null): bool` | Whether an event of the exact class was dispatched (optionally exactly `$times` times) |
-| `isObjectTriggered(object $event, ?int $times = null): bool` | Whether this exact instance was dispatched |
-| `isInstanceOfTriggered(string $class, ?int $times = null): bool` | Whether an event `instanceof $class` was dispatched |
+For events testing, the two most-used members:
 
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Order;
-
-use App\Domain\Order\Event\OrderPlacedEvent;
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
-
-final class OrderPlacedDispatchTest extends TestCase
-{
-    public function testOrderPlacedEventIsDispatchedExactlyOnce(): void
-    {
-        $eventDispatcher = new SimpleEventDispatcher();
-
-        $eventDispatcher->dispatch(new OrderPlacedEvent('ord-1', 'user-1', 1999));
-
-        $this->assertSame([OrderPlacedEvent::class], $eventDispatcher->getEventClasses());
-        $this->assertTrue($eventDispatcher->isClassTriggered(OrderPlacedEvent::class, 1));
-    }
-}
-```
+- `getEventClasses(): string[]` — dispatched event class names in order; ideal for order assertions: `assertSame([OrderPlacedEvent::class], $dispatcher->getEventClasses())`.
+- `isClassTriggered(string $class, ?int $times = null): bool` — exact-class assertion with an optional exact-count check: `isClassTriggered(OrderPlacedEvent::class, 1)`.
 
 Inject the `SimpleEventDispatcher` instance wherever an `EventDispatcherInterface` is expected (constructor argument of the use case under test) to assert what was dispatched and in which order — e.g. that domain events were released strictly after the transaction committed (see [Section 5](#5-mandatory-post-commit-event-dispatching-rule)).
 
@@ -969,21 +941,7 @@ final class CategoryInsertPreventionTest extends TestCase
 
 ### 8.3. SimpleContainer for Listener Resolution
 
-`Yiisoft\Test\Support\Container\SimpleContainer` (constructor accepts a `definitions` array, optional `factory`/`hasCallback` closures) resolves listeners and their dependencies without the full application container:
-
-```php
-declare(strict_types=1);
-
-use Psr\Log\LoggerInterface;
-use Yiisoft\Test\Support\Container\SimpleContainer;
-
-/** @var LoggerInterface $logger */
-$container = new SimpleContainer([
-    LoggerInterface::class => $logger,
-]);
-
-$listener = $container->get(\App\Application\Order\Listener\LogOrderPlacementListener::class);
-```
+`Yiisoft\Test\Support\Container\SimpleContainer` resolves listeners and their dependencies without the full application container: hand it a `definitions` array mapping container ids (e.g. `LoggerInterface::class`) to pre-built services, then resolve the listener class from it. Constructor options (`factory`/`hasCallback` closures), memoization behavior, and exception semantics are owned by the [Testing Guide](testing-core.md), section 3.5.
 
 ---
 

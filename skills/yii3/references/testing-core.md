@@ -702,6 +702,8 @@ final class SimpleEventDispatcherTest extends TestCase
 > [!NOTE]
 > Even if an event implements `StoppableEventInterface` and returns `isPropagationStopped() === true`, `SimpleEventDispatcher` **still records the event** in `$eventDispatcher->getEvents()`. Stoppability only suppresses listener invocation.
 
+Events-specific testing strategy — PSR-14 architecture context, Active Record event testing via `EventDispatcherProvider::set()`, and asserting that domain events were released strictly after a transaction commit — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 8.
+
 ---
 
 ### 3.2. PSR-3 Logger (`SimpleLogger`)

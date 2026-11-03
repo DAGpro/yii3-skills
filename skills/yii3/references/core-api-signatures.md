@@ -717,15 +717,14 @@ final readonly class AuthorRule implements RuleInterface
 ---
 
 ## 15. PSR-14 Event Dispatcher (`Psr\EventDispatcher`)
+
+Signatures only — PSR-14 architecture, named-argument call forms, and the `attach()` vs `add()` API drift warning are owned by the [Events & Listeners Guide](core-events-and-listeners.md), sections 1 and 7.
+
 ```php
 namespace Psr\EventDispatcher;
 
 interface EventDispatcherInterface
 {
-    /**
-     * The PSR interface itself declares the result via a docblock only (`@return object`) —
-     * implementable without a native return type.
-     */
     public function dispatch(object $event);
 }
 ```
@@ -742,9 +741,6 @@ final class Dispatcher implements EventDispatcherInterface
     public function dispatch(object $event): object;
 }
 ```
-> Notes:
-> - Do not type the native `: object` return against the PSR interface declaration — attribute it to `Yiisoft\EventDispatcher\Dispatcher\Dispatcher`.
-> - Companion PSR-14 interfaces in use: `ListenerProviderInterface` (`getListenersForEvent(object $event): iterable`) and `StoppableEventInterface` (checked in the dispatch loop).
 
 **Usage in Use Case:**
 ```php

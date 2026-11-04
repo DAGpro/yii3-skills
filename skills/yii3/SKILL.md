@@ -12,14 +12,14 @@ End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to
 
 Pick the mode at Stage 0 and print it.
 
-- **Light** — small, contained edits: a single route, a config/params/DI change, a one-file refactor or fix, a guide lookup. Flow: Stage 0 (guard + archetype only) → only the stages actually touched → deterministic gate → the Chain Integrity lines for the wiring touched. The extended Finale (`references/core-definition-of-done.md`) is skipped.
-- **Full** — everything else, default. New features, and tasks touching runtime, auth, queues, or infrastructure, run the full Mission Workflow and Finale including `references/core-definition-of-done.md`.
+- **Light** — small, contained edits: a single route, a config/params/DI change, a one-file refactor or fix, a guide lookup. Flow: Stage 0 (guard + archetype only) → only the stages actually touched → deterministic gate → the touched Chain Integrity lines. The extended Finale (`references/core-definition-of-done.md`) is skipped.
+- **Full** — everything else, default. New features, and tasks touching runtime, auth, queues, or infrastructure, run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
 
 ## AI Factory mode
 
 All workflow-integration specifics live here; the rest of this skill reads without them.
 
-- The skill was loaded by the `yii3` injection inside an `aif-*` workflow (`/aif-plan`, `/aif-implement`, `/aif-verify`, …): Stage 0 detects what the workflow already resolved — config + plan paths (`paths.architecture`, `paths.rules_file`, `paths.plans` from `.ai-factory/config.yaml` when present), architecture artifact, rules file — and continues without redoing it.
+- The skill was loaded by the `yii3` injection inside an `aif-*` workflow (`/aif-plan`, `/aif-implement`, `/aif-verify`, …): Stage 0 detects what the workflow already resolved — config + plan paths (`paths.architecture`, `paths.rules_file`, `paths.plans` from `.ai-factory/config.yaml` when present), architecture artifact, rules file (never redo).
 - In `HANDOFF_MODE=1` never ask the user: prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked.
 - The Finale hands control to `/aif-verify` (findings merge into its `aif-gate-result`); Standalone runs close the Finale themselves.
 
@@ -27,23 +27,30 @@ All workflow-integration specifics live here; the rest of this skill reads witho
 
 Run first, in every mode. If the target project's `composer.json` contains no `yiisoft/*` packages, this skill does not apply — stop and report inapplicability.
 
-1. **Bootstrap checklist** (skip items already resolved by the running workflow — detect and continue, never redo):
+1. **Bootstrap checklist** (skip items the running workflow already resolved — never redo):
    - Architecture source: the project's architecture artifact if present (note its vendor-isolation level — see `references/core-architecture-alignment.md`); otherwise mirror the real `src/` + `config/` layout and 2–3 similar existing features (Core rule 3).
    - Rules: the configured rules file(s), else the project's existing conventions.
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages — re-anchor the SSOT hierarchy (Core rule 2) and check against `references/package-catalog.md`.
-2. **Cross-milestone consistency:** the stack is fixed by past milestones — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
+2. **Cross-milestone consistency:** past milestones fixed the stack — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
 3. **Lifecycle position** — detect and print one of:
    - **(a) Plan task:** a plan artifact of the current milestone exists → execute the task per its phases (6-phase contract, see Mission Workflow).
    - **(b) Standalone feature:** a new feature request → full Mission Workflow route.
    - **(c) Bug / diagnostics:** root-cause checklist, in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. Never use a Yii2 static facade as a workaround.
 4. **Archetype & mode:** classify the task via the Task & Intent Routing Matrix; print `Light` or `Full`.
-5. **Mission plan** — print before implementing: `Architecture: <source>`, guides to load (matrix row), gate scripts to run at the Finale.
+5. **Mission plan** — print before implementing: `Architecture: <source>`, guides to load, Finale gate scripts.
 
 ## Mission Workflow (Stages 1–7)
 
-For business features execute the stages strictly bottom-up — the execution refinement of the 6-phase plan contract (phases 2–5 map 1:1 onto stages 2–5; phase 6 "Wiring & Tests" = stages 6+7):
+For business features execute the stages strictly bottom-up. Plan tasks decompose into the 6 phases below — the single authoritative phase → stage mapping (plan artifacts say "phases", execution says "stages"):
 
-> Migration → Domain Entity & Repository Interface → Repository Implementation → Use Case Handler & Events → Input DTO & Single-Action Handler (or Console Command) → Config Wiring → Tests.
+| Plan phase | Execution stages |
+|---|---|
+| 1 Migration & Schema | Stage 1 |
+| 2 Domain Entity & Repository Interface | Stage 2 |
+| 3 Repository Implementation | Stage 3 |
+| 4 Use Case Handler & Events | Stage 4 |
+| 5 Input DTO & Single-Action Handler | Stage 5 |
+| 6 Wiring & Tests | Stages 6–7 |
 
 Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist) and `examples/crud-slice/README.md`. Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
 
@@ -65,7 +72,7 @@ Non-feature tasks (pure config, docs, refactoring): Stage 0 marks the inapplicab
 
 Run after the last stage, in every mode.
 
-1. **Deterministic gate** — from the skill package directory, against the target project path: `php scripts/verify-all.php [project-path]` (or individual verifiers). Loop: fix every error and rerun until exit 0. Exit codes and flags are documented in the tooling section below; exit 2 means a misconfigured invocation — fix the invocation, never treat it as a pass.
+1. **Deterministic gate** — from the skill package directory, against the target project path: `php scripts/verify-all.php [project-path]` (or individual verifiers). Loop: fix every error and rerun until exit 0. Exit codes and flags: tooling section below; exit 2 means a misconfigured invocation — fix the invocation, never treat it as a pass.
 2. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Packages used in code must be declared in `composer.json`.
 3. **Chain Integrity Checklist** (blocking): every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
 4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
@@ -77,9 +84,9 @@ Run after the last stage, in every mode.
 3. **Architecture decides placement:** the architecture artifact if it exists, otherwise the project's real structure (`src/`, `config/` + similar existing features). See `references/core-architecture-alignment.md`.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
 
-### Cross-Cutting Yii 2 Bans (Quick Guard List)
+### Cross-Cutting Yii 2 Bans
 
-Full grounded matrices live in the topic guides' Anti-Pattern Matrix sections; the scripts below catch the mechanical ones:
+Full grounded matrices: each topic guide's Anti-Pattern Matrix; the scripts below catch the mechanical ones:
 
 | # | Forbidden Legacy / Anti-Pattern | Mandatory Idiomatic Yii 3 Replacement |
 |---|---|---|
@@ -104,7 +111,7 @@ Full grounded matrices live in the topic guides' Anti-Pattern Matrix sections; t
 ### Task & Intent Routing Matrix
 Load only the guides for the active archetype:
 
-| Task Archetype | Primary Guides (Start Here) | Secondary / Wiring Guides | Canonical Template / Gate |
+| Task Archetype | Primary Guides | Secondary | Template / Gate |
 |---|---|---|---|
 | **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-and-forms.md`<br>`references/http-routes.md` | `references/persistence-db.md`<br>`references/infra-error-handling.md` | `examples/crud-slice/README.md`<br>`verify-actions.php` |
 | **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` | `check-di-syntax.php` |

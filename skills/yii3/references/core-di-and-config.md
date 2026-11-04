@@ -756,7 +756,7 @@ The `'reset'` callback must be a `Closure` — the container binds it to the ser
 
 > [!TIP]
 > **Worker State Reset Reference:**
-> For the complete reference on persistent-runtime state safety — the per-iteration worker-loop contract (`afterEmit()` → `StateResetter::reset()` → `gc_collect_cycles()`), the silent drop of definition resetters when `StateResetter::class` is overridden (§6.2), and closure scope binding (§6.5) — see the [Runners & Runtimes Guide, §6. Long-Running Worker Safety & StateResetter](infra-runners-and-runtimes.md#6-long-running-worker-safety--stateresetter).
+> For the complete reference on persistent-runtime state safety — the silent drop of definition resetters when `StateResetter::class` is overridden (§2), idiomatic per-service `'reset'` declarations (§3), and closure scope binding (§5) — see the [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md). The per-iteration worker-loop contract (`afterEmit()` → `StateResetter::reset()` → `gc_collect_cycles()`) lives in the [RoadRunner](infra-runtime-roadrunner.md) and [FrankenPHP](infra-runtime-frankenphp.md) worker runtime guides.
 
 ---
 
@@ -1051,7 +1051,7 @@ Signature: `StrictFactory::__construct(array $definitions, ?ContainerInterface $
 ### 7.8. Overriding `StateResetter` Kills Definition Resetters
 - **Pitfall:** Defining `StateResetter::class` in definitions or service providers while also using `'reset'` metadata on service definitions.
 - **Consequence:** Resetters registered via `'reset'` metadata are silently ignored; per-request state stops being cleared.
-- **Solution:** Use either definition-level `'reset'` callbacks OR a manually configured `StateResetter` — never both. Container internals: [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md#62-the-stateresetterclass-definition-trap).
+- **Solution:** Use either definition-level `'reset'` callbacks OR a manually configured `StateResetter` — never both. Container internals: [StateResetter Guide, §2](infra-state-resetter.md#2-the-stateresetterclass-definition-trap).
 
 ### 7.9. Resolution Exception Map
 
@@ -1081,8 +1081,8 @@ Container resolution failures surface as a small, well-defined exception set. Kn
 | ❌ **Passing raw alias `'@runtime/logs'` to constructor** | In Yii3, DI definitions do not automatically parse `@` string prefixes into paths. | ✅ Use `\Yiisoft\Aliases\AliasReference::to('@runtime/logs')` or inject `Yiisoft\Aliases\Aliases`. |
 | ❌ **Calling `$container->set(...)` at runtime** | `Yiisoft\Di\Container` is an immutable PSR-11 container; it has no `set()` method. | ✅ Declare all definitions in configuration arrays, or use `Yiisoft\Factory\Factory` / `Injector` for runtime instantiation. |
 | ❌ **Storing closures or service objects in `params.php`** | Parameters are merged across packages, environments, and DI files; closures hide service wiring in parameter files, resist environment overrides, and cannot be introspected. | ✅ Put service definitions and factory closures in `config/*/di/*.php`, never in `params.php`. |
-| ❌ **Leaving stateful singletons without `'reset'` in workers** | In persistent worker mode (RoadRunner, FrankenPHP, Swoole), singleton properties persist across HTTP requests, leaking user data. | ✅ Add `'reset' => function (): void { $this->resetInternalState(); }` to the service definition — see [Runners & Runtimes Guide, §6](infra-runners-and-runtimes.md#6-long-running-worker-safety--stateresetter). |
-| ❌ **Defining `StateResetter::class` while also using `'reset'` metadata** | Definition-level resetters are silently ignored when `StateResetter` is overridden in definitions or providers. | ✅ Choose one mechanism: definition-level `'reset'` callbacks or a manually configured `StateResetter` — see [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md#62-the-stateresetterclass-definition-trap). |
+| ❌ **Leaving stateful singletons without `'reset'` in workers** | In persistent worker mode (RoadRunner, FrankenPHP, Swoole), singleton properties persist across HTTP requests, leaking user data. | ✅ Add `'reset' => function (): void { $this->resetInternalState(); }` to the service definition — see the [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md). |
+| ❌ **Defining `StateResetter::class` while also using `'reset'` metadata** | Definition-level resetters are silently ignored when `StateResetter` is overridden in definitions or providers. | ✅ Choose one mechanism: definition-level `'reset'` callbacks or a manually configured `StateResetter` — see [StateResetter Guide, §2](infra-state-resetter.md#2-the-stateresetterclass-definition-trap). |
 | ❌ **Passing default option values as the second `Factory` constructor argument** | `Factory::__construct(?ContainerInterface $container = null, array $definitions = [], ...)` expects a definitions map; arbitrary scalar arrays fail `DefinitionValidator`. | ✅ Pass real definitions (`['service-id' => [...definition...]]`) or omit the argument; use `create()` for per-call configuration. |
 | ❌ **Using `StrictFactory::create()` with a class name or inline array** | `StrictFactory::create(string $id)` is string-typed: an unregistered class-string throws `NotFoundException`; an inline definition array fails with a PHP `TypeError` before any factory logic runs. | ✅ Register a definition for the ID first, or use `Factory` / `Injector::make()` for ad-hoc creation. |
 | ❌ **Circular dependencies (`ServiceA` -> `ServiceB` -> `ServiceA`)** | Causes `Yiisoft\Definitions\Exception\CircularReferenceException` during container resolution. | ✅ Refactor using domain events (PSR-14), dedicated use cases, or extract an intermediate interface/provider. |
@@ -1107,6 +1107,7 @@ php scripts/check-di-syntax.php [path-to-project]
 
 ## 9. Related Topic Guides
 
-- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and RoadRunner/FrankenPHP workers with `StateResetter`.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and the runtime selection matrix.
+- [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md) — Worker state reset mechanics, the `StateResetter::class` trap, and the built-in package resetter catalog.
 - [Logging Guide](infra-logging.md) — PSR-3 logger wiring and targets, including the `StreamTarget` used by runner temporary error handlers.
 - [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 event mapping and listener registration in config groups.

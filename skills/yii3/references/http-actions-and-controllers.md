@@ -624,7 +624,7 @@ final class ContactForm extends FormModel
 > **The Form Name / Scope Trap:** with no explicit `scope`, `populateFromPostAndValidate()` falls back to `FormModel::getFormName()` — the hydrator looks for nested data `$request->getParsedBody()['ContactForm']`; pass `scope: ''` for flat inputs (or override `getFormName(): string { return ''; }`). Missing scope data is not silent: the method deterministically returns `false` — always branch on the returned `bool`. Full semantics: [Validation & Forms Guide, §8.2](http-validation-and-forms.md).
 
 > [!TIP]
-> For layout configurations, page lifecycle, asset bundles, custom widgets, and DataView components (`GridView`, `ListView`, `DetailView`), see [Views, Layouts & Widgets Guide](http-views-and-widgets.md).
+> For layout configurations, page lifecycle, asset bundles, and custom widgets, see [Views, Layouts & Widgets Guide](http-views-and-widgets.md); for `GridView`, `ListView`, and `DetailView`, see the [DataView Widgets Guide](http-dataview-widgets.md).
 
 **WebViewRenderer Capabilities:**
 - Full layout rendering: `$this->webViewRenderer->render('contact/index', ['form' => $form])` returns a typed `ResponseInterface` and sets `Content-Type: text/html; charset=UTF-8` (customizable via `withContentType()` / `withEncoding()`).
@@ -824,7 +824,7 @@ final readonly class DeletePostAction
   $token = $this->tokenFactory->create(['sub' => $identity->getId()], CompactSerializer::NAME);
   ```
   > [!NOTE]
-  > The method on `TokenFactoryInterface` is `create()` (NOT `createToken()`), requiring `CompactSerializer::NAME`. Full JWT issuer recipes, key algorithms, token parsing, and auth-pipeline middleware wiring are owned by the [Authentication & RBAC Guide](infra-auth-and-rbac.md), section 5.2.
+  > The method on `TokenFactoryInterface` is `create()` (NOT `createToken()`), requiring `CompactSerializer::NAME`. Full JWT issuer recipes, key algorithms, token parsing, and auth-pipeline middleware wiring are owned by the [JWT Authentication Guide](infra-auth-jwt.md), section 2.
 
 #### CSRF Token (`yiisoft/csrf`)
 
@@ -1057,7 +1057,8 @@ final readonly class ShowUserAction
 
 - [Routing Guide](http-routes.md) — Route definition, FastRoute patterns, and URL generation.
 - [PSR-15 Middlewares Guide](http-middlewares.md) — Middleware pipeline ordering, authentication guards, and request manipulation.
-- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — HTML view templates, layouts, asset bundles, and DataView widgets.
+- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — HTML view templates, layouts, asset bundles, and custom widgets.
+- [DataView Widgets Guide](http-dataview-widgets.md) — `GridView`, `ListView`, and `DetailView` rendering.
 - [Error Handling Guide](infra-error-handling.md) — Exception catching, status code responders, and error presentation formats.
 - [Validation & Forms Guide](http-validation-and-forms.md) — Input validation, FormModel hydration, and DTO rules.
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting API action endpoints, request bodies, and schemas with PHP 8 attributes.

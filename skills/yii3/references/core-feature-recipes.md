@@ -182,7 +182,7 @@ final class SendWelcomeEmailHandler implements HandlerInterface
 > [!TIP]
 > **Queue & Jobs Reference:**
 > For the complete reference on producer push patterns (`QueueProducerInterface`, delayed execution, `status()` with the `MessageStatus` codes), custom message DTOs with the `fromPayload()` contract, handler mapping in params (including the zero-config path when the message type equals the handler FQCN), and worker CLI commands, see the [Queue & Asynchronous Jobs Guide, §3-§4](infra-queue-jobs.md#3-pushing-messages-to-queue).
-> For the push/consume/failure middleware pipelines and adapter specifics (`queue-db`, `queue-redis`, `queue-amqp`), see [§5](infra-queue-jobs.md#5-middleware-subsystems-failure-handling--pipelines) and [§8](infra-queue-jobs.md#8-multi-queue-configuration--broker-adapters).
+> For the push/consume/failure middleware pipelines, see [§5](infra-queue-jobs.md#5-middleware-subsystems-failure-handling--pipelines); for broker adapter specifics (`queue-db`, `queue-redis`, `queue-amqp`), see the [Queue Broker Adapters Guide](infra-queue-brokers.md).
 
 ---
 

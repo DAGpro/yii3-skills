@@ -1,7 +1,7 @@
 # Yii3 Testing: Mutation Testing with Infection (`infection/infection`)
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
 
 > Complete reference for Infection mutation testing in Yii3 projects: role and architecture, installation, canonical `infection.json.dist` configuration, the Testo runner bridge (`testo/bridge-infection`), and execution with MSI thresholds.
 

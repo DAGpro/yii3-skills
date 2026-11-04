@@ -1,7 +1,7 @@
 # Yii3 Views, Layouts & Widgets Guide
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
 
 > Comprehensive guide for template rendering, XSS protection, layouts, view injections, asset bundles, custom widgets, and HTML forms using `yiisoft/view`, `yiisoft/yii-view-renderer`, `yiisoft/html`, `yiisoft/widget`, `yiisoft/assets`, `yiisoft/yii-widgets`, `yiisoft/form`, and `yiisoft/form-model`. Package-specific material is split out into on-demand child guides owned by this one: the Twig template engine ([Twig Template Engine Guide](http-views-twig.md)), the CSS-framework widget drivers ([Bootstrap 5 Guide](http-views-bootstrap5.md), [Bulma Guide](http-views-bulma.md)), and the DataView widgets ([DataView Widgets Guide](http-dataview-widgets.md)).
 

@@ -1,7 +1,7 @@
 # Yii3 Testing: Architecture, Runners, PSR Doubles & Quality Gates
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
 
 > Practical guide for Yii3 test architecture, the PHPUnit test runner, PSR test doubles from `yiisoft/test-support`, modern mocking rules, domain validation testing, fixture generation, and unit test suites. Alternative runners (Testo, Codeception), Infection mutation testing, and console command testing are owned by dedicated companion guides — see the runner-selection note in [§2](#2-test-runner-ecosystem--quality-gates).
 

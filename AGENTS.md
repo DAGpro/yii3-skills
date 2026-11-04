@@ -66,9 +66,9 @@ Agents must understand the distinction between the two operating contexts and th
 
 * **Runtime Source of Truth:**
 
-  - Target project's `composer.json` and installed packages in `vendor/yiisoft/`.
+  - Installed packages in `vendor/yiisoft/` — the API source of truth (`src/` for signatures); `composer.json` / `composer.lock` for installed versions.
 
-  - Target project's `.ai-factory/` (architecture, rules, config) and existing codebase layout (`src/`, `config/`).
+  - Target project's `.ai-factory/` (architecture, rules, config). The skill's guides are the implementation instructions the project code must follow; the existing codebase layout (`src/`, `config/`) is integration context only — never a source of truth.
 
   - The runtime package catalog delivered with the skill: `skills/yii3/references/package-catalog.md` (**NOT** the root `PACKAGES.md`, which does not exist in target installations).
 

@@ -1,7 +1,7 @@
 # Yii3 FrankenPHP Worker Runtime Guide
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
 
 > Reference guide for the FrankenPHP worker runtime (`yiisoft/yii-runner-frankenphp`): the Caddy CGO threading model and operating modes, `worker.php` implementation with `ignore_user_abort`, worker recycling via `MAX_REQUESTS`, production and development `Caddyfile` configurations, in-memory functional testing, and scoped request access with `yiisoft/request-provider`.
 

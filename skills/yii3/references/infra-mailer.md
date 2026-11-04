@@ -1,7 +1,7 @@
 # Yii3 Mailer & Email Notifications Guide
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
 
 > Practical guide and configuration recipes for composing, rendering HTML templates, attaching files, embedding inline assets, and sending emails via `yiisoft/mailer` and `yiisoft/mailer-symfony`. Production transport DSN configuration, asynchronous queue delivery, and mailer lifecycle events live in dedicated child guides.
 

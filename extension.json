@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/lee-to/ai-factory/2.x/schemas/extension.schema.json",
   "name": "yii3-skills",
-  "version": "0.2.0",
-  "description": "AI Factory extension with skills for generating Yii3 (yiisoft) PHP code: actions, forms, CRUD modules, REST API endpoints, DI configuration and DB migrations. Based on the official Yii3 guide.",
+  "version": "0.3.0",
+  "description": "AI Factory extension with the yii3 agent skill: a stage-based Yii3 development workflow (bootstrap, bottom-up stages, deterministic verification, production readiness gate) backed by 56 topic guides, dependency-free PHP verifiers with a fixture self-test, a canonical crud-slice example, and thin workflow injections for plan/improve/implement/verify/fix/review/roadmap/architecture.",
   "injections": [
     {
       "target": "aif-plan",

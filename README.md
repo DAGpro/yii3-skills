@@ -1,6 +1,6 @@
 # AI Factory Extension: Yii3 Skills
 
-[AI Factory](https://github.com/lee-to/ai-factory) extension with the **`yii3`** agent skill — a stage-based development workflow for **Yii 3** (`yiisoft/*` packages, PHP 8.2+): mission bootstrap, bottom-up implementation stages, deterministic verification, and a production readiness gate. The skill grounds every API claim in the target project's installed `vendor/yiisoft/<pkg>/src/` sources — zero hallucinated signatures, zero Yii 2 constructs.
+[AI Factory](https://github.com/lee-to/ai-factory) extension with the **`yii3`** agent skill — a stage-based development workflow for **Yii 3** (`yiisoft/*` packages, PHP 8.2+): mission bootstrap, bottom-up implementation stages, deterministic verification, and a production readiness gate. The skill grounds every API claim in the target project's installed `vendor/yiisoft/<pkg>/src/` sources — zero hallucinated signatures, zero Yii 2 constructs — and separates three sources of truth with an explicit conflict rule: API (vendor sources) → implementation patterns (skill guides) → project conventions (the project's own architecture artifact or dominant `src/` style), so new code never rewrites a working project to match the guides.
 
 ## What is inside
 

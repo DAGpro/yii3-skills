@@ -1,7 +1,7 @@
 # Yii3 Feature Decomposition Recipes
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
+> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 > Guides how to decompose high-level business feature requests into complete, idiomatic Yii3 architecture artifacts (Domain, Persistence, Use Cases, Presentation, Wiring, Tests).
 >

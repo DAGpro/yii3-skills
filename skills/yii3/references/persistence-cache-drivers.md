@@ -1,7 +1,7 @@
 # Yii3 Cache Driver Adapters Guide (Redis, DB, APCu, Memcached, WinCache)
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
+> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 > Configuration recipes for the external PSR-16 cache driver packages of `yiisoft/cache`: `yiisoft/cache-redis` (Predis client wiring), `yiisoft/cache-db` (storage-table initialization), `yiisoft/cache-apcu` (per-SAPI shared memory), `yiisoft/cache-memcached` (persistent connections and TTL semantics), and `yiisoft/cache-wincache`.
 

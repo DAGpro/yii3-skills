@@ -1,7 +1,7 @@
 # Yii3 Queue Broker Adapters Guide
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
+> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 > Reference guide for multi-queue configuration and the transport adapter packages of `yiisoft/queue`: named queues in `config/params.php`, `QueueFactoryProvider` DI wiring, the `yiisoft/queue-db`, `yiisoft/queue-redis`, and `yiisoft/queue-amqp` broker adapters, the synchronous `SyncQueueProducer`, and the driver comparison matrix.
 

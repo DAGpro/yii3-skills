@@ -1,7 +1,7 @@
 # Yii3 Caching & Performance Optimization Guide
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
+> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 > Practical guide and configuration recipes for data caching, PSR-16 drivers, stampede prevention with `getOrSet()`, tag invalidation, view fragment caching with hole-punching, and unit testing using `yiisoft/cache` and driver adapters. External PSR-16 driver adapters and HTTP response caching are owned by dedicated child guides: the [Cache Driver Adapters Guide](persistence-cache-drivers.md) and the [HTTP Response Caching (ETag) Guide](http-cache-etag.md).
 

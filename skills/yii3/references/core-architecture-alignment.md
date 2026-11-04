@@ -1,10 +1,12 @@
 # Framework & Vendor Boundary Alignment
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
+> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 > Architectural contract governing where third-party vendor code (`yiisoft/*`, PSR implementations, database drivers) lives in a Yii 3 application.  
 > Adjusts boundary strictness proportionally to the project's chosen architecture pattern across AI Factory workflows (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`).
+
+This guide is the authority for **project conventions** (layout, layer placement, composition-root location) — row 3 of the source-of-truth split in SKILL.md Core rule 2. When the project's existing layout or naming differs from the pattern described here and violates no correctness rule, new code continues the project's style and records the divergence; correctness violations (e.g. database access inside presentation) are always fixed per the Universal Invariants in §3.
 
 ---
 

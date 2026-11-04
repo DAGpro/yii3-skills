@@ -1,7 +1,7 @@
 # Yii3 Stateless JWT Authentication Guide
 
 > [!IMPORTANT]
-> **Grounding rule:** this guide carries the implementation instructions for its topic — follow it when implementing project code; project code itself is integration context, never a source of truth. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`). Verify there before writing code; never assume Yii 2 APIs.
+> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 > Reference guide for stateless JSON Web Token (JWT) / Bearer-token authentication with `yiisoft/auth-jwt`: DI binding for the JWT authenticator, and issuing signed tokens with `TokenFactoryInterface`.
 

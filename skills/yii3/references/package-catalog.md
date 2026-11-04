@@ -215,21 +215,21 @@ Packages below are prescribed or used by topic guides but are not part of the yi
 | `psr/http-message` | PSR-7 contract (`UploadedFileInterface`, request/response interfaces) | core-api-signatures, core-architecture-alignment, core-feature-recipes |
 | `olvlvl/composer-attribute-collector` | Composer plugin scanning classes for attribute routing | core-dependency-protocol, http-routes |
 | `vlucas/phpdotenv` | `.env` loading (`require-dev` convenience in `yiisoft/app`; not a production secrets mechanism) | core-di-and-config |
-| `predis/predis` | Redis client for `RedisCache` / `RedisMutexFactory` (strictly required — no PECL `\Redis`) | persistence-caching, infra-queue-jobs |
-| `symfony/mailer` | Transport layer behind the `yiisoft/mailer-symfony` bridge (`^6.0\|\|^7.0\|\|^8.0`) | infra-mailer |
-| `symfony/finder` | Directory scanning behind `yiisoft/classifier` | core-utilities |
+| `predis/predis` | Redis client for `RedisCache` / `RedisMutexFactory` (strictly required — no PECL `\Redis`) | persistence-cache-drivers, infra-queue-mutex |
+| `symfony/mailer` | Transport layer behind the `yiisoft/mailer-symfony` bridge (`^6.0\|\|^7.0\|\|^8.0`) | infra-mailer-transports |
+| `symfony/finder` | Directory scanning behind `yiisoft/classifier` | core-utilities-niche |
 | `sentry/sentry` | Sentry SDK behind `yiisoft/yii-sentry` (version-gated options) | infra-error-handling |
 | `zircote/swagger-php` | PHP 8 attribute-based OpenAPI specification generation (v5+) | http-openapi-swagger |
 | `swagger-api/swagger-ui` | Swagger UI static assets published by `SwaggerUiAsset` | http-openapi-swagger |
-| `spiral/roadrunner-worker` | Base Goridge payload protocol for RoadRunner workers | infra-runners-and-runtimes |
-| `spiral/roadrunner-cli` | `./vendor/bin/rr` binary download and runner | infra-runners-and-runtimes |
-| `spiral/roadrunner-grpc` | gRPC worker support | infra-runners-and-runtimes |
-| `temporal/sdk` | Temporal workflow SDK (RoadRunner workflows) | infra-runners-and-runtimes |
+| `spiral/roadrunner-worker` | Base Goridge payload protocol for RoadRunner workers | infra-runtime-roadrunner |
+| `spiral/roadrunner-cli` | `./vendor/bin/rr` binary download and runner | infra-runtime-roadrunner |
+| `spiral/roadrunner-grpc` | gRPC worker support | infra-runtime-roadrunner |
+| `temporal/sdk` | Temporal workflow SDK (RoadRunner workflows) | infra-runtime-roadrunner |
 | `cycle/schema-migrations-generator` | Cycle CLI schema migrations (with `cycle/migrations`) | persistence-cycle-orm |
-| `mockery/mockery` | Mocking framework (via `php-testo/bridge-mockery`) | testing-core |
-| `infection/extension-installer` | Infection Composer extension installer | testing-core |
-| `roave/infection-static-analysis-plugin` | Static-analysis-filtered mutation testing | testing-core |
-| `codeception/module-asserts`, `module-cli`, `module-rest`, `module-phpbrowser`, `lib-innerbrowser` | Codeception suites (REST module requires `module-phpbrowser` + `lib-innerbrowser` and a live served application) | testing-core, testing-http |
+| `mockery/mockery` | Mocking framework (via `php-testo/bridge-mockery`) | testing-testo |
+| `infection/extension-installer` | Infection Composer extension installer | testing-infection |
+| `roave/infection-static-analysis-plugin` | Static-analysis-filtered mutation testing | testing-infection |
+| `codeception/module-asserts`, `module-cli`, `module-rest`, `module-phpbrowser`, `lib-innerbrowser` | Codeception suites (REST module requires `module-phpbrowser` + `lib-innerbrowser` and a live served application) | testing-codeception |
 | `httpsoft/http-message` | PSR-7 message and factory implementations (`ServerRequest`, `ServerRequestFactory`, `ResponseFactory`) used to build in-memory test requests and responses | testing-core, testing-http |
 | `phpstan/phpstan`, `vimeo/psalm` | Static analysis linters (allowed `require-dev` per Dependency Protocol §3.2) | core-dependency-protocol |
 

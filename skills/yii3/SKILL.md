@@ -1,7 +1,7 @@
 ---
 name: yii3
 description: >-
-  Architectural guide, code generator, and verification suite for modern Yii 3 applications (PHP 8.2+, yiisoft/* packages; strict zero-Yii2 policy). Provides conventions, package catalogs, layer decomposition, deterministic AST validation scripts, and vertical slice templates. Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "add repository", "add use case", "add event", "add listener", "add middleware", "configure DI", "register route", "send email", "queue job", "worker command", "mutex lock", "Yii migration", "render view", "custom widget", "gridview", "dataview", "asset bundle", "validate yii3 form", "validation rules", "custom rule", "form model", "PHPUnit", "cache", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC", "oauth", "sqlite", "error handling", "PSR-3 logging", "i18n", "flash message", "CSRF", "file upload", "download file", "swagger", "openapi", "layered architecture", "vertical slices".
+  Yii 3 development guide, code generator, and verification suite (PHP 8.2+, yiisoft/*; strict zero-Yii2 policy). Provides conventions, package catalogs, layer decomposition, deterministic validation, and vertical slice templates. Use when user says "Yii3", "Yii 3", "yiisoft", "create yii3 action", "add repository", "add use case", "add event", "add listener", "add middleware", "configure DI", "register route", "send email", "queue job", "worker command", "mutex lock", "roadrunner", "frankenphp", "Yii migration", "render view", "custom widget", "twig", "bootstrap", "bulma", "gridview", "dataview", "asset bundle", "validate yii3 form", "validation rules", "custom rule", "form model", "PHPUnit", "codeception", "testo", "cache", "redis", "query builder", "transactions", "active record", "cycle orm", "login", "JWT", "RBAC", "oauth", "sqlite", "error handling", "PSR-3 logging", "i18n", "flash message", "CSRF", "file upload", "download file", "swagger", "openapi", "layered architecture", "vertical slices".
 ---
 
 # Yii3 development
@@ -82,19 +82,19 @@ Load only the targeted reference guides required for the active task archetype:
 | Task Archetype | Primary Guides (Start Here) | Secondary / Wiring Guides | Canonical Template / Gate |
 |---|---|---|---|
 | **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-and-forms.md`<br>`references/http-routes.md` | `references/persistence-db.md`<br>`references/infra-error-handling.md` | `examples/crud-slice/README.md`<br>`verify-actions.php` |
-| **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md` | `check-di-syntax.php` |
-| **HTML UI / Forms / Grid** | `references/http-views-and-widgets.md`<br>`references/http-validation-and-forms.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-file-handling.md` | `verify-actions.php` |
-| **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-routes.md`<br>`references/http-state.md` | `verify-actions.php` |
-| **Database & Schema Migrations** | `references/persistence-migrations.md`<br>`references/persistence-db.md` (or `persistence-cycle-orm.md`) | `references/core-di-and-config.md`<br>`references/persistence-caching.md` | `examples/crud-slice/Migration` |
+| **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` (broker driver)<br>`references/infra-queue-mutex.md` (locks) | `check-di-syntax.php` |
+| **HTML UI / Forms / Grid** | `references/http-views-and-widgets.md`<br>`references/http-validation-and-forms.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-file-handling.md`<br>`references/http-views-twig.md` (if Twig)<br>`references/http-views-bootstrap5.md` / `http-views-bulma.md` (installed CSS framework)<br>`references/http-dataview-widgets.md` (grid/list/detail tasks) | `verify-actions.php` |
+| **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-routes.md`<br>`references/http-state.md`<br>`references/infra-auth-jwt.md` (if JWT)<br>`references/infra-auth-oauth2.md` (if OAuth2/OIDC)<br>`references/infra-rbac-storage.md` (RBAC storage driver) | `verify-actions.php` |
+| **Database & Schema Migrations** | `references/persistence-migrations.md`<br>`references/persistence-db.md` (or `persistence-cycle-orm.md`) | `references/core-di-and-config.md`<br>`references/persistence-caching.md`<br>`references/persistence-cache-drivers.md` (external cache driver) | `examples/crud-slice/Migration` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/package-catalog.md` | `examples/crud-slice/README.md` |
-| **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md` | `check-di-syntax.php` |
-| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` | `check-di-syntax.php` |
+| **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` (transport DSN)<br>`references/infra-mailer-async-queue.md` (if queue sending) | `check-di-syntax.php` |
+| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md`<br>`references/testing-testo.md` (if Testo runner)<br>`references/testing-codeception.md` (if Codeception)<br>`references/testing-infection.md` (mutation gate)<br>`references/testing-console.md` (CLI tests) | `check-di-syntax.php` |
 | **i18n / Localization** | `references/http-i18n-translation.md` | `references/http-routes.md`<br>`references/core-di-and-config.md` | `verify-actions.php` |
 | **API Docs (OpenAPI / Swagger)** | `references/http-openapi-swagger.md` | `references/http-routes.md`<br>`references/http-actions-and-controllers.md` | `verify-routes.php` |
 | **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md`<br>`references/infra-commands.md` | `check-di-syntax.php` |
 | **Persistence via Active Record** | `references/persistence-active-record.md` | `references/persistence-db.md`<br>`references/persistence-migrations.md` | `examples/crud-slice/Migration` |
-| **App Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-queue-jobs.md` | `check-di-syntax.php` |
-| **Cross-cutting API / Helper Lookup** | `references/core-api-signatures.md`<br>`references/core-utilities.md` | `references/package-catalog.md` | — |
+| **App Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-queue-jobs.md`<br>`references/infra-runtime-roadrunner.md` (if RoadRunner)<br>`references/infra-runtime-frankenphp.md` (if FrankenPHP)<br>`references/infra-state-resetter.md` (worker state) | `check-di-syntax.php` |
+| **Cross-cutting API / Helper Lookup** | `references/core-api-signatures.md`<br>`references/core-utilities.md` | `references/package-catalog.md`<br>`references/core-utilities-niche.md` (niche helpers)<br>`references/core-friendly-exceptions.md` | — |
 
 ### Core & Architecture
 - `references/core-architecture-alignment.md` — framework & vendor boundary isolation, layer placement, and composition root wiring
@@ -102,7 +102,9 @@ Load only the targeted reference guides required for the active task archetype:
 - `references/core-dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
 - `references/core-api-signatures.md` — exact signatures for the most-used Yii3 interfaces and classes
-- `references/core-utilities.md` — standalone helper packages: ArrayHelper array access and transformation, StringHelper + Inflector, exception-safe Json, VarDumper/ClosureExporter, Classifier class discovery, and IP/DNS utilities
+- `references/core-utilities.md` — daily-use helper packages: ArrayHelper array access and transformation, StringHelper + Inflector, and exception-safe Json (niche helpers load separately)
+- `references/core-utilities-niche.md` — rarely-needed standalone helpers: VarDumper debug dumping, Classifier class discovery, network-utilities (IpHelper/DnsHelper/IpRanges), and the requirements checker
+- `references/core-friendly-exceptions.md` — FriendlyException contract, actionable solutions, and web & console rendering (consolidated single source)
 - `references/core-di-and-config.md` — PSR-11 container, config directory separation, canonical app skeleton & `config/` tree, definition syntax recipes, parameter inheritance, and environment overrides
 - `references/core-events-and-listeners.md` — PSR-14 event architecture, immutable domain event DTOs, listener design, event mapping configuration, and post-commit dispatching
 
@@ -113,7 +115,12 @@ Load only the targeted reference guides required for the active task archetype:
 - `references/http-openapi-swagger.md` — OpenAPI specification generation with yiisoft/yii-swagger, PHP 8 attributes (OA), Swagger UI asset rendering, and route integration
 - `references/http-validation-and-forms.md` — built-in validator rules, skipOnEmpty/when modifiers, message translation, FormModel + FormHydrator, validating hydrator DTOs, and input-http request inputs
 - `references/http-validation-custom-rules.md` — custom validation rules (RuleInterface), service handlers (RuleHandlerInterface), DI wiring with RuleHandlerContainer, compound rules, and isolated unit testing
-- `references/http-views-and-widgets.md` — view placement (colocated action templates or central views directory), PHP view templates, mandatory XSS escaping, layouts, asset bundles, custom widgets, CSS-framework widget drivers (yiisoft/bootstrap5, yiisoft/yii-bulma), HTML forms, and DataView widgets (GridView, ListView, DetailView)
+- `references/http-views-and-widgets.md` — view placement (colocated action templates or central views directory), PHP view templates, mandatory XSS escaping, layouts, view injections, asset bundles, custom & core widgets, and HTML form rendering (Twig engine and CSS-framework widget drivers load separately)
+- `references/http-views-twig.md` — Twig template engine: renderer registration, Twig layout anatomy, `WebViewExtension`, and static-invocation restrictions
+- `references/http-views-bootstrap5.md` — Bootstrap 5 widget driver (`yiisoft/bootstrap5`), flash alerts, Bootstrap asset bundles, and form theming presets
+- `references/http-views-bulma.md` — Bulma widget driver catalog (`yiisoft/yii-bulma`)
+- `references/http-dataview-widgets.md` — DataView widgets (`yiisoft/yii-dataview`): GridView architecture, column catalog, filters, ListView, DetailView, and standalone pagination
+- `references/http-cache-etag.md` — HTTP response caching with ETag & conditional requests around the middleware pipeline
 - `references/http-state.md` — sessions and session middleware, flash messages, cookie handling with signing/encryption, and CSRF token implementations with middleware wiring
 - `references/http-file-handling.md` — FileHelper filesystem utilities, download responses (sendFile, x-sendfile, byte ranges), and the PSR-7 upload flow with file validation rules
 - `references/http-i18n-translation.md` — translator API and category sources, message formatters, PHP/DB/gettext message storage, message extraction, and locale routing middleware
@@ -123,17 +130,32 @@ Load only the targeted reference guides required for the active task archetype:
 - `references/persistence-active-record.md` — yiisoft/active-record models, queries, relations, lifecycle, and LazyLoadGuard N+1 prevention
 - `references/persistence-cycle-orm.md` — Cycle ORM Data Mapper integration (yiisoft/yii-cycle, cycle/orm, #[Entity], EntityReader/Writer, DBAL, migrations, and yiisoft/rbac-cycle-db)
 - `references/persistence-migrations.md` — database schema DDL migrations, typed column definitions, foreign keys, indexes, reversible migrations, and data seeding
-- `references/persistence-caching.md` — PSR-16 drivers (file, redis, db, APCu, memcached, wincache), getOrSet stampede prevention, TagDependency invalidation, and HTTP/view fragment caching
+- `references/persistence-caching.md` — PSR-16 caching architecture, File cache DI, getOrSet stampede prevention, TagDependency invalidation, and view fragment caching (external cache drivers load separately)
+- `references/persistence-cache-drivers.md` — external PSR-16 cache driver wiring: redis, db, APCu, memcached, wincache (pick exactly one)
 
 ### Infrastructure, Async & Operations
-- `references/infra-runners-and-runtimes.md` — entry point architecture, HttpApplicationRunner (public/index.php), SapiEmitter response emitting (yiisoft/psr-emitter), ConsoleApplicationRunner (yii CLI), RoadRunner & FrankenPHP workers (incl. rr binary installation), and StateResetter
+- `references/infra-runners-and-runtimes.md` — entry point architecture, HttpApplicationRunner (public/index.php), SapiEmitter response emitting (yiisoft/psr-emitter), ConsoleApplicationRunner (yii CLI), and the runtime selection matrix (worker runtimes and StateResetter load separately)
+- `references/infra-runtime-roadrunner.md` — RoadRunner worker runtime (`yiisoft/yii-runner-roadrunner`): worker loop, worker.php, .rr.yaml, gRPC/Temporal
+- `references/infra-runtime-frankenphp.md` — FrankenPHP worker runtime (`yiisoft/yii-runner-frankenphp`): Caddy modes, worker.php, MAX_REQUESTS, Caddyfile
+- `references/infra-state-resetter.md` — long-running worker state safety (`yiisoft/state-resetter`): the definition trap, per-service `'reset'` declarations, built-in resetter catalog
 - `references/infra-commands.md` — thin console commands with Symfony Console, input arguments/options, interactive SymfonyStyle, ExitCode constants, and command registration
-- `references/infra-queue-jobs.md` — asynchronous queue jobs, serializable message DTOs, worker handlers, distributed mutex locks, and worker CLI management
-- `references/infra-auth-and-rbac.md` — user identity, session lifecycle (login/logout anti-fixation), remember-me cookies, user events, JWT auth, OAuth2/OIDC login (yiisoft/yii-auth-client), RBAC manager with storage drivers (rbac-db, rbac-php, rbac-cycle-db), and route protection
-- `references/infra-mailer.md` — email composition, Symfony Mailer DSN transport, HTML view templating, file attachments, inline CID embeddings, and async queue sending
+- `references/infra-queue-jobs.md` — asynchronous queue jobs, serializable message DTOs, worker handlers, failure pipelines, and worker CLI management (broker drivers and mutex load separately)
+- `references/infra-queue-brokers.md` — queue broker adapter wiring: queue-db, queue-redis, queue-amqp, SyncQueue (pick exactly one)
+- `references/infra-queue-mutex.md` — distributed mutex locks & Synchronizer (`yiisoft/mutex`) for concurrency safety in workers and beyond
+- `references/infra-auth-and-rbac.md` — user identity, session lifecycle (login/logout anti-fixation), remember-me cookies, user events, RBAC manager & rules, and route protection (JWT, OAuth2/OIDC, and RBAC storage drivers load separately)
+- `references/infra-auth-jwt.md` — stateless JWT authentication (`yiisoft/auth`): token issuance via `TokenFactory`, authenticator DI, parsing
+- `references/infra-auth-oauth2.md` — OAuth2/OIDC login (`yiisoft/yii-auth-client`): AuthAction, provider clients, state/PKCE
+- `references/infra-rbac-storage.md` — RBAC storage drivers: rbac-db, rbac-php, rbac-cycle-db, hybrid (pick exactly one)
+- `references/infra-mailer.md` — email composition, sending lifecycle, HTML view templating, file attachments, inline CID embeddings, and testing recipes (transport DSN and async queue sending load separately)
+- `references/infra-mailer-transports.md` — Symfony Mailer transport & DSN configuration, `useSendmail`, and full `messageSettings` map
+- `references/infra-mailer-async-queue.md` — async queue sending via yiisoft/queue + PSR-14 listeners and BeforeSend/AfterSend lifecycle events
 - `references/infra-logging.md` — PSR-3 logger injection, DI binding for LoggerInterface, categories, placeholders, target catalog (file/db/email/syslog/stream), context providers, and flushing
-- `references/infra-error-handling.md` — ErrorCatcher middleware, custom HTML/JSON Problem Details renderers, Friendly Exceptions, and Sentry logging
-- `references/testing-core.md` — test architecture, testing pyramid, exclusive runner rule (PHPUnit vs Testo), PSR test doubles (yiisoft/test-support), modern mocking rules, and console command testing
+- `references/infra-error-handling.md` — ErrorCatcher middleware, custom HTML/JSON Problem Details renderers, and Sentry logging (Friendly Exceptions live in core-friendly-exceptions.md)
+- `references/testing-core.md` — test architecture, testing pyramid, PHPUnit canon, PSR test doubles (yiisoft/test-support), and mocking rules (alternative runners and console testing load separately)
+- `references/testing-testo.md` — Testo runner (exclusive alternative to PHPUnit) and the Mockery bridge
+- `references/testing-codeception.md` — Codeception framework setup and actor-driven REST API testing
+- `references/testing-infection.md` — Infection mutation testing as an optional quality gate
+- `references/testing-console.md` — console command testing: CommandTester, exit codes, prompts, autocompletion
 - `references/testing-http.md` — functional HTTP testing with yiisoft/yii-testing, HttpApplicationRunner, isolated PSR-15 middleware testing, session/cookie validation, and ResponseAccessor API
 - `references/testing-database.md` — transactional database testing, ephemeral in-memory SQLite (yiisoft/db-sqlite), migration fixtures with MigrationBuilder, and repository integration tests
 

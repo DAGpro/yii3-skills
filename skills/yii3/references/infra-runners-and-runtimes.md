@@ -576,7 +576,7 @@ When an unhandled exception implements `Yiisoft\FriendlyException\FriendlyExcept
 
 > **For the complete reference on long-running worker state safety** — the state bleeding and memory accumulation problem, the `StateResetter::class` definition trap, idiomatic per-service `'reset'` declarations, the ground-truth catalog of built-in package resetters, and `Closure::bindTo` scope binding — **see the** [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md).
 >
-> Worker-mode state safety applies to **both** worker runtimes (RoadRunner, FrankenPHP) **and** long-running queue workers (`yiisoft/yii-queue` `queue:listen` daemons) — it is not tied to one runtime.
+> Worker-mode state safety applies to **both** worker runtimes (RoadRunner, FrankenPHP) **and** long-running queue workers (`yiisoft/queue` `queue:listen` daemons) — it is not tied to one runtime.
 
 ---
 

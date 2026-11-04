@@ -824,7 +824,7 @@ Tests that need the full `Yiisoft\Yii\Console\Application` pipeline — `find()`
 
 > [!TIP]
 > **Console Command Testing Reference:**
-> For the complete reference on `CommandTester` usage — exit codes (§6.2), output assertion with `getDisplay(true)` (§6.3), failure scenarios such as `ExitCode::DATAERR` (§6.4), interactive prompt simulation via `setInputs()` (§6.5), autocompletion testing via `CommandCompletionTester` (§6.6), and container-aware resolution via the `CommandHelper` pattern (§6.7) — see the [Testing Core Guide, §6. Testing Console Commands](testing-core.md#6-testing-console-commands-yiisoftyii-console).
+> For the complete reference on `CommandTester` usage — exit codes (§2), output assertion with `getDisplay(true)` (§3), failure scenarios such as `ExitCode::DATAERR` (§4), interactive prompt simulation via `setInputs()` (§5), autocompletion testing via `CommandCompletionTester` (§6), and container-aware resolution via the `CommandHelper` pattern (§7) — see the [Console Testing Guide](testing-console.md).
 
 Testing traps:
 
@@ -930,4 +930,5 @@ Ecosystem details worth knowing:
 - [DI & Configuration Guide](core-di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
 - [Queue & Asynchronous Jobs Guide](infra-queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
 - [Error Handling Guide](infra-error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.
-- [Testing Core Guide](testing-core.md) — PSR test doubles, test runners, and the complete console command testing reference (`CommandTester`, §6).
+- [Console Testing Guide](testing-console.md) — The complete console command testing reference: `CommandTester`, exit codes, prompts, and autocompletion.
+- [Testing Core Guide](testing-core.md) — PSR test doubles, test runners, and unit testing architecture.

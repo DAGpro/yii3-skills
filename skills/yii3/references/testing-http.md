@@ -467,125 +467,9 @@ The full test-double example — stream inspection, pointer/rewind semantics, an
 
 ## 7. Actor-Driven REST API Testing in Codeception
 
-Codeception integration follows the official `yiisoft/app-api` template. JSON API assertion testing uses the `Api` suite with the REST module; since no Yii3 framework module exists for Codeception, the REST module depends on `PhpBrowser` and drives a live served application instead of in-memory dispatch.
-
-#### Suite Configuration (`tests/Api.suite.yml`)
-
-```yaml
-actor: ApiTester
-extensions:
-  enabled:
-    - Codeception\Extension\RunProcess:
-        0: composer serve
-        sleep: 5
-modules:
-  enabled:
-    - REST:
-        url: http://127.0.0.1:8080
-        depends: PhpBrowser
-```
-
-The `composer serve` script (`@php ./yii serve`) from the template's `composer.json` starts the application server on `127.0.0.1:8080` before the suite runs.
-
-#### REST Cest Example (`tests/Api/UserApiCest.php`)
-
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Api;
-
-use App\Tests\Support\ApiTester;
-
-final readonly class UserApiCest
-{
-    public function tryToCreateUser(ApiTester $I): void
-    {
-        $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->haveHttpHeader('Accept', 'application/json');
-        $I->sendPost('/api/v1/users', [
-            'email' => 'codecept@example.com',
-            'name' => 'Codecept User',
-        ]);
-
-        $I->seeResponseCodeIs(201);
-        $I->seeResponseIsJson();
-        $I->seeResponseContainsJson([
-            'status' => 'success',
-            'data' => [
-                'email' => 'codecept@example.com',
-            ],
-        ]);
-    }
-}
-```
-
-#### In-Memory Functional Actor (`tests/Support/FunctionalTester.php`)
-
-For in-memory functional smoke tests without the REST module, define a `FunctionalTester` actor that executes in-memory HTTP requests using `HttpApplicationRunner::runAndGetResponse()` without launching an external web server:
-
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Support;
-
-use Codeception\Actor;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
-
-class FunctionalTester extends Actor
-{
-    use _generated\FunctionalTesterActions;
-
-    public function sendRequest(ServerRequestInterface $request): ResponseInterface
-    {
-        $runner = new HttpApplicationRunner(
-            rootPath: dirname(__DIR__, 2),
-            environment: 'test',
-        );
-
-        $response = $runner->runAndGetResponse($request);
-
-        $body = $response->getBody();
-        if ($body->isSeekable()) {
-            $body->rewind();
-        }
-
-        return $response;
-    }
-}
-```
-
-#### In-Memory Functional Cest Example (`tests/Functional/HomePageCest.php`)
-
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Functional;
-
-use App\Tests\Support\FunctionalTester;
-use HttpSoft\Message\ServerRequest;
-use function PHPUnit\Framework\assertSame;
-use function PHPUnit\Framework\assertStringContainsString;
-
-final class HomePageCest
-{
-    public function testHomePageRenders(FunctionalTester $tester): void
-    {
-        $request = new ServerRequest(method: 'GET', uri: '/');
-        $response = $tester->sendRequest($request);
-
-        assertSame(200, $response->getStatusCode());
-        assertStringContainsString('Yii3', (string) $response->getBody());
-    }
-}
-```
-
-> [!NOTE]
-> For in-memory functional smoke tests (status code and body assertions without REST-module actions), do not enable the REST module: reuse the `FunctionalTester::sendRequest()` actor action defined above in this section, which dispatches through `HttpApplicationRunner::runAndGetResponse()`.
-
-> [!CAUTION]
-> In Codeception Cests, inject actors (e.g. `FunctionalTester $I`); never extend `FunctionalTestCase` inside a Cest class. `FunctionalTestCase` is strictly a PHPUnit `TestCase`.
+> [!TIP]
+> **Codeception REST Actors Reference:**
+> Codeception is an alternative, actor-driven test framework — mutually exclusive with plain PHPUnit/Testo suite setups (resolve what is installed via the project's `composer.json`). For the complete reference — REST-module suite configuration (`tests/Api.suite.yml` with `composer serve`), the REST Cest example, the in-memory `FunctionalTester` actor dispatching through `HttpApplicationRunner::runAndGetResponse()`, and in-memory functional Cests — see the [Codeception Testing Guide, §2. Actor-Driven REST API Testing in Codeception](testing-codeception.md#2-actor-driven-rest-api-testing-in-codeception).
 
 ---
 
@@ -622,7 +506,11 @@ final class HomePageCest
 ---
 
 ## 10. Related Guides
-- [`testing-core.md`](testing-core.md) — Test architecture, test runners (PHPUnit, Testo), PSR test doubles, and unit testing.
+- [`testing-core.md`](testing-core.md) — Test architecture, PHPUnit runner, PSR test doubles, mocking rules, and unit testing.
+- [`testing-testo.md`](testing-testo.md) — Alternative Testo runner and the exclusive runner rule (PHPUnit XOR Testo).
+- [`testing-codeception.md`](testing-codeception.md) — Alternative Codeception 5 framework: actors, Cests, and REST-module API testing (owner of §7's moved material).
+- [`testing-infection.md`](testing-infection.md) — Optional Infection mutation-testing quality gate layered on top of the runner.
+- [`testing-console.md`](testing-console.md) — Console command testing with `CommandTester`, exit codes, prompts, and autocompletion.
 - [`testing-database.md`](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
 - [`http-middlewares.md`](http-middlewares.md) — PSR-15 middleware pipeline and official middleware catalog.
 - [`http-state.md`](http-state.md) — Sessions, cookies, CSRF protection, and flash messages.

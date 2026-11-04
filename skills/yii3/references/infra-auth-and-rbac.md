@@ -1,6 +1,6 @@
 # Yii3 Authentication & RBAC Guide
 
-> Practical guide and configuration recipes for user authentication, password hashing, stateful session/cookie methods, stateless JWT token methods, external OAuth2/OIDC login, user lifecycle events, and role-based access control (RBAC) in Yii3.
+> Practical guide and configuration recipes for user authentication, password hashing, stateful session/cookie methods, user lifecycle events, and role-based access control (RBAC) in Yii3. The alternative login methods and RBAC storage drivers are owned by dedicated child guides: the [Stateless JWT Authentication Guide](infra-auth-jwt.md) (§5), the [OAuth2/OIDC Login Guide](infra-auth-oauth2.md) (§6), and the [RBAC Storage Drivers Guide](infra-rbac-storage.md) (§8.4–8.7).
 
 ---
 
@@ -21,16 +21,8 @@
   - [4.5. Remember-Me Auto-Login Cookies (`CookieLogin`)](#45-remember-me-auto-login-cookies-cookielogin)
   - [4.6. Web Login Security: CSRF & Brute-Force Rate Limiting](#46-web-login-security-csrf--brute-force-rate-limiting)
   - [4.7. PSR-14 User Authentication Events](#47-psr-14-user-authentication-events)
-- [5. Stateless REST API Authentication (JWT / Bearer Token)](#5-stateless-rest-api-authentication-jwt--bearer-token)
-  - [5.1. DI Binding for JWT Authenticator](#51-di-binding-for-jwt-authenticator)
-  - [5.2. Issuing JSON Web Tokens](#52-issuing-json-web-tokens)
-- [6. External OAuth2 / OIDC Login (`yiisoft/yii-auth-client`)](#6-external-oauth2--oidc-login-yiisoftyii-auth-client)
-  - [6.1. Package Architecture & Core Contracts](#61-package-architecture--core-contracts)
-  - [6.2. Wiring `AuthAction` (Callback Route + DI)](#62-wiring-authaction-callback-route--di)
-  - [6.3. Configuring Clients via `Collection` Params](#63-configuring-clients-via-collection-params)
-  - [6.4. OpenID Connect (`Client\OpenIdConnect`)](#64-openid-connect-clientopenidconnect)
-  - [6.5. `AuthChoice` Button Widget](#65-authchoice-button-widget)
-  - [6.6. Mapping Provider Attributes to Your Identity & Critical Gotchas](#66-mapping-provider-attributes-to-your-identity--critical-gotchas)
+- [5. Stateless REST API Authentication (JWT / Bearer Token)](#5-stateless-rest-api-authentication-jwt--bearer-token) — full reference in the [Stateless JWT Authentication Guide](infra-auth-jwt.md)
+- [6. External OAuth2 / OIDC Login (`yiisoft/yii-auth-client`)](#6-external-oauth2--oidc-login-yiisoftyii-auth-client) — full reference in the [OAuth2/OIDC Login Guide](infra-auth-oauth2.md)
 - [7. Route Protection via Authentication & RBAC Middleware](#7-route-protection-via-authentication--rbac-middleware)
   - [7.1. Route Definition with Authentication & Login Bridge](#71-route-definition-with-authentication--login-bridge)
   - [7.2. Protecting Routes with RBAC Permissions](#72-protecting-routes-with-rbac-permissions)
@@ -38,10 +30,10 @@
   - [8.1. RBAC Items, Roles, Permissions, and `ManagerInterface`](#81-rbac-items-roles-permissions-and-managerinterface)
   - [8.2. Dynamic Business Rules (`RuleInterface` & `RuleContext`)](#82-dynamic-business-rules-ruleinterface--rulecontext)
   - [8.3. Registering Rules via `rbac-rules-container`](#83-registering-rules-via-rbac-rules-container)
-  - [8.4. Relational Database Storage (`yiisoft/rbac-db`)](#84-relational-database-storage-yiisoftrbac-db)
-  - [8.5. PHP File Storage (`yiisoft/rbac-php`)](#85-php-file-storage-yiisoftrbac-php)
-  - [8.6. Cycle Database Storage (`yiisoft/rbac-cycle-db`)](#86-cycle-database-storage-yiisoftrbac-cycle-db)
-  - [8.7. Hybrid Storage Architectures](#87-hybrid-storage-architectures)
+  - [8.4. Relational Database Storage (`yiisoft/rbac-db`)](#84-relational-database-storage-yiisoftrbac-db) — full reference in the [RBAC Storage Drivers Guide](infra-rbac-storage.md)
+  - [8.5. PHP File Storage (`yiisoft/rbac-php`)](#85-php-file-storage-yiisoftrbac-php) — full reference in the [RBAC Storage Drivers Guide](infra-rbac-storage.md)
+  - [8.6. Cycle Database Storage (`yiisoft/rbac-cycle-db`)](#86-cycle-database-storage-yiisoftrbac-cycle-db) — full reference in the [RBAC Storage Drivers Guide](infra-rbac-storage.md)
+  - [8.7. Hybrid Storage Architectures](#87-hybrid-storage-architectures) — full reference in the [RBAC Storage Drivers Guide](infra-rbac-storage.md)
 - [9. Checking Permissions in Code](#9-checking-permissions-in-code)
   - [9.1. In Presentation Actions](#91-in-presentation-actions)
   - [9.2. In Application Services / Use Cases (`AccessCheckerInterface`)](#92-in-application-services--use-cases-accesscheckerinterface)
@@ -58,16 +50,16 @@ In Yii3, user authentication, session state management, and hierarchical access 
 |---|---|---|
 | `yiisoft/user` | `Yiisoft\User\CurrentUser`<br>`Yiisoft\User\Method\WebAuth`<br>`Yiisoft\User\Login\LoginMiddleware`<br>`Yiisoft\User\Login\Cookie\CookieLogin` | Current user context, session state, login/logout, guest check, auto-login cookies, lifecycle events, and the `can()` permission facade. |
 | `yiisoft/auth` | `Yiisoft\Auth\IdentityInterface`<br>`Yiisoft\Auth\IdentityRepositoryInterface`<br>`Yiisoft\Auth\IdentityWithTokenRepositoryInterface`<br>`Yiisoft\Auth\AuthenticatorInterface`<br>`Yiisoft\Auth\AuthenticatorWithChallengeInterface`<br>`Yiisoft\Auth\Middleware\Authentication`<br>`Yiisoft\Auth\Method\HttpBearer` | Identity contracts, token-based identity lookups, PSR-15 authentication middleware, challenge responders, and HTTP header token extractors. *(Note: `AuthenticationMethodInterface` is `@deprecated` in favor of `AuthenticatorWithChallengeInterface`).* |
-| `yiisoft/auth-jwt` | `Yiisoft\Auth\Jwt\JwtMethod`<br>`Yiisoft\Auth\Jwt\TokenFactoryInterface`<br>`Yiisoft\Auth\Jwt\TokenRepositoryInterface` | Stateless JSON Web Token authentication, claims validation, and token issuance. |
-| `yiisoft/yii-auth-client` | `Yiisoft\Yii\AuthClient\Collection`<br>`Yiisoft\Yii\AuthClient\AuthAction`<br>`Yiisoft\Yii\AuthClient\Client\OpenIdConnect`<br>`Yiisoft\Yii\AuthClient\Widget\AuthChoice` | External OAuth 2.0 / OpenID Connect login (Google, GitHub, Microsoft, X, VK, etc.): provider clients, PSR-15 callback middleware, and button widgets. See §6. |
+| `yiisoft/auth-jwt` | `Yiisoft\Auth\Jwt\JwtMethod`<br>`Yiisoft\Auth\Jwt\TokenFactoryInterface`<br>`Yiisoft\Auth\Jwt\TokenRepositoryInterface` | Stateless JSON Web Token authentication, claims validation, and token issuance. See the [Stateless JWT Authentication Guide](infra-auth-jwt.md). |
+| `yiisoft/yii-auth-client` | `Yiisoft\Yii\AuthClient\Collection`<br>`Yiisoft\Yii\AuthClient\AuthAction`<br>`Yiisoft\Yii\AuthClient\Client\OpenIdConnect`<br>`Yiisoft\Yii\AuthClient\Widget\AuthChoice` | External OAuth 2.0 / OpenID Connect login (Google, GitHub, Microsoft, X, VK, etc.): provider clients, PSR-15 callback middleware, and button widgets. See the [OAuth2/OIDC Login Guide](infra-auth-oauth2.md). |
 | `yiisoft/security` | `Yiisoft\Security\PasswordHasher`<br>`Yiisoft\Security\Random` | Cryptographically secure password hashing (BCrypt/Argon2), transparent rehash verification, and CSPRNG token generation. |
 | `yiisoft/csrf` | `Yiisoft\Csrf\CsrfTokenMiddleware`<br>`Yiisoft\Csrf\CsrfTokenInterface` | Synchronizer token pattern CSRF defense for stateful forms. *(Note: `CsrfMiddleware` is `@deprecated`).* |
 | `yiisoft/rate-limiter` | `Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware`<br>`Yiisoft\Yii\RateLimiter\Counter` | Request rate limiting with GCRA (leaky bucket) to protect endpoints against brute-force attacks. |
 | `yiisoft/access` | `Yiisoft\Access\AccessCheckerInterface` | Abstract access verification contract implemented by RBAC managers and consumed by `CurrentUser`. |
 | `yiisoft/rbac` | `Yiisoft\Rbac\ManagerInterface`<br>`Yiisoft\Rbac\Role`<br>`Yiisoft\Rbac\Permission`<br>`Yiisoft\Rbac\RuleInterface`<br>`Yiisoft\Rbac\RuleContext`<br>`Yiisoft\Rbac\CompositeRule` | Hierarchical RBAC item manager, assignment coordinator, and dynamic business rule evaluator. |
-| `yiisoft/rbac-db` | `Yiisoft\Rbac\Db\ItemsStorage`<br>`Yiisoft\Rbac\Db\AssignmentsStorage`<br>`Yiisoft\Rbac\Db\TransactionalManagerDecorator` | Relational database persistence driver for RBAC items and assignments using `yiisoft/db`. Includes migrations. See §8.4. |
-| `yiisoft/rbac-php` | `Yiisoft\Rbac\Php\ItemsStorage`<br>`Yiisoft\Rbac\Php\AssignmentsStorage`<br>`Yiisoft\Rbac\Php\ConcurrentItemsStorageDecorator`<br>`Yiisoft\Rbac\Php\ConcurrentAssignmentsStorageDecorator` | PHP file storage driver for RBAC items and assignments (version-controlled roles, no database). See §8.5. |
-| `yiisoft/rbac-cycle-db` | `Yiisoft\Rbac\Cycle\ItemsStorage`<br>`Yiisoft\Rbac\Cycle\AssignmentsStorage`<br>`Yiisoft\Rbac\Cycle\TransactionalManagerDecorator` | Database persistence driver for RBAC using `cycle/database` (Cycle migrations included). See §8.6. |
+| `yiisoft/rbac-db` | `Yiisoft\Rbac\Db\ItemsStorage`<br>`Yiisoft\Rbac\Db\AssignmentsStorage`<br>`Yiisoft\Rbac\Db\TransactionalManagerDecorator` | Relational database persistence driver for RBAC items and assignments using `yiisoft/db`. Includes migrations. See the [RBAC Storage Drivers Guide](infra-rbac-storage.md). |
+| `yiisoft/rbac-php` | `Yiisoft\Rbac\Php\ItemsStorage`<br>`Yiisoft\Rbac\Php\AssignmentsStorage`<br>`Yiisoft\Rbac\Php\ConcurrentItemsStorageDecorator`<br>`Yiisoft\Rbac\Php\ConcurrentAssignmentsStorageDecorator` | PHP file storage driver for RBAC items and assignments (version-controlled roles, no database). See the [RBAC Storage Drivers Guide](infra-rbac-storage.md). |
+| `yiisoft/rbac-cycle-db` | `Yiisoft\Rbac\Cycle\ItemsStorage`<br>`Yiisoft\Rbac\Cycle\AssignmentsStorage`<br>`Yiisoft\Rbac\Cycle\TransactionalManagerDecorator` | Database persistence driver for RBAC using `cycle/database` (Cycle migrations included). See the [RBAC Storage Drivers Guide](infra-rbac-storage.md). |
 | `yiisoft/rbac-rules-container` | `Yiisoft\Rbac\Rules\Container\RulesContainer` | Rule factory resolving custom `RuleInterface` implementations via a PSR-11 container. |
 
 ---
@@ -708,303 +700,19 @@ final readonly class CheckUserActiveListener
 
 ## 5. Stateless REST API Authentication (JWT / Bearer Token)
 
-For stateless REST APIs, avoid session cookies entirely. Clients send `Authorization: Bearer <token>` on every request.
-
-### 5.1. DI Binding for JWT Authenticator
-
-Configure `Yiisoft\Auth\Jwt\JwtMethod` in `config/web/di/auth.php`:
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\Auth\AuthenticatorInterface;
-use Yiisoft\Auth\AuthenticatorWithChallengeInterface;
-use Yiisoft\Auth\Jwt\JwtMethod;
-
-return [
-    AuthenticatorInterface::class => JwtMethod::class,
-    AuthenticatorWithChallengeInterface::class => JwtMethod::class,
-];
-```
-
-> [!NOTE]
-> `AuthenticationMethodInterface` is `@deprecated`. Bind modern `AuthenticatorInterface` and `AuthenticatorWithChallengeInterface` instead.
-
-### 5.2. Issuing JSON Web Tokens
-
-`TokenFactoryInterface::create(array $payload, string $format, ?int $signatureIndex = null): string` creates signed JWT strings.
-
-> [!IMPORTANT]
-> The second parameter `$format` is **mandatory** (omitting it throws an `ArgumentCountError`). Pass `\Jose\Component\Signature\Serializer\CompactSerializer::NAME` or `'jws_compact'`.
-
-```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Api;
-
-use App\Domain\User\Model\UserIdentity;
-use Jose\Component\Signature\Serializer\CompactSerializer;
-use Psr\Http\Message\ResponseInterface;
-use Yiisoft\Auth\Jwt\TokenFactoryInterface;
-use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
-
-final readonly class TokenIssueAction
-{
-    public function __construct(
-        private TokenFactoryInterface $tokenFactory,
-        private DataResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function createTokenForUser(UserIdentity $user): ResponseInterface
-    {
-        $payload = [
-            'sub' => $user->getId(),
-            'name' => $user->getLogin(),
-            'iat' => time(),
-            'exp' => time() + 3600, // 1 hour expiration
-            'iss' => 'my-api',
-        ];
-
-        // Format argument MUST be passed explicitly:
-        $token = $this->tokenFactory->create($payload, CompactSerializer::NAME);
-
-        return $this->responseFactory->createResponse([
-            'token' => $token,
-            'expires_in' => 3600,
-            'token_type' => 'Bearer',
-        ]);
-    }
-}
-```
+> **Login-method selection note:** The login method is **picked per project**: stateful sessions ([§4](#4-stateful-session-authentication-lifecycle-yiisoftuser)), stateless JWT / Bearer tokens (this section — `yiisoft/auth-jwt`), or external OAuth2/OIDC login ([§6](#6-external-oauth2--oidc-login-yiisoftyii-auth-client) — `yiisoft/yii-auth-client`). Resolve which method is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). RBAC authorization (§8) layers on top of any of them.
+>
+> One-line trap summary: the factory method is `TokenFactoryInterface::create()` (not `createToken()`), and its second `$format` parameter is mandatory — pass `CompactSerializer::NAME` / `'jws_compact'` explicitly.
+>
+> **For the complete reference on stateless JWT authentication** — the `JwtMethod` authenticator DI binding for `AuthenticatorInterface` / `AuthenticatorWithChallengeInterface` and issuing signed tokens with `TokenFactoryInterface::create()` — **see the** [Stateless JWT Authentication Guide](infra-auth-jwt.md).
 
 ---
 
 ## 6. External OAuth2 / OIDC Login (`yiisoft/yii-auth-client`)
 
-For "Sign in with Google / GitHub / Microsoft / X ..." flows, use `yiisoft/yii-auth-client`:
-
-```shell
-composer require yiisoft/yii-auth-client
-```
-
-The package ships:
-- `Yiisoft\Yii\AuthClient\Collection` — registry of configured OAuth2 clients keyed by client name.
-- `Yiisoft\Yii\AuthClient\AuthAction` — a **PSR-15 middleware** bound to a callback route: it redirects the user to the provider, exchanges the returned `code` for an access token, and hands the authenticated client to your success/cancel callbacks.
-- Ready-made clients under `Yiisoft\Yii\AuthClient\Client\`: `Google`, `GitHub`, `Facebook`, `X`, `Microsoft`, `Discord`, `LinkedIn`, `TikTok`, `Yandex`, `VKontakte`, and `OpenIdConnect`.
-- `Yiisoft\Yii\AuthClient\Widget\AuthChoice` — renders "Sign in with ..." buttons with built-in inline SVG logos.
-- It intentionally does **not** provide user/session management — map provider attributes onto your own identity in a success callback (§6.6).
-
-### 6.1. Package Architecture & Core Contracts
-
-```php
-interface AuthClientInterface
-{
-    public function getName(): string;
-    public function getTitle(): string;
-    public function getViewOptions(): array;
-    public function getUserAttributes(): array;
-    public function getClientId(): string;
-    public function buildAuthUrl(ServerRequestInterface $incomingRequest, array $params): string;
-}
-```
-
-Key types:
-
-| Type | Role |
-|---|---|
-| `Yiisoft\Yii\AuthClient\OAuth2` (abstract) | Full authorization-code flow. Constructor: `__construct(ClientInterface $httpClient, RequestFactoryInterface $requestFactory, StateStorageInterface $stateStorage, Factory $factory, SessionInterface $session)`. Key methods: `buildAuthUrl()`, `fetchAccessToken($request, $authCode): OAuthToken`, `refreshAccessToken($token): OAuthToken`, `getAccessToken(): ?OAuthToken`. |
-| `Collection` | `__construct(array $clients)`; `getClient(string $name): OAuth2Interface` throws `InvalidArgumentException` for unknown names. Built from params by `Factory\CollectionFactory`. |
-| `StateStorage\SessionStateStorage` | Default `StateStorageInterface` implementation (DI binding shipped in the package `config/di.php`) — persists `state`/nonce between redirect and callback via `SessionInterface`. `StateStorage\DummyStateStorage` is a no-op double for tests/CLI. |
-| `OAuthToken` | Token value object: `getToken()`, `getIsExpired()`, `getExpireDuration()`; expiry is auto-detected from the `expires_in` parameter. |
-
-Container bindings required from the application:
-
-```php
-// config/common/di/http-client.php — a PSR-18 client + PSR-17 request factory
-use Psr\Http\Client\ClientInterface;
-use Symfony\Component\HttpClient\Psr18Client;
-
-return [
-    ClientInterface::class => Psr18Client::class,
-];
-```
-
-```php
-// config/web/di/session.php — session must be available
-use Yiisoft\Session\SessionInterface;
-
-return [
-    SessionInterface::class => Yiisoft\Session\Session::class,
-];
-```
-
-### 6.2. Wiring `AuthAction` (Callback Route + DI)
-
-`AuthAction` is a terminal PSR-15 middleware mapped to a dedicated callback route. It reads the provider name exclusively from the **route argument** `{authclient}` via the injected `CurrentRoute` service:
-
-> [!CAUTION]
-> **Fatal crash warning:** In `AuthAction`, typed properties `$successUrl` and `$cancelUrl` are uninitialized by default. If a callback returns `void` or `null`, `AuthAction` attempts to redirect to these URLs. If `withSuccessUrl()` or `withCancelUrl()` was not called, PHP 8.2+ throws a fatal error: `Error: Typed property Yiisoft\Yii\AuthClient\AuthAction::$successUrl must not be accessed before initialization`. Always configure both URLs or return a `ResponseInterface` directly from callbacks!
-
-```php
-// config/common/di/auth-client.php
-declare(strict_types=1);
-
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Yiisoft\Aliases\Aliases;
-use Yiisoft\Router\CurrentRoute;
-use Yiisoft\View\WebView;
-use Yiisoft\Yii\AuthClient\AuthAction;
-use Yiisoft\Yii\AuthClient\AuthClientInterface;
-use Yiisoft\Yii\AuthClient\Collection;
-
-return [
-    AuthAction::class => static function (
-        Collection $clientCollection,
-        Aliases $aliases,
-        WebView $view,
-        ResponseFactoryInterface $responseFactory,
-        CurrentRoute $currentRoute,
-    ): AuthAction {
-        return (new AuthAction($clientCollection, $aliases, $view, $responseFactory, $currentRoute))
-            ->withSuccessUrl('/account/overview')
-            ->withCancelUrl('/auth/login')
-            ->withSuccessCallback(
-                static function (AuthClientInterface $client): ?ResponseInterface {
-                    // Map provider attributes to local identity (see §6.6)
-                    return null; // Safe: falls back to configured successUrl
-                }
-            )
-            ->withCancelCallback(
-                static function (AuthClientInterface $client): ?ResponseInterface {
-                    return null; // Safe: falls back to configured cancelUrl
-                }
-            );
-    },
-];
-```
-
-```php
-// config/routes.php
-declare(strict_types=1);
-
-use Yiisoft\Http\Method;
-use Yiisoft\Router\Route;
-use Yiisoft\Yii\AuthClient\AuthAction;
-
-return [
-    Route::methods([Method::GET, Method::POST], '/auth/{authclient}')
-        ->action(AuthAction::class)
-        ->name('site/auth'),
-];
-```
-
-### 6.3. Configuring Clients via `Collection` Params
-
-Clients are declared in `params['yiisoft/yii-auth-client']['clients']`. The shipped `Factory\CollectionFactory` instantiates each `'class'` and maps every remaining key to a `set*()` method:
-
-```php
-// config/common/params.php
-return [
-    'yiisoft/yii-auth-client' => [
-        'clients' => [
-            'google' => [
-                'class' => Yiisoft\Yii\AuthClient\Client\Google::class,
-                'clientId' => $_ENV['GOOGLE_CLIENT_ID'],
-                'clientSecret' => $_ENV['GOOGLE_CLIENT_SECRET'],
-                'oauth2ReturnUrl' => 'https://example.com/auth/google',
-            ],
-            'github' => [
-                'class' => Yiisoft\Yii\AuthClient\Client\GitHub::class,
-                'clientId' => $_ENV['GITHUB_CLIENT_ID'],
-                'clientSecret' => $_ENV['GITHUB_CLIENT_SECRET'],
-                'oauth2ReturnUrl' => 'https://example.com/auth/github',
-            ],
-        ],
-    ],
-];
-```
-
-> [!WARNING]
-> **`oauth2ReturnUrl` must be configured explicitly.** It is sent verbatim as `redirect_uri` and must match the provider's registered callback URL **exactly** (scheme, host, path).
-
-Config-key rules (enforced by `CollectionFactory`):
-- The `'name'` key is **forbidden**. The name is inferred from the array key (e.g. `'google'`).
-- Every array key must have a matching `set*()` method on the client class. Any unknown key throws `InvalidArgumentException`.
-
-### 6.4. OpenID Connect (`Client\OpenIdConnect`)
-
-`OpenIdConnect` extends `OAuth2` with discovery (`{issuerUrl}/.well-known/openid-configuration`), `id_token` JWS validation (`web-token/jwt-library`), nonce validation, and RP-initiated logout:
-
-```php
-'google-oidc' => [
-    'class' => Yiisoft\Yii\AuthClient\Client\OpenIdConnect::class,
-    'title' => 'Google OpenID Connect',
-    'issuerUrl' => 'https://accounts.google.com',
-    'clientId' => $_ENV['GOOGLE_CLIENT_ID'],
-    'clientSecret' => $_ENV['GOOGLE_CLIENT_SECRET'],
-],
-```
-
-Additional requirements and tools:
-- **A PSR-16 cache binding is mandatory**: `OpenIdConnect` takes `Psr\SimpleCache\CacheInterface $cache` in its constructor to cache discovery documents and JWK sets.
-- JWS validation is enabled by default (`$validateJws = true`). Because `withoutValidateJws()` is an immutable wither rather than a setter, JWS validation **cannot** be disabled via `params.php`.
-
-### 6.5. `AuthChoice` Button Widget
-
-`Yiisoft\Yii\AuthClient\Widget\AuthChoice` renders buttons linking to the `AuthAction` route:
-
-```php
-<?= Yiisoft\Yii\AuthClient\Widget\AuthChoice::widget()->authRoute('site/auth') ?>
-```
-
-- **Popup mode is on by default** (`popupMode(true)`); it requires the `@assets` / `@assetsUrl` aliases to publish the package JS asset (`AuthChoiceAsset`, `authchoice.js`).
-- Setting `->popupMode(false)` performs standard top-level navigation, eliminating the need for asset publishing aliases.
-
-### 6.6. Mapping Provider Attributes to Your Identity & Critical Gotchas
-
-The package does not log users in automatically. In the success callback, fetch `$client->getUserAttributes()` and match or link them to a local user identity:
-
-```php
-declare(strict_types=1);
-
-namespace App\Application\Auth;
-
-use App\Domain\User\Repository\UserRepositoryInterface;
-use Yiisoft\User\CurrentUser;
-use Yiisoft\Yii\AuthClient\AuthClientInterface;
-
-final readonly class OAuthSuccessHandler
-{
-    public function __construct(
-        private CurrentUser $currentUser,
-        private UserRepositoryInterface $userRepository,
-    ) {}
-
-    public function handle(AuthClientInterface $client): void
-    {
-        $attributes = $client->getUserAttributes();
-        $source = $client->getName();
-        $sourceId = (string) ($attributes['id'] ?? $attributes['sub'] ?? '');
-
-        $identity = $this->userRepository->findByOAuth($source, $sourceId)
-            ?? $this->userRepository->createFromOAuth($source, $sourceId, (string) ($attributes['email'] ?? ''));
-
-        $this->currentUser->login($identity);
-    }
-}
-```
-
-#### Critical Gotchas Matrix
-
-| Gotcha | Detail |
-|---|---|
-| Route argument only | `AuthAction` reads `{authclient}` exclusively from `CurrentRoute`, never from request body or attributes. |
-| State is session-backed | CSRF `state` and nonce values go to `StateStorageInterface` (default `SessionStateStorage`). CSRF `state` validation is on by default (`$validateAuthState = true`) — do not disable it. |
-| Token clearing | `setAccessToken(null)` is not supported; `setAccessToken([])` does not purge stored tokens. |
-| PKCE-only providers | `VKontakte` has no client secret (PKCE-only flow); `X` uses Authorization Code Flow with PKCE. |
-| Microsoft tenants | `Microsoft` uses `{$tenant}` URL templates, default tenant `common`; override with the `tenant` config key. |
-| Events | No PSR-14 events are dispatched by `yii-auth-client` — audit logging belongs in your success callback. |
+> **Login-method selection note:** The login method is **picked per project**: stateful sessions ([§4](#4-stateful-session-authentication-lifecycle-yiisoftuser)), stateless JWT / Bearer tokens ([§5](#5-stateless-rest-api-authentication-jwt--bearer-token) — `yiisoft/auth-jwt`), or external OAuth2/OIDC login (this section — `yiisoft/yii-auth-client`). Resolve which method is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). RBAC authorization (§8) layers on top of any of them.
+>
+> **For the complete reference on external OAuth2/OIDC login** — the package architecture and `AuthClientInterface` contracts, wiring the `AuthAction` callback middleware (with the uninitialized `$successUrl`/`$cancelUrl` fatal-crash trap), configuring provider clients via `Collection` params, OpenID Connect, the `AuthChoice` button widget, and mapping provider attributes to your identity — **see the** [OAuth2/OIDC Login Guide](infra-auth-oauth2.md).
 
 ---
 
@@ -1211,183 +919,21 @@ The package automatically provides the DI binding for `Yiisoft\Rbac\RuleFactoryI
 
 ### 8.4. Relational Database Storage (`yiisoft/rbac-db`)
 
-`yiisoft/rbac-db` persists RBAC data in relational database tables using `yiisoft/db`.
-
-#### Default Database Tables
-- `yii_rbac_item`: Stores roles and permissions.
-- `yii_rbac_item_child`: Stores parent-child inheritance relationships.
-- `yii_rbac_assignment`: Stores user-role bindings.
-
-> [!WARNING]
-> Yii 3 table names default to `yii_rbac_*`. The legacy Yii 2 table names (`auth_item`, `auth_assignment`) are **not** used.
-
-#### Running Relational Migrations
-
-Run the migrations that ship with the package:
-
-```shell
-./yii migrate:up --path=@vendor/yiisoft/rbac-db/migrations/items
-./yii migrate:up --path=@vendor/yiisoft/rbac-db/migrations/assignments
-```
-
-#### DI Configuration for `yiisoft/rbac-db`
-
-In `config/common/di/rbac.php`:
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\Db\Connection\ConnectionInterface;
-use Yiisoft\Definitions\Reference;
-use Yiisoft\Rbac\AssignmentsStorageInterface;
-use Yiisoft\Rbac\Db\AssignmentsStorage;
-use Yiisoft\Rbac\Db\ItemsStorage;
-use Yiisoft\Rbac\Db\TransactionalManagerDecorator;
-use Yiisoft\Rbac\ItemsStorageInterface;
-use Yiisoft\Rbac\Manager;
-use Yiisoft\Rbac\ManagerInterface;
-use Yiisoft\Rbac\RuleFactoryInterface;
-
-return [
-    ItemsStorageInterface::class => [
-        'class' => ItemsStorage::class,
-        '__construct()' => [
-            'database' => Reference::to(ConnectionInterface::class),
-            'tableName' => 'yii_rbac_item',
-            'childrenTableName' => 'yii_rbac_item_child',
-            'namesSeparator' => ',',
-        ],
-    ],
-
-    AssignmentsStorageInterface::class => [
-        'class' => AssignmentsStorage::class,
-        '__construct()' => [
-            'database' => Reference::to(ConnectionInterface::class),
-            'tableName' => 'yii_rbac_assignment',
-        ],
-    ],
-
-    ManagerInterface::class => [
-        'class' => TransactionalManagerDecorator::class,
-        '__construct()' => [
-            'manager' => static fn (
-                ItemsStorageInterface $itemsStorage,
-                AssignmentsStorageInterface $assignmentsStorage,
-                RuleFactoryInterface $rulesContainer,
-            ): ManagerInterface => new Manager(
-                itemsStorage: $itemsStorage,
-                assignmentsStorage: $assignmentsStorage,
-                ruleFactory: $rulesContainer,
-                enableDirectPermissions: false,
-                includeRolesInAccessChecks: false,
-            ),
-            'database' => Reference::to(ConnectionInterface::class),
-        ],
-    ],
-];
-```
-
-- `TransactionalManagerDecorator` wraps mutating operations (`updateRole()`, `updatePermission()`) inside database transactions, ensuring referential integrity.
-- `ItemTreeTraversalFactory` automatically selects recursive Common Table Expressions (CTE) for modern databases (PostgreSQL, SQLite ≥ 3.8.3, MySQL 8+) and falls back to a recursive query strategy for MySQL 5.
+> **Storage-driver selection note — pick exactly ONE:** RBAC items and assignments must be persisted by **one storage driver per project**: `yiisoft/rbac-db` (relational tables via `yiisoft/db`) XOR `yiisoft/rbac-php` (version-controlled PHP files) XOR `yiisoft/rbac-cycle-db` (Cycle database abstraction). Resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). One-line trap summary: Yii 3 table names default to `yii_rbac_*` — the legacy Yii 2 names (`auth_item`, `auth_assignment`) are not used.
+>
+> **For the complete reference on RBAC storage drivers** — default `yii_rbac_*` tables and relational migrations, the full `rbac-db` DI configuration with `TransactionalManagerDecorator` and CTE traversal, `rbac-php` file storages with concurrent-write decorators and the `items.php` schema, `rbac-cycle-db` wiring and Cycle migrations, and hybrid storage architectures — **see the** [RBAC Storage Drivers Guide](infra-rbac-storage.md).
 
 ### 8.5. PHP File Storage (`yiisoft/rbac-php`)
 
-`yiisoft/rbac-php` stores items and assignments in version-controlled PHP files:
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\Rbac\Manager;
-use Yiisoft\Rbac\Permission;
-use Yiisoft\Rbac\Php\AssignmentsStorage;
-use Yiisoft\Rbac\Php\ConcurrentAssignmentsStorageDecorator;
-use Yiisoft\Rbac\Php\ConcurrentItemsStorageDecorator;
-use Yiisoft\Rbac\Php\ItemsStorage;
-use Yiisoft\Rbac\RuleFactoryInterface;
-
-$directory = __DIR__ . '/../resources/rbac';
-
-$itemsStorage = new ConcurrentItemsStorageDecorator(
-    new ItemsStorage($directory . '/items.php')
-);
-
-$assignmentsStorage = new ConcurrentAssignmentsStorageDecorator(
-    new AssignmentsStorage($directory . '/assignments.php')
-);
-
-$manager = new Manager(
-    itemsStorage: $itemsStorage,
-    assignmentsStorage: $assignmentsStorage,
-    ruleFactory: $ruleFactory,
-);
-```
-
-> [!WARNING]
-> **Concurrent write safety:** In PHP-FPM environments where assignments change at runtime, always wrap storages with `ConcurrentItemsStorageDecorator` and `ConcurrentAssignmentsStorageDecorator` to prevent lost updates.
-
-#### File Schema Example (`items.php`)
-
-```php
-return [
-    [
-        'name' => 'posts.update',
-        'type' => 'permission',
-        'description' => 'Update a post',
-        'rule_name' => 'is_author',
-    ],
-    [
-        'name' => 'author',
-        'type' => 'role',
-        'children' => ['posts.update'],
-    ],
-];
-```
+> **For the complete reference on PHP file storage** — version-controlled items/assignments files, `ConcurrentItemsStorageDecorator` / `ConcurrentAssignmentsStorageDecorator` write safety, and the `items.php` schema — **see the** [RBAC Storage Drivers Guide, §2](infra-rbac-storage.md#2-php-file-storage-yiisoftrbac-php).
 
 ### 8.6. Cycle Database Storage (`yiisoft/rbac-cycle-db`)
 
-`yiisoft/rbac-cycle-db` stores items and assignments via the Cycle Database abstraction layer (`Cycle\Database\DatabaseInterface`):
-
-```php
-declare(strict_types=1);
-
-use Cycle\Database\DatabaseInterface;
-use Yiisoft\Rbac\Cycle\AssignmentsStorage;
-use Yiisoft\Rbac\Cycle\ItemsStorage;
-use Yiisoft\Rbac\Cycle\TransactionalManagerDecorator;
-use Yiisoft\Rbac\Manager;
-use Yiisoft\Rbac\RuleFactoryInterface;
-
-/** @var DatabaseInterface $database */
-
-$manager = new TransactionalManagerDecorator(
-    new Manager(
-        itemsStorage: new ItemsStorage($database),
-        assignmentsStorage: new AssignmentsStorage($database),
-        ruleFactory: $ruleFactory,
-    ),
-    $database,
-);
-```
-
-Run Cycle migrations via:
-```shell
-./vendor/bin/cycle-migrate --path=vendor/yiisoft/rbac-cycle-db/migrations/items
-./vendor/bin/cycle-migrate --path=vendor/yiisoft/rbac-cycle-db/migrations/assignments
-```
+> **For the complete reference on Cycle database storage** — the `ItemsStorage` / `AssignmentsStorage` / `TransactionalManagerDecorator` wiring and Cycle migrations — **see the** [RBAC Storage Drivers Guide, §3](infra-rbac-storage.md#3-cycle-database-storage-yiisoftrbac-cycle-db).
 
 ### 8.7. Hybrid Storage Architectures
 
-Because items storage and assignments storage are decoupled interfaces, you can combine drivers:
-- **Items in PHP files (`rbac-php`)**: Keep the roles, permissions, and rule bindings in version-controlled PHP files reviewed via pull requests.
-- **Assignments in Database (`rbac-db` or `rbac-cycle-db`)**: Manage dynamic user assignments in relational tables.
-
-```php
-$manager = new Manager(
-    itemsStorage: new ItemsStorage(__DIR__ . '/items.php'), // rbac-php
-    assignmentsStorage: new AssignmentsStorage($dbConnection), // rbac-db
-    ruleFactory: $ruleFactory,
-);
-```
+> **For the complete reference on hybrid storage architectures** — combining version-controlled PHP items with database-backed assignments — **see the** [RBAC Storage Drivers Guide, §4](infra-rbac-storage.md#4-hybrid-storage-architectures).
 
 ---
 
@@ -1450,25 +996,24 @@ final readonly class PostAuthorizationService
 | **3** | Direct permission assignment to user | By default `$enableDirectPermissions = false`; `$manager->assign('permissionName', $userId)` throws `InvalidArgumentException`. | Assign roles to users (`$manager->assign('roleName', $userId)`) and attach permissions to roles. |
 | **4** | Type-hinting `array $params` in `RuleInterface::execute()` | In Yii 3, the third parameter is strictly `RuleContext $context`. Typehinting an array triggers a fatal PHP `TypeError`. | Use `RuleContext $context` and retrieve values via `$context->getParameterValue('param')`. |
 | **5** | Calling storage methods on `Manager` | `Manager` manages access checks and hierarchy edges. Querying items or assignments belongs in storages. | Inject `ItemsStorageInterface` or `AssignmentsStorageInterface` for storage queries. |
-| **6** | Using legacy Yii 2 table names (`auth_*`) | Yii 3 `rbac-db` default tables are `yii_rbac_item`, `yii_rbac_item_child`, and `yii_rbac_assignment`. | Use standard `yii_rbac_*` tables or configure custom table names in storage constructors. |
-| **7** | Omitting `$format` in `TokenFactory::create()` | Parameter 2 `$format` has no default; omitting it throws an `ArgumentCountError`. | Pass `CompactSerializer::NAME` or `'jws_compact'` explicitly. |
-| **8** | Omitting `withSuccessUrl()` in `AuthAction` | Callbacks returning `void` fall back to `$this->successUrl`. If omitted, PHP 8.2 throws an uninitialized typed property fatal error. | Always configure `withSuccessUrl()` and `withCancelUrl()`, or return a `ResponseInterface` from the callback. |
-| **9** | Using deprecated `CsrfMiddleware` or `UserAuth` | Both are `@deprecated` and scheduled for removal. | Use `Yiisoft\Csrf\CsrfTokenMiddleware` and `Yiisoft\User\Method\WebAuth`. |
-| **10** | Binding `AuthenticationMethodInterface` | Deprecated interface in `yiisoft/auth`. | Bind `AuthenticatorWithChallengeInterface` or `AuthenticatorInterface`. |
-| **11** | Defining `StateResetter::class` in DI (or omitting worker state reset) | `CurrentUser` cached identity bleeds into subsequent worker requests in RoadRunner/FrankenPHP; worse, an application-level `StateResetter::class` definition acts as a full override and silently disables **all** built-in package resetters. | Rely on built-in package resetters (catalog: [infra-state-resetter.md](infra-state-resetter.md#4-ground-truth-catalog-of-built-in-package-resetters) §4); for custom services use the per-service `'reset'` definition key (§3). `yiisoft/user` already ships `'reset' => $this->clear()` for `CurrentUser`. |
-| **12** | Missing `signatureKey` for `CookieLogin` | Remember-me cookies are unsigned, allowing attackers to forge user IDs. | Always set a strong, random `signatureKey` in `CookieLogin` configuration. |
-| **13** | Mutating state in `RuleInterface::execute()` | Rules are executed during evaluation checks and must remain pure and side-effect free. | Only return `bool`. Perform state mutations in Application Use Cases. |
-| **14** | Storing plaintext tokens or passwords | Severe security vulnerability. | Hash passwords with `PasswordHasher` and sign tokens with cryptographic HMAC or asymmetric keys. |
+| **6** | Using deprecated `CsrfMiddleware` or `UserAuth` | Both are `@deprecated` and scheduled for removal. | Use `Yiisoft\Csrf\CsrfTokenMiddleware` and `Yiisoft\User\Method\WebAuth`. |
+| **7** | Binding `AuthenticationMethodInterface` | Deprecated interface in `yiisoft/auth`. | Bind `AuthenticatorWithChallengeInterface` or `AuthenticatorInterface`. |
+| **8** | Defining `StateResetter::class` in DI (or omitting worker state reset) | `CurrentUser` cached identity bleeds into subsequent worker requests in RoadRunner/FrankenPHP; worse, an application-level `StateResetter::class` definition acts as a full override and silently disables **all** built-in package resetters. | Rely on built-in package resetters (catalog: [infra-state-resetter.md](infra-state-resetter.md#4-ground-truth-catalog-of-built-in-package-resetters) §4); for custom services use the per-service `'reset'` definition key (§3). `yiisoft/user` already ships `'reset' => $this->clear()` for `CurrentUser`. |
+| **9** | Missing `signatureKey` for `CookieLogin` | Remember-me cookies are unsigned, allowing attackers to forge user IDs. | Always set a strong, random `signatureKey` in `CookieLogin` configuration. |
+| **10** | Mutating state in `RuleInterface::execute()` | Rules are executed during evaluation checks and must remain pure and side-effect free. | Only return `bool`. Perform state mutations in Application Use Cases. |
+| **11** | Storing plaintext tokens or passwords | Severe security vulnerability. | Hash passwords with `PasswordHasher` and sign tokens with cryptographic HMAC or asymmetric keys. |
 
 ---
 
 ## 11. Related Topic Guides
 
+- [Stateless JWT Authentication Guide](infra-auth-jwt.md) — The stateless REST API login method (`yiisoft/auth-jwt`): `JwtMethod` authenticator DI binding and token issuance (§5).
+- [OAuth2/OIDC Login Guide](infra-auth-oauth2.md) — The external login method (`yiisoft/yii-auth-client`): `AuthAction` callback middleware, provider client configuration, OpenID Connect, and identity mapping (§6).
+- [RBAC Storage Drivers Guide](infra-rbac-storage.md) — `rbac-db`, `rbac-php`, and `rbac-cycle-db` persistence drivers and hybrid architectures (§8.4–8.7).
 - [Routing Guide](http-routes.md) — Route groups, pipeline execution order, and attaching authentication/RBAC middlewares.
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Authentication and permission checks (`CurrentUser::can()`) inside presentation actions.
 - [PSR-15 Middlewares Guide](http-middlewares.md) — Global pipeline registration with the canonical authenticated order, the RBAC permission guard, rate limiting, CORS preflight ordering, and custom middleware implementations.
 - [HTTP State Guide](http-state.md) — Session authentication, cookie parameters, and remember-me state.
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and the runtime selection matrix.
 - [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md) — `StateResetter` configuration and per-service resetters for persistent worker runtimes.
-- [Caching Guide](persistence-caching.md) — PSR-16 cache configuration required for OpenID Connect discovery.
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting authenticated endpoints and security schemes.

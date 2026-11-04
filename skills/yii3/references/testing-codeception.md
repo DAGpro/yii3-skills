@@ -12,7 +12,7 @@
   - [1.2. Root Configuration (`codeception.yml`)](#12-root-configuration-codeceptionyml)
   - [1.3. Suite Configuration (`tests/Functional.suite.yml`)](#13-suite-configuration-testsfunctionalsuiteyml)
   - [1.4. Actor Roles and Cest Implementation](#14-actor-roles-and-cest-implementation)
-    - [1.4.1. `ConsoleTester` (`tests/Support/ConsoleTester.php`)](#141-consolotester-testssupportconsolotesterphp)
+    - [1.4.1. `ConsoleTester` (`tests/Support/ConsoleTester.php`)](#141-consoletester-testssupportconsoletesterphp)
     - [1.4.2. `ApiTester` (`tests/Support/ApiTester.php`)](#142-apitester-testssupportapitesterphp)
     - [1.4.3. `UnitTester` with `Codeception\Test\Unit`](#143-unittester-with-codeceptiontestunit)
   - [1.5. Execution](#15-execution)

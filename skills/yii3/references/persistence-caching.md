@@ -1,6 +1,6 @@
 # Yii3 Caching & Performance Optimization Guide
 
-> Practical guide and configuration recipes for data caching, PSR-16 drivers, stampede prevention with `getOrSet()`, tag invalidation, view fragment caching with hole-punching, HTTP conditional caching, and unit testing using `yiisoft/cache` and driver adapters.
+> Practical guide and configuration recipes for data caching, PSR-16 drivers, stampede prevention with `getOrSet()`, tag invalidation, view fragment caching with hole-punching, and unit testing using `yiisoft/cache` and driver adapters. External PSR-16 driver adapters and HTTP response caching are owned by dedicated child guides: the [Cache Driver Adapters Guide](persistence-cache-drivers.md) and the [HTTP Response Caching (ETag) Guide](http-cache-etag.md).
 
 ---
 
@@ -11,11 +11,7 @@
   - [1.3. Value Object Ttl (Yii 3.2+)](#13-value-object-ttl-yii-32)
 - [2. Cache Drivers & DI Configuration](#2-cache-drivers--di-configuration)
   - [2.1. File Cache (yiisoft/cache-file)](#21-file-cache-yiisoftcache-file)
-  - [2.2. Redis Cache (yiisoft/cache-redis)](#22-redis-cache-yiisoftcache-redis)
-  - [2.3. Database Cache (yiisoft/cache-db)](#23-database-cache-yiisoftcache-db)
-  - [2.4. APCu Cache (yiisoft/cache-apcu)](#24-apcu-cache-yiisoftcache-apcu)
-  - [2.5. Memcached (yiisoft/cache-memcached)](#25-memcached-yiisoftcache-memcached)
-  - [2.6. WinCache (yiisoft/cache-wincache)](#26-wincache-yiisoftcache-wincache)
+  - [2.2. External Cache Driver Adapters (Redis / DB / APCu / Memcached / WinCache)](#22-external-cache-driver-adapters-redis--db--apcu--memcached--wincache) — full reference in the [Cache Driver Adapters Guide](persistence-cache-drivers.md)
   - [2.7. Development & Namespacing Helpers](#27-development--namespacing-helpers)
 - [3. The getOrSet Pattern & Stampede Prevention](#3-the-getorset-pattern--stampede-prevention)
   - [3.1. Method Signatures & Basic Read-Through](#31-method-signatures--basic-read-through)
@@ -29,10 +25,7 @@
 - [5. View Fragment Caching & Dynamic Content (Hole-Punching)](#5-view-fragment-caching--dynamic-content-hole-punching)
   - [5.1. ViewRenderer Trap: Fatal Closure Serialization](#51-viewrenderer-trap-fatal-closure-serialization)
   - [5.2. Fragment Caching with Hole-Punching (CachedContent & DynamicContent)](#52-fragment-caching-with-hole-punching-cachedcontent--dynamiccontent)
-- [6. HTTP Response Caching (ETag & Conditional Requests)](#6-http-response-caching-etag--conditional-requests)
-  - [6.1. RFC 7232 Mechanics & Suffix Normalization](#61-rfc-7232-mechanics--suffix-normalization)
-  - [6.2. Declarative PSR-15 Middleware (HttpCacheMiddleware)](#62-declarative-psr-15-middleware-httpcachemiddleware)
-  - [6.3. Programmatic Action-Level Conditional GET](#63-programmatic-action-level-conditional-get)
+- [6. HTTP Response Caching (ETag & Conditional Requests)](#6-http-response-caching-etag--conditional-requests) — full reference in the [HTTP Response Caching (ETag) Guide](http-cache-etag.md)
 - [7. Unit Testing Caching & Fault Injection](#7-unit-testing-caching--fault-injection)
   - [7.1. Storage Failure Simulation with MemorySimpleCache](#71-storage-failure-simulation-with-memorysimplecache)
   - [7.2. Inspecting Cache Operations with SimpleCacheActionLogger](#72-inspecting-cache-operations-with-simplecacheactionlogger)
@@ -182,168 +175,11 @@ return [
 > [!WARNING]
 > `$gcProbability` is measured in **parts per million** (0–1,000,000), not percentage. The default `10` represents a **0.001%** probability that garbage collection runs on a `set()` call. Setting `1` means 0.0001% (nearly disabled), while `0` disables GC entirely, letting files accumulate indefinitely.
 
-### 2.2. Redis Cache (yiisoft/cache-redis)
+### 2.2. External Cache Driver Adapters (Redis / DB / APCu / Memcached / WinCache)
 
-```shell
-composer require yiisoft/cache-redis
-```
-
-`Yiisoft\Cache\Redis\RedisCache` requires a `Predis\ClientInterface` instance (`predis/predis` `^3.0`). Register the client and bind the PSR-16 cache:
-
-```php
-declare(strict_types=1);
-
-use Predis\Client;
-use Predis\ClientInterface;
-use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
-use Yiisoft\Cache\Cache;
-use Yiisoft\Cache\CacheInterface as YiisoftCacheInterface;
-use Yiisoft\Cache\Redis\RedisCache;
-
-/** @var array $params */
-
-return [
-    ClientInterface::class => static fn (): ClientInterface => new Client([
-        'scheme' => 'tcp',
-        'host' => $params['redis']['host'] ?? '127.0.0.1',
-        'port' => (int) ($params['redis']['port'] ?? 6379),
-        'password' => $params['redis']['password'] ?? null,
-        'database' => (int) ($params['redis']['database'] ?? 0),
-        'read_write_timeout' => 2.0,
-    ]),
-
-    PsrCacheInterface::class => RedisCache::class,
-    YiisoftCacheInterface::class => Cache::class,
-];
-```
-
-Redis cluster configurations are supported natively: pass multiple node configurations to `Predis\Client`, and `RedisCache` executes cluster-aware command routing and cluster-wide `flushdb` operations on `clear()`.
-
-### 2.3. Database Cache (yiisoft/cache-db)
-
-```shell
-composer require yiisoft/cache-db
-```
-
-`Yiisoft\Cache\Db\DbCache` requires a `Yiisoft\Db\Connection\ConnectionInterface`. Constructor: `__construct(ConnectionInterface $db, string $table = '{{%yii_cache}}', int $gcProbability = 100)`.
-
-```php
-declare(strict_types=1);
-
-use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
-use Yiisoft\Cache\Cache;
-use Yiisoft\Cache\CacheInterface as YiisoftCacheInterface;
-use Yiisoft\Cache\Db\DbCache;
-use Yiisoft\Db\Connection\ConnectionInterface;
-
-return [
-    DbCache::class => static fn (ConnectionInterface $db): DbCache => new DbCache(
-        db: $db,
-        table: '{{%yii_cache}}',
-        gcProbability: 100, // 0.01% chance per write
-    ),
-
-    PsrCacheInterface::class => DbCache::class,
-    YiisoftCacheInterface::class => Cache::class,
-];
-```
-
-> [!WARNING]
-> `DbCache` does **not** create its storage table automatically. Before the first write, initialize the schema (`{{%yii_cache}}`) by running `Yiisoft\Cache\Db\DbSchemaManager::ensureTable()` in a migration or executing the SQL scripts provided in `vendor/yiisoft/cache-db/sql/`. Writes to a non-existent table fail silently (the error is logged at `LogLevel::ERROR` and `set()` returns `false`).
-
-### 2.4. APCu Cache (yiisoft/cache-apcu)
-
-```shell
-composer require yiisoft/cache-apcu
-```
-
-`Yiisoft\Cache\Apcu\ApcuCache` is a `final` class implementing `Psr\SimpleCache\CacheInterface` with no constructor arguments:
-
-```php
-declare(strict_types=1);
-
-use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
-use Yiisoft\Cache\Apcu\ApcuCache;
-use Yiisoft\Cache\Cache;
-use Yiisoft\Cache\CacheInterface as YiisoftCacheInterface;
-
-return [
-    PsrCacheInterface::class => ApcuCache::class,
-    YiisoftCacheInterface::class => Cache::class,
-];
-```
-
-> [!WARNING]
-> APCu is **per-server, per-SAPI shared memory**: web workers and CLI processes do **not** share memory. For CLI scripts (queue workers, console commands) enable APCu via `apc.enable_cli = 1` in `php.ini`. CLI processes cannot clear the web SAPI's cache pool. For multi-server clusters or CLI-to-web invalidations, use Redis or Database cache instead.
-
-### 2.5. Memcached (yiisoft/cache-memcached)
-
-```shell
-composer require yiisoft/cache-memcached
-```
-
-`Yiisoft\Cache\Memcached\Memcached` wraps the PECL `memcached` extension. Constructor: `__construct(string $persistentId = '', array $servers = [], array $options = [])`. Class constants: `DEFAULT_SERVER_HOST = '127.0.0.1'`, `DEFAULT_SERVER_PORT = 11211`, `DEFAULT_SERVER_WEIGHT = 1`.
-
-```php
-declare(strict_types=1);
-
-// config/common/params.php
-return [
-    'yiisoft/cache-memcached' => [
-        'memcached' => [
-            'persistentId' => 'app-cache', // Sharing persistent ID pools connections across requests
-            'servers' => [
-                ['host' => 'cache-1.internal', 'port' => 11211, 'weight' => 100],
-                ['host' => 'cache-2.internal', 'port' => 11211, 'weight' => 50],
-            ],
-            'options' => [],
-        ],
-    ],
-];
-```
-
-Bind the PSR-16 interface in `config/common/di/cache.php`:
-
-```php
-declare(strict_types=1);
-
-use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
-use Yiisoft\Cache\Cache;
-use Yiisoft\Cache\CacheInterface as YiisoftCacheInterface;
-use Yiisoft\Cache\Memcached\Memcached;
-
-return [
-    PsrCacheInterface::class => Memcached::class,
-    YiisoftCacheInterface::class => Cache::class,
-];
-```
-
-> [!WARNING]
-> **TTL Semantics:** Numeric TTLs **greater than 2,592,000 (30 days)** are treated by Memcached as absolute Unix timestamps; the driver converts them via `$ttl + time()`. Storing `set($key, $val, 31 * 86400)` expires in 31 days, but passing an absolute timestamp smaller than 2,592,000 causes immediate expiration.
+> **Driver selection note:** `yiisoft/cache-file` (§2.1) is the zero-dependency default for simple web apps. Beyond it, exactly **ONE** additional PSR-16 driver package is installed per project — `yiisoft/cache-redis` XOR `yiisoft/cache-db` XOR `yiisoft/cache-apcu` XOR `yiisoft/cache-memcached` XOR `yiisoft/cache-wincache`. Resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family), then read only the matching adapter section in the child guide.
 >
-> Memcached provides **no authentication or access control**: any client capable of connecting to the port can read or wipe all data. Never cache unencrypted sensitive data in Memcached.
-
-### 2.6. WinCache (yiisoft/cache-wincache)
-
-```shell
-composer require yiisoft/cache-wincache
-```
-
-`Yiisoft\Cache\WinCache\WinCache` is a `final` class with no constructor arguments; requires `wincache.ucenabled = 1` in `php.ini` (and `wincache.enablecli = 1` for CLI):
-
-```php
-declare(strict_types=1);
-
-use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
-use Yiisoft\Cache\Cache;
-use Yiisoft\Cache\CacheInterface as YiisoftCacheInterface;
-use Yiisoft\Cache\WinCache\WinCache;
-
-return [
-    PsrCacheInterface::class => WinCache::class,
-    YiisoftCacheInterface::class => Cache::class,
-];
-```
+> **For the complete reference on external cache driver adapters** — `RedisCache` + Predis client wiring and cluster mode, `DbCache` schema initialization, `ApcuCache` per-SAPI shared memory, Memcached persistent connections and TTL semantics, and WinCache — **see the** [Cache Driver Adapters Guide](persistence-cache-drivers.md).
 
 ### 2.7. Development & Namespacing Helpers
 
@@ -797,160 +633,7 @@ Template file `views/widgets/sidebar.php`:
 
 ## 6. HTTP Response Caching (ETag & Conditional Requests)
 
-### 6.1. RFC 7232 Mechanics & Suffix Normalization
-
-HTTP conditional caching enables browsers and edge CDNs to validate cached representations:
-- **Weak Validators (`W/"..."`):** Indicate semantic equality rather than byte-for-byte identical representation (e.g. minified vs formatted JSON).
-- **Multi-Value `If-None-Match`:** Clients or proxies may send multiple comma-separated ETags: `If-None-Match: "tag1", "tag2", W/"tag3"`.
-- **Compression Suffixes (`-gzip`, `-br`):** Web servers like Apache (`mod_deflate`, `mod_brotli`) alter ETag values by appending compression suffixes. Without normalization, client ETags will fail to match server entity tags, causing 304 validation to fail.
-- **Automatic 304 Not Modified:** When ETags match or `If-Modified-Since` is unchanged, the server must emit a `304 Not Modified` response without a message body.
-
-### 6.2. Declarative PSR-15 Middleware (HttpCacheMiddleware)
-
-The `yiisoft/http-middleware` package provides `Yiisoft\HttpMiddleware\HttpCache\HttpCacheMiddleware` to handle RFC 7232 negotiation automatically.
-
-Constructor dependencies:
-- `ResponseFactoryInterface $responseFactory`
-- `CacheControlProviderInterface $cacheControlProvider = new NullCacheControlProvider()`
-- `LastModifiedProviderInterface $lastModifiedProvider = new NullLastModifiedProvider()`
-- `ETagProviderInterface $eTagProvider = new NullETagProvider()`
-- `ETagGeneratorInterface $eTagGenerator = new DefaultETagGenerator()`
-- `ETagValueNormalizerInterface $eTagValueNormalizer = new NoopETagValueNormalizer()`
-
-Implement custom providers for your domain models:
-
-```php
-declare(strict_types=1);
-
-namespace App\Blog\Http;
-
-use App\Blog\Domain\BlogPostRepositoryInterface;
-use DateTimeImmutable;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\HttpMiddleware\HttpCache\ETag;
-use Yiisoft\HttpMiddleware\HttpCache\ETagProvider\ETagProviderInterface;
-use Yiisoft\HttpMiddleware\HttpCache\LastModifiedProvider\LastModifiedProviderInterface;
-
-final readonly class BlogPostETagProvider implements ETagProviderInterface
-{
-    public function __construct(
-        private BlogPostRepositoryInterface $repository,
-    ) {}
-
-    public function get(ServerRequestInterface $request): ?ETag
-    {
-        $id = (string) $request->getAttribute('id', '');
-        $post = $this->repository->findById($id);
-        if ($post === null) {
-            return null;
-        }
-
-        $seed = $post->getUpdatedAt()->format(\DateTimeInterface::ATOM) . ':' . $post->getTitle();
-
-        return new ETag(seed: $seed, weak: false);
-    }
-}
-
-final readonly class BlogPostLastModifiedProvider implements LastModifiedProviderInterface
-{
-    public function __construct(
-        private BlogPostRepositoryInterface $repository,
-    ) {}
-
-    public function get(ServerRequestInterface $request): ?DateTimeImmutable
-    {
-        $id = (string) $request->getAttribute('id', '');
-        $post = $this->repository->findById($id);
-
-        return $post?->getUpdatedAt();
-    }
-}
-```
-
-Wire the middleware into route definitions in `config/common/routes.php`:
-
-```php
-declare(strict_types=1);
-
-use App\Blog\Action\ViewPostAction;
-use App\Blog\Http\BlogPostETagProvider;
-use App\Blog\Http\BlogPostLastModifiedProvider;
-use Psr\Http\Message\ResponseFactoryInterface;
-use Yiisoft\HttpMiddleware\HttpCache\CacheControlProvider\ConstantCacheControlProvider;
-use Yiisoft\HttpMiddleware\HttpCache\ETagValueNormalizer\SuffixETagValueNormalizer;
-use Yiisoft\HttpMiddleware\HttpCache\HttpCacheMiddleware;
-use Yiisoft\Router\Group;
-use Yiisoft\Router\Route\Get;
-
-return [
-    (new Group('/blog'))->routes(
-        (new Get('/post/{id:\d+}'))
-            ->middleware(static fn (
-                ResponseFactoryInterface $responseFactory,
-                BlogPostETagProvider $eTagProvider,
-                BlogPostLastModifiedProvider $lastModifiedProvider,
-            ): HttpCacheMiddleware => new HttpCacheMiddleware(
-                responseFactory: $responseFactory,
-                cacheControlProvider: new ConstantCacheControlProvider('public, max-age=3600, must-revalidate'),
-                lastModifiedProvider: $lastModifiedProvider,
-                eTagProvider: $eTagProvider,
-                eTagValueNormalizer: new SuffixETagValueNormalizer(['-gzip', '-br']),
-            ))
-            ->action(ViewPostAction::class),
-    ),
-];
-```
-
-### 6.3. Programmatic Action-Level Conditional GET
-
-For lightweight scenarios without route middleware:
-
-```php
-declare(strict_types=1);
-
-namespace App\Blog\Action;
-
-use App\Blog\Domain\BlogPost;
-use App\Blog\Domain\BlogPostRepositoryInterface;
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Http\Header;
-use Yiisoft\Http\Status;
-
-final readonly class ViewPostAction
-{
-    public function __construct(
-        private BlogPostRepositoryInterface $repository,
-        // Canonical factory from the ResponseFactory sub-namespace (wraps the payload
-        // into a DataStream body). The deprecated root-namespace twin must not be used.
-        private \Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface $dataResponseFactory,
-        private ResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $id = (string) $request->getAttribute('id', '');
-        $post = $this->repository->findById($id);
-
-        if (!$post instanceof BlogPost) {
-            return $this->responseFactory->createResponse(Status::NOT_FOUND);
-        }
-
-        $etag = '"' . sha1($post->getId() . ':' . $post->getUpdatedAt()->getTimestamp()) . '"';
-        $clientEtag = $request->getHeaderLine(Header::IF_NONE_MATCH);
-
-        if ($clientEtag === $etag) {
-            return $this->responseFactory->createResponse(Status::NOT_MODIFIED);
-        }
-
-        return $this->dataResponseFactory
-            ->createResponse($post->toArray())
-            ->withHeader(Header::ETAG, $etag)
-            ->withHeader(Header::CACHE_CONTROL, 'public, max-age=3600, must-revalidate');
-    }
-}
-```
+> **For the complete reference on** HTTP-layer response caching — RFC 7232 conditional-request mechanics (weak validators, multi-value `If-None-Match`, compression suffix normalization), the declarative `HttpCacheMiddleware` PSR-15 recipe (ETag / `Last-Modified` providers, route wiring), and programmatic action-level conditional GET — **see the** [HTTP Response Caching (ETag) Guide](http-cache-etag.md). HTTP caching wraps the middleware pipeline and is distinct from application data caching (§1–§5); the middleware itself is catalogued in the [PSR-15 Middlewares Guide](http-middlewares.md).
 
 ---
 
@@ -997,9 +680,16 @@ public function testGetFeaturedProductsIsCached(): void
 | String cache keys containing `{ } ( ) / \ @ :` or longer than 64 characters | PSR-16 reserves these characters; all bundled drivers throw `InvalidArgumentException` on raw key violations. | Use safe flat strings (letters, digits, dots, dashes, underscores) or array keys (normalized to MD5). |
 | Expecting array keys like `['catalog', $id]` to be human-readable strings | `CacheKeyNormalizer` deterministically converts array keys to `md5(json_encode($key))`. | Use explicit prefixed string keys (`catalog.product.10`) when manual inspection in storage is required. |
 | Caching `ViewRenderer::renderPartial()` output directly | Returns `DataResponse` wrapping an unexecuted closure capturing `$this`; serialization throws fatal `Serialization of 'Closure' is not allowed`. | Cache string output using `renderPartialAsString()` (no layout) or `renderAsString()` (with layout). |
-| Mapping `RedisCache::class` in DI without binding `Predis\ClientInterface` | Container cannot resolve constructor parameter `$client` and fails at runtime during initial resolution. | Define `Predis\ClientInterface::class` in DI configuration before binding `PsrCacheInterface => RedisCache::class`. |
-| Using `DbCache` without creating `{{%yii_cache}}` table | Driver catches SQL exceptions and logs them; writes fail silently and `set()` returns `false`. | Execute `DbSchemaManager::ensureTable()` in migration or run SQL scripts from `vendor/yiisoft/cache-db/sql/`. |
 | Setting `$gcProbability` as a percentage (e.g. `1` for 1%) | Parameter is parts per million (PPM); `1` means 0.0001% (1 in 1,000,000 writes), effectively disabling garbage collection. | Use proper PPM scale: `FileCache` default `10` (0.001%), `DbCache` default `100` (0.01%), `10_000` (1.0%). |
 | Invalidating cache tags before committing database transaction | Concurrent requests read uncommitted/stale DB state and re-populate cache, locking stale data under new tag timestamp. | Commit database transactions first, then call `TagDependency::invalidate()` in the post-commit phase. |
 | Writing values via raw `psr()->set()` expecting dependencies to work | Raw PSR-16 writes store values directly without the `CacheItem` metadata envelope; dependencies are never validated. | Always use `getOrSet()` when attaching `TagDependency`, `FileDependency`, or `CallbackDependency`. |
 | Passing a `Ttl` object directly to `CacheInterface::getOrSet()` | `getOrSet()` accepts `DateInterval|int|null`, not `Ttl`. Passing `Ttl` object directly triggers fatal `TypeError`. | Call `->toSeconds()` when passing to `getOrSet()`: `$cache->getOrSet(..., ttl: $ttl->toSeconds())`. |
+
+---
+
+## Related Topic Guides
+
+- [Cache Driver Adapters Guide](persistence-cache-drivers.md) — External PSR-16 driver adapters (`cache-redis`, `cache-db`, `cache-apcu`, `cache-memcached`, `cache-wincache`): Predis wiring, `DbCache` schema initialization, per-SAPI shared-memory traps, and driver anti-patterns.
+- [HTTP Response Caching (ETag) Guide](http-cache-etag.md) — RFC 7232 conditional requests, the `HttpCacheMiddleware` PSR-15 recipe, and action-level conditional GET.
+- [Persistence: Plain DB Guide](persistence-db.md) — Query caching and cache invalidation strategies for repositories.
+- [Testing Core Guide](testing-core.md) — `MemorySimpleCache` fault-injection flags and `SimpleCacheActionLogger` semantics (§7 references its PSR-16 section).

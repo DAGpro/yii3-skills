@@ -13,7 +13,10 @@
   - [2.3. Idiomatic Authentication via yiisoft/auth](#23-idiomatic-authentication-via-yiisoftauth)
   - [2.4. Response Post-Processing (Security Headers)](#24-response-post-processing-security-headers)
   - [2.5. Exception Mapping Responder via yiisoft/error-handler](#25-exception-mapping-responder-via-yiisofterror-handler)
+  - [2.6. RBAC Permission Guard (AccessCheckerMiddleware)](#26-rbac-permission-guard-accesscheckermiddleware)
 - [3. Official Yii3 Middlewares Catalog](#3-official-yii3-middlewares-catalog)
+  - [3.1. SessionMiddleware Behavior](#31-sessionmiddleware-behavior)
+  - [3.2. CSRF Middleware Behavior](#32-csrf-middleware-behavior)
 - [4. Registration Scopes & Pipelines](#4-registration-scopes--pipelines)
   - [4.1. Global Application Pipeline (config/web/di/application.php)](#41-global-application-pipeline-configwebdiapplicationphp)
   - [4.2. Route Group Pipeline (config/web/routes.php)](#42-route-group-pipeline-configwebroutesphp)
@@ -216,48 +219,23 @@ final readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
 
 Yii3 provides the official `Yiisoft\Auth\Middleware\Authentication` middleware. It delegates identity verification to standard authenticators (such as `HttpBearer` or `HttpHeader`) and automatically binds the authenticated identity to `$request->getAttribute(Authentication::class)`.
 
+Downstream actions only need to read that attribute — the middleware guarantees it is populated, or the request was already rejected with a `401` challenge:
+
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Application\Controller;
-
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Auth\IdentityInterface;
-use Yiisoft\Auth\Middleware\Authentication;
-use Yiisoft\Http\Header;
-use Yiisoft\Http\Status;
-
-use function json_encode;
-
-use const JSON_THROW_ON_ERROR;
-
-final readonly class ProfileController
+// App\Presentation\Action\ProfileAction
+public function __invoke(ServerRequestInterface $request): ResponseInterface
 {
-    public function __construct(
-        private ResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function index(ServerRequestInterface $request): ResponseInterface
-    {
-        // Identity was verified and attached by Yiisoft\Auth\Middleware\Authentication
-        /** @var IdentityInterface|null $identity */
-        $identity = $request->getAttribute(Authentication::class);
-
-        $response = $this->responseFactory->createResponse(Status::OK);
-        $response->getBody()->write(
-            json_encode([
-                'id' => $identity?->getId(),
-            ], JSON_THROW_ON_ERROR),
-        );
-
-        return $response->withHeader(Header::CONTENT_TYPE, 'application/json');
-    }
+    /** @var IdentityInterface|null $identity */
+    $identity = $request->getAttribute(Authentication::class);
+    // ... build the PSR-7 response for the authenticated identity
 }
 ```
+
+> [!TIP]
+> **Actions & Controllers Reference:**
+> For the complete action-layer recipes on authentication and authorization (login/logout actions, guarding route
+> groups, identity injection into action signatures, and permission checks), see the
+> [Actions & Controllers Guide, §3.8 "Authentication & Authorization"](http-actions-and-controllers.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt).
 
 ---
 
@@ -355,6 +333,93 @@ final class ExceptionResponderFactory
 
 ---
 
+### 2.6. RBAC Permission Guard (`AccessCheckerMiddleware`)
+
+Beyond authentication, route-level **authorization** is enforced with a short PSR-15 guard that checks an RBAC permission for the current user before the action runs. Roles, permissions, assignments, and dynamic rules are defined in the RBAC layer — see the [Authentication & RBAC Guide, §8 "Role-Based Access Control (RBAC) Architecture"](infra-auth-and-rbac.md#8-role-based-access-control-rbac-architecture).
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+use Yiisoft\Http\Status;
+use Yiisoft\User\CurrentUser;
+
+final readonly class AccessCheckerMiddleware implements MiddlewareInterface
+{
+    public function __construct(
+        private string $permission,
+        private CurrentUser $currentUser,
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        if ($this->currentUser->isGuest()) {
+            return $this->responseFactory->createResponse(
+                ['error' => 'Authentication required'],
+                Status::UNAUTHORIZED
+            );
+        }
+
+        if (!$this->currentUser->can($this->permission)) {
+            return $this->responseFactory->createResponse(
+                ['error' => 'Access denied'],
+                Status::FORBIDDEN
+            );
+        }
+
+        return $handler->handle($request);
+    }
+}
+```
+
+Attaching the RBAC guard to route groups and single routes (the guard is created via a closure so the container injects `CurrentUser` and the response factory per request):
+
+```php
+declare(strict_types=1);
+
+use App\Presentation\Action\Admin\ListUsersAction;
+use App\Presentation\Middleware\AccessCheckerMiddleware;
+use Yiisoft\Auth\Middleware\Authentication;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+use Yiisoft\Router\Group;
+use Yiisoft\Router\Route\Get;
+use Yiisoft\User\CurrentUser;
+use Yiisoft\User\Login\LoginMiddleware;
+
+(new Group('/admin'))
+    ->middleware(Authentication::class)
+    ->middleware(LoginMiddleware::class)
+    ->middleware(
+        static fn (
+            CurrentUser $currentUser,
+            DataResponseFactoryInterface $responseFactory,
+        ): AccessCheckerMiddleware => new AccessCheckerMiddleware('adminAccess', $currentUser, $responseFactory)
+    )
+    ->routes(
+        (new Get('/users'))
+            ->action(ListUsersAction::class)
+            ->middleware(
+                static fn (
+                    CurrentUser $currentUser,
+                    DataResponseFactoryInterface $responseFactory,
+                ): AccessCheckerMiddleware => new AccessCheckerMiddleware('manageUsers', $currentUser, $responseFactory)
+            )
+            ->name('admin.users'),
+    );
+```
+
+> [!NOTE]
+> `AccessCheckerMiddleware` depends on `Yiisoft\User\CurrentUser`, which is populated by `LoginMiddleware` (the identity bridge). Keep the ordering `Authentication → LoginMiddleware → AccessCheckerMiddleware` — see §4.1 for the pipeline invariant and the [Authentication & RBAC Guide](infra-auth-and-rbac.md) for `CurrentUser` wiring and RBAC configuration.
+
+---
+
 ## 3. Official Yii3 Middlewares Catalog
 
 The following table documents verified PSR-15 middlewares across official `yiisoft/*` packages:
@@ -363,14 +428,10 @@ The following table documents verified PSR-15 middlewares across official `yiiso
 |---|---|---|---|
 | `Yiisoft\ErrorHandler\Middleware\ErrorCatcher` | `yiisoft/error-handler` | Ingress / Egress | Catches all downstream throwables, dispatches `ApplicationError` event, and renders error responses using `ThrowableResponseFactoryInterface`. Dependencies: `ThrowableResponseFactoryInterface $throwableResponseFactory`, `?EventDispatcherInterface $eventDispatcher = null`. |
 | `Yiisoft\ErrorHandler\Middleware\ExceptionResponder` | `yiisoft/error-handler` | Ingress / Egress | Maps specific exceptions to status codes or custom responses. Dependencies: `array $exceptionMap`, `ResponseFactoryInterface $responseFactory`, `Injector $injector`, `bool $checkResponseBody = false`. |
-| `Yiisoft\Session\SessionMiddleware` | `yiisoft/session` | Ingress / Egress | Manages session lifecycle. Restores session ID from request cookies, commits session on egress, and discards state if downstream throws. Dependencies: `SessionInterface $session`. *(Note: namespace is `Yiisoft\Session`, NOT `Yiisoft\Session\Middleware`)*. |
-| `Yiisoft\Csrf\CsrfTokenMiddleware` | `yiisoft/csrf` | Ingress / Guard | Validates CSRF tokens (`_csrf` param or `X-CSRF-Token` header) for unsafe methods (`POST`, `PUT`, `DELETE`, `PATCH`). Dependencies: `ResponseFactoryInterface $responseFactory`, `CsrfTokenInterface $token`, `?RequestHandlerInterface $failureHandler = null`. *(Replaces deprecated `CsrfMiddleware`)*. |
-| `Yiisoft\Csrf\CsrfTokenCookieMiddleware` | `yiisoft/csrf` | Egress | Publishes current CSRF token into client-readable `XSRF-TOKEN` response cookie with `Cache-Control: no-store` for SPA/Axios clients. Place before `CsrfTokenMiddleware`. Constructor and cookie semantics — see [HTTP State Guide, §5.2](http-state.md). |
-| `Yiisoft\Csrf\CsrfHeaderMiddleware` | `yiisoft/csrf` | Ingress / Guard | Validates custom HTTP header CSRF (`X-CSRF-Header`) for AJAX/SPA requests. Dependencies: `ResponseFactoryInterface $responseFactory`, `?RequestHandlerInterface $failureHandler = null`. |
-
-> [!TIP]
-> For session API, flash messages, cookie signing/encryption, CSRF token implementations, and the required
-> middleware ordering (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → Router`), see [HTTP State Guide](http-state.md).
+| `Yiisoft\Session\SessionMiddleware` | `yiisoft/session` | Ingress / Egress | Manages session lifecycle. Restores session ID from request cookies, commits session on egress, and discards state if downstream throws. Dependencies: `SessionInterface $session`. Full behavior — see §3.1. *(Note: namespace is `Yiisoft\Session`, NOT `Yiisoft\Session\Middleware`)*. |
+| `Yiisoft\Csrf\CsrfTokenMiddleware` | `yiisoft/csrf` | Ingress / Guard | Validates CSRF tokens (parsed-body param `_csrf`, falling back to the `X-CSRF-Token` header) for unsafe methods. Dependencies: `ResponseFactoryInterface $responseFactory`, `CsrfTokenInterface $token`, `?RequestHandlerInterface $failureHandler = null`. Configuration, failure handling, and the `withSafeMethods()` trap — see §3.2. *(Replaces deprecated `CsrfMiddleware`)*. |
+| `Yiisoft\Csrf\CsrfTokenCookieMiddleware` | `yiisoft/csrf` | Egress | Publishes the current CSRF token into a client-readable `XSRF-TOKEN` response cookie for SPA/Axios clients. Must be placed **before** `CsrfTokenMiddleware`. Dependencies: `CsrfTokenInterface $token` (cookie and `$cacheControl` options). Constructor and cookie semantics — see §3.2. |
+| `Yiisoft\Csrf\CsrfHeaderMiddleware` | `yiisoft/csrf` | Ingress / Guard | Validates the presence of a custom CSRF header (`X-CSRF-Header`) for AJAX/SPA requests; takes no `CsrfTokenInterface`. Dependencies: `ResponseFactoryInterface $responseFactory`, `?RequestHandlerInterface $failureHandler = null`. Header semantics and method terminology — see §3.2. |
 | `Yiisoft\RequestProvider\RequestCatcherMiddleware` | `yiisoft/request-provider` | Ingress | Captures current `$request` into `RequestProviderInterface $provider` so DI-resolved domain services can access request context. Dependencies: `RequestProviderInterface $provider`. |
 | `Yiisoft\Request\Body\RequestBodyParser` | `yiisoft/request-body-parser` | Ingress | Parses raw HTTP body (`application/json` via `JsonParser`) into `$request->withParsedBody()`. Returns HTTP 400 on malformed payloads. Dependencies: `ResponseFactoryInterface $responseFactory`, `ContainerInterface $container`, `?BadRequestHandlerInterface $badRequestHandler = null`. |
 | `Yiisoft\Router\Middleware\Router` | `yiisoft/router` | Ingress / Terminal | Matches route via `UrlMatcherInterface`. Sets `CurrentRoute`. Dispatches route-level middleware stack. Returns HTTP 405 with `Allow` header on method mismatch. Dependencies: `UrlMatcherInterface $matcher`, `ResponseFactoryInterface $responseFactory`, `MiddlewareFactory $middlewareFactory`, `CurrentRoute $currentRoute`, `?EventDispatcherInterface $eventDispatcher = null`. |
@@ -391,6 +452,29 @@ The following table documents verified PSR-15 middlewares across official `yiiso
 | `Yiisoft\Yii\Middleware\IpFilter` | `yiisoft/yii-middleware` | Ingress / Guard | Restricts incoming requests to specified IPv4/IPv6 ranges using `IpRanges`. Responds with HTTP 403 Forbidden for disallowed clients. Dependencies: `ValidatorInterface $validator`, `ResponseFactoryInterface $responseFactory`, `?string $clientIpAttribute = null`, `array $ipRanges = []`. |
 | `Yiisoft\Yii\Middleware\Subfolder` | `yiisoft/yii-middleware` | Ingress | Adjusts URI path and sets `@baseUrl` alias when Yii3 application is served from a subfolder rather than root domain. Must precede `Router`. Dependencies: `UrlGeneratorInterface $uriGenerator`, `Aliases $aliases`, `?string $prefix = null`, `?string $baseUrlAlias = '@baseUrl'`. |
 | `Yiisoft\ProxyMiddleware\TrustedHostsNetworkResolver` | `yiisoft/proxy-middleware` | Ingress | Resolves client IP, protocol, host, and port behind reverse proxies using `X-Forwarded-*` or RFC 7239 `Forwarded` headers. Configured via `withTrustedIps(array $trustedIps)`. Stores client IP in attribute `TrustedHostsNetworkResolver::ATTRIBUTE_REQUEST_CLIENT_IP`. |
+
+> [!TIP]
+> For session API, flash messages, cookie signing/encryption, CSRF token implementations, and the required
+> middleware ordering (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → Router`), see [HTTP State Guide](http-state.md).
+
+### 3.1. SessionMiddleware Behavior
+
+`Yiisoft\Session\SessionMiddleware` (constructor: `SessionInterface $session`) drives the per-request session lifecycle around the downstream handler:
+
+- **Ingress:** reads the session id from the request cookie named by `$session->getName()` and calls `setId()` **only when the session has no id yet** — an already-set id is never overwritten.
+- **Egress:** on any downstream `Throwable` it **discards** the session (uncommitted changes are lost) and re-throws; otherwise it `close()`s an active session and appends a `Set-Cookie` header **only when the session id changed** (cookie attributes come from `Session::getCookieParameters()`).
+- **HTTPS invariant:** throws `Yiisoft\Session\SessionException` when `cookie_secure` is enabled but the request scheme is not HTTPS; adds the `Secure` flag automatically for `SameSite=None`. The shipped params pre-override `cookie_secure` to `0` for local HTTP — see the [HTTP State Guide, §2.2](http-state.md#22-di-wiring--options).
+- **Token-authenticated APIs:** place `SessionMiddleware` in a route **group** rather than the global pipeline, so sessions are not started for stateless, token-authenticated requests.
+
+### 3.2. CSRF Middleware Behavior
+
+Shared behavioral reference for the three CSRF middlewares (token implementations and token storage are owned by the [HTTP State Guide, §5.1](http-state.md#51-token-implementations); state-side DI wiring by its §5.2):
+
+- **`CsrfTokenMiddleware`** — the standard validator. Constants: `PARAMETER_NAME = '_csrf'`, `HEADER_NAME = 'X-CSRF-Token'`. The token is read from the parsed-body parameter `_csrf`, falling back to the `X-CSRF-Token` header. Immutable config: `withParameterName()`, `withHeaderName()`, `withSafeMethods()` (default safe methods `[GET, HEAD, OPTIONS]`); the getters `getParameterName()` / `getHeaderName()` let views and clients read the configured names instead of hard-coding `_csrf`. On failure: the configured `$failureHandler` runs, otherwise a `422` with a plain-text body is returned. (`CsrfMiddleware` — without "Token" — is **deprecated**; use `CsrfTokenMiddleware`.)
+- **`withSafeMethods()` replacement trap:** `withSafeMethods()` **replaces** the whole default `[GET, HEAD, OPTIONS]` list. The OPTIONS-only DI definition `'withSafeMethods()' => [[Method::OPTIONS]]` (`Method` is `Yiisoft\Http\Method` from `yiisoft/http`) is the official recipe for any-origin JavaScript SPAs, not a neutral syntax demo — after it, GET and HEAD are validated too.
+- **`CsrfHeaderMiddleware`** — AJAX/SPA variant: requires only the **presence** of a custom header (`HEADER_NAME = 'X-CSRF-Header'`; an empty value passes) — no token value matching, and it takes no `CsrfTokenInterface`. The default `'unsafe'` methods `[GET, HEAD, POST]` use **CORS-preflight terminology** (the methods for which the header is required), not HTTP-method safety; config: `withHeaderName()`, `withUnsafeMethods()`. A custom request header sent cross-origin requires CORS configuration.
+- **`CsrfTokenCookieMiddleware`** — for SPA (JS-readable double-submit): publishes the token in an `XSRF-TOKEN` cookie; the cookie is **not** HttpOnly (JavaScript must read it) and is never trusted as input. Constructor: `(CsrfTokenInterface $token, string $cookieName = self::COOKIE_NAME, string $path = '/', ?string $domain = null, ?bool $secure = null, ?string $sameSite = self::SAME_SITE_LAX, $cacheControl = true)`. `$cacheControl` is untyped in the signature (documented `bool|string`, runtime-checked): `true` (default) replaces `Cache-Control` with `no-store`, `false` leaves the header untouched, a string sets that value. `$secure = null` (default) resolves per request — secure over HTTPS, and always secure with `SameSite=None`.
+- **Ordering:** place `CsrfTokenCookieMiddleware` **before** `CsrfTokenMiddleware` so the token is published even on `422` responses, and `SessionMiddleware` before CSRF when the synchronizer token storage is session-backed. The official SPA cookie-flow wiring (`SessionMiddleware → CsrfTokenCookieMiddleware → CsrfTokenMiddleware` with `->withHeaderName('X-XSRF-TOKEN')`) together with the client-side usage is documented in the [HTTP State Guide, §5.3](http-state.md#53-forms--ajax-usage).
 
 ---
 
@@ -481,7 +565,19 @@ return [
 ```
 
 > [!NOTE]
-> In `yiisoft/middleware-dispatcher >= 5.5.0`, `MiddlewareDispatcher::withMiddlewares()` is deprecated in favor of passing middleware definitions directly to `__construct(['middlewareDefinitions' => [...]])`.
+> In `yiisoft/middleware-dispatcher >= 5.5.0`, `MiddlewareDispatcher::withMiddlewares()` is deprecated in favor of passing middleware definitions directly to `__construct(['middlewareDefinitions' => [...]])`. `MiddlewareDispatcher` reverses the definitions internally — never rely on the outdated "last specified handler will be executed first" sentence in its docblock: the first-listed definition is the outermost middleware and executes first.
+
+> [!NOTE]
+> **Authenticated pipelines:** the example above is the anonymous baseline. A typical authenticated web application
+> inserts the auth middlewares into the same global stack (canonical invariant from the
+> [Authentication & RBAC Guide](infra-auth-and-rbac.md)):
+> `ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`,
+> with route-specific access guards (`AccessCheckerMiddleware`, §2.6) attached inside route groups after `Router`
+> dispatches them. Hard constraints: `SessionMiddleware` must precede CSRF (synchronizer tokens live in the session);
+> `CookieLoginMiddleware` runs after `SessionMiddleware` (remember-me auto-login needs the session) and before
+> `Authentication` / `LoginMiddleware`, so the remembered identity is resolved before identity consumers run;
+> `Authentication` must precede route-level permission guards. For token-authenticated APIs, keep `SessionMiddleware`
+> and the CSRF middlewares out of the global pipeline and scope them to the route groups that need sessions (§3.1).
 
 ---
 
@@ -779,7 +875,8 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 - [Routing Guide](http-routes.md) — Route groups, URL generation, FastRoute parameters, and route middleware pipelines.
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Single-action invokable controllers, parameter resolution, and response factories.
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Authentication middleware methods, identity repositories, OAuth2/OIDC login (`AuthAction`), and RBAC rules.
-- [HTTP State Guide](http-state.md) — Sessions, cookies, flash messages, and headers.
+- [HTTP State Guide](http-state.md) — Session/cookie APIs, flash messages, CSRF token implementations, and state-side DI wiring.
+- [Error Handling & Exception Management Guide](infra-error-handling.md) — `ErrorCatcher` / `ExceptionResponder` internals, error renderers, and Sentry capture around the pipeline.
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
 - [Utility Packages Guide](core-utilities.md) — `IpHelper`/`IpRanges` for building custom IP allow/deny guards, and `DnsHelper` for domain validation.

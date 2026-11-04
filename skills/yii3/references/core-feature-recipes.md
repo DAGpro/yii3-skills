@@ -122,6 +122,10 @@ final readonly class ProductListService
 
 **Sorting:** build a whitelist with `Sort::only([...])` (each config item is shaped `['asc' => ..., 'desc' => ..., 'default' => ...]`) and parse the client order string with `->withOrderString('-title')` (a `-` prefix means descending). Apply the sort where the reader is constructed — `yiisoft/data-db`'s `QueryDataReader` takes `?Sort $sort = null` as its second constructor argument. `Sort::any()` disables the whitelist; use it only for trusted/internal listings.
 
+> [!TIP]
+> **Pagination & Sorting Reference:**
+> For the complete reference on `QueryDataReader` sorting (`Sort::only()` / `Sort::any()`) and `OffsetPaginator` behavior, see the [Persistence: Plain DB Guide, §5.1](persistence-db.md#51-querydatareader--sorting-sortonly-sortany) and [§5.2](persistence-db.md#52-offset-pagination-offsetpaginator).
+
 **API response composition** (fragment of an Archetype B list action):
 
 ```php
@@ -175,28 +179,10 @@ final class SendWelcomeEmailHandler implements HandlerInterface
 }
 ```
 
-**Handler mapping (params key, not DI):**
-
-```php
-// config/common/params.php (or config/console/params.php for console-only apps) —
-// the handler mapping is a params key of yiisoft/queue, not a DI definition:
-'yiisoft/queue' => [
-    'handlers' => [
-        'send-welcome-email' => \App\Notification\Queue\SendWelcomeEmailHandler::class,
-        // Callable form is also supported: 'generate-report' => [ReportHandler::class, 'handle'],
-    ],
-    'messages' => [],
-    'middlewares-push' => [],
-    'middlewares-consume' => [],
-    'middlewares-fail' => [], // built-in middlewares: SendAgainMiddleware, ExponentialDelayMiddleware
-],
-```
-
-**Push pattern (producer side):** inject `Yiisoft\Queue\QueueProducerInterface` and call `push(MessageInterface $message): MessageInterface`. Messages follow the `Yiisoft\Queue\Message\MessageInterface` factory contract `fromPayload(string $type, bool|int|float|string|array|null $payload): static`; check `vendor/yiisoft/queue/src/Message/` for the concrete message class in the installed version. Zero-config path: if the message type equals the handler FQCN, no `handlers` entry is needed. Track delivery with `status(string|int $id): MessageStatus` (`NOT_FOUND=0`, `WAITING=1`, `RESERVED=2`, `DONE=3`).
-
-**Workers:** the consumer commands `queue:run`, `queue:listen`, and `queue:listen-all` are auto-registered under `'yiisoft/yii-console' => ['commands' => [...]]` by the queue package.
-
-**Retry is NOT built into the core package:** configure the `middlewares-fail` list (built-in middlewares `SendAgainMiddleware`, `ExponentialDelayMiddleware`). Adapter notes: `queue-db` works with any `ConnectionInterface` (TTR default 300 s; ships the `queue` table migration), `queue-redis` requires ext-redis (a handler returning `true` acknowledges/deletes the message), `queue-amqp`'s `status()` throws `NotImplementedException` and delays require exchange settings. Adapters pin `yiisoft/queue` at dev-master — anchor wiring to the installed vendor versions (see the [Queue Jobs Guide](infra-queue-jobs.md)).
+> [!TIP]
+> **Queue & Jobs Reference:**
+> For the complete reference on producer push patterns (`QueueProducerInterface`, delayed execution, `status()` with the `MessageStatus` codes), custom message DTOs with the `fromPayload()` contract, handler mapping in params (including the zero-config path when the message type equals the handler FQCN), and worker CLI commands, see the [Queue & Asynchronous Jobs Guide, §3-§4](infra-queue-jobs.md#3-pushing-messages-to-queue).
+> For the push/consume/failure middleware pipelines and adapter specifics (`queue-db`, `queue-redis`, `queue-amqp`), see [§5](infra-queue-jobs.md#5-middleware-subsystems-failure-handling--pipelines) and [§8](infra-queue-jobs.md#8-multi-queue-configuration--broker-adapters).
 
 ---
 
@@ -301,7 +287,7 @@ final readonly class SignupAction
 </form>
 ```
 
-Note: CSRF is not auto-embedded by `yiisoft/form` or `yiisoft/form-model` — the middleware plus the rendered token handle it (see the [Validation & Forms Guide](http-validation-and-forms.md) and the [HTTP State Guide](http-state.md)).
+Note: CSRF is not auto-embedded by `yiisoft/form` or `yiisoft/form-model` — the middleware plus the rendered token handle it (see the [Validation & Forms Guide](http-validation-and-forms.md), the [HTTP State Guide](http-state.md), and the [Middlewares Guide, §3.2 — CSRF Middleware Behavior](http-middlewares.md#32-csrf-middleware-behavior)).
 
 ---
 
@@ -313,13 +299,13 @@ Processes background or maintenance tasks via command line interface (`yiisoft/y
    - Extends `Symfony\Component\Console\Command\Command` — there is NO Yii base command class in `yiisoft/yii-console/src/`; the real package commands are `final`.
    - Constructor injection of Use Cases / Services works (commands are resolved via the DI container); call `parent::__construct()` after promoted properties.
    - Arguments & options are configured in `configure()` (`addArgument('file', InputArgument::OPTIONAL, ...)`, `addOption('chunk', 'c', InputOption::VALUE_OPTIONAL, ...)`). `#[AsCommand]` sets **name/description only** (it is required in practice for lazy loading); the params-map command name overrides the attribute name.
-   - Uses `new SymfonyStyle($input, $output)` for styled terminal I/O; methods observed in real package code: `title`, `section`, `note`, `writeln`, `table`, `success`, `warning`, `error`, `confirm`, `choice` (free-form ask goes through `QuestionHelper::ask()` per Symfony docs).
-   - For batch/bulk processing:
-     * Stream or chunk data (generators / `iterable`) to avoid out-of-memory. Verified streaming reads in `yiisoft/db`: `Query::batch(int $batchSize = 100): BatchQueryResultInterface` and `Query::each()`.
-     * Terminal feedback: use the verified `SymfonyStyle` methods above; for a determinate progress bar, `Symfony\Component\Console\Helper\ProgressBar` is documented in the Symfony Console docs (symfony/console is a third-party dependency — verify against `vendor/symfony/console/`).
-     * Execute bulk database writes via `insertBatch(string $table, iterable $rows, array $columns = []): static` + `execute(): int` (named arguments `table`, `rows`, `columns`). `$rows` accepts generators; the whole batch is ONE SQL statement — size the chunks yourself.
    - Returns `Yiisoft\Yii\Console\ExitCode::OK` or `ExitCode::UNSPECIFIED_ERROR` as the app-level convention (recommended, not strictly enforced: the full sysexits palette and `getReason()` exist, and ecosystem packages also use Symfony's `Command::SUCCESS`/`FAILURE`/`INVALID`).
    - *Anti-pattern:* Never put raw SQL queries or business algorithms directly inside the command; delegate to Use Cases.
+
+> [!TIP]
+> **Console & Batch Reference:**
+> For the complete reference on styled terminal I/O (`SymfonyStyle` banners, tables, prompts, progress bars), see the [Console Commands Guide, §5](infra-commands.md#5-interactive-terminal-ux-with-symfonystyle); for exit-code conventions, see [§6](infra-commands.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode).
+> For memory-safe cursor streaming (`Query::each()` / `Query::batch()`) and bulk inserts, see the [Persistence: Plain DB Guide, §3.4](persistence-db.md#34-memory-safe-cursor-streaming-each--batch).
 
 **Reference command class** (Symfony Console imports follow the standard `Symfony\Component\Console\*` layout per Symfony docs — symfony/console is not re-exported by the yiisoft packages, so verify those exact class paths against `vendor/symfony/console/`):
 
@@ -361,10 +347,6 @@ final class ImportCommand extends Command
         $io->title('Catalog import');
 
         try {
-            // The handler streams data (yiisoft/db: Query::batch() / Query::each()) and issues
-            // bulk writes per chunk:
-            //   insertBatch(table: 'catalog_product', rows: $batchRows, columns: ['sku', 'title'])
-            //     ->execute(): int  — the whole batch is ONE SQL statement; size chunks yourself.
             foreach ($this->handler->readChunks() as $batchRows) {
                 $this->handler->importChunk($batchRows);
             }
@@ -427,15 +409,9 @@ Exposes complete collection and resource management with standard HTTP semantics
              (new Delete('/{id:\d+}'))->action(DeleteProductAction::class)->name('api.products.delete'),
          );
      ```
-     > **Version-aware route syntax.** The snippet uses the `yiisoft/router` >= 4.0.3 constructor
-     > classes (`Yiisoft\Router\Route\Get|Post|Put|Delete|Patch|Head|Options`). On released <= 4.0.2
-     > (pinned by the canonical app template, which itself uses them) those classes do not exist and
-     > the static factories are the only API: `Group::create('/api/products')->routes(Route::get(...), ...)`.
-     > On >= 4.0.3 the static factories `Route::get()`/`Route::post()` and `Group::create()` are `@deprecated`.
-     > Discriminator: check whether `vendor/yiisoft/router/src/Route/Get.php` exists in the installed project.
-     > Routes live in `config/common/routes.php` (the canonical template has no `routes-web` group); the
-     > `routes` config group is consumed by DI, which builds `RouteCollectionInterface` via
-     > `(new RouteCollector())->addRoute(...$config->get('routes'))` — see the [Routing Guide](http-routes.md).
+     > [!TIP]
+     > **Routing Reference:**
+     > **Version-aware route syntax:** the snippet uses the `yiisoft/router` >= 4.0.3 constructor classes — discriminator: check whether `vendor/yiisoft/router/src/Route/Get.php` exists in the installed project (static factories are deprecated since 4.0.3). For the complete reference on verb classes and route collection wiring, see the [Routing Guide, §1.1](http-routes.md#11-dedicated-http-verb-classes).
 
 ---
 
@@ -509,6 +485,10 @@ $uploadedFile = $request->getUploadedFiles()['avatar'] ?? null;
 // validate the DTO (#[File] attributes) via ValidatorInterface, then delegate to the Use Case
 // which hands the UploadedFileInterface to the storage service.
 ```
+
+> [!TIP]
+> **File Upload Reference:**
+> For the complete reference on `File` / `Image` validation rules and safe post-validation storage, see the [Validation & Forms Guide, §5](http-validation-and-forms.md#5-file--image-validation); for the upload pipeline and storage/wiring placement, see the [File Handling Guide, §4](http-file-handling.md#4-file-uploads-psr-7--validator) and [§5](http-file-handling.md#5-placement--wiring).
 
 ---
 
@@ -662,23 +642,23 @@ Deprecation-sensitive and error-prone APIs, verified against installed package s
 
 | # | Pitfall | Guidance | Anchor |
 |---|---|---|---|
-| 1 | `ViewRenderer` deprecated | `Yiisoft\Yii\View\Renderer\ViewRenderer` is `@deprecated` since yii-view-renderer 7.4.0 — use `WebViewRenderer` (`render(...): ResponseInterface`; the deprecated `ViewRenderer::render(string $view, array $parameters = [])` returns the legacy `DataResponse`). Layout defaults to none when unset | `vendor/yiisoft/yii-view-renderer/src/ViewRenderer.php`, `src/WebViewRenderer.php` |
+| 1 | `ViewRenderer` deprecated | `Yiisoft\Yii\View\Renderer\ViewRenderer` is `@deprecated` since yii-view-renderer 7.4.0 — use `WebViewRenderer` (`render(...): ResponseInterface`; the deprecated `ViewRenderer::render(string $view, array $parameters = [])` returns the legacy `DataResponse`). Layout defaults to none when unset. Full signature surface: [API Signatures Guide, §11](core-api-signatures.md#11-html-view-renderer-yiisoftyii-view-renderer) | `vendor/yiisoft/yii-view-renderer/src/ViewRenderer.php`, `src/WebViewRenderer.php` |
 | 2 | Legacy data-response surface | Root-namespace `DataResponseFactoryInterface`, `DataResponse`, and the formatter middleware are `@deprecated` — use `Yiisoft\DataResponse\ResponseFactory\*` factories: `createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = '')` has no `$headers` parameter (chain `->withHeader()` afterwards). `JsonResponseFactory` is self-contained for JSON APIs | `vendor/yiisoft/data-response/src/` |
-| 3 | CSRF class rename | `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated` (since csrf 2.2.0) — use `Yiisoft\Csrf\CsrfTokenMiddleware`: token read from the `_csrf` body param or `X-CSRF-Token` header, safe methods (GET/HEAD/OPTIONS) skipped, failure responds `422`. `SessionMiddleware` must precede it in the stack | `vendor/yiisoft/csrf/src/CsrfTokenMiddleware.php` |
+| 3 | CSRF class rename | `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated` (since csrf 2.2.0) — use `Yiisoft\Csrf\CsrfTokenMiddleware`: token read from the `_csrf` body param or `X-CSRF-Token` header, safe methods (GET/HEAD/OPTIONS) skipped, failure responds `422`. `SessionMiddleware` must precede it in the stack. Behavior details: [Middlewares Guide, §3.2](http-middlewares.md#32-csrf-middleware-behavior) | `vendor/yiisoft/csrf/src/CsrfTokenMiddleware.php` |
 | 4 | Mailer templates removed | Mailer template rendering (`MessageBodyRenderer`, `compose()`, `withTemplate()`) was removed in mailer 6.0.0 — render HTML via `yiisoft/view` and pass it to `withHtmlBody()`. The base package binds only `FileMailer`; the `MailerInterface => Mailer` binding ships with `yiisoft/mailer-symfony` | `vendor/yiisoft/mailer/` (CHANGELOG, `config/`) |
-| 5 | Router version skew | `yiisoft/router` <= 4.0.2: static factories `Route::get()/post()` + `Group::create()` are the only API. >= 4.0.3: constructor classes `Yiisoft\Router\Route\{Get,Post,Put,Delete,Patch,Head,Options}`, static factories `@deprecated`. Discriminator: existence of `vendor/yiisoft/router/src/Route/Get.php` | `vendor/yiisoft/router/src/Route.php`, `src/Route/Get.php` |
+| 5 | Router version skew | Discriminator: check whether `vendor/yiisoft/router/src/Route/Get.php` exists in the installed project — static factories are deprecated since 4.0.3. Verb-class syntax: [Routing Guide, §1.1](http-routes.md#11-dedicated-http-verb-classes) | `vendor/yiisoft/router/src/Route.php`, `src/Route/Get.php` |
 | 6 | Wrong data-reader name | There is NO `ArrayDataReader` in `yiisoft/data` 2.x — the in-memory reader is `Yiisoft\Data\Reader\Iterable\IterableDataReader` | `vendor/yiisoft/data/src/Reader/Iterable/` |
 | 7 | GridView namespace | The dataview grid FQCN has a doubled sub-namespace: `Yiisoft\Yii\DataView\GridView\GridView` | `vendor/yiisoft/yii-dataview/src/GridView/GridView.php` |
 | 8 | Hydration attributes location | `#[FromQuery]` / `#[FromBody]` live in `Yiisoft\Input\Http\Attribute\Data\*` (package `yiisoft/input-http`), NOT in `Yiisoft\Hydrator\*` | `vendor/yiisoft/input-http/src/Attribute/Data/` |
-| 9 | `Inflector` is instance-only | All `Yiisoft\Strings\Inflector` methods are instance methods: `(new Inflector())->toSlug('Hello World')` — never call statically | `vendor/yiisoft/strings/src/Inflector.php` |
-| 10 | No `StringHelper::truncate()` | `yiisoft/strings` 2.x provides `truncateBegin`, `truncateMiddle`, `truncateEnd`, `truncateWords`, `truncateWordsByLength` — there is no plain `truncate()` | `vendor/yiisoft/strings/src/StringHelper.php` |
-| 11 | `ArrayHelper::getValue()` dotted keys | Dotted string keys are NOT traversed by `getValue()` — use `getValueByPath()` or an array of keys | `vendor/yiisoft/arrays/src/ArrayHelper.php` |
-| 12 | RBAC fails closed | `CurrentUser::can()` returns `false` without an attached checker — `withAccessChecker()` must be applied by DI wiring. Without a configured guest role, guest checks also fail closed | `vendor/yiisoft/user/src/CurrentUser.php` |
-| 13 | Queue retry is opt-in | Retry is not built into `yiisoft/queue` core — configure `middlewares-fail` (built-ins `SendAgainMiddleware`, `ExponentialDelayMiddleware`). Payloads are scalars/recursive arrays only; handler mapping is a params key, not DI | `vendor/yiisoft/queue/config/params.php` |
-| 14 | No Yii base console command | Extend `Symfony\Component\Console\Command\Command` (no `Yiisoft\Yii\Console\Command` base class exists). `ExitCode::OK`/`UNSPECIFIED_ERROR` is the recommended app-level convention, not a package-enforced one | `vendor/yiisoft/yii-console/src/Command/` |
+| 9 | `Inflector` is instance-only | All `Yiisoft\Strings\Inflector` methods are instance methods: `(new Inflector())->toSlug('Hello World')` — never call statically. Method catalog: [Utility Packages Guide, §3.2](core-utilities.md#32-inflector-case-slugs-pluralization-transliteration) | `vendor/yiisoft/strings/src/Inflector.php` |
+| 10 | No `StringHelper::truncate()` | `yiisoft/strings` 2.x provides `truncateBegin`, `truncateMiddle`, `truncateEnd`, `truncateWords`, `truncateWordsByLength` — there is no plain `truncate()`. Available methods: [Utility Packages Guide, §3.1](core-utilities.md#31-stringhelper-32-utf-8-safe-methods) | `vendor/yiisoft/strings/src/StringHelper.php` |
+| 11 | `ArrayHelper::getValue()` dotted keys | Dotted string keys are NOT traversed by `getValue()` — use `getValueByPath()` or an array of keys. Path-aware access: [Utility Packages Guide, §2.1](core-utilities.md#21-getting-setting--removing-values-direct-and-by-path) | `vendor/yiisoft/arrays/src/ArrayHelper.php` |
+| 12 | RBAC fails closed | `CurrentUser::can()` returns `false` without an attached checker — `withAccessChecker()` must be applied by DI wiring. Without a configured guest role, guest checks also fail closed. Action-layer wiring: [Actions & Controllers Guide, §3.8](http-actions-and-controllers.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt) | `vendor/yiisoft/user/src/CurrentUser.php` |
+| 13 | Queue retry is opt-in | Retry is not built into `yiisoft/queue` core — see the [Queue & Asynchronous Jobs Guide, §5](infra-queue-jobs.md#5-middleware-subsystems-failure-handling--pipelines) for the failure middleware pipeline | `vendor/yiisoft/queue/config/params.php` |
+| 14 | No Yii base console command | Extend `Symfony\Component\Console\Command\Command` (no `Yiisoft\Yii\Console\Command` base class exists); exit-code conventions: [Console Commands Guide, §6](infra-commands.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode) | `vendor/yiisoft/yii-console/src/Command/` |
 | 15 | Upload contract is PSR-7 | `UploadedFileInterface` comes from `psr/http-message` (NOT `yiisoft/http`, which only ships header/status/method classes); `moveTo()` and temp-file semantics are PSR-7 contract — verify against `vendor/psr/http-message/` | `vendor/yiisoft/validator/src/Rule/File.php` |
 | 16 | Active Record `tableName()` | Non-static instance method (`public function tableName(): string`); overriding is optional (`{{%snake_case}}` derived from the class short name). A stale `public static` docblock example inside the package's `ActiveRecord.php` must not be copied. `save()` returns `void` | `vendor/yiisoft/active-record/src/` |
 | 17 | Dispatch is synchronous | PSR-14 listeners run inline before `dispatch()` returns (no outbox/deferral) — this is why the post-commit invariant in §4 matters | `vendor/yiisoft/event-dispatcher/src/Dispatcher/Dispatcher.php` |
-| 18 | form-model strict fill | Only properties carrying validation rules are populated from request data by default — `#[Safe]` opts a property out | `vendor/yiisoft/form-model/src/FormHydrator.php` |
-| 19 | Views are not auto-escaped | Template output is NOT escaped automatically — escape with `Html::encode()` | `vendor/yiisoft/view/` (docs: use-in-web-environment) |
+| 18 | form-model strict fill | Only properties carrying validation rules are populated from request data by default — `#[Safe]` opts a property out. Hydration & mass-assignment details: [Validation & Forms Guide, §8.2](http-validation-and-forms.md#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection) | `vendor/yiisoft/form-model/src/FormHydrator.php` |
+| 19 | Views are not auto-escaped | Template output is NOT escaped automatically — escape with `Html::encode()`. Escaping catalog: [Views & Widgets Guide, §4](http-views-and-widgets.md#4-mandatory-xss-escaping--safe-html-yiisofthtmlhtml) | `vendor/yiisoft/view/` (docs: use-in-web-environment) |
 | 20 | Event config fails late | Config-format errors throw at build time, but bad listener definitions pass config build and fail at dispatch — run `ListenerConfigurationChecker::check()` in development (timing details: [Events & Listeners Guide](core-events-and-listeners.md), section 4.3) | `vendor/yiisoft/yii-event/src/ListenerConfigurationChecker.php` |

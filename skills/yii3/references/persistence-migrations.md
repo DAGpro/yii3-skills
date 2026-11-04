@@ -1189,3 +1189,4 @@ Only when no additional databases are configured does the command fall back to t
 - [Active Record Persistence Guide](persistence-active-record.md) — Active Record models, relations, lifecycle, and LazyLoadGuard.
 - [Cycle ORM Persistence Guide](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
 - [Console Commands Guide](infra-commands.md) — Running migration commands (`./yii migrate:*`) and console runners.
+- [I18n & Translation Guide](http-i18n-translation.md) — Creating the `yii_source_message` / `yii_message` translation schema for the DB message source.

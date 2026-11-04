@@ -288,6 +288,9 @@ $runner->run();
 - *(Deprecated)* `bool $useContentLengthMiddleware = true`: Deprecated in favor of `ContentLengthMiddleware`.
 - *(Deprecated)* `bool $useHeadRequestMiddleware = true`: Deprecated in favor of `HeadRequestMiddleware`.
 
+> [!NOTE]
+> **The runner reads no environment variables itself** — `environment` is an ordinary constructor parameter (`?string $environment = null`). Environment detection happens one level up: the `yiisoft/app` template passes `App\Environment::appEnv()` (backed by `APP_ENV`, default `'prod'`; invalid values throw `RuntimeException`: `APP_ENV="%s" is invalid. Valid values are "dev", "test", "prod".`) and `App\Environment::appDebug()` (backed by `APP_DEBUG`). Snippets like `$_ENV['YII_ENV'] ?? null` appear only in runner README examples — do not mistake them for runner behavior.
+
 ---
 
 ### 2.2. Temporary Error Handling Mechanics
@@ -388,45 +391,11 @@ public function runAndGetResponse(?ServerRequestInterface $request = null): Resp
 3. Dispatches the full application pipeline, firing `ApplicationStartup`, `BeforeRequest`, `AfterRequest`, `AfterEmit`, and `ApplicationShutdown`.
 4. Returns the generated PSR-7 `ResponseInterface` directly to the test assertion.
 
-#### Canonical Functional Test Example:
+Complete functional test classes — direct `ServerRequestFactory` dispatch, the higher-level `FunctionalTestCase` from `yiisoft/yii-testing` (§1.1 there), and Codeception `Cest` wiring — are owned by the HTTP testing guide:
 
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Tests\Functional;
-
-use HttpSoft\Message\ServerRequestFactory;
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Http\Method;
-use Yiisoft\Http\Status;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
-
-final class SiteControllerTest extends TestCase
-{
-    public function testIndexPageReturnsSuccessfulResponse(): void
-    {
-        $root = dirname(__DIR__, 2);
-
-        $runner = new HttpApplicationRunner(
-            rootPath: $root,
-            debug: true,
-            checkEvents: true,
-            environment: 'test',
-        );
-
-        $request = (new ServerRequestFactory())
-            ->createServerRequest(Method::GET, '/');
-
-        $response = $runner->runAndGetResponse($request);
-
-        $this->assertSame(Status::OK, $response->getStatusCode());
-        $this->assertSame('text/html; charset=UTF-8', $response->getHeaderLine('Content-Type'));
-        $this->assertStringContainsString('Welcome to Yii3', (string) $response->getBody());
-    }
-}
-```
+> [!TIP]
+> **In-Memory HTTP Testing Reference:**
+> For the complete reference on functional HTTP tests dispatched through `runAndGetResponse()` — full test classes, `FunctionalTestCase`, and Codeception wiring — see the [HTTP Testing Guide, §5. In-Memory HTTP Testing via `HttpApplicationRunner`](testing-http.md#5-in-memory-http-testing-via-httpapplicationrunner).
 
 ---
 
@@ -734,6 +703,9 @@ $runner = new RoadRunnerHttpApplicationRunner(
 
 $runner->run();
 ```
+
+> [!WARNING]
+> **Named-argument portability:** `RoadRunnerHttpApplicationRunner` does not accept `temporaryErrorHandler` in its constructor — use the `withTemporaryErrorHandler()` setter. `FrankenPHPApplicationRunner` accepts it, and additionally exposes `configModifiers`, `configDirectory`, `vendorDirectory`, and `configMergePlanFile`. The `MAX_REQUESTS` environment variable bounds the FrankenPHP worker loop.
 
 ---
 
@@ -1223,3 +1195,4 @@ $this->resetters[] = $callback->bindTo($instance, $instance::class);
 - [HTTP State Guide](http-state.md) — Sessions, cookies, and CSRF token handling.
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — `CurrentUser` lifecycle and identity management.
 - [Events & Listeners Guide](core-events-and-listeners.md) — Application lifecycle event classes, payloads, and dispatch points (its sections 6.1–6.2).
+- [HTTP Testing Guide](testing-http.md) — Functional HTTP testing dispatched in-memory through `HttpApplicationRunner::runAndGetResponse()` (§5).

@@ -958,82 +958,29 @@ final readonly class ViewPostAction
 
 ### 7.1. Storage Failure Simulation with MemorySimpleCache
 
-The `yiisoft/test-support` package provides `Yiisoft\Test\Support\SimpleCache\MemorySimpleCache`. It provides public boolean flags to simulate storage hardware failures and timeout exceptions without mocking frameworks:
-
-- `$memoryCache->returnOnSet = false;` (causes `set()` to return `false`)
-- `$memoryCache->returnOnDelete = false;` (causes `delete()` to return `false`)
-- `$memoryCache->returnOnClear = false;` (causes `clear()` to return `false`)
+`Yiisoft\Test\Support\SimpleCache\MemorySimpleCache` is an in-memory PSR-16 double with public boolean fault-injection flags: `$memoryCache->returnOnSet = false;` (plus the `returnOnDelete` / `returnOnClear` counterparts) makes `set()`, `delete()`, and `clear()` return `false`, simulating storage failures without a mocking framework. Under `yiisoft/cache`, a failed `set()` inside `getOrSet()` surfaces as a `SetCacheException`.
 
 ### 7.2. Inspecting Cache Operations with SimpleCacheActionLogger
 
-Wrap any PSR-16 cache with `Yiisoft\Test\Support\SimpleCache\SimpleCacheActionLogger` to record every cache interaction:
-- Records actions as `Action` instances (`Action::GET`, `Action::SET`, `Action::DELETE`, `Action::CLEAR`, `Action::HAS`).
-- Inspect call sequences with `$logger->getActionKeyList(): array<int, array{0: string, 1: mixed}>`.
-
-Complete unit test demonstrating verification of cache hits and fault injection:
+Wrap any PSR-16 cache with `Yiisoft\Test\Support\SimpleCache\SimpleCacheActionLogger` to record every interaction as `Action` constants (`Action::GET`, `Action::SET`, `Action::DELETE`, `Action::CLEAR`, `Action::HAS`) — inspect the call sequence with `$logger->getActionKeyList()`. Note there is **no** `clearActions()` method: instantiate a fresh wrapper to record fresh actions. One compact zero-shot cache-hit assertion:
 
 ```php
-declare(strict_types=1);
-
-namespace App\Tests\Unit;
-
-use App\Catalog\Application\ProductCatalogService;
-use App\Catalog\Domain\Product;
-use App\Catalog\Domain\ProductRepositoryInterface;
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Cache\Cache;
-use Yiisoft\Cache\Exception\SetCacheException;
-use Yiisoft\Test\Support\SimpleCache\Action;
-use Yiisoft\Test\Support\SimpleCache\MemorySimpleCache;
-use Yiisoft\Test\Support\SimpleCache\SimpleCacheActionLogger;
-
-final class ProductCatalogServiceTest extends TestCase
+public function testGetFeaturedProductsIsCached(): void
 {
-    public function testGetFeaturedProductsIsCached(): void
-    {
-        $memoryCache = new MemorySimpleCache();
-        $logger = new SimpleCacheActionLogger($memoryCache);
-        $cache = new Cache($logger);
+    $logger = new SimpleCacheActionLogger(new MemorySimpleCache());
+    $service = new ProductCatalogService(new Cache($logger), $this->createMock(ProductRepositoryInterface::class));
 
-        $repository = $this->createMock(ProductRepositoryInterface::class);
-        $repository->expects(self::once())
-            ->method('findFeatured')
-            ->with(5)
-            ->willReturn([new Product(1, 'Notebook Pro')]);
+    $first = $service->getFeaturedProducts(5); // Populates the cache
+    $second = $service->getFeaturedProducts(5); // Served from cache
 
-        $service = new ProductCatalogService($cache, $repository);
-
-        // First call: executes repository and populates cache
-        $firstCall = $service->getFeaturedProducts(5);
-        self::assertCount(1, $firstCall);
-
-        // Second call: served from cache (repository mock called only once)
-        $secondCall = $service->getFeaturedProducts(5);
-        self::assertCount(1, $secondCall);
-
-        // Verify exact PSR-16 action sequence
-        $actions = $logger->getActionKeyList();
-        self::assertSame(Action::GET, $actions[0][0]);
-        self::assertSame(Action::SET, $actions[1][0]);
-        self::assertSame(Action::GET, $actions[2][0]);
-    }
-
-    public function testHandlesStorageFailureViaFaultInjection(): void
-    {
-        $memoryCache = new MemorySimpleCache();
-        $memoryCache->returnOnSet = false; // Simulate persistent storage write failure
-
-        $cache = new Cache($memoryCache);
-        $repository = $this->createMock(ProductRepositoryInterface::class);
-        $repository->method('findFeatured')->willReturn([new Product(1, 'Notebook Pro')]);
-
-        $service = new ProductCatalogService($cache, $repository);
-
-        $this->expectException(SetCacheException::class);
-        $service->getFeaturedProducts(5);
-    }
+    self::assertSame($first, $second);
+    self::assertSame([Action::GET, Action::SET, Action::GET], array_column($logger->getActionKeyList(), 0));
 }
 ```
+
+> [!TIP]
+> **Cache Testing Reference:**
+> For the complete reference on `MemorySimpleCache` fault-injection flags, `SimpleCacheActionLogger` / `Action` semantics, and the `clearActions()` trap, see the [Testing Core Guide, §3.3. PSR-16 Simple Cache (`MemorySimpleCache` & `SimpleCacheActionLogger`)](testing-core.md#33-psr-16-simple-cache-memorysimplecache--simplecacheactionlogger).
 
 ---
 

@@ -633,6 +633,10 @@ file_put_contents(
 > [!CAUTION]
 > **Anonymous Class Limitation:** Variables or properties that contain anonymous classes cannot be exported into evaluatable PHP code. `export()` falls back to a string literal representation.
 
+> [!TIP]
+> **Authentication & RBAC Guide Reference:**
+> For the full RBAC storage architecture — `yiisoft/rbac-php` file storages, concurrent-write decorators, and the `items.php` schema — see the [Authentication & RBAC Guide, §8.5](infra-auth-and-rbac.md#85-php-file-storage-yiisoftrbac-php).
+
 ---
 
 ## 6. `yiisoft/classifier` — Class Discovery

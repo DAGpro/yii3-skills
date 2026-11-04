@@ -310,36 +310,11 @@ final class RegisterUserTest
 ```
 
 #### In-Memory Functional HTTP Testing on Testo
-Because `yiisoft/yii-testing` requires PHPUnit, functional HTTP testing on the Testo path executes requests in-memory via `HttpApplicationRunner::runAndGetResponse()`:
+Because `yiisoft/yii-testing` requires PHPUnit, functional HTTP testing on the Testo path executes requests in-memory via `HttpApplicationRunner::runAndGetResponse()`: instantiate the runner with the project `rootPath` and `environment: 'test'`, create a PSR-7 `ServerRequest` (e.g. `HttpSoft\Message\ServerRequest`), call `runAndGetResponse($request)`, and assert the status code and body with `Testo\Assert`.
 
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Functional;
-
-use HttpSoft\Message\ServerRequest;
-use Testo\Assert;
-use Testo\Test;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
-
-#[Test]
-final class HomePageTest
-{
-    public function testHomePageReturnsOk(): void
-    {
-        $runner = new HttpApplicationRunner(
-            rootPath: dirname(__DIR__, 2),
-            environment: 'test',
-        );
-
-        $request = new ServerRequest(method: 'GET', uri: '/');
-        $response = $runner->runAndGetResponse($request);
-
-        Assert::same(200, $response->getStatusCode());
-        Assert::true(str_contains((string) $response->getBody(), 'Yii3'));
-    }
-}
-```
+> [!TIP]
+> **In-Memory HTTP Runner Reference:**
+> For the complete PHPUnit-based canonical recipe on runner construction, PSR-7 request creation, and body rewind/assertions, see the [Functional HTTP Testing Guide, §5](testing-http.md#5-in-memory-http-testing-via-httpapplicationrunner); mirror it on the Testo path using `#[Test]` classes and `Testo\Assert` instead of PHPUnit assertions.
 
 #### Execution
 ```bash
@@ -400,67 +375,11 @@ modules:
 
 #### Actor Roles and Cest Implementation
 
-##### 1. `FunctionalTester` (`tests/Support/FunctionalTester.php`)
-Executes in-memory HTTP requests using `HttpApplicationRunner::runAndGetResponse()` without launching an external web server:
+> [!TIP]
+> **Codeception HTTP Actor Reference:**
+> The `FunctionalTester` actor definition — `sendRequest()` dispatching in-memory PSR-7 requests via `HttpApplicationRunner::runAndGetResponse()` — and its functional Cest usage are owned by the [Functional HTTP Testing Guide, §7 Actor-Driven REST API Testing in Codeception](testing-http.md#7-actor-driven-rest-api-testing-in-codeception).
 
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Support;
-
-use Codeception\Actor;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
-
-class FunctionalTester extends Actor
-{
-    use _generated\FunctionalTesterActions;
-
-    public function sendRequest(ServerRequestInterface $request): ResponseInterface
-    {
-        $runner = new HttpApplicationRunner(
-            rootPath: dirname(__DIR__, 2),
-            environment: 'test',
-        );
-
-        $response = $runner->runAndGetResponse($request);
-
-        $body = $response->getBody();
-        if ($body->isSeekable()) {
-            $body->rewind();
-        }
-
-        return $response;
-    }
-}
-```
-
-##### 2. In-Memory Functional HTTP Test (`tests/Functional/HomePageCest.php`)
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Functional;
-
-use App\Tests\Support\FunctionalTester;
-use HttpSoft\Message\ServerRequest;
-use function PHPUnit\Framework\assertSame;
-use function PHPUnit\Framework\assertStringContainsString;
-
-final class HomePageCest
-{
-    public function testHomePageRenders(FunctionalTester $tester): void
-    {
-        $request = new ServerRequest(method: 'GET', uri: '/');
-        $response = $tester->sendRequest($request);
-
-        assertSame(200, $response->getStatusCode());
-        assertStringContainsString('Yii3', (string) $response->getBody());
-    }
-}
-```
-
-##### 3. `ConsoleTester` (`tests/Support/ConsoleTester.php`)
+##### 1. `ConsoleTester` (`tests/Support/ConsoleTester.php`)
 Runs `./yii` CLI commands via shell invocation:
 
 ```php
@@ -502,7 +421,7 @@ final class EchoCest
 }
 ```
 
-##### 4. `ApiTester` (`tests/Support/ApiTester.php`)
+##### 2. `ApiTester` (`tests/Support/ApiTester.php`)
 In `yiisoft/app-api`, REST endpoints are tested via `ApiTester` paired with `Codeception\Util\HttpCode`:
 
 ```php
@@ -527,7 +446,7 @@ final class UserApiCest
 }
 ```
 
-##### 5. `UnitTester` with `Codeception\Test\Unit`
+##### 3. `UnitTester` with `Codeception\Test\Unit`
 ```php
 declare(strict_types=1);
 
@@ -735,7 +654,8 @@ final class SimpleLoggerTest extends TestCase
 
         $this->assertCount(2, $messages);
         $this->assertSame(LogLevel::INFO, $messages[0]['level']);
-        // Placeholders matching /{([\w.]+)}/ are automatically interpolated from context!
+        // Placeholders matching /{([\w.]+)}/ are interpolated from top-level context keys only:
+        // dotted-path placeholders match the pattern but never traverse nested context arrays.
         $this->assertSame('User usr_123 signed in successfully.', $messages[0]['message']);
         $this->assertSame(['userId' => 'usr_123'], $messages[0]['context']);
 
@@ -1397,44 +1317,11 @@ final class RegisterUserDtoTest extends TestCase
 
 #### 2. Custom Validation Rule & Handler Testing
 
-Custom validation rules decouple definition (`RuleInterface`) from execution (`RuleHandlerInterface`). In tests, rule handlers with service dependencies can be tested in isolation (by instantiating the handler and calling `validate()` directly) or integrated with `Validator` via `SimpleRuleHandlerContainer`:
-
-```php
-declare(strict_types=1);
-
-namespace App\Tests\Unit\Validation;
-
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Validator\RuleHandlerResolver\SimpleRuleHandlerContainer;
-use Yiisoft\Validator\Validator;
-
-final class UniqueEmailRuleTest extends TestCase
-{
-    public function testFailsWhenEmailIsTaken(): void
-    {
-        $mockRepo = $this->createMock(UserCheckRepositoryInterface::class);
-        $mockRepo->expects($this->once())
-            ->method('isEmailTaken')
-            ->with('taken@example.com')
-            ->willReturn(true);
-
-        // Supply mock dependencies into SimpleRuleHandlerContainer
-        $handlerContainer = new SimpleRuleHandlerContainer([
-            UniqueEmailHandler::class => new UniqueEmailHandler($mockRepo),
-        ]);
-
-        $validator = new Validator(ruleHandlerResolver: $handlerContainer);
-        $result = $validator->validate('taken@example.com', [new UniqueEmail()]);
-
-        $this->assertFalse($result->isValid());
-        $this->assertSame(['This email is already registered.'], $result->getErrorMessages());
-    }
-}
-```
+Custom validation rules decouple definition (`RuleInterface`) from execution (`RuleHandlerInterface`). In tests, rule handlers with service dependencies can be tested in isolation (by instantiating the handler and calling `validate()` directly) or integrated with `Validator` via a `SimpleRuleHandlerContainer` preloaded with mocked handler dependencies.
 
 > [!TIP]
-> **Complete Custom Validation Guide & Isolated Testing:**
-> For `RuleInterface`, `RuleHandlerInterface`, `ValidationContext` inspection, composite rules, testing cross-property rules via `ArrayDataSet`, handling `UnexpectedRuleException`, and isolated handler unit tests without the validator engine, see [Custom Validation Rules & Testing](http-validation-custom-rules.md).
+> **Custom Validation Rule Testing Reference:**
+> For the complete recipe on integration-testing custom rules through the validator engine — `SimpleRuleHandlerContainer` wiring with mocked handler dependencies, DTO attribute discovery, and `skipOnEmpty` / `when` modifier behavior — see the [Custom Validation Rules & Testing Guide, §6.2 Strategy B](http-validation-custom-rules.md#62-strategy-b-integration-testing-via-validator-with-simplerulehandlercontainer).
 
 ---
 
@@ -1708,6 +1595,10 @@ Yii3 exit codes return constants from `Yiisoft\Yii\Console\ExitCode`, conforming
 - `ExitCode::SOFTWARE` (70) — Internal software exception.
 - `ExitCode::CONFIG` (78) — Misconfigured application state.
 
+> [!TIP]
+> **Exit Code Palette Reference:**
+> The complete 17-code `ExitCode` palette with FreeBSD sysexits semantics and `ExitCode::getReason()` inspection is owned by the [Console Commands Guide, §6 Standard Exit Codes](infra-commands.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode).
+
 ---
 
 ### 6.3. Output Assertion & Line-Ending Normalization (`CommandTester::getDisplay(true)`)
@@ -1877,6 +1768,9 @@ final class TruncateDatabaseCommandTest extends TestCase
 }
 ```
 
+> [!NOTE]
+> **Suppressing interactivity entirely:** `setInputs(['yes', ...])` pre-fills simulated answers for interactive prompts — use it only when the command under test actually prompts. To suppress prompts entirely, pass `['interactive' => false]` as the second argument of `CommandTester::execute()` (mirrors the production `--no-interaction` flag).
+
 ---
 
 ### 6.6. Autocompletion Testing via `CommandCompletionTester`
@@ -1968,6 +1862,9 @@ final class CommandHelper
     }
 }
 ```
+
+> [!IMPORTANT]
+> When assembling a real `Application` instance in a test, call `setAutoExit(false)` — otherwise a non-zero command exit code terminates the PHPUnit process.
 
 ---
 

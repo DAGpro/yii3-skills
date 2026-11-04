@@ -212,45 +212,11 @@ The map above is the complete `yiisoft/app` set — **19 groups**. There is deli
 
 ### 2.5. Booting the Application: Runners and `Config`
 
-Application templates do NOT construct `Config` manually. Entrypoints (`public/index.php`, `./yii`) instantiate runners — `Yiisoft\Yii\Runner\Http\HttpApplicationRunner` or `Yiisoft\Yii\Runner\Console\ConsoleApplicationRunner` — which create `Config` and the DI container lazily:
+Application templates do NOT construct `Config` manually. Entrypoints (`public/index.php`, `./yii`) instantiate runners — `Yiisoft\Yii\Runner\Http\HttpApplicationRunner` or `Yiisoft\Yii\Runner\Console\ConsoleApplicationRunner` — which create `Config` and the DI container lazily. The entry point constructs `HttpApplicationRunner` with `environment` (an ordinary `?string` constructor parameter — the template's `App\Environment::appEnv()` resolves it) and `temporaryErrorHandler` (the bootstrap error handler used while configuration and the container are still being compiled) — both passed before the container exists.
 
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Environment;
-use Yiisoft\ErrorHandler\ErrorHandler;
-use Yiisoft\ErrorHandler\Renderer\HtmlRenderer;
-use Yiisoft\Log\Logger;
-use Yiisoft\Log\StreamTarget;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
-
-$root = dirname(__DIR__);
-
-$runner = new HttpApplicationRunner(
-    rootPath: $root,
-    debug: Environment::appDebug(),
-    checkEvents: Environment::appDebug(),
-    environment: Environment::appEnv(),
-    temporaryErrorHandler: new ErrorHandler(
-        new Logger([
-            new StreamTarget(levels: [
-                \Psr\Log\LogLevel::EMERGENCY,
-                \Psr\Log\LogLevel::ERROR,
-                \Psr\Log\LogLevel::WARNING,
-            ]),
-        ]),
-        new HtmlRenderer(),
-    ),
-);
-$runner->run();
-```
-
-> [!NOTE]
-> **The runner reads no environment variables itself** — `environment` is an ordinary constructor parameter (`?string $environment = null`). Environment detection happens one level up: the `yiisoft/app` template passes `App\Environment::appEnv()` (backed by `APP_ENV`, default `'prod'`; invalid values throw `RuntimeException`: `APP_ENV="%s" is invalid. Valid values are "dev", "test", "prod".`) and `App\Environment::appDebug()` (backed by `APP_DEBUG`). Snippets like `$_ENV['YII_ENV'] ?? null` appear only in runner README examples — do not mistake them for runner behavior.
->
-> **Deprecated API note:** `StreamTarget::setLevels()` is deprecated in `yiisoft/log` 2.2.2 (unreleased at the time of writing) — pass the levels to the constructor (`new StreamTarget(levels: [...])`, as above; the `$levels` constructor parameter is available since 2.2.0).
+> [!TIP]
+> **Runners & Runtimes Reference:**
+> For the complete reference on the `public/index.php` entry point, full `HttpApplicationRunner` construction (including environment detection), and two-phase temporary error handling, see the [Runners & Runtimes Guide, §2.1–§2.2](infra-runners-and-runtimes.md#21-publicindexphp-entry-point--cli-server-bypass).
 
 The HTTP runner defaults to the groups `bootstrap-web`, `events-web`, `di-web`, `di-providers-web`, `di-delegates-web`, `di-tags-web`, `params-web`, plus `nestedParamsGroups: ['params']` and `nestedEventsGroups: ['events']`; the console runner defaults to the `-console` counterparts (`di-console`, `params-console`, ...). Every group is consulted only when it actually exists (a `has()` check) — the `yiisoft/app` template defines no `di-tags*` group (see 2.3).
 
@@ -785,19 +751,12 @@ return [
 ];
 ```
 
-> [!TIP]
-> **Closure Binding:** The `'reset'` callback must be a `Closure`; it is automatically bound to the service instance (`$callback->bindTo($instance, $instance::class)`). Inside the callback, `$this` refers directly to the service object, giving you direct access to reset private and protected properties without having to re-instantiate the object. Alternatively, the closure may declare `function (ContainerInterface $container)` and receive the container instead.
->
-> **Worker loop trigger:** both worker runners run the same contract on **every** iteration, including error paths: first `$application->afterEmit($response)`, then `$container->get(StateResetter::class)->reset()`, then `gc_collect_cycles()`.
->
-> **Caveats:**
-> - Resetters from definitions are applied only to services that have actually been instantiated.
-> - Resetters from definitions are ignored if you override `StateResetter::class` in definitions or service providers.
-> - For non-array definitions (plain class strings or closures), wrap them in a `'definition'` meta key to attach metadata:
->   `EngineInterface::class => ['definition' => EngineMarkOne::class, 'reset' => function (): void { /* ... */ }]`.
+The `'reset'` callback must be a `Closure` — the container binds it to the service instance (`$callback->bindTo($instance, $instance::class)`), so `$this` inside the callback is the service object with private/protected property access; alternatively the closure may declare `function (ContainerInterface $container)` and receive the container instead. For non-array definitions (plain class strings or closures), wrap them in a `'definition'` meta key to attach metadata:
+`EngineInterface::class => ['definition' => EngineMarkOne::class, 'reset' => function (): void { /* ... */ }]`.
 
-> [!WARNING]
-> **Named-argument portability:** `RoadRunnerHttpApplicationRunner` does not accept `temporaryErrorHandler` in its constructor — use the `withTemporaryErrorHandler()` setter. `FrankenPHPApplicationRunner` accepts it, and additionally exposes `configModifiers`, `configDirectory`, `vendorDirectory`, and `configMergePlanFile`. The `MAX_REQUESTS` environment variable bounds the FrankenPHP worker loop.
+> [!TIP]
+> **Worker State Reset Reference:**
+> For the complete reference on persistent-runtime state safety — the per-iteration worker-loop contract (`afterEmit()` → `StateResetter::reset()` → `gc_collect_cycles()`), the silent drop of definition resetters when `StateResetter::class` is overridden (§6.2), and closure scope binding (§6.5) — see the [Runners & Runtimes Guide, §6. Long-Running Worker Safety & StateResetter](infra-runners-and-runtimes.md#6-long-running-worker-safety--stateresetter).
 
 ---
 
@@ -851,6 +810,10 @@ final class UserModuleServiceProvider implements ServiceProviderInterface
 
 > [!WARNING]
 > **Deprecated API:** `MiddlewareDispatcher::withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — pass middleware definitions to the `MiddlewareDispatcher` **constructor** instead. The example is kept because it demonstrates the extension mechanism; in new code, wire middleware definitions through the constructor argument or the application's middleware stack.
+
+> [!TIP]
+> **Middlewares Reference:**
+> For the complete reference on the idiomatic middleware stack — declaring middleware in the global application pipeline — see the [PSR-15 Middlewares Guide, §4.1. Global Application Pipeline](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 Providers are accepted as class-strings or instances; class-strings are instantiated with `new $provider()`, so a provider needs a no-argument constructor. `getDefinitions()` runs at container construction; extensions collected from all providers are applied after all definitions, so an extension may target another provider's service.
 
@@ -1088,7 +1051,7 @@ Signature: `StrictFactory::__construct(array $definitions, ?ContainerInterface $
 ### 7.8. Overriding `StateResetter` Kills Definition Resetters
 - **Pitfall:** Defining `StateResetter::class` in definitions or service providers while also using `'reset'` metadata on service definitions.
 - **Consequence:** Resetters registered via `'reset'` metadata are silently ignored; per-request state stops being cleared.
-- **Solution:** Use either definition-level `'reset'` callbacks OR a manually configured `StateResetter` — never both.
+- **Solution:** Use either definition-level `'reset'` callbacks OR a manually configured `StateResetter` — never both. Container internals: [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md#62-the-stateresetterclass-definition-trap).
 
 ### 7.9. Resolution Exception Map
 
@@ -1118,8 +1081,8 @@ Container resolution failures surface as a small, well-defined exception set. Kn
 | ❌ **Passing raw alias `'@runtime/logs'` to constructor** | In Yii3, DI definitions do not automatically parse `@` string prefixes into paths. | ✅ Use `\Yiisoft\Aliases\AliasReference::to('@runtime/logs')` or inject `Yiisoft\Aliases\Aliases`. |
 | ❌ **Calling `$container->set(...)` at runtime** | `Yiisoft\Di\Container` is an immutable PSR-11 container; it has no `set()` method. | ✅ Declare all definitions in configuration arrays, or use `Yiisoft\Factory\Factory` / `Injector` for runtime instantiation. |
 | ❌ **Storing closures or service objects in `params.php`** | Parameters are merged across packages, environments, and DI files; closures hide service wiring in parameter files, resist environment overrides, and cannot be introspected. | ✅ Put service definitions and factory closures in `config/*/di/*.php`, never in `params.php`. |
-| ❌ **Leaving stateful singletons without `'reset'` in workers** | In persistent worker mode (RoadRunner, FrankenPHP, Swoole), singleton properties persist across HTTP requests, leaking user data. | ✅ Add `'reset' => function (): void { $this->resetInternalState(); }` to the service definition. |
-| ❌ **Defining `StateResetter::class` while also using `'reset'` metadata** | Definition-level resetters are silently ignored when `StateResetter` is overridden in definitions or providers. | ✅ Choose one mechanism: definition-level `'reset'` callbacks or a manually configured `StateResetter`. |
+| ❌ **Leaving stateful singletons without `'reset'` in workers** | In persistent worker mode (RoadRunner, FrankenPHP, Swoole), singleton properties persist across HTTP requests, leaking user data. | ✅ Add `'reset' => function (): void { $this->resetInternalState(); }` to the service definition — see [Runners & Runtimes Guide, §6](infra-runners-and-runtimes.md#6-long-running-worker-safety--stateresetter). |
+| ❌ **Defining `StateResetter::class` while also using `'reset'` metadata** | Definition-level resetters are silently ignored when `StateResetter` is overridden in definitions or providers. | ✅ Choose one mechanism: definition-level `'reset'` callbacks or a manually configured `StateResetter` — see [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md#62-the-stateresetterclass-definition-trap). |
 | ❌ **Passing default option values as the second `Factory` constructor argument** | `Factory::__construct(?ContainerInterface $container = null, array $definitions = [], ...)` expects a definitions map; arbitrary scalar arrays fail `DefinitionValidator`. | ✅ Pass real definitions (`['service-id' => [...definition...]]`) or omit the argument; use `create()` for per-call configuration. |
 | ❌ **Using `StrictFactory::create()` with a class name or inline array** | `StrictFactory::create(string $id)` is string-typed: an unregistered class-string throws `NotFoundException`; an inline definition array fails with a PHP `TypeError` before any factory logic runs. | ✅ Register a definition for the ID first, or use `Factory` / `Injector::make()` for ad-hoc creation. |
 | ❌ **Circular dependencies (`ServiceA` -> `ServiceB` -> `ServiceA`)** | Causes `Yiisoft\Definitions\Exception\CircularReferenceException` during container resolution. | ✅ Refactor using domain events (PSR-14), dedicated use cases, or extract an intermediate interface/provider. |
@@ -1145,4 +1108,5 @@ php scripts/check-di-syntax.php [path-to-project]
 ## 9. Related Topic Guides
 
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `HttpApplicationRunner`, `ConsoleApplicationRunner`, and RoadRunner/FrankenPHP workers with `StateResetter`.
+- [Logging Guide](infra-logging.md) — PSR-3 logger wiring and targets, including the `StreamTarget` used by runner temporary error handlers.
 - [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 event mapping and listener registration in config groups.

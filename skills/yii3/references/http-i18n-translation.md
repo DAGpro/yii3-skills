@@ -502,15 +502,18 @@ Tables are **not** created automatically. Two verified options:
 
 1. `Yiisoft\Translator\Message\Db\DbSchemaManager::ensureTables()` (constructor takes `ConnectionInterface`;
    also `ensureNoTables()`) — `vendor/yiisoft/translator-message-db/src/DbSchemaManager.php:18-78`.
-2. A migration via `yiisoft/db-migration` (no base `Migration` class exists — migrations implement
-   `MigrationInterface` / `RevertibleMigrationInterface` with `up(MigrationBuilder $b): void` /
-   `down(MigrationBuilder $b): void`; `vendor/yiisoft/db-migration/src/RevertibleMigrationInterface.php:15-27`).
-   Commands `migrate:up`, `migrate:create`, `migrate:down`, `migrate:history`, `migrate:new`, `migrate:redo`,
-   `migrate:mark` are registered by the package's `config/params.php` under the `yiisoft/yii-console` `commands`
-   param.
+2. A migration via `yiisoft/db-migration` — the compact skeleton below shows only the
+   translation-specific schema.
+
+> [!TIP]
+> **Migrations Reference:**
+> For the complete reference on writing migrations — the `MigrationInterface` / `RevertibleMigrationInterface`
+> contracts, `MigrationBuilder` and `ColumnBuilder` schema construction, `addForeignKey()` named-argument
+> semantics with `ReferentialAction::*`, and the `migrate:*` console commands — see the
+> [Migrations Guide, §3 "Schema Construction with Modern `ColumnBuilder`"](persistence-migrations.md#3-schema-construction-with-modern-columnbuilder).
 
 ```php
-// A revertible migration creating the translation schema.
+// Revertible migration creating the translation schema (i18n-specific skeleton).
 declare(strict_types=1);
 
 use Yiisoft\Db\Constant\ReferentialAction;
@@ -535,8 +538,7 @@ final class M250101000000CreateTranslationTables implements RevertibleMigrationI
             'id' => $columnBuilder::integer(),
             'locale' => $columnBuilder::string(16),
             'translation' => $columnBuilder::text(),
-            'PRIMARY KEY(id, locale)', // composite PK via raw definition string (same pattern as the
-                                        // `migrate:create` generator output for composite keys)
+            'PRIMARY KEY(id, locale)', // composite PK via raw definition string
         ]);
         $b->createIndex('{{%yii_message}}', 'IDX_yii_message_locale', 'locale');
 
@@ -558,11 +560,6 @@ final class M250101000000CreateTranslationTables implements RevertibleMigrationI
     }
 }
 ```
-
-(`$b->columnBuilder()` returns the driver's `Yiisoft\Db\Schema\Column\ColumnBuilder` class name;
-`addForeignKey(..., ?string $delete = null, ?string $update = null)` accepts `ReferentialAction::*` —
-`vendor/yiisoft/db-migration/src/MigrationBuilder.php:48,509-517`; `ReferentialAction` constants:
-`vendor/yiisoft/db/src/Constant/ReferentialAction.php:25-45`.)
 
 For reference, the package's own MySQL DDL (`vendor/yiisoft/translator-message-db/sql/mysql-up.sql:1-15`;
 `sql/` ships the same up/down pairs for mysql, oci, pgsql, sqlite, sqlsrv):
@@ -833,6 +830,13 @@ return [
 ];
 ```
 
+> [!TIP]
+> **Routing Reference:**
+> For the complete reference on the routing side of locale handling — multilingual route table setup
+> (`Group('/{_language:[a-z]{2}}')`), `_language` URL generation coupling, ingress path rewriting, 302
+> canonicalization, and the `Subfolder` → `Locale` → `Router` pipeline ordering — see the
+> [Routing Guide, §6.4 "Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)"](http-routes.md#64-multilingual-routing--locale-management-yiisoftyiimiddlewarelocale).
+
 ## 7. Missing Translation Events
 
 Events are **optional by design**: the translator's `$eventDispatcher` is nullable and the shipped DI wiring uses
@@ -1009,3 +1013,4 @@ plain strings internally.
 - [Validation & Forms Guide](http-validation-and-forms.md) — Translating validation rule messages and attribute labels.
 - [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — Localization inside templates and view injections.
 - [Events & Listeners Guide](core-events-and-listeners.md) — Handling SetLocaleEvent and MissingTranslationEvent.
+- [Database Migrations Guide](persistence-migrations.md) — Creating the translator message-source schema with a revertible migration (§4.2).

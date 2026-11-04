@@ -1129,99 +1129,32 @@ To deliver application log records by email through the same `MailerInterface`, 
 
 ## 8. Testing Recipes (`StubMailer`)
 
-Yii3 provides `Yiisoft\Mailer\StubMailer` out of the box. It implements `MailerInterface`, collects all dispatched messages in an internal list, and makes them accessible via `getMessages(): array` (`list<MessageInterface>` in send order). It has **no constructor** — instantiate with `new StubMailer()`. Its `sendMultiple()` appends every message and reports all of them as successful:
+`Yiisoft\Mailer\StubMailer` (introduced in §2.2) implements `MailerInterface`, has **no constructor** — instantiate with `new StubMailer()` — collects all dispatched messages in an internal list, and exposes them via `getMessages(): array` (`list<MessageInterface>` in send order). One compact zero-shot test:
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Tests\Unit\Notification;
-
-use App\Application\Notification\Service\EmailNotificationService;
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Mailer\Message;
-use Yiisoft\Mailer\MessageInterface;
-use Yiisoft\Mailer\StubMailer;
-
-final class EmailNotificationServiceTest extends TestCase
+// App\Tests\Unit\Notification\EmailNotificationServiceTest
+public function testWelcomeNotificationIsSent(): void
 {
-    public function testWelcomeNotificationIsSent(): void
-    {
-        $stubMailer = new StubMailer();
-        $service = new EmailNotificationService($stubMailer);
+    $stubMailer = new StubMailer();
+    $service = new EmailNotificationService($stubMailer);
 
-        $service->sendWelcomeNotification(
-            recipientEmail: 'alice@example.com',
-            recipientName: 'Alice',
-        );
+    $service->sendWelcomeNotification(recipientEmail: 'alice@example.com', recipientName: 'Alice');
 
-        $sentMessages = $stubMailer->getMessages();
-        $this->assertCount(1, $sentMessages);
-
-        /** @var MessageInterface $sentMessage */
-        $sentMessage = $sentMessages[0];
-        $this->assertSame(['alice@example.com' => 'Alice'], $sentMessage->getTo());
-        $this->assertSame('Welcome to Our Service', $sentMessage->getSubject());
-        $this->assertStringContainsString('Thank you for signing up!', (string) $sentMessage->getTextBody());
-    }
-
-    public function testBatchSendReportsAllMessagesAsSuccess(): void
-    {
-        $stubMailer = new StubMailer();
-        $messages = [
-            (new Message())->withTo('a@example.com')->withSubject('Digest A')->withTextBody('Hello A'),
-            (new Message())->withTo('b@example.com')->withSubject('Digest B')->withTextBody('Hello B'),
-        ];
-
-        $results = $stubMailer->sendMultiple($messages);
-
-        $this->assertCount(2, $results->successMessages);
-        $this->assertSame([], $results->failMessages);
-    }
+    $sentMessages = $stubMailer->getMessages();
+    $this->assertCount(1, $sentMessages);
+    $this->assertSame(['alice@example.com' => 'Alice'], $sentMessages[0]->getTo());
+    $this->assertSame('Welcome to Our Service', $sentMessages[0]->getSubject());
+    $this->assertStringContainsString('Thank you for signing up!', (string) $sentMessages[0]->getTextBody());
 }
 ```
 
-#### Asserting Lifecycle Events with `SimpleEventDispatcher`
+- Batch semantics: `sendMultiple()` appends every message to the same internal list and reports all of them as successful — the returned `SendResults` DTO lists them in `$successMessages` with an empty `$failMessages` (full failure semantics live in §3.2; the `$results->getErrors()` phantom-method trap lives in the §9 anti-pattern matrix).
 
-`Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` implements `EventDispatcherInterface` and records every dispatched event; its full API is owned by the [Testing Guide](testing-core.md), section 3.1. This is the pattern the mailer package's own tests use for `BeforeSend` prevention:
+To assert lifecycle events (§7), inject a `Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` into the mailer, `send()` one message, and assert `isClassTriggered(BeforeSend::class)` / `isClassTriggered(AfterSend::class)` — no separate mailer double ships in `yiisoft/test-support`; `StubMailer` comes from `yiisoft/mailer` itself.
 
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Tests\Integration\Notification;
-
-use PHPUnit\Framework\TestCase;
-use Yiisoft\Mailer\Event\AfterSend;
-use Yiisoft\Mailer\Event\BeforeSend;
-use Yiisoft\Mailer\FileMailer;
-use Yiisoft\Mailer\Message;
-use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
-
-final class MailerEventTest extends TestCase
-{
-    public function testBeforeSendAndAfterSendAreDispatched(): void
-    {
-        $eventDispatcher = new SimpleEventDispatcher();
-        $mailer = new FileMailer(
-            path: sys_get_temp_dir() . '/mailer-guide-test',
-            eventDispatcher: $eventDispatcher,
-        );
-
-        $mailer->send(
-            (new Message())->withTo('alice@example.com')->withSubject('Test')->withTextBody('Hello'),
-        );
-
-        $this->assertTrue($eventDispatcher->isClassTriggered(BeforeSend::class));
-        $this->assertTrue($eventDispatcher->isClassTriggered(AfterSend::class));
-        $this->assertInstanceOf(BeforeSend::class, $eventDispatcher->getEvents()[0]);
-    }
-}
-```
-
-`yiisoft/test-support` ships PSR doubles for Clock, Container, EventDispatcher, HttpMessage, Log, and SimpleCache — there is **no** mailer double; `StubMailer` comes from `yiisoft/mailer` itself. For logging assertions, `Yiisoft\Test\Support\Log\SimpleLogger` implements `LoggerInterface` via `LoggerTrait` and exposes `getMessages(): array`.
+> [!TIP]
+> **Mailer Testing Reference:**
+> For the complete reference on the PSR-14 event double used to assert `BeforeSend`/`AfterSend` dispatching, see the [Testing Core Guide, §3.1. PSR-14 Event Dispatcher (`SimpleEventDispatcher`)](testing-core.md#31-psr-14-event-dispatcher-simpleeventdispatcher). For logging assertions with `Yiisoft\Test\Support\Log\SimpleLogger` (`LoggerInterface` via `LoggerTrait`, `getMessages(): array`), see [§3.2. PSR-3 Logger (`SimpleLogger`)](testing-core.md#32-psr-3-logger-simplelogger).
 
 ---
 

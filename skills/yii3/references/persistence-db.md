@@ -612,7 +612,7 @@ Transactions must be handled at the **Application/Use Case Layer**, not inside i
 
 ### 4.1. Idiomatic Closure Transactions (`transaction()`)
 
-`$db->transaction()` automatically commits when the closure successfully returns, and automatically rolls back if any `Throwable` is thrown:
+`$db->transaction()` automatically commits when the closure successfully returns, and automatically rolls back if any `Throwable` is thrown. The closure may be zero-argument; a one-argument closure receives the `ConnectionInterface` instance. The optional second `transaction()` argument (`isolationLevel`) is forwarded verbatim to `beginTransaction()`:
 
 ```php
 declare(strict_types=1);

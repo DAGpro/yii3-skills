@@ -217,7 +217,7 @@ composer yii-config-rebuild
 > [!CAUTION]
 > **FATAL ERROR: Intra-Layer Duplicate String Keys.** Inside the **same** layer, duplicate string keys in associative arrays throw a fatal `ErrorException: Duplicate key "<key>" in the following configs while building "<group>" group` — e.g. two application-level parameter files defining the same key. Full layer semantics, group syntax, and prefix rules (`$`, `*`, `?`) are specified in the [DI & Config Guide, §2](core-di-and-config.md).
 >
-> **Scope Restriction:** The `$params` variable is **not available** inside `params.php` files. It is only accessible when building DI definitions (`di/*.php`).
+> **Scope Restriction:** The variable-scope rules for configuration files are owned by the [DI & Config Guide, §3.1 rule 4](core-di-and-config.md#31-rules-for-parameters): in short, params files see **neither** `$params` nor `$config`, while DI, events, routes, and bootstrap files receive both.
 
 ### 4.4. Canonical Wiring Recipes
 

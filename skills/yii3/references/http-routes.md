@@ -724,33 +724,11 @@ Route middleware execution follows the standard PSR-15 **onion / pipeline model 
 
 ### 5.1. Execution Order Hierarchy (The Onion Model)
 
-```text
-Incoming Request
-      │
-      ▼
-┌────────────────────────────────────────────────────────┐
-│ Global App Middlewares (ErrorCatcher, Subfolder, etc.) │
-│   ┌──────────────────────────────────────────────────┐ │
-│   │ Router Middleware (matches pattern, sets CurrentRoute) │
-│   │   ┌────────────────────────────────────────────┐ │ │
-│   │   │ Group Middlewares (FIFO: Ingress 1, Ingress 2) │
-│   │   │   ┌──────────────────────────────────────┐ │ │ │
-│   │   │   │ Route Middlewares (FIFO: Ingress 1)   │ │ │ │
-│   │   │   │   ┌────────────────────────────────┐ │ │ │ │
-│   │   │   │   │ Action Handler (Terminal)      │ │ │ │ │
-│   │   │   │   │ Returns ResponseInterface      │ │ │ │ │
-│   │   │   │   └────────────────────────────────┘ │ │ │ │
-│   │   │   │ Route Middlewares (LIFO: Egress)   │ │ │ │
-│   │   │   └──────────────────────────────────────┘ │ │ │
-│   │   │ Group Middlewares (LIFO: Egress 2, Egress 1) │ │
-│   │   └────────────────────────────────────────────┘ │ │
-│   └──────────────────────────────────────────────────┘ │
-│ Global App Middlewares (LIFO: Egress)                  │
-└────────────────────────────────────────────────────────┘
-      │
-      ▼
-Outgoing Response
-```
+The routing-specific aspect of the onion model is the nesting depth of the matched route: **global application middlewares → `Yiisoft\Router\Middleware\Router` → group middlewares → route middlewares → action handler**. Each level wraps the next on request ingress (FIFO) and unwinds in reverse order on response egress (LIFO).
+
+> [!TIP]
+> **Onion Model Reference:**
+> For the complete pipeline diagram, the three middleware functional roles (pre-processing, post-processing, short-circuiting), and `MiddlewareDispatcher` mechanics, see the [PSR-15 Middlewares Guide, §1.1 "Pipeline Flow (The Onion Model)"](http-middlewares.md#11-pipeline-flow-the-onion-model).
 
 ### 5.2. Routing Middleware Pipeline: 404 vs. 405 Architecture
 
@@ -770,16 +748,7 @@ When no declared route matches the incoming URI path (`!$result->isSuccess()` an
 
 ### 5.3. Canonical Middleware Sequence
 
-When attaching middlewares to groups and routes, declare them in this canonical order:
-
-1. **CORS / Preflight Handling:** `CorsAllowAllMiddleware` from `yiisoft/http-middleware` (processes `OPTIONS` before authentication).
-2. **Response Formatting:** `DataResponseMiddleware` from `yiisoft/data-response` (intercepts `DataResponse` on egress and serializes to JSON/XML).
-3. **Request Body Parsing:** `RequestBodyParser` from `yiisoft/request-body-parser` (deserializes JSON/XML payload before validation or guards inspect it).
-4. **Session / Cookies:** `SessionMiddleware` from `yiisoft/session` (restores session state and user identity).
-5. **CSRF Protection:** `CsrfTokenMiddleware` from `yiisoft/csrf` (validates CSRF token for web state-changing verbs).
-6. **Authentication & Authorization:** `Authentication` (`Yiisoft\Auth\Middleware\Authentication`, no `Middleware` suffix in the class name), `AccessCheckerInterface` (`yiisoft/access`).
-7. **Rate Limiting:** `LimitRequestsMiddleware` (`yiisoft/rate-limiter`) throttles requests per authenticated identity.
-8. **Action Handler:** Presentation Action.
+The canonical ordering of common middlewares (CORS → response formatting → body parsing → session → CSRF → authentication → guards → action) is owned by the [PSR-15 Middlewares Guide](http-middlewares.md): see [§4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp) — including the authenticated-pipeline invariant — and [§4.2 "Route Group Pipeline"](http-middlewares.md#42-route-group-pipeline-configwebroutesphp). From the routing side, middlewares are attached to a group (executing for every route inside it) and optionally refined per route:
 
 ```php
 declare(strict_types=1);
@@ -833,38 +802,11 @@ $route2 = (new Get('/users/{id:\d+}'))
 
 ### 5.5. Route Access Control & RBAC Protection
 
-Routes and route groups can be protected with authentication and role/permission authorization middlewares:
-
-```php
-declare(strict_types=1);
-
-use App\Presentation\Action\Admin\DashboardAction;
-use App\Presentation\Action\Post\CreatePostAction;
-use App\Presentation\Middleware\AccessCheckerMiddleware;
-use Yiisoft\Auth\Middleware\Authentication;
-use Yiisoft\Router\Group;
-use Yiisoft\Router\Route\Get;
-use Yiisoft\Router\Route\Post;
-
-return [
-    // Group protected by authentication and permission checks
-    (new Group('/admin'))
-        ->middleware(Authentication::class)
-        ->middleware(new AccessCheckerMiddleware(permission: 'adminAccess'))
-        ->routes(
-            (new Get('/dashboard'))
-                ->action(DashboardAction::class)
-                ->name('admin.dashboard'),
-            (new Post('/posts'))
-                ->action(CreatePostAction::class)
-                ->middleware(new AccessCheckerMiddleware(permission: 'managePosts'))
-                ->name('admin.posts.create'),
-        ),
-];
-```
+Route and group level authorization chains `Yiisoft\Auth\Middleware\Authentication` with an RBAC permission guard (`AccessCheckerMiddleware`) attached via `->middleware(...)` at either group or single-route scope. The guard depends on `CurrentUser` and a response factory, so it must be instantiated through a container closure — attaching it as a bare `new AccessCheckerMiddleware(...)` instance breaks DI resolution.
 
 > [!TIP]
-> For identity storage, token authentication, and defining role/permission hierarchies in `yiisoft/rbac`, see [Authentication & RBAC Guide](infra-auth-and-rbac.md).
+> **RBAC Permission Guard Reference:**
+> For the canonical `AccessCheckerMiddleware` recipe — group and single-route attachment, container-closure construction, and the `Authentication → LoginMiddleware → AccessCheckerMiddleware` ordering invariant — see the [PSR-15 Middlewares Guide, §2.6 "RBAC Permission Guard (`AccessCheckerMiddleware`)"](http-middlewares.md#26-rbac-permission-guard-accesscheckermiddleware). For identity storage, token authentication, and defining role/permission hierarchies in `yiisoft/rbac`, see the [Authentication & RBAC Guide](infra-auth-and-rbac.md).
 
 ---
 
@@ -1020,36 +962,17 @@ public function __construct(
 3. **Alias Registration:** It registers the detected base path with `Yiisoft\Aliases\Aliases` under `@baseUrl` (`$aliases->set('@baseUrl', $baseUrl)`), making it available to asset publishers and template helpers.
 4. **Auto-Detection Mode:** If `$prefix` is omitted (`null`), `Subfolder` automatically derives the web path from `$_SERVER` environment variables (`SCRIPT_FILENAME`, `PHP_SELF`, `ORIG_SCRIPT_NAME`, `DOCUMENT_ROOT`).
 
-Register `Subfolder` in the HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via the `MiddlewareDispatcher` constructor argument `middlewareDefinitions` (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [middlewares.md](http-middlewares.md), [error-handling.md](infra-error-handling.md), section 2):
+Register `Subfolder` in the global HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via the `MiddlewareDispatcher` constructor argument `middlewareDefinitions` (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0).
 
-```php
-declare(strict_types=1);
+The routing-relevant placement invariant is:
 
-// In config/web/di/application.php:
-use Yiisoft\Definitions\DynamicReference;
-use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
-use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
-use Yiisoft\Router\Middleware\Router;
-use Yiisoft\Yii\Http\Application;
-use Yiisoft\Yii\Middleware\Subfolder;
+`ErrorCatcher` → `Subfolder` → `Locale` (§6.4) → `Router`
 
-return [
-    Application::class => [
-        '__construct()' => [
-            'dispatcher' => DynamicReference::to([
-                'class' => MiddlewareDispatcher::class,
-                '__construct()' => [
-                    'middlewareDefinitions' => [
-                        ErrorCatcher::class,
-                        Subfolder::class, // MUST precede Router middleware
-                        Router::class,
-                    ],
-                ],
-            ]),
-        ],
-    ],
-];
-```
+`Subfolder` **must** precede `Router`: it slices the subfolder prefix from the request path before route matching. If `Router` runs first, every route match fails with a 404 because the request path still carries the prefix.
+
+> [!TIP]
+> **Canonical Global Pipeline Wiring:**
+> For the canonical `Application::class` / `MiddlewareDispatcher` wiring with the full middleware stack, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp). For the outermost `ErrorCatcher` layer and pipeline ordering, see the [Error Handling Guide, §2](infra-error-handling.md#2-errorcatcher-middleware--pipeline-ordering).
 
 ### 6.4. Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)
 
@@ -1081,45 +1004,24 @@ return [
 ];
 ```
 
-#### `Locale` Middleware Features
+#### `Locale` Middleware: Routing-Relevant Behavior
 
-1. **4-Stage Resolution Priority:**
-   - (1) URI path prefix (`/en/...`, `/de/...`).
-   - (2) Query parameter (default `_language`).
-   - (3) Cookie (default `_language`).
-   - (4) `Accept-Language` header (when enabled via `->withDetectLocale(true)`).
+1. **Transparent Ingress Rewriting:**
+   When a request arrives without a locale prefix (`/about`), and the resolved locale is the default locale, `Locale` internally rewrites the request path to `/{defaultLocale}/about` before passing it to `$handler`. This allows the route group `Group('/{_language:[a-z]{2}}')` to match cleanly without duplicate route definitions.
 2. **SEO Canonicalization (302 Redirect):**
    If a client requests the default locale with an explicit prefix (e.g. `GET /en/about` when `'en'` is the default), `Locale` strips the prefix and issues a **302 redirect** (`Status::FOUND`) to `/about`.
-3. **Transparent Ingress Rewriting:**
-   When a request arrives without a locale prefix (`/about`), and the resolved locale is the default locale, `Locale` internally rewrites the request path to `/{defaultLocale}/about` before passing it to `$handler`. This allows the route group `Group('/{_language:[a-z]{2}}')` to match cleanly without duplicate route definitions.
-4. **URL Generator Integration:**
+3. **URL Generator Coupling (`_language`):**
    For non-default locales, `Locale` calls `$urlGenerator->setDefaultArgument('_language', $locale)`. You do **not** need to manually pass `['_language' => $locale]` in actions or views. For the default locale, it resets the default argument to `null`.
-5. **Translator Event Synchronization:**
-   Upon resolving the locale, it dispatches `Yiisoft\Yii\Middleware\Event\SetLocaleEvent`, allowing `yiisoft/translator` to update its active translation locale.
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\Yii\Middleware\Locale;
-
-// Configuring Locale in DI container (config/di-web.php):
-return [
-    Locale::class => static fn(Locale $locale) => $locale
-        ->withSupportedLocales([
-            'en' => 'en-US',
-            'de' => 'de-DE',
-            'ru' => 'ru-RU',
-        ])
-        ->withDefaultLocale('en')
-        ->withDetectLocale(true),
-];
-```
 
 > [!IMPORTANT]
 > **Pipeline Ordering Invariant:**
 > The routing ingress pipeline order is strictly constrained:
 > `Subfolder` -> `Locale` -> `Router`.
 > `Subfolder` must run first so `Locale` sees clean paths. `Locale` must run before `Router` so that rewritten paths and localized default arguments are available during route matching.
+
+> [!TIP]
+> **Locale Resolution Reference:**
+> For the complete locale resolution mechanics — the 4-stage resolution priority (URL path prefix → `_language` query parameter → cookie → `Accept-Language`), cookie/header gating, `SetLocaleEvent` translator synchronization, the constructor signature, and DI registration — see the [I18n & Translation Guide, §6.2 "Locale Middleware (`yii-middleware`)"](http-i18n-translation.md#62-locale-middleware-yii-middleware).
 
 ### 6.5. Declarative Route Redirects (`Yiisoft\Yii\Middleware\Redirect`)
 
@@ -1398,6 +1300,7 @@ return [
 | **Yii2 URL syntax: `['user/view', 'id' => 1]`** | Legacy Yii2 array syntax. Not supported in Yii3; triggers type error. | Inject `UrlGeneratorInterface` and call `$urlGenerator->generate('user.view', ['id' => 1])`. |
 | **Deprecated static factories: `Route::get('/...')`** | Static factory methods on `Route` and `Group::create()` are deprecated in `yiisoft/router`. | Use `new \Yiisoft\Router\Route\Get('/...')` and `new \Yiisoft\Router\Group('/...')`. |
 | **Deprecated `Group::create('/...')`** | Static factory on `Group` is deprecated in `yiisoft/router`. | Use `new \Yiisoft\Router\Group('/...')`. |
+| **Second argument to `Group::create('/prefix', [...routes])`** | `Group::create()` signature is `(?string $prefix = null)` — it accepts only one parameter. A second argument (a middleware list or routes array) is silently discarded by PHP, resulting in an empty route group with zero endpoints. | Instantiate the group with `new Group('/prefix', [...routes])` (the constructor's second `$routes` parameter) or chain `->routes(...)`. |
 | **Calling `$currentRoute->getRoute()`** | `CurrentRoute` does NOT expose `getRoute()`; triggers fatal `Error: Call to undefined method CurrentRoute::getRoute()`. | Access metadata via individual getters: `$currentRoute->getName()`, `getPattern()`, `getHost()`, `getMethods()`, `getUri()`, `getArgument('id')`. |
 | **Relying on `Route::defaults()` for URL generation** | `Route::defaults()` is strictly used by `UrlMatcher`. `UrlGenerator` ignores it, throwing `RuntimeException` for missing parameters. | Set generation defaults via `$urlGenerator->setDefaultArgument('param', 'val')` or pass them in `$arguments`. |
 | **Deprecated `FormatDataResponse` middleware** | `Yiisoft\DataResponse\Middleware\FormatDataResponse` is deprecated in `yiisoft/data-response`. | Use `Yiisoft\DataResponse\Middleware\DataResponseMiddleware`. |
@@ -1430,7 +1333,8 @@ return [
 ## 10. Related Topic Guides
 
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Single-action controllers, PSR-7 response factories, and input DTO hydration.
-- [PSR-15 Middlewares Guide](http-middlewares.md) — Middleware pipeline flow, official middlewares catalog, and custom guards.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Onion-model pipeline flow, canonical global/group middleware ordering, official middlewares catalog, and custom middleware recipes (including the RBAC permission guard).
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Route access control, authentication middlewares, and RBAC permission checks.
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting routes, endpoints, and schemas with PHP 8 attributes.
-- [I18n & Translation Guide](http-i18n-translation.md) — Message translation, category sources, and integration with `SetLocaleEvent`.
+- [Error Handling Guide](infra-error-handling.md) — `ErrorCatcher` middleware, error rendering, and the outermost pipeline layer.
+- [I18n & Translation Guide](http-i18n-translation.md) — Message translation, category sources, and locale resolution via the `Locale` middleware (`SetLocaleEvent`, cookie/header gating, DI registration).

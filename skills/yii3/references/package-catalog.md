@@ -230,5 +230,6 @@ Packages below are prescribed or used by topic guides but are not part of the yi
 | `infection/extension-installer` | Infection Composer extension installer | testing-core |
 | `roave/infection-static-analysis-plugin` | Static-analysis-filtered mutation testing | testing-core |
 | `codeception/module-asserts`, `module-cli`, `module-rest`, `module-phpbrowser`, `lib-innerbrowser` | Codeception suites (REST module requires `module-phpbrowser` + `lib-innerbrowser` and a live served application) | testing-core, testing-http |
+| `httpsoft/http-message` | PSR-7 message and factory implementations (`ServerRequest`, `ServerRequestFactory`, `ResponseFactory`) used to build in-memory test requests and responses | testing-core, testing-http |
 | `phpstan/phpstan`, `vimeo/psalm` | Static analysis linters (allowed `require-dev` per Dependency Protocol §3.2) | core-dependency-protocol |
 

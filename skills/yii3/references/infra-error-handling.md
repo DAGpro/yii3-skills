@@ -70,22 +70,17 @@ The standard execution sequence (first-listed middleware = outermost = executed 
 
 There is **no** `'middlewares'` params key: no package consumes it. The pipeline is wired through the DI definition of `Yiisoft\Yii\Http\Application`, whose `dispatcher` constructor parameter receives a `Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher`.
 
-In `config/web/di/application.php`:
+In `config/web/di/application.php`, the error-component slice of the global pipeline:
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-use App\Infrastructure\Middleware\CustomAuthMiddleware;
-use App\Web\NotFound\NotFoundHandler;
 use Yiisoft\Definitions\DynamicReference;
-use Yiisoft\Definitions\Reference;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
 use Yiisoft\ErrorHandler\Middleware\ExceptionResponder;
 use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
-use Yiisoft\Router\Middleware\Router;
-use Yiisoft\Session\SessionMiddleware;
 use Yiisoft\Yii\Http\Application;
 use Yiisoft\Yii\Sentry\SentryMiddleware;
 
@@ -98,34 +93,35 @@ return [
                 'class' => MiddlewareDispatcher::class,
                 '__construct()' => [
                     'middlewareDefinitions' => [
-                        // 1. Outermost: catches every Throwable escaping the chain below.
+                        // 1. First (outermost): catches every Throwable escaping the chain
+                        //    below, dispatches `ApplicationError`, and renders the response.
                         ErrorCatcher::class,
 
-                        // 2. Captures exceptions into Sentry, then re-throws.
+                        // 2. Captures exceptions into Sentry, then re-throws so
+                        //    `ErrorCatcher` can format the HTTP response (see section 8.2).
                         SentryMiddleware::class,
 
                         // 3. Maps anticipated domain exceptions to HTTP responses (see section 3).
                         ExceptionResponder::class,
 
-                        // 4. Application middlewares: session, auth, CORS, etc.
-                        SessionMiddleware::class,
-                        CustomAuthMiddleware::class,
-
-                        // 5. Last: matches the route and invokes the action handler.
-                        Router::class,
+                        // 4+. Application middlewares (session, auth, CORS) and the
+                        //     Router complete the pipeline.
                     ],
                 ],
             ]),
-            // Pipeline-end fallback when no middleware produced a response.
-            // The app template wires its own view-rendering 404 handler here.
-            'fallbackHandler' => Reference::to(NotFoundHandler::class),
         ],
     ],
 ];
 ```
 
+> [!TIP]
+> **Pipeline Wiring Reference:**
+> For the complete `Application::class` global-pipeline DI definition — the `fallbackHandler`, application
+> middlewares (`SessionMiddleware`, auth, CORS), `Router`, and all ordering constraints — see the
+> [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
+
 > [!NOTE]
-> `MiddlewareDispatcher::withMiddlewares()` is `@deprecated since 5.5.0` — pass middleware definitions to the `__construct()` instead, as shown above. The canonical app template still uses `withMiddlewares()` inside `DynamicReference::to()`; both forms accept the same definition list. The first-listed middleware is the outermost and executes first (`MiddlewareDispatcher` reverses the definitions internally — never rely on the outdated "last specified handler will be executed first" sentence in its docblock).
+> The `MiddlewareDispatcher::withMiddlewares()` deprecation (`yiisoft/middleware-dispatcher` >= 5.5.0) and the dispatcher-reversal ordering fact (first-listed definition = outermost middleware) are canonicalized in the [PSR-15 Middlewares Guide, §4.1](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 **Fallback request handlers.** When no middleware produces a response, the pipeline falls back to the `fallbackHandler` configured on `Application`:
 
@@ -133,7 +129,7 @@ return [
 - `yiisoft/yii-http` ships `Yiisoft\Yii\Http\Handler\NotFoundHandler`, a bare fallback returning a 404 response with the body `We were unable to find the page "$path".` It requires a `Psr\Http\Message\ResponseFactoryInterface` and renders nothing else — it is not an error renderer.
 - The canonical app template wires its own `App\Web\NotFound\NotFoundHandler`, which renders a full 404 view via the view renderer.
 
-**Session behavior on errors.** `Yiisoft\Session\SessionMiddleware` commits the session (sends `Set-Cookie`) only when a response passes through it successfully. On a downstream `Throwable` it calls `$this->session->discard()` and re-throws — an unhandled exception means no new session cookie is sent with the error response.
+**Session behavior on errors.** An unhandled downstream exception means **no `Set-Cookie` on the error response** — uncommitted session state is discarded instead of committed. The full commit/discard lifecycle of `Yiisoft\Session\SessionMiddleware` is owned by the [PSR-15 Middlewares Guide, §3.1 "SessionMiddleware Behavior"](http-middlewares.md#31-sessionmiddleware-behavior).
 
 ---
 
@@ -402,6 +398,9 @@ Yii3 ships three built-in non-HTML renderers, all consuming `ThrowableRendererIn
 - `Yiisoft\ErrorHandler\Renderer\PlainTextRenderer` (constructor default `'text/plain'`): production returns exactly `ThrowableRendererInterface::DEFAULT_ERROR_MESSAGE`; verbose returns the `static PlainTextRenderer::throwableToString()` format — `"<class> with message "<message>"` followed by `in <file>:<line>` and the stack trace.
 
 There is **no** built-in RFC 7807 support: `JsonRenderer` always emits `application/json`, never `application/problem+json`. Implement `ThrowableRendererInterface` yourself to return compliant Problem Details responses.
+
+> [!TIP]
+> **Scope note:** this renderer slice covers uncaught `Throwable`s at the pipeline level. Converting a validation `Result` / `Yiisoft\Input\Http\InputValidationException` into a `422` `application/problem+json` response is the action-layer concern, owned by the [Actions & Controllers Guide, §3.2 "Request Parsing & DTO Hydration"](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator) (`ValidationProblemDetailsResponder`).
 
 > [!IMPORTANT]
 > `Yiisoft\ErrorHandler\ErrorData` holds string content and headers. It implements `\Stringable`.
@@ -781,7 +780,8 @@ DI and bootstrap, shipped by the package:
 Placement: `SentryMiddleware` must be added **right after `ErrorCatcher`** in the middleware pipeline — expressed through the canonical `Application` / `MiddlewareDispatcher` wiring shown in section 2 (there is no `'middlewares'` params key):
 
 ```php
-// config/web/di/application.php (excerpt) — full example in section 2.
+// config/web/di/application.php (excerpt) — pipeline context in section 2,
+// the complete Application::class definition in the PSR-15 Middlewares Guide, §4.1.
 'middlewareDefinitions' => [
     ErrorCatcher::class,
     SentryMiddleware::class,   // <-- right after ErrorCatcher
@@ -927,6 +927,6 @@ $errorHandler->register(); // Idempotent; once per process.
 ## 12. Related Topic Guides
 
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Action handlers, PSR-7 response factories, and thin-action error delegation.
-- [PSR-15 Middlewares Guide](http-middlewares.md) — Pipeline flow, ErrorCatcher positioning, and custom error middleware.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Canonical global-pipeline wiring (`Application` dispatcher, §4.1), `SessionMiddleware` commit/discard lifecycle (§3.1), and custom error middleware.
 - [Logging Guide](infra-logging.md) — PSR-3 logger configuration, log targets, and context logging.
 - [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 dispatcher wiring, listener definition formats, and event configuration groups.

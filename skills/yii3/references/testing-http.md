@@ -519,8 +519,70 @@ final readonly class UserApiCest
 }
 ```
 
+#### In-Memory Functional Actor (`tests/Support/FunctionalTester.php`)
+
+For in-memory functional smoke tests without the REST module, define a `FunctionalTester` actor that executes in-memory HTTP requests using `HttpApplicationRunner::runAndGetResponse()` without launching an external web server:
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Support;
+
+use Codeception\Actor;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
+
+class FunctionalTester extends Actor
+{
+    use _generated\FunctionalTesterActions;
+
+    public function sendRequest(ServerRequestInterface $request): ResponseInterface
+    {
+        $runner = new HttpApplicationRunner(
+            rootPath: dirname(__DIR__, 2),
+            environment: 'test',
+        );
+
+        $response = $runner->runAndGetResponse($request);
+
+        $body = $response->getBody();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
+
+        return $response;
+    }
+}
+```
+
+#### In-Memory Functional Cest Example (`tests/Functional/HomePageCest.php`)
+
+```php
+declare(strict_types=1);
+
+namespace App\Tests\Functional;
+
+use App\Tests\Support\FunctionalTester;
+use HttpSoft\Message\ServerRequest;
+use function PHPUnit\Framework\assertSame;
+use function PHPUnit\Framework\assertStringContainsString;
+
+final class HomePageCest
+{
+    public function testHomePageRenders(FunctionalTester $tester): void
+    {
+        $request = new ServerRequest(method: 'GET', uri: '/');
+        $response = $tester->sendRequest($request);
+
+        assertSame(200, $response->getStatusCode());
+        assertStringContainsString('Yii3', (string) $response->getBody());
+    }
+}
+```
+
 > [!NOTE]
-> For in-memory functional smoke tests (status code and body assertions without REST-module actions), do not enable the REST module: reuse the `FunctionalTester::sendRequest()` actor action defined in [`testing-core.md`, §2.3](testing-core.md#23-codeception-codeceptioncodeception-5), which dispatches through `HttpApplicationRunner::runAndGetResponse()`.
+> For in-memory functional smoke tests (status code and body assertions without REST-module actions), do not enable the REST module: reuse the `FunctionalTester::sendRequest()` actor action defined above in this section, which dispatches through `HttpApplicationRunner::runAndGetResponse()`.
 
 > [!CAUTION]
 > In Codeception Cests, inject actors (e.g. `FunctionalTester $I`); never extend `FunctionalTestCase` inside a Cest class. `FunctionalTestCase` is strictly a PHPUnit `TestCase`.

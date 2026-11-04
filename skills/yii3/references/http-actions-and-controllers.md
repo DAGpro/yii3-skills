@@ -318,8 +318,63 @@ Setting `$name = 'user'` extracts a nested key from the body or query parameters
 Parameter attributes (`Yiisoft\Input\Http\Attribute\Parameter\*`) pull specific request segments into DTO properties or directly into action parameters:
 - `#[Body('title')]` &rarr; extracts a single property from the request body.
 - `#[Query('page')]` &rarr; extracts a query parameter.
-- `#[UploadedFiles('avatar')]` &rarr; extracts an uploaded file from `$request->getUploadedFiles()`.
+- `#[UploadedFiles('avatar')]` &rarr; extracts uploaded files from `$request->getUploadedFiles()`. The mapping is type-hint based on the raw upload-map value:
+    - A `UploadedFileInterface`-typed property or parameter receives **one element**; an `array`-typed one receives the **whole list** at that path.
+    - Dot-paths address nested upload maps: `#[UploadedFiles('gallery.images')]`.
+    - A missing path is **fail-soft** — the property keeps its declared default value, nothing is thrown.
 - **`#[Request('attributeName')]`:** Reads from **PSR-7 request attributes** (`$request->getAttributes()`), such as router match parameters or middleware context. **It does NOT read HTTP headers.**
+
+**Canonical Upload Action (`File` rule + 422 errors):** the action validates the upload, returns HTTP 422 with errors indexed by path, and dispatches to a use case. Moving the file to permanent storage (directories, alias resolution, naming conventions) is owned by the [File Handling Guide, §4](http-file-handling.md#4-file-uploads-psr-7--validator):
+
+```php
+declare(strict_types=1);
+
+namespace App\Presentation\Action\Document;
+
+use App\Application\Document\StoreDocumentUseCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
+use Yiisoft\Http\Status;
+use Yiisoft\Validator\Rule\File;
+use Yiisoft\Validator\Rule\Required;
+use Yiisoft\Validator\ValidatorInterface;
+
+final readonly class UploadDocumentAction
+{
+    public function __construct(
+        private ValidatorInterface $validator,
+        private StoreDocumentUseCase $useCase,
+        private DataResponseFactoryInterface $responseFactory,
+    ) {}
+
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        $uploaded = $request->getUploadedFiles()['document'] ?? null;
+
+        // String-keyed rules require the same key in the data set:
+        $result = $this->validator->validate(
+            ['document' => $uploaded],
+            ['document' => [new Required(), new File(extensions: ['pdf', 'docx'], maxSize: 10 * 1024 * 1024)]],
+        );
+        if (!$result->isValid()) {
+            return $this->responseFactory->createResponse(
+                ['status' => 'error', 'errors' => $result->getErrorMessagesIndexedByPath()],
+                Status::UNPROCESSABLE_ENTITY // HTTP 422
+            );
+        }
+
+        /** @var UploadedFileInterface $uploaded */
+        // The File rule already reports non-OK upload error codes as validation errors.
+        // Persist with $uploaded->moveTo() — directory creation, alias resolution, and naming
+        // conventions: see the File Handling Guide, §4.
+        $this->useCase->handle($uploaded);
+
+        return $this->responseFactory->createResponse(['status' => 'ok'], Status::CREATED);
+    }
+}
+```
 
 ##### 3. Direct Action Parameter Resolution (`HydratorAttributeParametersResolver`)
 
@@ -574,7 +629,7 @@ final class ContactForm extends FormModel
 **WebViewRenderer Capabilities:**
 - Full layout rendering: `$this->webViewRenderer->render('contact/index', ['form' => $form])` returns a typed `ResponseInterface` and sets `Content-Type: text/html; charset=UTF-8` (customizable via `withContentType()` / `withEncoding()`).
 - Partial rendering (no layout, for HTMX/AJAX/modals): `$this->webViewRenderer->renderPartial('partial/_modal', [...])`.
-- Custom layout per action: `$this->webViewRenderer->withLayout('@views/layout/blank.php')->render('login', [...])`. The `withLayout()` argument is the **full path or alias to the layout file** (e.g. `'@views/layout/blank.php'`), not a bare view name like `'layout/blank'`.
+- Custom layout per action: `$this->webViewRenderer->withLayout('@views/layout/blank.php')->render('login', [...])` — for layout path/alias argument semantics and layout configuration, see the [Views, Layouts & Widgets Guide, §1.2](http-views-and-widgets.md#12-key-webviewrenderer-api-methods).
 - Controller-to-view path mapping: `$this->webViewRenderer->withController($this)` or `->withControllerName('contact')` prefixes relative view names.
 - Setting HTTP status: Call `->withStatus(Status::BAD_REQUEST)` on the **returned `ResponseInterface`**, NOT on the renderer itself (which does not have a `withStatus()` method).
 
@@ -857,9 +912,7 @@ $lastPage = $this->session->get('last_page', default: '/');
 $this->session->remove('last_page');
 ```
 
-**Session Regeneration:** call `$session->regenerateId(): void` after privilege-level changes (e.g. after login — `CurrentUser::login()` already does this) to mitigate session fixation.
-
-**Flash Method Set:** `FlashInterface` exposes exactly `get()`, `getAll()`, `set()`, `add()`, `remove()`, `removeAll()`, and `has()` — there is **no `delete()` method**. Note that `getAll()` is a consuming read: flash messages are removed automatically on the next request.
+**Flash & Session Regeneration:** the `FlashInterface` method set, consuming-read semantics, and session-id regeneration (`regenerateId()`) — see the [HTTP State Guide, §3](http-state.md#3-flash-messages).
 
 ---
 
@@ -989,7 +1042,6 @@ final readonly class ShowUserAction
 | ❌ Importing nonexistent enum `use Yiisoft\Cookies\SameSite;` | There is no `SameSite` class or enum in `yiisoft/cookies`. | ✅ Use class constants on `Cookie`: `Cookie::SAME_SITE_LAX`, `Cookie::SAME_SITE_STRICT`, `Cookie::SAME_SITE_NONE`. |
 | ❌ Registering deprecated `Yiisoft\Csrf\CsrfMiddleware` | `CsrfMiddleware` is marked `@deprecated` in `yiisoft/csrf`. | ✅ Use `Yiisoft\Csrf\CsrfTokenMiddleware` (parsed body parameter `_csrf`, header `X-CSRF-Token`). |
 | ❌ Calling nonexistent `TokenFactoryInterface::createToken(...)` | In `yiisoft/auth-jwt`, the method is `create(array $payload, string $format, ?int $signatureIndex = null)`. Calling `createToken()` causes a Fatal Error. | ✅ Call `$tokenFactory->create(['sub' => $id], CompactSerializer::NAME)`. |
-| ❌ Calling nonexistent `DownloadResponseFactory::sendStream(...)` or `send(...)` | `DownloadResponseFactory` only exposes `sendStreamAsFile()`, `sendContentAsFile()`, `sendFile()`, and `xSendFile()`. Shorthand names cause Fatal Errors. | ✅ Call `$downloadFactory->sendStreamAsFile($stream, $name)` or `$downloadFactory->sendContentAsFile($content, $name)`. |
 | ❌ Calling `$this->webViewRenderer->withStatus(404)->render(...)` | `WebViewRenderer` and the deprecated `ViewRenderer` do not have a `withStatus()` method. | ✅ Call `withStatus()` on the returned response: `$this->webViewRenderer->render(...)->withStatus(Status::NOT_FOUND)`. |
 | ❌ Forgetting `$form->getFormName()` scope in `populateFromPostAndValidate()` | By default, `FormModel::getFormName()` expects nested body data: `$body['FormName']['field']`. When the scope key is missing from the parsed body, `populateFromPostAndValidate()` deterministically returns `false` and validation is skipped. | ✅ If using flat form inputs, override `getFormName(): string { return ''; }` in the form model or pass `scope: ''` to `populateFromPostAndValidate()`, and always branch on the returned `bool`. |
 | ❌ Direct SQL or Active Record / Cycle queries inside Actions | Violates Presentation Layer separation of concerns and bypasses business logic encapsulation. | ✅ Delegate all data fetching and persistence to Application Use Cases or Repository interfaces. |

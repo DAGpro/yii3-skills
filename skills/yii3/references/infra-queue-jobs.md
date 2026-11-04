@@ -283,6 +283,7 @@ if ($messageId !== null) {
 ```
 
 > [!NOTE]
+> `MessageStatus` is an integer-backed enum (`vendor/yiisoft/queue/src/MessageStatus.php`): `NOT_FOUND = 0`, `WAITING = 1`, `RESERVED = 2`, `DONE = 3`.
 > `queue-db` and `queue-redis` support `status()`. `queue-amqp` throws `Yiisoft\Queue\Amqp\Exception\NotImplementedException` because AMQP 0-9-1 does not maintain a random-access status registry.
 
 ### Transactional Dispatching & Race Condition Prevention
@@ -1254,6 +1255,9 @@ return [
 ```
 
 ---
+
+> [!WARNING]
+> **Adapter Version Pin (`dev-master`):** All three transport adapters (`yiisoft/queue-db`, `yiisoft/queue-redis`, `yiisoft/queue-amqp`) pin `"yiisoft/queue": "dev-master"` in their `composer.json`. Anchor queue API usage and wiring to the sources actually installed under `vendor/yiisoft/queue/src/`, not to assumptions about released tags.
 
 ### Driver Adapters Comparison Matrix
 

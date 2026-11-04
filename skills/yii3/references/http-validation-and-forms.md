@@ -264,6 +264,10 @@ Each `Yiisoft\Validator\Error` value object exposes:
 | `Image` | `Yiisoft\Validator\Rule\Image\Image` | `?int $width = null`, `?int $height = null`, `?int $minWidth = null`, `?int $minHeight = null`, `?int $maxWidth = null`, `?int $maxHeight = null`, `?ImageAspectRatio $aspectRatio = null`, `string $notImageMessage = ...` *(8 dimension messages follow)*, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Image\ImageHandler` |
 | `ImageAspectRatio` | `Yiisoft\Validator\Rule\Image\ImageAspectRatio` | `int $width`, `int $height`, `float $margin = 0` | Value object companion | Evaluated by `ImageHandler` |
 
+> [!TIP]
+> **`File` Rule Deep-Dive:**
+> For the complete `File` constructor (including all message parameters), size/exclusivity and upload-error traps, the `trustClientMediaType` warning, and string-keyed validation-call semantics, see [§5.1](#51-file-rule--safe-post-validation-storage).
+
 #### 11. Miscellaneous Rules
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
@@ -486,51 +490,65 @@ final class UploadDocumentInput
 }
 ```
 
-#### Safe Post-Validation File Moving
-
-> [!CAUTION]
-> **`FileHelper::createDirectory()` Trap:**
-> In `yiisoft/files`, `FileHelper::createDirectory()` does **NOT** exist. The correct method is `Yiisoft\Files\FileHelper::ensureDirectory(string $path, int $mode = 0775): void`. It normalizes directory paths and safely handles concurrent mkdir race conditions.
-
-After validation confirms that the uploaded file is valid, persist it using `$file->moveTo()`:
+**Complete constructor** (verbatim, `vendor/yiisoft/validator/src/Rule/File.php` — the §2.3 catalog row above lists the core options; the message parameters complete the signature):
 
 ```php
-declare(strict_types=1);
-
-namespace App\Application\Document;
-
-use App\Application\Document\Dto\UploadDocumentInput;
-use RuntimeException;
-use Yiisoft\Files\FileHelper;
-
-final readonly class DocumentStorageService
-{
-    public function __construct(
-        private string $storageDirectory = '/var/uploads/contracts',
-    ) {}
-
-    public function store(UploadDocumentInput $input): string
-    {
-        $file = $input->document;
-        if ($file === null || $file->getError() !== UPLOAD_ERR_OK) {
-            throw new RuntimeException('Uploaded file is missing or corrupted.');
-        }
-
-        // 1. Ensure storage directory exists with proper permissions
-        FileHelper::ensureDirectory($this->storageDirectory, 0775);
-
-        // 2. Generate a collision-resistant filename
-        $extension = pathinfo($file->getClientFilename() ?? '', PATHINFO_EXTENSION);
-        $safeFilename = bin2hex(random_bytes(16)) . '.' . strtolower($extension);
-        $targetPath = $this->storageDirectory . DIRECTORY_SEPARATOR . $safeFilename;
-
-        // 3. Move the file from PHP temp folder to permanent storage
-        $file->moveTo($targetPath);
-
-        return $safeFilename;
-    }
-}
+public function __construct(
+    array|string|null $extensions = null,
+    array|string|null $mimeTypes = null,
+    ?int $size = null,
+    ?int $minSize = null,
+    ?int $maxSize = null,
+    bool $trustClientMediaType = false,
+    string $message = '{Property} must be a file.',
+    string $uploadFailedMessage = 'Failed to upload {property}. Error code: {error, number}.',
+    string $uploadRequiredMessage = 'Please upload a file.',
+    string $wrongExtensionMessage = 'Only files with these extensions are allowed: {extensions}.',
+    string $wrongMimeTypeMessage = 'Only files with these MIME types are allowed: {mimeTypes}.',
+    string $notExactSizeMessage = 'The size of {property} must be exactly {exactly, number} {exactly, plural, one{byte} other{bytes}}.',
+    string $tooSmallMessage = 'The size of {property} cannot be smaller than {limit, number} {limit, plural, one{byte} other{bytes}}.',
+    string $tooBigMessage = 'The size of {property} cannot be larger than {limit, number} {limit, plural, one{byte} other{bytes}}.',
+    string $unableToDetermineSizeMessage = 'The size of {property} cannot be determined.',
+    bool|callable|null $skipOnEmpty = null,
+    bool $skipOnError = false,
+    ?Closure $when = null,
+)
 ```
+
+- Exact `size` is mutually exclusive with `minSize` / `maxSize` (`InvalidArgumentException`); negative sizes and `minSize > maxSize` are rejected.
+- Upload error pipeline: `UPLOAD_ERR_NO_FILE` → `uploadRequiredMessage`; any other non-OK error → `uploadFailedMessage`, with `{error}` carrying the numeric PHP upload error code.
+- Optional uploads: `new File(skipOnEmpty: true)` treats `UPLOAD_ERR_NO_FILE` as "empty".
+- `extensions` / `mimeTypes` accept `array|string` (string = comma/space separated), support MIME wildcards like `image/*`, and are lowercased/deduplicated. A file **without an extension fails** when `extensions` is configured.
+
+> [!WARNING]
+> `trustClientMediaType` defaults to `false`. For a pathless / in-memory `UploadedFileInterface` there is no
+> real file on disk to sniff: the client media type is used only when `trustClientMediaType` is enabled,
+> otherwise MIME validation fails. Client MIME is spoofable — enable it only deliberately.
+
+> [!NOTE]
+> The `File` rule also accepts string paths and `SplFileInfo` — that does not prove HTTP-upload provenance.
+> Never pass user-submitted paths into it.
+
+**Validation-call semantics** — string keys in the rules map address **properties of the validated data**:
+
+```php
+// Whole-value validation (rules in a flat list):
+$result = $this->validator->validate($uploaded, [new Required(), new File(extensions: ['pdf'])]);
+
+// Named field — the key must exist in the data AND in the rules map:
+$result = $this->validator->validate(
+    ['document' => $uploaded],
+    ['document' => [new Required(), new File(extensions: ['pdf'])]],
+);
+```
+
+> [!IMPORTANT]
+> `validate($uploaded, ['document' => [...]])` — a bare upload under a string-keyed rules map — always fails
+> `Required`: the validator reads a non-existent `document` property (`null`) from the wrapped upload object.
+
+> [!TIP]
+> **Post-Validation File Persistence Reference:**
+> After validation, persist the uploaded file with `$uploadedFile->moveTo()`. For directory creation (`FileHelper::ensureDirectory()`), alias resolution, filename generation, and storage-service placement, see the [File Handling Guide, §4](http-file-handling.md#4-file-uploads-psr-7--validator) and [§5](http-file-handling.md#5-placement--wiring).
 
 ### 5.2. Image & Aspect Ratio Rules (`Rule\Image\Image`, `ImageAspectRatio`)
 
@@ -569,6 +587,13 @@ final class UpdateAvatarInput
     public ?UploadedFileInterface $avatar = null;
 }
 ```
+
+Constructor options and behavioral traps (from `vendor/yiisoft/validator/src/Rule/Image/Image.php`):
+
+- Constructor parameters: `?int $width`, `?int $height`, `?int $minWidth`, `?int $minHeight`, `?int $maxWidth`, `?int $maxHeight`, `?ImageAspectRatio $aspectRatio`, message parameters, then `skipOnEmpty` / `skipOnError` / `when`. Exact `width` / `height` are mutually exclusive with their min/max counterparts (`InvalidArgumentException`).
+- A bare `new Image()` is an "is an image" check only — dimensions are validated when a constraint is set.
+- For `UploadedFileInterface` the handler requires `getError() === UPLOAD_ERR_OK` and reads the temp path from the stream metadata.
+- Dimension checks rely on `getimagesize()` — HEIF/HEIC images are not supported.
 
 ### 5.3. Validating PSR-7 UploadedFileInterface & Multi-File Collections
 

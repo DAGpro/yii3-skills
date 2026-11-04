@@ -82,45 +82,17 @@ In Yii3, controllers and actions do not have their own internal rendering engine
 `WebViewRenderer::render()` produces a PSR-7 response instance (`Yiisoft\Yii\View\Renderer\ViewResponse`) containing a deferred body stream. The actual template rendering happens only when the response stream is emitted or read, keeping memory usage minimal and allowing header/status modifications prior to output.
 
 ```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\User;
-
-use App\Domain\User\UserRepositoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Http\Status;
-use Yiisoft\Router\CurrentRoute;
-use Yiisoft\Yii\View\Renderer\WebViewRenderer;
-
-final readonly class ViewUserAction
-{
-    public function __construct(
-        private CurrentRoute $currentRoute,
-        private UserRepositoryInterface $userRepository,
-        private WebViewRenderer $viewRenderer,
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $id = (int) $this->currentRoute->getArgument('id');
-        $user = $this->userRepository->findById($id);
-
-        if ($user === null) {
-            // render() returns PSR-7 ResponseInterface; status code is chained on the returned response
-            return $this->viewRenderer
-                ->render('user/not-found', ['id' => $id])
-                ->withStatus(Status::NOT_FOUND);
-        }
-
-        // Renders views/user/profile.php wrapped by the configured layout
-        return $this->viewRenderer->render('user/profile', [
-            'user' => $user,
-            'pageTitle' => 'User Profile: ' . $user->getName(),
-        ]);
-    }
-}
+// Inside the action handler ($this->viewRenderer is the injected WebViewRenderer):
+// Renders views/user/profile.php wrapped by the configured layout
+return $this->viewRenderer->render('user/profile', [
+    'user' => $user,
+    'pageTitle' => 'User Profile: ' . $user->getName(),
+]);
 ```
+
+> [!TIP]
+> **Action Handler Wiring Reference:**
+> For the complete reference on injecting `WebViewRenderer` into action handlers, resolving route arguments, handling 404 branches, and chaining `->withStatus()` on the returned response, see the [Actions & Controllers Guide, §3.5](http-actions-and-controllers.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
 
 ### 1.2. Key `WebViewRenderer` API Methods
 
@@ -128,7 +100,7 @@ final readonly class ViewUserAction
 - `renderPartial(string $view, array $parameters = []): ResponseInterface` — renders only the view template without the layout.
 - `renderAsString(string $view, array $parameters = []): string` — renders view with layout immediately into a string (useful for HTML emails or CLI output).
 - `renderPartialAsString(string $view, array $parameters = []): string` — renders view without layout immediately into a string.
-- `withLayout(?string $layout): self` — sets or overrides layout for the current render call (`null` disables layout). Immutable.
+- `withLayout(?string $layout): self` — sets or overrides layout for the current render call (`null` disables layout). Immutable. The argument is the **full path or alias to the layout file** (e.g. `'@views/layout/blank.php'`), **not** a bare view name like `'layout/blank'`.
 - `withController(object $controller): self` — sets the controller instance to infer view path prefix (removes `Controller` suffix and kebab-cases the class name via `Inflector::pascalCaseToId()`).
 - `withControllerName(string $name): self` — sets the controller name explicitly for view path resolution.
 - `withViewPath(string $viewPath): self` — overrides the base directory path for views (supports path aliases).
@@ -138,44 +110,22 @@ final readonly class ViewUserAction
 - `withContentType(string $contentType): self` — sets response Content-Type header (default: `text/html`).
 - `withEncoding(string $encoding): self` — sets response charset encoding in Content-Type (default: `UTF-8`).
 
-> [!WARNING]
-> **CRITICAL: Setting HTTP Status Codes:**
-> `WebViewRenderer` does **NOT** have a `withStatus()` method. Calling `$this->viewRenderer->withStatus(404)` throws a fatal `Error: Call to undefined method`. Always chain `->withStatus()` on the returned `ResponseInterface`:
-> ```php
-> return $this->viewRenderer->render('not-found')->withStatus(Status::NOT_FOUND);
-> ```
+> [!TIP]
+> **HTTP Status Chaining Reference:**
+> For chaining `->withStatus()` on the returned `ResponseInterface` inside action handlers, see the [Actions & Controllers Guide, §3.5](http-actions-and-controllers.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
 
 ### 1.3. Template Placement: Colocation (Style A) vs Centralized (Style B)
 
 Two valid placement styles exist. Resolve which one the project uses from the architecture artifact (or the existing `src/` tree) and stay consistent — never mix styles within one project.
 
 **Style A — views colocated with their action (current official `yiisoft/app` template).**
-Each page folder contains the action class and its `template.php`. `render()` receives an **absolute path**, and `params['yiisoft/yii-view-renderer']['viewPath']` stays `null` (with `viewPath = null`, relative view paths in `render()` are not available):
+Each page folder contains the action class and its `template.php`. `render()` receives an **absolute path**, and `params['yiisoft/yii-view-renderer']['viewPath']` stays `null` (with `viewPath = null`, relative view paths in `render()` are not available). Given `$products` is passed by the caller/action, the render call is:
 
 ```php
-declare(strict_types=1);
-
-namespace App\Product\Web\Index;
-
-use App\Domain\Product\ProductRepositoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Yiisoft\Yii\View\Renderer\WebViewRenderer;
-
-final readonly class Action
-{
-    public function __construct(
-        private WebViewRenderer $viewRenderer,
-        private ProductRepositoryInterface $repository,
-    ) {}
-
-    public function __invoke(): ResponseInterface
-    {
-        return $this->viewRenderer->render(
-            __DIR__ . '/template',
-            ['products' => $this->repository->findAll(20, 0)],
-        );
-    }
-}
+return $this->viewRenderer->render(
+    __DIR__ . '/template',
+    ['products' => $products],
+);
 ```
 
 ```
@@ -1458,17 +1408,9 @@ In Yii3, forms are divided into two distinct components:
 
 ### 8.2. Form Model Definition for Widgets (`FormModel` & UI Attributes)
 
+For widget rendering, only the **UI attributes** on the model properties matter — they directly drive the label, placeholder, and hint output of the `Field::*` factories documented in §8.3 and §8.4:
+
 ```php
-declare(strict_types=1);
-
-namespace App\Presentation\Form;
-
-use Yiisoft\FormModel\Attribute\Hint;
-use Yiisoft\FormModel\Attribute\Placeholder;
-use Yiisoft\FormModel\Attribute\Safe;
-use Yiisoft\FormModel\FormModel;
-use Yiisoft\Validator\Label;
-
 final class RegistrationForm extends FormModel
 {
     #[Label('Username')]
@@ -1479,35 +1421,6 @@ final class RegistrationForm extends FormModel
     #[Label('Email Address')]
     #[Placeholder('you@example.com')]
     private string $email = '';
-
-    #[Label('Password')]
-    private string $password = '';
-
-    #[Label('I accept the terms and conditions')]
-    private bool $acceptTerms = false;
-
-    #[Safe]
-    private ?string $referralCode = null;
-
-    public function getUsername(): string
-    {
-        return $this->username;
-    }
-
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
-    public function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    public function isAcceptTerms(): bool
-    {
-        return $this->acceptTerms;
-    }
 }
 ```
 
@@ -1990,7 +1903,6 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 | **Calling non-existent `Field::submit()`, `Field::radio()`, `Field::reset()`, `Field::tel()`** | These method names do not exist on `Yiisoft\FormModel\Field` and cause fatal `Call to undefined method` errors. | Use `Field::submitButton()`, `Field::radioList()`, `Field::resetButton()`, and `Field::telephone()`. |
 | **`Field::submitButton('Sign In', ['class' => 'btn'])`** | Second parameter is `$config` (DI definitions), not HTML attributes. | Call `Field::submitButton('Sign In')->buttonAttributes(['class' => 'btn btn-primary'])` or `->buttonClass(...)`. |
 | **`$params['yiisoft/form']['defaultConfig'] = '...'`** | Bootstrap file reads `'defaultTheme'`. Causes `Undefined array key "defaultTheme"`. | Set `$params['yiisoft/form']['defaultTheme'] = 'bootstrap5-vertical'`. |
-| **`WebViewRenderer::withStatus($code)`** | `WebViewRenderer` does not have `withStatus()`; it returns a PSR-7 `ResponseInterface`. | Chain `->withStatus($code)` on the returned response: `$this->viewRenderer->render(...)->withStatus(Status::NOT_FOUND)`. |
 | **`WebViewRenderer::withDefaultParameters(...)`** | Phantom method; does not exist on `WebViewRenderer`. | Configure an injection implementing `CommonParametersInjectionInterface` in `injections`. |
 | **`GridView::widget()->emptyText('...')`** | Yii2 legacy property; does not exist in `GridView` or `BaseListView`. | Use `->noResultsText('No records found.')` for empty lists, or `->emptyCell('—')` for individual empty cells. |
 | **`GridView::widget()->paginator($paginator)`** | Method does not exist on `GridView` or `BaseListView`. | Use `GridView::widget()->dataReader($paginator)` (accepts any `ReadableDataInterface`). |

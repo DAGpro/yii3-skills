@@ -31,8 +31,8 @@
 |---|---|---|
 | `yiisoft/files` | Static filesystem utilities: directories, copying, deletion, path normalization, wildcard filtering | `Yiisoft\Files\FileHelper` + `PathMatcher\*` classes. **No** `File`/`Directory` objects, **no** upload helpers, **no** filename sanitizer. **Never resolves aliases** — resolve with `Yiisoft\Aliases\Aliases::get()` before any call (§2.2). |
 | `yiisoft/response-download` | Factory for PSR-7 download responses (attachment/inline, x-sendfile, byte ranges) | `Yiisoft\ResponseDownload\DownloadResponseFactory`. **Concrete class, no factory interface exists.** |
-| `yiisoft/validator` | Upload validation rules: `Yiisoft\Validator\Rule\File` (extensions, MIME, size), `Yiisoft\Validator\Rule\Image\Image` (dimensions) | The file rule is the **flat class** `Rule\File` — `Rule\File\File` does not exist. See [Validation & Forms Guide](http-validation-and-forms.md) §2.3. |
-| `yiisoft/input-http` | `#[UploadedFiles]` parameter attribute to pull uploaded files into action arguments | See [Validation & Forms Guide](http-validation-and-forms.md) §8. |
+| `yiisoft/validator` | Upload validation rules: `Yiisoft\Validator\Rule\File` (extensions, MIME, size), `Yiisoft\Validator\Rule\Image\Image` (dimensions) | The file rule is the **flat class** `Rule\File` — `Rule\File\File` does not exist. See [Validation & Forms Guide](http-validation-and-forms.md) §5.1. |
+| `yiisoft/input-http` | `#[UploadedFiles]` parameter attribute to pull uploaded files into action arguments | See [Actions & Controllers Guide](http-actions-and-controllers.md) §3.2. |
 | `yiisoft/http` | HTTP constants: `Yiisoft\Http\Status`, `Yiisoft\Http\Header`, `Yiisoft\Http\ContentDispositionHeader` (`ATTACHMENT` / `INLINE`) | Final constant-only classes. **No** `ContentType` or `StatusCode` classes exist. |
 | `yiisoft/data-response` | Data/JSON responses: `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface::createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = '')` | The data parameter is `mixed`, not `array`. Root-namespace `DataResponse*` classes are `@deprecated` — use `ResponseFactory\*`. |
 | `yiisoft/aliases` | Alias resolution: `Yiisoft\Aliases\Aliases::get('@alias')` | `final`, **no interface** — inject the concrete class. Ships no predefined aliases; `@runtime` is defined by the app template, `@uploads` must be registered by the project (§5). |
@@ -222,39 +222,9 @@ return $this->downloads->sendStreamAsFile(
 );
 ```
 
-```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Invoice;
-
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Http\Status;
-use Yiisoft\ResponseDownload\DownloadResponseFactory;
-
-final readonly class DownloadInvoiceAction
-{
-    public function __construct(
-        private ResponseFactoryInterface $responseFactory, // PSR-17, for plain status responses
-        private DownloadResponseFactory $downloads,
-        private InvoiceRepositoryInterface $invoices,
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $invoice = $this->invoices->find($request->getAttribute('id'));
-        if ($invoice === null) {
-            return $this->responseFactory->createResponse(Status::NOT_FOUND);
-        }
-
-        return $this->downloads->sendFile(
-            filePath: $invoice->getPdfPath(),
-            attachmentName: "invoice-{$invoice->getNumber()}.pdf",
-        );
-    }
-}
-```
+> [!TIP]
+> **Download Action Reference:**
+> For action-layer wiring of `DownloadResponseFactory` (constructor injection, repository lookups, 404 handling for missing files), see the [Actions & Controllers Guide, §3.6](http-actions-and-controllers.md#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp).
 
 ### 3.2. x-Sendfile Support
 
@@ -304,74 +274,17 @@ header** — and then:
 No `yiisoft/*` package wraps the upload flow. The idiomatic pipeline:
 
 1. **Extract** — uploaded files arrive as `Psr\Http\Message\UploadedFileInterface` (PSR-7) from
-   `$request->getUploadedFiles()` (or via the `#[UploadedFiles]` parameter attribute from `yiisoft/input-http`).
-   The attribute passes the raw map value through as-is: a `UploadedFileInterface`-typed property receives one
-   element, an `array`-typed property receives the whole list; dot-paths address nested upload maps. A missing
-   path is fail-soft — the property keeps its default, nothing is thrown. Native `$_FILES` arrays are **not**
-   accepted by the validator — convert to PSR-7 upload objects first; `php://input` body streams are not
-   supported either.
+   `$request->getUploadedFiles()` or via the `#[UploadedFiles]` parameter attribute from `yiisoft/input-http`
+   (the attribute's type-hint-based mapping semantics are owned by the
+   [Actions & Controllers Guide, §3.2](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator)).
+   Native `$_FILES` arrays are **not** accepted by the validator — convert to PSR-7 upload objects first;
+   `php://input` body streams are not supported either.
 2. **Validate** — apply `Yiisoft\Validator\Rule\File` (extensions, MIME, size) and/or
    `Yiisoft\Validator\Rule\Image\Image` (dimensions, §4.2). The rule is `final`, usable as a PHP attribute, and
-   validates string paths, `SplFileInfo`, and PSR-7 `UploadedFileInterface` values. Full constructor (from
-   `vendor/yiisoft/validator/src/Rule/File.php`):
-
-```php
-public function __construct(
-    array|string|null $extensions = null,
-    array|string|null $mimeTypes = null,
-    ?int $size = null,
-    ?int $minSize = null,
-    ?int $maxSize = null,
-    bool $trustClientMediaType = false,
-    string $message = '{Property} must be a file.',
-    string $uploadFailedMessage = 'Failed to upload {property}. Error code: {error, number}.',
-    string $uploadRequiredMessage = 'Please upload a file.',
-    string $wrongExtensionMessage = 'Only files with these extensions are allowed: {extensions}.',
-    string $wrongMimeTypeMessage = 'Only files with these MIME types are allowed: {mimeTypes}.',
-    string $notExactSizeMessage = 'The size of {property} must be exactly {exactly, number} {exactly, plural, one{byte} other{bytes}}.',
-    string $tooSmallMessage = 'The size of {property} cannot be smaller than {limit, number} {limit, plural, one{byte} other{bytes}}.',
-    string $tooBigMessage = 'The size of {property} cannot be larger than {limit, number} {limit, plural, one{byte} other{bytes}}.',
-    string $unableToDetermineSizeMessage = 'The size of {property} cannot be determined.',
-    bool|callable|null $skipOnEmpty = null,
-    bool $skipOnError = false,
-    ?Closure $when = null,
-)
-```
-
-- Exact `size` is mutually exclusive with `minSize` / `maxSize` (`InvalidArgumentException`); negative sizes and
-  `minSize > maxSize` are rejected.
-- Upload error pipeline: `UPLOAD_ERR_NO_FILE` → `uploadRequiredMessage`; any other non-OK error →
-  `uploadFailedMessage`, with `{error}` carrying the numeric PHP upload error code.
-- Optional uploads: `new File(skipOnEmpty: true)` treats `UPLOAD_ERR_NO_FILE` as "empty".
-- `extensions` / `mimeTypes` accept `array|string` (string = comma/space separated), support MIME wildcards like
-  `image/*`, and are lowercased/deduplicated. A file **without an extension fails** when `extensions` is
-  configured.
-
-> [!WARNING]
-> `trustClientMediaType` defaults to `false`. For a pathless / in-memory `UploadedFileInterface` there is no
-> real file on disk to sniff: the client media type is used only when `trustClientMediaType` is enabled,
-> otherwise MIME validation fails. Client MIME is spoofable — enable it only deliberately.
-
-> [!NOTE]
-> The `File` rule also accepts string paths and `SplFileInfo` — that does not prove HTTP-upload provenance.
-> Never pass user-submitted paths into it.
-
-Validation-call semantics — string keys in the rules map address **properties of the validated data**:
-
-```php
-// Whole-value validation (rules in a flat list):
-$result = $this->validator->validate($uploaded, [new Required(), new File(extensions: ['pdf'])]);
-
-// Named field — the key must exist in the data AND in the rules map:
-$result = $this->validator->validate(
-    ['document' => $uploaded],
-    ['document' => [new Required(), new File(extensions: ['pdf'])]],
-);
-```
-
-> [!IMPORTANT]
-> `validate($uploaded, ['document' => [...]])` — a bare upload under a string-keyed rules map — always fails
-> `Required`: the validator reads a non-existent `document` property (`null`) from the wrapped upload object.
+   validates string paths, `SplFileInfo`, and PSR-7 `UploadedFileInterface` values. The complete constructor with
+   all message parameters, size/exclusivity and upload-error traps, the `trustClientMediaType` warning, and
+   string-keyed validation-call semantics are owned by the
+   [Validation & Forms Guide, §5.1](http-validation-and-forms.md#51-file-rule--safe-post-validation-storage).
 
 3. **Move** — check `$uploaded->getError() === UPLOAD_ERR_OK` first (PSR-7; the `File` rule already reports
    non-OK codes as validation errors), then persist with `$uploadedFile->moveTo($destination)`. Build the
@@ -380,113 +293,25 @@ $result = $this->validator->validate(
    client-supplied `getClientFilename()` directly — generate your own server-side name.
 4. **Store metadata** — save the generated path/name through the repository, not just the file.
 
-```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Document;
-
-use App\Application\Document\StoreDocumentUseCase;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\Aliases\Aliases;
-use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
-use Yiisoft\Files\FileHelper;
-use Yiisoft\Http\Status;
-use Yiisoft\Validator\Rule\File;
-use Yiisoft\Validator\Rule\Required;
-use Yiisoft\Validator\ValidatorInterface;
-
-final readonly class UploadDocumentAction
-{
-    public function __construct(
-        private ValidatorInterface $validator,
-        private StoreDocumentUseCase $useCase,
-        private DataResponseFactoryInterface $responseFactory,
-        private Aliases $aliases,
-        private string $uploadDir, // e.g. from params: '@uploads/documents'
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $files = $request->getUploadedFiles();
-        $uploaded = $files['document'] ?? null;
-
-        // String-keyed rules require the same key in the data set:
-        $result = $this->validator->validate(
-            ['document' => $uploaded],
-            ['document' => [new Required(), new File(extensions: ['pdf', 'docx'], maxSize: 10 * 1024 * 1024)]],
-        );
-        if (!$result->isValid()) {
-            return $this->responseFactory->createResponse(
-                ['status' => 'error', 'errors' => $result->getErrorMessagesIndexedByPath()],
-                Status::UNPROCESSABLE_ENTITY,
-            );
-        }
-
-        /** @var \Psr\Http\Message\UploadedFileInterface $uploaded */
-        if ($uploaded->getError() !== UPLOAD_ERR_OK) {
-            return $this->responseFactory->createResponse(
-                ['status' => 'error', 'errors' => ['document' => 'Upload failed.']],
-                Status::UNPROCESSABLE_ENTITY,
-            );
-        }
-
-        // FileHelper never resolves aliases — '@uploads/...' must go through Aliases::get() first:
-        $dir = FileHelper::normalizePath($this->aliases->get($this->uploadDir));
-        FileHelper::ensureDirectory($dir); // chmod($dir, 0775) runs even when the dir already exists
-
-        $filename = bin2hex(random_bytes(16)) . '.' . pathinfo($uploaded->getClientFilename() ?? '', PATHINFO_EXTENSION);
-        $uploaded->moveTo("{$dir}/{$filename}");
-
-        $this->useCase->handle($filename, $uploaded->getClientMediaType());
-
-        return $this->responseFactory->createResponse(['status' => 'ok'], Status::CREATED);
-    }
-}
-```
-
-`Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface::createResponse()` has the signature
-`createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = ''): ResponseInterface` —
-the data parameter is `mixed` (arrays are fine), not `array`.
+> [!TIP]
+> **Upload Action Reference:**
+> For the canonical upload action (validation call, HTTP 422 error payload via `getErrorMessagesIndexedByPath()`, use-case dispatch with `DataResponseFactoryInterface`), see the [Actions & Controllers Guide, §3.2](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator).
 
 ### 4.1. Multi-File Upload (`Each`)
 
-For a list of uploads apply the rule to every element with `Yiisoft\Validator\Rule\Each`:
+For a list of uploads apply the `File` / `Image` rules to every element with `Yiisoft\Validator\Rule\Each`.
 
-```php
-use Yiisoft\Validator\Rule\Each;
-
-$result = $this->validator->validate(
-    ['attachments' => $request->getUploadedFiles()],
-    ['attachments' => new Each(new File(maxSize: 5_000_000))],
-);
-```
+> [!TIP]
+> **Multi-File Validation Reference:**
+> For the complete multi-file recipe (DTO attribute usage with `#[Each]`, count limits, per-element checks), see the [Validation & Forms Guide, §5.3](http-validation-and-forms.md#53-validating-psr-7-uploadedfileinterface--multi-file-collections).
 
 ### 4.2. Image Dimension Rules (`Rule\Image\Image`)
 
-`Yiisoft\Validator\Rule\Image\Image` checks dimensions alongside the `File` rule (constructor from
-`vendor/yiisoft/validator/src/Rule/Image/Image.php`):
+`Yiisoft\Validator\Rule\Image\Image` checks dimensions alongside the `File` rule; it requires PHP `ext-gd`.
 
-```php
-use Yiisoft\Validator\Rule\Image\Image;
-use Yiisoft\Validator\Rule\Image\ImageAspectRatio;
-
-// Exact width/height are mutually exclusive with their min/max counterparts.
-new Image(
-    minWidth: 100,
-    maxWidth: 2000,
-    aspectRatio: new ImageAspectRatio(16, 9), // int $width, int $height, float $margin = 0
-);
-```
-
-- Constructor parameters: `?int $width`, `?int $height`, `?int $minWidth`, `?int $minHeight`, `?int $maxWidth`,
-  `?int $maxHeight`, `?ImageAspectRatio $aspectRatio`, message parameters, then
-  `skipOnEmpty` / `skipOnError` / `when`. Exact `width` / `height` are mutually exclusive with their min/max
-  counterparts (`InvalidArgumentException`).
-- A bare `new Image()` is an "is an image" check only — dimensions are validated when a constraint is set.
-- For `UploadedFileInterface` the handler requires `getError() === UPLOAD_ERR_OK` and reads the temp path from
-  the stream metadata.
-- Dimension checks rely on `getimagesize()` — HEIF/HEIC images are not supported.
+> [!TIP]
+> **Image Rule Reference:**
+> For the complete `Image` / `ImageAspectRatio` usage (DTO attribute example, constructor options, and dimension traps), see the [Validation & Forms Guide, §5.2](http-validation-and-forms.md#52-image--aspect-ratio-rules-ruleimageimage-imageaspectratio).
 
 ## 5. Placement & Wiring
 
@@ -533,6 +358,12 @@ return [
 ];
 ```
 
+- Generate the stored file name yourself — the client-supplied `getClientFilename()` is untrusted input.
+  Store uploads under a random name (e.g. `bin2hex(random_bytes(16))` plus the extension taken via
+  `pathinfo($clientName, PATHINFO_EXTENSION)`); if the original name must be kept for display, sanitize it
+  with `basename()` / `pathinfo()` to strip any directory segments before it touches a path (traversal risk).
+  Compose the destination only after alias resolution (shown above), then persist with `$upload->moveTo()`.
+
 - Download responses are presentation concerns — injecting `DownloadResponseFactory` into an action is correct.
 - Register `DownloadResponseFactory::class` explicitly in DI only if the container cannot autowire PSR-17
   factories; otherwise no definition is needed:
@@ -570,6 +401,7 @@ return [
 | Serving protected files from `public/` by direct URL | Bypasses auth/permission checks entirely | Store outside `public/`; stream through an action with `DownloadResponseFactory` |
 | Reading large files into memory to send them | `sendContentAsFile()` with a huge string exhausts memory | Use `sendFile()` (streams from disk) or `sendStreamAsFile()`; use `xSendFile()` when the web server can serve |
 | Inventing `DownloadResponseFactoryInterface` or `DownloadResponse` class | Neither exists — the factory is concrete and methods return plain `ResponseInterface` | Type-hint `Yiisoft\ResponseDownload\DownloadResponseFactory` |
+| Calling nonexistent `sendStream()` / `send()` shortcuts on `DownloadResponseFactory` | The factory exposes only `sendFile()`, `sendContentAsFile()`, `sendStreamAsFile()`, and `xSendFile()` — shorthand names cause a fatal `Error` | Use the real method names (§3.1); `$mimeType` is non-nullable in `sendStreamAsFile()` — pass it explicitly |
 | Hardcoding the x-sendfile header for your dev environment | Apache/Nginx/Lighttpd use different headers; with the feature disabled the download dialog opens a 0-byte file | Pass `xHeader:` explicitly per environment (`X-Sendfile`, `X-Accel-Redirect`, `X-LIGHTTPD-send-file`) |
 | Assuming `Content-Length` on every download response | Without `$request` the factory intentionally sets no `Content-Length`/`Accept-Ranges` | Pass the `ServerRequestInterface` when you need length + range support (§3.3) |
 | Cleaning directories with `rm -rf` in code | No cross-platform guarantees, no filtering | `FileHelper::clearDirectory()` with a `PathMatcher` `filter` |
@@ -579,5 +411,5 @@ return [
 ## 7. Related Topic Guides
 
 - [Utility Packages Guide](core-utilities.md) — `ArrayHelper`, `StringHelper`, `Json`, `VarDumper`, `Classifier`, and IP/DNS helpers.
-- [Actions & Controllers Guide](http-actions-and-controllers.md) — Streaming downloads and binary responses from Presentation Actions.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Download/upload actions: binary responses, `#[UploadedFiles]` mapping, and the canonical upload action.
 - [Validation & Forms Guide](http-validation-and-forms.md) — UploadedFile validation, multi-file rules, and image constraints.

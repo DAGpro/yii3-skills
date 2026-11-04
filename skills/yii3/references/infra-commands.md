@@ -795,159 +795,41 @@ The `! [NOTE]`-styled rendering (title + note) applies only when the output obje
 
 ## 8. Testing Console Commands (`CommandTester`)
 
-Console commands must be covered by automated integration tests using `Symfony\Component\Console\Tester\CommandTester`.
+Console commands are covered by lightweight integration tests using `Symfony\Component\Console\Tester\CommandTester`: construct the command with a mocked use-case handler, execute it with input arguments, and assert the exit code and display output.
 
 ### 8.1. Zero-Shot Compilable Command Test
 
 ```php
-declare(strict_types=1);
-
-namespace App\Tests\Presentation\Console\Command;
-
-use App\Application\UseCase\User\Create\CreateUserDto;
-use App\Application\UseCase\User\Create\CreateUserHandler;
-use App\Application\UseCase\User\Create\CreateUserResult;
-use App\Domain\User\Exception\UserAlreadyExistsException;
-use App\Presentation\Console\Command\CreateUserCommand;
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Tester\CommandTester;
-use Yiisoft\Yii\Console\ExitCode;
-
-final class CreateUserCommandTest extends TestCase
+// App\Tests\Presentation\Console\Command\CreateUserCommandTest
+public function testExecuteSuccessful(): void
 {
-    public function testExecuteSuccessful(): void
-    {
-        $handler = $this->createMock(CreateUserHandler::class);
-        $handler
-            ->expects(self::once())
-            ->method('handle')
-            ->with(self::callback(static function (CreateUserDto $dto): bool {
-                return $dto->email === 'admin@example.com'
-                    && $dto->name === 'Super Admin'
-                    && $dto->role === 'admin'
-                    && $dto->sendWelcome === true;
-            }))
-            ->willReturn(new CreateUserResult(id: 'usr_mock_123', name: 'Super Admin'));
+    $handler = $this->createMock(CreateUserHandler::class);
+    $handler->expects(self::once())->method('handle')
+        ->willReturn(new CreateUserResult(id: 'usr_mock_123', name: 'Super Admin'));
 
-        $command = new CreateUserCommand($handler);
-        $tester = new CommandTester($command);
+    $tester = new CommandTester(new CreateUserCommand($handler));
 
-        $exitCode = $tester->execute([
-            'email' => 'admin@example.com',
-            'name' => 'Super Admin',
-            '--role' => 'admin',
-        ]);
+    $exitCode = $tester->execute(['email' => 'admin@example.com', 'name' => 'Super Admin']);
 
-        self::assertSame(ExitCode::OK, $exitCode);
-
-        $display = $tester->getDisplay(true);
-        self::assertStringContainsString('Provisioning User Account', $display);
-        self::assertStringContainsString('User "Super Admin" created successfully (ID: usr_mock_123).', $display);
-    }
-
-    public function testExecuteWithInvalidEmailReturnsDataError(): void
-    {
-        $handler = $this->createMock(CreateUserHandler::class);
-        $handler->expects(self::never())->method('handle');
-
-        $command = new CreateUserCommand($handler);
-        $tester = new CommandTester($command);
-
-        $exitCode = $tester->execute([
-            'email' => 'invalid-email-string',
-            'name' => 'John Doe',
-        ]);
-
-        self::assertSame(ExitCode::DATAERR, $exitCode);
-        self::assertStringContainsString('Invalid email format: "invalid-email-string".', $tester->getDisplay(true));
-    }
-
-    public function testExecuteHandlesDomainExceptionGracefully(): void
-    {
-        $handler = $this->createMock(CreateUserHandler::class);
-        $handler
-            ->expects(self::once())
-            ->method('handle')
-            ->willThrowException(new UserAlreadyExistsException('User with this email already exists.'));
-
-        $command = new CreateUserCommand($handler);
-        $tester = new CommandTester($command);
-
-        $exitCode = $tester->execute([
-            'email' => 'existing@example.com',
-            'name' => 'Existing User',
-        ]);
-
-        self::assertSame(ExitCode::DATAERR, $exitCode);
-        self::assertStringContainsString('User with this email already exists.', $tester->getDisplay(true));
-    }
-
-    public function testExecuteSuppressesInteractivity(): void
-    {
-        $handler = $this->createMock(CreateUserHandler::class);
-        $handler
-            ->expects(self::once())
-            ->method('handle')
-            ->willReturn(new CreateUserResult(id: 'usr_mock_ci', name: 'CI User'));
-
-        $command = new CreateUserCommand($handler);
-        $tester = new CommandTester($command);
-
-        // Explicitly disable interactivity for unattended test runs
-        $exitCode = $tester->execute([
-            'email' => 'ci@example.com',
-            'name' => 'CI User',
-        ], ['interactive' => false]);
-
-        self::assertSame(ExitCode::OK, $exitCode);
-        self::assertStringContainsString('User "CI User" created successfully', $tester->getDisplay(true));
-    }
+    self::assertSame(ExitCode::OK, $exitCode);
+    self::assertStringContainsString('User "Super Admin" created successfully', $tester->getDisplay(true));
 }
 ```
 
-Two testing notes:
-
-- `setInputs(['yes', ...])` pre-fills simulated answers for interactive prompts — use it only when the command under test actually prompts (the yii-console package's own `ServeTest` calls it before `execute()`). `CreateUserCommand` has no prompts, so the last test disables interactivity explicitly instead of feeding unused inputs.
-- The `interactive` option of `CommandTester::execute()` (second argument) suppresses prompts, mirroring the production `--no-interaction` flag.
+Failure paths follow the same shape: feed invalid input (e.g. a malformed email) or throw from the mocked handler, then assert `ExitCode::DATAERR` and the friendly message returned by `getDisplay(true)`.
 
 ### 8.2. Assembling a Real `Application` Instance in Tests
 
-To test through the real `Yiisoft\Yii\Console\Application` (command lookup via `find()`, `CommandLoader` wiring, event bridging), assemble it manually and disable auto-exit. The yii-console package's own test suite uses this shape with doubles from `yiisoft/test-support`:
+Tests that need the full `Yiisoft\Yii\Console\Application` pipeline — `find()` lookup through `CommandLoader`, event bridging, default application options — assemble the application manually with test doubles from `yiisoft/test-support` (`SimpleContainer`, `SimpleEventDispatcher`). That assembly recipe, along with all `CommandTester` mechanics, is owned by the testing guide:
 
-```php
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Tester\CommandTester;
-use Yiisoft\Test\Support\Container\SimpleContainer;
-use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
-use Yiisoft\Yii\Console\Application;
-use Yiisoft\Yii\Console\CommandLoader;
-use Yiisoft\Yii\Console\SymfonyEventDispatcher;
+> [!TIP]
+> **Console Command Testing Reference:**
+> For the complete reference on `CommandTester` usage — exit codes (§6.2), output assertion with `getDisplay(true)` (§6.3), failure scenarios such as `ExitCode::DATAERR` (§6.4), interactive prompt simulation via `setInputs()` (§6.5), autocompletion testing via `CommandCompletionTester` (§6.6), and container-aware resolution via the `CommandHelper` pattern (§6.7) — see the [Testing Core Guide, §6. Testing Console Commands](testing-core.md#6-testing-console-commands-yiisoftyii-console).
 
-$dispatcher = new SymfonyEventDispatcher(new SimpleEventDispatcher());
+Testing traps:
 
-$application = new Application();
-$application->setAutoExit(false);
-$application->setDispatcher($dispatcher);
-$application->addOptions(
-    new InputOption('config', 'c', InputOption::VALUE_REQUIRED, 'Set alternative configuration name'),
-);
-
-$commandLoader = new CommandLoader(
-    new SimpleContainer([
-        // $handler: your real or mocked CreateUserHandler
-        CreateUserCommand::class => new CreateUserCommand($handler),
-    ]),
-    [
-        'user:create' => CreateUserCommand::class,
-    ],
-);
-$application->setCommandLoader($commandLoader);
-
-$command = $application->find('user:create');
-$tester = new CommandTester($command);
-```
-
-Key points: `setAutoExit(false)` prevents the test process from terminating on a non-zero exit code; `SymfonyEventDispatcher` bridges Symfony events to the PSR-14 dispatcher double; `find()` resolves through `CommandLoader` exactly as in production. Shell-completion behavior is covered by `Symfony\Component\Console\Tester\CommandCompletionTester` — construct it with the command and call `complete($input)` to receive the suggestion array.
+- `setInputs(['yes', ...])` pre-fills simulated answers for interactive prompts — use it only when the command under test actually prompts; to suppress prompts entirely, pass `['interactive' => false]` as the second argument of `CommandTester::execute()` (mirrors the production `--no-interaction` flag).
+- When assembling a real `Application` in a test, call `setAutoExit(false)` — otherwise the test process terminates on the first non-zero command exit code.
 
 ---
 
@@ -1048,3 +930,4 @@ Ecosystem details worth knowing:
 - [DI & Configuration Guide](core-di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
 - [Queue & Asynchronous Jobs Guide](infra-queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
 - [Error Handling Guide](infra-error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.
+- [Testing Core Guide](testing-core.md) — PSR test doubles, test runners, and the complete console command testing reference (`CommandTester`, §6).

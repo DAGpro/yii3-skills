@@ -421,22 +421,13 @@ Details:
 
 ### Why the Rule Holds: the `transaction()` API
 
-`Yiisoft\Db\Connection\ConnectionInterface::transaction` has the signature:
-
-```php
-public function transaction(Closure $closure, ?string $isolationLevel = null): mixed
-```
-
-Semantics (`vendor/yiisoft/db/src/Connection/AbstractConnection.php`, `vendor/yiisoft/db/src/Connection/ConnectionInterface.php`):
-
-1. Begins a transaction and invokes `$closure($this)` — zero-argument closures are accepted.
-2. Commits when the callback returns and the isolation level is unchanged.
-3. On any `Throwable`, rolls back and **re-throws** — the callback result never escapes a failed transaction.
-4. Returns the callback result only **after** COMMIT.
-
-Therefore any code executed after `transaction()` returns is guaranteed to run strictly after a successful commit — the post-commit dispatch rule is enforced by the API itself. The second argument is forwarded to `beginTransaction()`; use the string constants declared on `Yiisoft\Db\Transaction\TransactionInterface`: `READ_UNCOMMITTED`, `READ_COMMITTED`, `REPEATABLE_READ`, `SERIALIZABLE`.
+`ConnectionInterface::transaction()` commits **before** it returns and, on any `Throwable`, rolls back and re-throws — so any code executed after `transaction()` returns is guaranteed to run strictly after a successful commit: the post-commit dispatch rule is enforced by the API itself.
 
 Note: `dispatch()` returns the same (possibly mutated) event object that was passed in.
+
+> [!TIP]
+> **Database Guide Reference:**
+> For the complete `transaction()` reference — the closure contract (zero-argument closures are accepted), the isolation-level second argument forwarded to `beginTransaction()`, and the `TransactionInterface` isolation-constant catalog — see the [Database Guide, §4.1](persistence-db.md#41-idiomatic-closure-transactions-transaction) and [§4.3](persistence-db.md#43-isolation-levels--post-commit-event-rule).
 
 ### Recommended Aggregate Event-Recording Pattern
 
@@ -898,46 +889,23 @@ Inject the `SimpleEventDispatcher` instance wherever an `EventDispatcherInterfac
 AR event behavior (veto, custom return values) is testable by wiring a `SimpleEventDispatcher` into `EventDispatcherProvider::set()` — the same technique used by `yiisoft/active-record`'s own test suite:
 
 ```php
-declare(strict_types=1);
+// Category must use Yiisoft\ActiveRecord\Trait\EventsTrait (see Section 6.6)
+EventDispatcherProvider::set(Category::class, new SimpleEventDispatcher(
+    static function (object $event): void {
+        if ($event instanceof BeforeInsert) {
+            $event->preventDefault(); // veto the insert
+        }
+    },
+));
+$category = new Category();
+$category->name = 'Prevented Category';
 
-namespace App\Tests\Model;
-
-use App\Model\Category;
-use PHPUnit\Framework\TestCase;
-use Yiisoft\ActiveRecord\Event\BeforeInsert;
-use Yiisoft\ActiveRecord\Event\EventDispatcherProvider;
-use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
-
-final class CategoryInsertPreventionTest extends TestCase
-{
-    protected function tearDown(): void
-    {
-        EventDispatcherProvider::reset();
-    }
-
-    public function testInsertCanBePrevented(): void
-    {
-        // class Category must use Yiisoft\ActiveRecord\Trait\EventsTrait (see Section 6.6)
-        EventDispatcherProvider::set(
-            Category::class,
-            new SimpleEventDispatcher(
-                static function (object $event): void {
-                    if ($event instanceof BeforeInsert) {
-                        $event->preventDefault();
-                    }
-                },
-            ),
-        );
-
-        $category = new Category();
-        $category->name = 'Prevented Category';
-
-        $category->insert();
-
-        $this->assertNull($category->id);
-    }
-}
+$category->insert();
+$this->assertNull($category->id); // nothing was inserted
 ```
+
+- **`tearDown()` must call `EventDispatcherProvider::reset()`:** the provider holds **static** per-model dispatchers — without the reset, the wiring leaks between tests and pollutes unrelated tests touching the same model class.
+- **Prevent-`BeforeInsert` wiring:** the test double is registered per model class via `EventDispatcherProvider::set(Model::class, $dispatcher)`; its listener calls `$event->preventDefault()` on `BeforeInsert`, after which the model's `insert()` performs no insert and suppresses the corresponding `AfterInsert` event (see [Section 6.6](#66-active-record-lifecycle-yiisoftactive-record)).
 
 ### 8.3. SimpleContainer for Listener Resolution
 

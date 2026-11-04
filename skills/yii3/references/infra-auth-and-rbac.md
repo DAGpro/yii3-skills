@@ -483,17 +483,7 @@ return [
 
 `Yiisoft\Auth\Middleware\Authentication` inspects credentials and places the authenticated `IdentityInterface` into the request attribute `Yiisoft\Auth\Middleware\Authentication::class`. However, it does not mutate `CurrentUser`.
 
-`Yiisoft\User\Login\LoginMiddleware` bridges this gap: if `CurrentUser::isGuest()` is true, it reads the `Authentication::class` request attribute and automatically calls `$currentUser->login($identity)`:
-
-```php
-use Yiisoft\Auth\Middleware\Authentication;
-use Yiisoft\User\Login\LoginMiddleware;
-
-// In route group middleware definition:
-$group
-    ->middleware(Authentication::class) // Evaluates credentials, sets request attribute
-    ->middleware(LoginMiddleware::class); // Logs identity into CurrentUser session
-```
+`Yiisoft\User\Login\LoginMiddleware` bridges this gap: if `CurrentUser::isGuest()` is true, it reads the `Authentication::class` request attribute and automatically calls `$currentUser->login($identity)`. The pair is attached to route groups as `Authentication::class` followed by `LoginMiddleware::class` — see §7.1 for the complete route-wiring example.
 
 ### 4.4. Full Logout Lifecycle & State Reset
 
@@ -606,37 +596,13 @@ return [
 
 #### Attaching `CookieLoginMiddleware` to Pipeline
 
-There is **no** `"middlewares"` params key — no package consumes it. The middleware pipeline is wired through the `Application::class` DI definition in `config/web/di/application.php`, whose `dispatcher` constructor parameter receives a `MiddlewareDispatcher` with middleware definitions passed to its constructor (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [error-handling.md](infra-error-handling.md), section 2). Register `CookieLoginMiddleware` immediately after `SessionMiddleware`:
+There is **no** `"middlewares"` params key — no package consumes it. The middleware pipeline is wired through the `Application::class` DI definition in `config/web/di/application.php`, whose `dispatcher` constructor parameter receives a `MiddlewareDispatcher` with middleware definitions passed to its constructor (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [error-handling.md](infra-error-handling.md), section 2).
 
-```php
-// config/web/di/application.php
-use Yiisoft\Definitions\DynamicReference;
-use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
-use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
-use Yiisoft\Router\Middleware\Router;
-use Yiisoft\Session\SessionMiddleware;
-use Yiisoft\User\Login\Cookie\CookieLoginMiddleware;
-use Yiisoft\Yii\Http\Application;
+In authenticated web pipelines, register `CookieLoginMiddleware` after `SessionMiddleware` (remember-me auto-login needs the session) and before `Authentication` / `LoginMiddleware`, so the remembered identity is resolved before identity consumers run:
 
-return [
-    Application::class => [
-        '__construct()' => [
-            'dispatcher' => DynamicReference::to([
-                'class' => MiddlewareDispatcher::class,
-                '__construct()' => [
-                    'middlewareDefinitions' => [
-                        ErrorCatcher::class,
-                        SessionMiddleware::class,
-                        CookieLoginMiddleware::class, // Auto-authenticates guest users from cookie
-                        // ... other application middlewares
-                        Router::class,
-                    ],
-                ],
-            ]),
-        ],
-    ],
-];
-```
+> [!TIP]
+> **Global Middleware Pipeline Reference:**
+> For the complete `Application::class` DI wiring and the canonical authenticated-pipeline order (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`), see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 ### 4.6. Web Login Security: CSRF & Brute-Force Rate Limiting
 
@@ -647,91 +613,41 @@ All state-changing web login forms must validate CSRF tokens using `Yiisoft\Csrf
 > [!WARNING]
 > `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated`. Always use `Yiisoft\Csrf\CsrfTokenMiddleware`.
 
-1. **Pipeline registration (`config/web/di/application.php`):** there is **no** `"middlewares"` params key — the stack is wired on the `Application::class` DI definition via the `MiddlewareDispatcher` constructor argument `middlewareDefinitions` (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [error-handling.md](infra-error-handling.md), section 2):
-   ```php
-   use Yiisoft\Csrf\CsrfTokenMiddleware;
-   use Yiisoft\Definitions\DynamicReference;
-   use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
-   use Yiisoft\Router\Middleware\Router;
-   use Yiisoft\Session\SessionMiddleware;
-   use Yiisoft\User\Login\Cookie\CookieLoginMiddleware;
-   use Yiisoft\Yii\Http\Application;
+**Pipeline ordering (auth-specific constraints only):** `SessionMiddleware` must precede `CsrfTokenMiddleware` (synchronizer tokens live in the session), and in the canonical authenticated pipeline `CsrfTokenMiddleware` runs before `CookieLoginMiddleware`. The pipeline itself is registered once on the `Application::class` DI definition — the full stack is not repeated here.
 
-   return [
-       Application::class => [
-           '__construct()' => [
-               'dispatcher' => DynamicReference::to([
-                   'class' => MiddlewareDispatcher::class,
-                   '__construct()' => [
-                       'middlewareDefinitions' => [
-                           \Yiisoft\ErrorHandler\Middleware\ErrorCatcher::class,
-                           SessionMiddleware::class,
-                           CsrfTokenMiddleware::class,
-                           CookieLoginMiddleware::class,
-                           Router::class,
-                       ],
-                   ],
-               ]),
-           ],
-       ],
-   ];
-   ```
+> [!TIP]
+> **Middleware Pipeline & CSRF Reference:**
+> For the complete `Application::class` pipeline wiring, the canonical authenticated order, and full CSRF middleware behavior (`withSafeMethods()` trap, failure handlers, SPA cookie variants), see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp) and [§3.2 "CSRF Middleware Behavior"](http-middlewares.md#32-csrf-middleware-behavior).
 
-2. **Login View Form Template:**
-   ```php
-   /** @var Yiisoft\Csrf\CsrfTokenInterface $csrfToken */
-   ?>
-   <form method="post" action="/auth/login">
-       <input type="hidden" name="_csrf" value="<?= \Yiisoft\Html\Html::encode($csrfToken->getValue()) ?>">
-       <div class="mb-3">
-           <label for="username">Username or Email</label>
-           <input type="text" id="username" name="username" class="form-control" required>
-       </div>
-       <div class="mb-3">
-           <label for="password">Password</label>
-           <input type="password" id="password" name="password" class="form-control" required>
-       </div>
-       <div class="mb-3 form-check">
-           <input type="checkbox" id="rememberMe" name="rememberMe" value="1" class="form-check-input">
-           <label for="rememberMe" class="form-check-label">Remember me</label>
-       </div>
-       <button type="submit" class="btn btn-primary">Sign In</button>
-   </form>
-   ```
+**Login View Form Template:**
+```php
+/** @var Yiisoft\Csrf\CsrfTokenInterface $csrfToken */
+?>
+<form method="post" action="/auth/login">
+    <input type="hidden" name="_csrf" value="<?= \Yiisoft\Html\Html::encode($csrfToken->getValue()) ?>">
+    <div class="mb-3">
+        <label for="username">Username or Email</label>
+        <input type="text" id="username" name="username" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-control" required>
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" id="rememberMe" name="rememberMe" value="1" class="form-check-input">
+        <label for="rememberMe" class="form-check-label">Remember me</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Sign In</button>
+</form>
+```
 
 #### Brute-Force Rate Limiting (`LimitRequestsMiddleware`)
 
-Protect authentication endpoints from credential-stuffing and brute-force dictionary attacks using `Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware`. It uses the Generic Cell Rate Algorithm (GCRA leaky bucket):
+Login endpoints are the primary target of credential-stuffing and brute-force dictionary attacks, so restrict repeated authentication attempts (typically per client IP) with `Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware` (GCRA leaky bucket) before delegating to the login action:
 
-```php
-declare(strict_types=1);
-
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\SimpleCache\CacheInterface;
-use Yiisoft\Router\Route;
-use Yiisoft\Yii\RateLimiter\Counter;
-use Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware;
-use Yiisoft\Yii\RateLimiter\Policy\LimitPerIp;
-use Yiisoft\Yii\RateLimiter\Storage\SimpleCacheStorage;
-
-// Restrict login attempts to 5 per 60 seconds per client IP:
-Route::post('/auth/login')
-    ->middleware(
-        static fn (
-            ResponseFactoryInterface $responseFactory,
-            CacheInterface $cache,
-        ): LimitRequestsMiddleware => new LimitRequestsMiddleware(
-            counter: new Counter(
-                storage: new SimpleCacheStorage($cache),
-                limit: 5,
-                periodInSeconds: 60,
-            ),
-            responseFactory: $responseFactory,
-            limitingPolicy: new LimitPerIp(),
-        )
-    )
-    ->action(LoginAction::class);
-```
+> [!TIP]
+> **Rate Limiting Reference:**
+> For the complete reference on `yiisoft/rate-limiter` — DI configuration (`Counter`, `SimpleCacheStorage`, `LimitPerIp`), route-level attachment, custom per-user policies, and automatic `X-Rate-Limit-*` headers with HTTP 429 mapping — see the [PSR-15 Middlewares Guide, §4.4 "Rate Limiting Recipes"](http-middlewares.md#44-rate-limiting-recipes-yiisoftrate-limiter).
 
 ### 4.7. PSR-14 User Authentication Events
 
@@ -1134,97 +1050,21 @@ return [
 
 #### Middleware Pipeline Order Invariant
 
-In standard web applications, middlewares must run in this exact sequence:
-1. `ErrorCatcher`
-2. `SessionMiddleware`
-3. `CsrfTokenMiddleware`
-4. `CookieLoginMiddleware`
-5. `Authentication`
-6. `LoginMiddleware`
-7. `Router`
-8. Route-specific access guards (`AccessCheckerMiddleware`)
+The exact global middleware sequence is a middleware-layer concern: route definitions in this guide only attach `Authentication` and `LoginMiddleware` at the route-group scope, and the canonical global order is owned by the Middlewares Guide.
+
+> [!TIP]
+> **Middleware Pipeline Reference:**
+> For the canonical authenticated-pipeline order (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`), the complete `Application::class` DI wiring, and all ordering constraints, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 ### 7.2. Protecting Routes with RBAC Permissions
 
-To enforce permission checks directly on route groups or endpoints, register a custom PSR-15 permission guard middleware:
+For coarse-grained, endpoint-level authorization (e.g. "only users with the `adminAccess` permission may reach `/admin/*`"), enforce the RBAC permission check as a PSR-15 middleware attached to route groups or single routes, after `Authentication` and `LoginMiddleware` have resolved the identity.
 
-```php
-declare(strict_types=1);
+> [!TIP]
+> **RBAC Permission Guard Reference:**
+> For the complete reference on the `AccessCheckerMiddleware` guard implementation and attaching it to route groups and single routes, see the [PSR-15 Middlewares Guide, §2.6 "RBAC Permission Guard"](http-middlewares.md#26-rbac-permission-guard-accesscheckermiddleware).
 
-namespace App\Presentation\Middleware;
-
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
-use Yiisoft\Http\Status;
-use Yiisoft\User\CurrentUser;
-
-final readonly class AccessCheckerMiddleware implements MiddlewareInterface
-{
-    public function __construct(
-        private string $permission,
-        private CurrentUser $currentUser,
-        private DataResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        if ($this->currentUser->isGuest()) {
-            return $this->responseFactory->createResponse(
-                ['error' => 'Authentication required'],
-                Status::UNAUTHORIZED
-            );
-        }
-
-        if (!$this->currentUser->can($this->permission)) {
-            return $this->responseFactory->createResponse(
-                ['error' => 'Access denied'],
-                Status::FORBIDDEN
-            );
-        }
-
-        return $handler->handle($request);
-    }
-}
-```
-
-Attaching the RBAC guard to route definitions:
-
-```php
-declare(strict_types=1);
-
-use App\Presentation\Action\Admin\ListUsersAction;
-use App\Presentation\Middleware\AccessCheckerMiddleware;
-use Yiisoft\Auth\Middleware\Authentication;
-use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
-use Yiisoft\Router\Group;
-use Yiisoft\Router\Route;
-use Yiisoft\User\CurrentUser;
-use Yiisoft\User\Login\LoginMiddleware;
-
-Group::create('/admin')
-    ->middleware(Authentication::class)
-    ->middleware(LoginMiddleware::class)
-    ->middleware(
-        static fn (
-            CurrentUser $currentUser,
-            DataResponseFactoryInterface $responseFactory,
-        ): AccessCheckerMiddleware => new AccessCheckerMiddleware('adminAccess', $currentUser, $responseFactory)
-    )
-    ->routes(
-        Route::get('/users')
-            ->action(ListUsersAction::class)
-            ->middleware(
-                static fn (
-                    CurrentUser $currentUser,
-                    DataResponseFactoryInterface $responseFactory,
-                ): AccessCheckerMiddleware => new AccessCheckerMiddleware('manageUsers', $currentUser, $responseFactory)
-            )
-            ->name('admin.users'),
-    );
-```
+Where the permissions, roles, assignments, and dynamic rules evaluated by such guards are defined and stored — the RBAC layer itself — see §8 (Role-Based Access Control Architecture); for fine-grained, object-level permission checks inside actions and services, see §9.
 
 ---
 
@@ -1555,52 +1395,21 @@ $manager = new Manager(
 
 ### 9.1. In Presentation Actions
 
-Inject `Yiisoft\User\CurrentUser` into the action handler and call `$currentUser->can()`:
+Inject `Yiisoft\User\CurrentUser` into the action handler and call `$currentUser->can()`. Pass contextual parameters as the second argument so dynamic RBAC rules (e.g. "author only") can evaluate them — this is the one permission detail that differs from a plain permission-name check:
 
 ```php
-declare(strict_types=1);
-
-namespace App\Presentation\Action\Post;
-
-use App\Application\Post\PostRepositoryInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
-use Yiisoft\Http\Status;
-use Yiisoft\User\CurrentUser;
-
-final readonly class UpdatePostAction
-{
-    public function __construct(
-        private CurrentUser $currentUser,
-        private PostRepositoryInterface $postRepository,
-        private DataResponseFactoryInterface $responseFactory,
-    ) {}
-
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $postId = (string) $request->getAttribute('id');
-        $post = $this->postRepository->findById($postId);
-
-        if ($post === null) {
-            return $this->responseFactory->createResponse(
-                ['error' => 'Post not found'],
-                Status::NOT_FOUND,
-            );
-        }
-
-        // Evaluate permission with contextual arguments (supports string or BackedEnum)
-        if (!$this->currentUser->can('posts.editOwn', ['authorId' => $post->getAuthorId()])) {
-            return $this->responseFactory->createResponse(
-                ['error' => 'Forbidden'],
-                Status::FORBIDDEN,
-            );
-        }
-
-        return $this->responseFactory->createResponse(['status' => 'updated']);
-    }
+// Inside an action handler, after loading the post:
+if (!$this->currentUser->can('posts.editOwn', ['authorId' => $post->getAuthorId()])) {
+    return $this->responseFactory->createResponse(
+        ['error' => 'Forbidden'],
+        Status::FORBIDDEN, // HTTP 403
+    );
 }
 ```
+
+> [!TIP]
+> **Action Authorization Reference:**
+> For the complete reference on authentication and authorization in presentation actions — guest/401 handling, the full `can()` signature (`can(string|BackedEnum $permissionName, array $params = []): bool`), and the "no access checker attached → `can()` always returns `false`" trap — see the [Actions & Controllers Guide, §3.8 "Authentication & Authorization"](http-actions-and-controllers.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt).
 
 ### 9.2. In Application Services / Use Cases (`AccessCheckerInterface`)
 
@@ -1656,8 +1465,8 @@ final readonly class PostAuthorizationService
 ## 11. Related Topic Guides
 
 - [Routing Guide](http-routes.md) — Route groups, pipeline execution order, and attaching authentication/RBAC middlewares.
-- [Actions & Controllers Guide](http-actions-and-controllers.md) — Checking permissions via `CurrentUser::can()` inside actions.
-- [PSR-15 Middlewares Guide](http-middlewares.md) — Guard pipelines, CORS preflight ordering, and custom middleware implementations.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Authentication and permission checks (`CurrentUser::can()`) inside presentation actions.
+- [PSR-15 Middlewares Guide](http-middlewares.md) — Global pipeline registration with the canonical authenticated order, the RBAC permission guard, rate limiting, CORS preflight ordering, and custom middleware implementations.
 - [HTTP State Guide](http-state.md) — Session authentication, cookie parameters, and remember-me state.
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and `StateResetter` configuration.
 - [Caching Guide](persistence-caching.md) — PSR-16 cache configuration required for OpenID Connect discovery.

@@ -621,27 +621,17 @@ class ExitCode
 Also on the class: `public static array $reasons` (exit-code to description map) and `public static function getReason(int $exitCode): string` (returns "Unknown exit code" for unlisted codes).
 **Usage in Console Command:**
 ```php
-declare(strict_types=1);
-
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Yiisoft\Yii\Console\ExitCode;
-
-#[AsCommand(name: 'app:greet', description: 'Greets the user.')]
-final class GreetCommand extends Command
-{
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        return ExitCode::OK;
-    }
-}
+// Inside a command's execute(InputInterface $input, OutputInterface $output): int:
+return ExitCode::OK;
 ```
+
+> [!TIP]
+> **Console Commands Guide Reference:**
+> For the full command anatomy — `final class ... extends Command` with the `#[AsCommand]` attribute, constructor injection, and the mandatory `parent::__construct()` rule — see the [Console Commands Guide, §2](infra-commands.md#2-command-class-anatomy--constructor-injection); for exit-code semantics and reason inspection, see [§6](infra-commands.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode).
+
 > Notes:
 > - `ExitCode` is `@final` — do not extend it despite the missing `final` keyword.
-> - The `execute()` override idiom above is the pattern used by official commands; the base declaration lives in Symfony Console — verify it against `vendor/symfony/console/` (`Symfony\Component\Console\Command\Command`).
-> - Command classes are `final` classes extending `Symfony\Component\Console\Command\Command`, registered with the `#[AsCommand]` attribute (`name` + `description`).
+> - The `execute(InputInterface $input, OutputInterface $output): int` override returning an `ExitCode` constant is the idiom used by official commands; the base declaration lives in Symfony Console — verify it against `vendor/symfony/console/` (`Symfony\Component\Console\Command\Command`).
 
 ---
 
@@ -908,8 +898,8 @@ interface SessionInterface
 > - `get()`, `set()`, `pull()` are intentionally untyped in the source — reproduce them exactly when implementing the interface.
 > - Session is obtained via DI injection of `SessionInterface`, NOT via request attributes.
 > - `final class Session` ctor: `new Session(array $options = [], ?SessionHandlerInterface $handler = null)`; `final class SessionMiddleware` (ctor `(SessionInterface $session)`) reads the session cookie and commits the `Set-Cookie` header on close.
-> - Canonical pipeline order: `ErrorCatcher` → `SessionMiddleware` → `CsrfTokenMiddleware` → `Router`.
-> - Flash API lives in `Yiisoft\Session\Flash` (`FlashInterface`: `set()`, `add()`, `get()`, `getAll()`, `has()`, `remove()`, `removeAll()`); `final class Flash` ctor: `(SessionInterface $session)`.
+> - The canonical middleware pipeline order — including the authenticated-pipeline invariants — is owned by the [PSR-15 Middlewares Guide, §4.1](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
+> - Flash Messages (`Yiisoft\Session\Flash\Flash` / `FlashInterface`) — full API and usage semantics are owned by the [HTTP State Guide, §3](http-state.md#3-flash-messages).
 
 **Usage:**
 ```php
@@ -956,8 +946,7 @@ interface CsrfTokenInterface
 ```
 > Notes:
 > - `CsrfMiddleware` is `@deprecated` (since 2.2.0) — the canonical middleware is `CsrfTokenMiddleware`.
-> - The token is read from the parsed body (`PARAMETER_NAME`) first, then from the header (`HEADER_NAME`). Safe methods (GET, HEAD, OPTIONS) skip validation; failure returns 422 unless a `failureHandler` is provided.
-> - Default DI pipeline: `CsrfTokenInterface` → `MaskedCsrfToken(SynchronizerCsrfToken(RandomCsrfTokenGenerator, SessionCsrfTokenStorage))`; a stateless variant `Yiisoft\Csrf\Hmac\HmacCsrfToken` exists.
+> - Request-validation behavior (parsed-body → header read order, safe methods, 422 failure handling) is owned by the [PSR-15 Middlewares Guide, §3.2](http-middlewares.md#32-csrf-middleware-behavior); token implementations and DI wiring (`CsrfTokenInterface` → `MaskedCsrfToken`, stateless `HmacCsrfToken` variant) by the [HTTP State Guide, §5](http-state.md#5-csrf-yiisoftcsrf).
 
 **Usage:**
 ```php
@@ -1052,21 +1041,14 @@ final class MiddlewareDispatcher
 
 **Usage:**
 ```php
-declare(strict_types=1);
-
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-
-final class SecurityHeadersMiddleware implements MiddlewareInterface
-{
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        return $handler->handle($request)->withHeader('X-Frame-Options', 'DENY');
-    }
-}
+// App\Presentation\Middleware\SecurityHeadersMiddleware implements MiddlewareInterface:
+public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface;
+// post-processes the downstream response, e.g. $handler->handle($request)->withHeader('X-Frame-Options', 'DENY')
 ```
+
+> [!TIP]
+> **Middlewares Guide Reference:**
+> For the complete security-headers recipe (recommended header set, response post-processing flow, and pipeline placement), see the [PSR-15 Middlewares Guide, §2.4](http-middlewares.md#24-response-post-processing-security-headers).
 
 ---
 

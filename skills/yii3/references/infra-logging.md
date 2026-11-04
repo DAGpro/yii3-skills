@@ -397,6 +397,8 @@ The core package ships two targets (no external package needed):
   must go to stdout/stderr instead of files. **RoadRunner exception:** under RoadRunner `stdout` is the Goridge
   binary pipe between Go and PHP — writing unformatted log text to it breaks payload framing and crashes the
   worker; log to `php://stderr` (or a file) instead — see [Runners & Runtimes Guide, §4.3](infra-runners-and-runtimes.md).
+  The `$levels` constructor parameter is available since `yiisoft/log` 2.2.0 — `StreamTarget::setLevels()` is
+  deprecated (like all `Target` setters, §4), so pass levels to the constructor.
 - `Yiisoft\Log\PsrTarget` — constructor: `__construct(LoggerInterface $logger, array $levels = [], /* Target params */)`.
   On export every message is forwarded as `$logger->log($level, $message, $context)` — level, message, and the
   full context — which makes it the bridge to third-party PSR-3 loggers.
@@ -586,15 +588,11 @@ real logger. With debug disabled nothing is decorated — production logging con
 
 ## 11. Testing Logging Code
 
-`yiisoft/test-support` (`composer require --dev yiisoft/test-support`) provides
-`Yiisoft\Test\Support\Log\SimpleLogger` — a `final` PSR-3 implementation (`LoggerInterface` via `LoggerTrait`)
-that accumulates every logged message in memory:
+`yiisoft/test-support` (`composer require --dev yiisoft/test-support`) provides `Yiisoft\Test\Support\Log\SimpleLogger` — a `final` PSR-3 implementation (`LoggerInterface` via `LoggerTrait`) that accumulates every logged message in memory as flat `['level' => string, 'message' => string, 'context' => array]` arrays (not `Yiisoft\Log\Message` objects), read via `getMessages(): array`; it interpolates placeholders from top-level context keys only, unlike `Yiisoft\Log\Message` (§5).
 
-- The constructor takes no arguments. Each record is a flat array `['level' => string, 'message' => string,
-  'context' => array]` — **not** a `Yiisoft\Log\Message` object. Read everything with `getMessages(): array`.
-- Level validation mirrors PSR-3: a non-string or unsupported level throws `Psr\Log\InvalidArgumentException`.
-- Placeholders are interpolated by **top-level** context keys only — `{user.name}` is *not* resolved from nested
-  `'user' => ['name' => …]` context (unlike `Yiisoft\Log\Message`, §5).
+> [!TIP]
+> **Logging Testing Reference:**
+> For the complete reference on the PSR-3 `SimpleLogger` double — interpolation behavior, level validation, and the missing `hasMessage()`/`clear()` methods — see the [Testing Core Guide, §3.2. PSR-3 Logger (`SimpleLogger`)](testing-core.md#32-psr-3-logger-simplelogger).
 
 ```php
 declare(strict_types=1);

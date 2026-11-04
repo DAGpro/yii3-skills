@@ -315,22 +315,8 @@ return [
 
 ### 4.2. Why `Group::create('/swagger', [...])` Silently Fails
 
-In `Yiisoft\Router\Group`, the method signature is:
-
-```php
-public static function create(?string $prefix = null): self
-```
-
-`Group::create()` accepts **only one parameter** (`$prefix`). If you pass an array of routes as the second argument:
-
-```php
-// FATAL FLAW: Second parameter is silently discarded by PHP!
-Group::create('/swagger', [
-    Route::get('')->action(...),
-]);
-```
-
-The array of routes is completely ignored, resulting in an empty route group with zero endpoints. You **must** call `new Group('/swagger', [...])` — note that the static factory `Group::create()` itself is `@deprecated` since router 4.0.3 (see the [Routing Guide](http-routes.md)).
+> [!CAUTION]
+> `Group::create(?string $prefix = null)` accepts **only the prefix** — a second argument (routes array) is silently discarded by PHP, leaving an empty route group with zero endpoints. Always use `new Group('/swagger', [...])` or `(new Group('/swagger'))->routes(...)`. The canonical trap analysis lives in the [Routing Guide, §9 Anti-Pattern Matrix](http-routes.md#9-anti-pattern-matrix).
 
 ### 4.3. The JSON Response Middleware Contract
 
@@ -847,8 +833,6 @@ use Yiisoft\Http\Status;
 use Yiisoft\Hydrator\HydratorInterface;
 use Yiisoft\Validator\ValidatorInterface;
 
-use function array_map;
-
 final readonly class CreateProductAction
 {
     public function __construct(
@@ -883,24 +867,10 @@ final readonly class CreateProductAction
     )]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array $body */
-        $body = (array) ($request->getParsedBody() ?? []);
-        /** @var CreateProductRequest $dto */
-        $dto = $this->hydrator->create(CreateProductRequest::class, $body);
-        $validationResult = $this->validator->validate($dto);
-
-        if (!$validationResult->isValid()) {
-            return $this->responseFactory->createResponse([
-                'type' => 'https://example.com/errors/validation-failed',
-                'title' => 'Validation Failed',
-                'status' => Status::UNPROCESSABLE_ENTITY,
-                'detail' => 'The request payload contains invalid values.',
-                'invalid-params' => array_map(
-                    static fn ($error) => ['name' => implode('.', $error->getValuePath()), 'reason' => $error->getMessage()],
-                    $validationResult->getErrors()
-                ),
-            ], Status::UNPROCESSABLE_ENTITY);
-        }
+        // Hydrate + validate + 422 problem+json — canonical recipe: Actions & Controllers Guide §3.2.
+        // On failure, the payload's `invalid-params` is a path-indexed map
+        // (`Result::getErrorMessagesIndexedByPath()` — see the ValidationProblemDetailsResponder, §3.2, item 5).
+        $dto = /* hydrated + validated CreateProductRequest per the recipe above */;
 
         $product = $this->productRepository->createFromDTO($dto);
 
@@ -915,6 +885,12 @@ final readonly class CreateProductAction
 }
 ```
 
+> [!TIP]
+> **Request Parsing & Validation Reference:**
+> For the complete reference on the manual hydrate → validate → 422 loop and the RFC 7807
+> `ValidationProblemDetailsResponder` (which serializes `invalid-params` as a path-indexed map via
+> `getErrorMessagesIndexedByPath()`), see the [Actions & Controllers Guide, §3.2 — Request Parsing & DTO Hydration](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator) and [§3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-and-controllers.md#5-rfc-7807-problem-details-error-responder).
+
 ### 5.7. File Uploads (`multipart/form-data`)
 
 Documenting binary file uploads requires `#[OA\MediaType(mediaType: 'multipart/form-data')]` with `type: 'string', format: 'binary'`.
@@ -928,26 +904,17 @@ use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use Yiisoft\Aliases\Aliases;
 use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
 use Yiisoft\Http\Status;
-use Yiisoft\Router\CurrentRoute;
 use Yiisoft\Validator\Rule\File;
 use Yiisoft\Validator\Rule\Required;
 use Yiisoft\Validator\ValidatorInterface;
-
-use function bin2hex;
-use function pathinfo;
-use function random_bytes;
-use function sprintf;
-use function strtolower;
 
 final readonly class UploadProductImageAction
 {
     public function __construct(
         private ValidatorInterface $validator,
         private DataResponseFactoryInterface $responseFactory,
-        private Aliases $aliases,
     ) {}
 
     #[OA\Post(
@@ -1004,10 +971,8 @@ final readonly class UploadProductImageAction
             ),
         ]
     )]
-    public function __invoke(
-        CurrentRoute $currentRoute,
-        ServerRequestInterface $request,
-    ): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
         $uploadedFiles = $request->getUploadedFiles();
         /** @var UploadedFileInterface|null $file */
         $file = $uploadedFiles['image'] ?? null;
@@ -1030,17 +995,12 @@ final readonly class UploadProductImageAction
             ], Status::UNPROCESSABLE_ENTITY);
         }
 
-        // Move uploaded file to persistent storage.
-        //
-        // CAUTION: `UploadedFileInterface::moveTo()` accepts only a real filesystem path — it does NOT resolve Yii
-        // aliases such as `@public`. Resolve the alias with the `Yiisoft\Aliases\Aliases` service first. Also never
-        // concatenate the raw client-supplied filename into the target path (path traversal risk): sanitize it via
-        // `basename()`/`pathinfo()`, or preferably store the file under a random name.
-        $clientName = $file->getClientFilename() ?? '';
-        $extension = strtolower(pathinfo($clientName, PATHINFO_EXTENSION));
-        $safeName = bin2hex(random_bytes(16)) . '.' . $extension;
-        $targetPath = sprintf('/uploads/products/%s-%s', $currentRoute->getArgument('id'), $safeName);
-        $file->moveTo($this->aliases->get('@public') . $targetPath);
+        // Storage step — persist with `$file->moveTo($targetPath)`. Building the safe destination
+        // (random server-side name, sanitized client extension, alias resolved via `Aliases::get()`,
+        // directory creation) is the filesystem slice owned by the File Handling Guide — see the
+        // bridge below.
+        $targetPath = /* destination per File Handling Guide §4/§5: alias-resolved path + random server-side name */;
+        $file->moveTo($targetPath);
 
         return $this->responseFactory->createResponse([
             'imageUrl' => $targetPath,
@@ -1048,6 +1008,13 @@ final readonly class UploadProductImageAction
     }
 }
 ```
+
+> [!TIP]
+> **File Handling Reference:**
+> For the complete reference on the filesystem-level storage step (random file names via
+> `bin2hex(random_bytes(16))`, path-traversal sanitization with `basename()`/`pathinfo()`,
+> `FileHelper::ensureDirectory()`, and alias resolution before `moveTo()`), see the
+> [File Handling Guide, §4 — File Uploads (PSR-7 + Validator)](http-file-handling.md#4-file-uploads-psr-7--validator) and [§5 — Placement & Wiring](http-file-handling.md#5-placement--wiring).
 
 ### 5.8. Standardized Error Models: RFC 7807 / RFC 9457 Problem Details
 
@@ -1101,7 +1068,7 @@ use OpenApi\Attributes as OA;
         ),
         new OA\Property(
             property: 'invalid-params',
-            description: 'List of specific parameter validation failures',
+            description: 'Validation failures as a list of {name, reason} objects — a custom API-specific shape, NOT the framework default (canonical shape: path-indexed map, see the note below).',
             type: 'array',
             items: new OA\Items(
                 properties: [
@@ -1116,6 +1083,14 @@ final readonly class ProblemDetails
 {
 }
 ```
+
+> [!IMPORTANT]
+> **Canonical `invalid-params` shape:** the canonical `ValidationProblemDetailsResponder`
+> serializes `invalid-params` as a **path-indexed map** of messages —
+> `Result::getErrorMessagesIndexedByPath()`, e.g. `{"sku": "SKU must be uppercase alphanumeric with dashes."}` —
+> not as a list of `{name, reason}` objects. The object-list items modeled above are a **custom-shape
+> variant**, not the framework default; only commit to them deliberately across the whole API.
+> For the canonical responder, see the [Actions & Controllers Guide, §3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-and-controllers.md#5-rfc-7807-problem-details-error-responder).
 
 ---
 
@@ -1325,6 +1300,8 @@ return [
 
 Copy `vendor/yiisoft/yii-swagger/views/swagger-ui.php` to your application at `views/swagger/swagger-ui.php` and customize the HTML header, corporate logos, or analytics scripts.
 
+Theme path mapping mechanics (`Yiisoft\View\Theme`, `pathMap`) are owned by the [Views & Widgets Guide, §2.4 — Application View Theming](http-views-and-widgets.md#24-application-view-theming-yiisoftviewtheme).
+
 ### 8.3. Custom CSS Theme & Dark Mode
 
 To apply custom branding or dark themes to Swagger UI, create an asset bundle in your application:
@@ -1360,6 +1337,8 @@ Register this bundle globally in `config/packages/yiisoft/assets.php` or inside 
 $assetManager->register(\App\Infrastructure\Asset\SwaggerDarkThemeAsset::class);
 ```
 
+Asset bundle declaration (`AssetBundle` properties, `depends`, publishing, CDN with SRI) is owned by the [Views & Widgets Guide, §6.1 — Declaring an Asset Bundle](http-views-and-widgets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
+
 ### 8.4. CDN Asset Serving for Serverless Deployments
 
 For read-only serverless filesystems (e.g. AWS Lambda, Google Cloud Run) where local `@assets` directories cannot be written to at runtime:
@@ -1381,6 +1360,8 @@ return [
     ],
 ];
 ```
+
+Full `customizedBundles` semantics (overriding and disabling bundles in `params.php`) are documented in the [Views & Widgets Guide, §6.7 — Overriding & Disabling Bundles](http-views-and-widgets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp).
 
 ---
 
@@ -1566,7 +1547,7 @@ When deploying new code releases in production:
 | 1 | **Setting `'cacheTTL' => null` in Dev** | `\array_key_exists('cacheTTL', $params)` activates caching with infinite TTL (`Ttl::forever()`). | Omit the `'cacheTTL'` key completely from `params.php` in development using conditional array spreading. |
 | 2 | **Attaching `FormatDataResponseAsHtml` to `SwaggerUi`** | `SwaggerUi` returns a standard PSR-7 `ResponseInterface` (`ViewResponse`), not a `DataStream`. The middleware is completely ignored. | Do not attach `FormatDataResponseAsHtml` to the Swagger UI route. |
 | 3 | **Using deprecated `FormatDataResponseAsJson`** | `FormatDataResponseAsJson` is deprecated. Omitting formatting entirely throws `LogicException: Formatter is not set.` | Attach modern `Yiisoft\DataResponse\Middleware\JsonDataResponseMiddleware::class` to `/swagger/json-url`. |
-| 4 | **Calling `Group::create('/swagger', [...])`** | `Group::create(?string $prefix = null)` takes only 1 argument. The array of routes is silently dropped by PHP. | Use `new Group('/swagger', [...])` or `(new Group('/swagger'))->routes(...)` — the static factory `Group::create()` is `@deprecated` since router 4.0.3 (see the [Routing Guide](http-routes.md)). |
+| 4 | **Calling `Group::create('/swagger', [...])`** | `Group::create()` takes only the prefix — a second argument is silently discarded, leaving an empty route group (canonical analysis: [Routing Guide, §9](http-routes.md#9-anti-pattern-matrix)). | Use `new Group('/swagger', [...])` or `(new Group('/swagger'))->routes(...)`. |
 | 5 | **Reading path parameters via `$request->getAttribute('id')`** | In Yii 3, route match arguments are stored in `CurrentRoute`, not PSR-7 request attributes. Always evaluates to `null`. | Inject `Yiisoft\Router\CurrentRoute $currentRoute` and call `$currentRoute->getArgument('id')` or use `#[RouteArgument('id')]`. |
 | 6 | **Writing custom DI factories in `config/web/di/swagger.php`** | `yiisoft/yii-swagger` already ships with `config/di-web.php` wiring `SwaggerService`, `SwaggerJson`, and `SwaggerUi`. | Configure `config/params.php` under `'yiisoft/yii-swagger'`. Avoid custom DI declarations. |
 | 7 | **Using phantom methods like `withAnnotationPaths()` or `withOptions()` on `SwaggerJson`** | These methods do not exist on `SwaggerJson`. Calling them throws a fatal `Error: Call to undefined method`. | Use `SwaggerJson::withPaths(string ...$paths)` and configure generator options in `params.php` or `SwaggerService`. |

@@ -264,7 +264,9 @@ Exit codes (all scripts): **0** = pass or warnings only · **1** = at least one 
 
 - `examples/crud-slice/README.md` — minimal canonical vertical slice for generating new Yii 3 features:
   - `Migration/` — schema table creation with `ColumnBuilder` (`M261026120000CreatePostTable.php`).
-  - `Domain/` — pure entity (`Post.php`) and repository contract (`PostRepositoryInterface.php`).
-  - `Persistence/` — repository implementation using `ConnectionInterface` and `Query` (`DbPostRepository.php`).
-  - `Presentation/` — invokable thin actions (`CreatePostAction.php`, `ViewPostAction.php`) and input DTO with validation attributes `#[Required]`, `#[Length]` (`CreatePostDto.php`).
-  - `Config/` — DI container mapping (`di.php`) and modern HTTP routing (`routes.php`).
+  - `Domain/` — pure aggregate (`Post.php`: factory method, `assignId()` guard, event recording, `releaseEvents()`), `PostStatus` enum, `PostCreated` domain event, repository contract (`PostRepositoryInterface.php`).
+  - `Persistence/` — repository adapter using `ConnectionInterface` and `Query` (`DbPostRepository.php`); assigns the database identity after INSERT via `Post::assignId()`.
+  - `Application/` — use case command & handler (`CreatePostCommand.php`, `CreatePostHandler.php`: domain checks → `ConnectionInterface::transaction()` → post-commit event dispatch) and a PSR-14 listener (`Listener/LogPostCreatedListener.php`).
+  - `Presentation/` — invokable thin actions (`CreatePostAction.php`, `ViewPostAction.php`) and input DTO with validation attributes `#[Required]`, `#[Length]`, `#[InEnum]` (`CreatePostDto.php`).
+  - `Config/` — DI container mapping (`di.php`), declarative PSR-14 event mapping (`events.php`), and modern HTTP routing (`routes.php`).
+  - `Tests/` — handler unit tests proving the save → commit → dispatch order, no dispatch on rollback, and no write on failed domain checks (`CreatePostHandlerTest.php` + `Support/` doubles).

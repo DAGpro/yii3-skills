@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Presentation;
 
-use App\Domain\Post;
-use App\Domain\PostRepositoryInterface;
+use App\Application\CreatePostCommand;
+use App\Application\CreatePostHandler;
+use App\Domain\PostStatus;
+use DomainException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
@@ -14,8 +16,11 @@ use Yiisoft\Hydrator\HydratorInterface;
 use Yiisoft\Validator\ValidatorInterface;
 
 /**
- * Invokable thin Action that handles HTTP POST requests to create a new post.
- * Coordinates request body parsing, DTO hydration, input validation, and repository persistence.
+ * Invokable thin Action handling HTTP POST requests to create a post.
+ *
+ * HTTP orchestration only: hydrate the input DTO, validate it, translate
+ * the result into an application command, delegate to the use case handler,
+ * and map the outcome to an HTTP response. No domain or persistence logic.
  */
 final readonly class CreatePostAction
 {
@@ -23,7 +28,7 @@ final readonly class CreatePostAction
         private HydratorInterface $hydrator,
         private ValidatorInterface $validator,
         private DataResponseFactoryInterface $responseFactory,
-        private PostRepositoryInterface $postRepository,
+        private CreatePostHandler $handler,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -45,14 +50,21 @@ final readonly class CreatePostAction
             );
         }
 
-        $post = new Post(
-            id: null,
-            title: $dto->title,
-            content: $dto->content,
-            status: $dto->status,
-        );
-
-        $this->postRepository->save($post);
+        try {
+            $post = $this->handler->handle(new CreatePostCommand(
+                title: $dto->title,
+                content: $dto->content,
+                status: PostStatus::from($dto->status),
+            ));
+        } catch (DomainException $e) {
+            return $this->responseFactory->createResponse(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                Status::CONFLICT, // HTTP 409
+            );
+        }
 
         return $this->responseFactory->createResponse(
             [

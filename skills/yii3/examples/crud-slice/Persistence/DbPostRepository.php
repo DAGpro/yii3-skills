@@ -6,12 +6,14 @@ namespace App\Persistence;
 
 use App\Domain\Post;
 use App\Domain\PostRepositoryInterface;
+use App\Domain\PostStatus;
 use DateTimeImmutable;
+use LogicException;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Query\Query;
 
 /**
- * Database repository implementation using yiisoft/db.
+ * Database repository implementation (adapter) using yiisoft/db.
  * Communicates with the database table via ConnectionInterface and Query builder.
  */
 final readonly class DbPostRepository implements PostRepositoryInterface
@@ -33,9 +35,6 @@ final readonly class DbPostRepository implements PostRepositoryInterface
         return $row !== null ? $this->hydrate($row) : null;
     }
 
-    /**
-     * @return list<Post>
-     */
     public function findAll(): array
     {
         /** @var list<array<string, mixed>> $rows */
@@ -47,37 +46,31 @@ final readonly class DbPostRepository implements PostRepositoryInterface
         return array_map(fn (array $row): Post => $this->hydrate($row), $rows);
     }
 
+    public function existsByTitle(string $title): bool
+    {
+        return (new Query($this->db))
+            ->from(self::TABLE_NAME)
+            ->where(['title' => $title])
+            ->exists();
+    }
+
     public function save(Post $post): void
     {
-        $now = new DateTimeImmutable();
-
-        if ($post->getId() === null) {
-            $this->db->createCommand()
-                ->insert(self::TABLE_NAME, [
-                    'title' => $post->getTitle(),
-                    'content' => $post->getContent(),
-                    'status' => $post->getStatus(),
-                    'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                    'updated_at' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
-                ])
-                ->execute();
-
-            $id = (int) $this->db->getLastInsertID();
-            $post->setId($id);
-        } else {
-            $this->db->createCommand()
-                ->update(
-                    self::TABLE_NAME,
-                    [
-                        'title' => $post->getTitle(),
-                        'content' => $post->getContent(),
-                        'status' => $post->getStatus(),
-                        'updated_at' => $now->format('Y-m-d H:i:s'),
-                    ],
-                    ['id' => $post->getId()],
-                )
-                ->execute();
+        if ($post->getId() !== null) {
+            throw new LogicException('Only new posts are persisted by save(); update tracked posts through their intent methods.');
         }
+
+        $this->db->createCommand()
+            ->insert(self::TABLE_NAME, [
+                'title' => $post->getTitle(),
+                'content' => $post->getContent(),
+                'status' => $post->getStatus()->value,
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'updated_at' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
+            ])
+            ->execute();
+
+        $post->assignId((int) $this->db->getLastInsertId());
     }
 
     public function delete(Post $post): void
@@ -93,17 +86,17 @@ final readonly class DbPostRepository implements PostRepositoryInterface
     }
 
     /**
-     * Hydrates a database record into a pure Domain Entity.
+     * Hydrates a database record into a pure Domain aggregate.
      *
      * @param array<string, mixed> $row
      */
     private function hydrate(array $row): Post
     {
-        return new Post(
-            id: isset($row['id']) ? (int) $row['id'] : null,
+        return Post::restore(
+            id: (int) ($row['id'] ?? 0),
             title: (string) ($row['title'] ?? ''),
             content: (string) ($row['content'] ?? ''),
-            status: (string) ($row['status'] ?? 'draft'),
+            status: PostStatus::from((string) ($row['status'] ?? PostStatus::Draft->value)),
             createdAt: isset($row['created_at']) && is_string($row['created_at'])
                 ? new DateTimeImmutable($row['created_at'])
                 : new DateTimeImmutable(),

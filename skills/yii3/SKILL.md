@@ -12,8 +12,8 @@ End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to
 
 Pick the mode at Stage 0 and print it.
 
-- **Light** — small, contained edits: a single route, config/DI change, one-file refactor or fix, a guide lookup. Flow: Stage 0 (guard + archetype) → only the stages actually touched → deterministic gate → the touched Chain Integrity lines. The extended Finale (`references/core-definition-of-done.md`) is skipped.
-- **Full** — everything else, default. New features and tasks touching runtime, auth, queues, or infrastructure run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
+- **Light** — small, contained edits: a single route, config/DI change, one-file refactor or fix, a guide lookup. Flow: Stage 0 → touched stages → deterministic gate → touched Chain Integrity lines. The extended Finale (`references/core-definition-of-done.md`) is skipped.
+- **Full** — everything else, default. New features and runtime/auth/queue/infrastructure tasks run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
 
 ## AI Factory mode
 
@@ -21,7 +21,7 @@ All workflow-integration specifics live here; the rest of this skill reads witho
 
 - The skill was loaded by the `yii3` injection inside an `aif-*` workflow (`/aif-plan`, `/aif-implement`, `/aif-verify`, …): Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present, architecture artifact, rules file — never redo).
 - `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked.
-- The Finale hands control to `/aif-verify` (findings merge into its `aif-gate-result`); Standalone runs close the Finale themselves.
+- The Finale hands control to `/aif-verify` (findings merge into `aif-gate-result`); Standalone closes the Finale itself.
 
 ## Stage 0 — Mission Bootstrap
 
@@ -75,13 +75,13 @@ Run after the last stage, in every mode.
 1. **Deterministic gate** — from the skill package directory, against the target project path: `php scripts/verify-all.php [project-path]` (or individual verifiers). Loop: fix every error and rerun until exit 0. Exit codes and flags: tooling section below; exit 2 means a misconfigured invocation — fix the invocation, never treat it as a pass.
 2. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Packages used in code must be declared in `composer.json`.
 3. **Chain Integrity Checklist** (blocking): every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
-4. **Runtime smoke** (optional, Full mode, when `vendor/` exists): run `./yii list` from the project root — it must exit 0 and list the new commands; catches container wiring failures the static gate cannot see (`references/infra-runners-and-runtimes.md`).
+4. **Runtime smoke** (optional, Full mode, `vendor/` present): `./yii list` must exit 0 and list the new commands — catches container wiring failures the static gate cannot see (`references/infra-runners-and-runtimes.md`).
 5. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
 
 ## Core rules
 
 1. **Yii3 is not Yii2.** No `Yii::$app`, no `yii\` namespace, no static facades, no behaviors (`TimestampBehavior`), no `rules()` / `behaviors()` on persistence models. PSR-based, injected.
-2. **Source of Truth (SSOT) hierarchy:** Tier 1 — target project codebase (`src/`, `config/`, `composer.json`, architecture artifact); Tier 2 — installed package sources `vendor/yiisoft/<pkg>/src/` (exact signatures, argument order, config defaults); Tier 3 — the skill's `references/*.md` guides. Verify unfamiliar signatures in Tier 2. Inspect `composer.lock` for installed versions — newer majors change syntax.
+2. **Source of Truth (SSOT) hierarchy:** Tier 1 — target project codebase (`src/`, `config/`, `composer.json`, architecture artifact); Tier 2 — installed package sources `vendor/yiisoft/<pkg>/src/` (exact signatures, argument order, config defaults); Tier 3 — the skill's `references/*.md` guides. Verify unfamiliar signatures in Tier 2. Inspect `composer.lock` for installed versions — version-gated behavior is cataloged in `references/core-version-notes.md`.
 3. **Architecture decides placement:** the architecture artifact if it exists, otherwise the project's real structure (`src/`, `config/` + similar existing features). See `references/core-architecture-alignment.md`.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
 
@@ -97,7 +97,7 @@ Full grounded matrices: each topic guide's Anti-Pattern Matrix; the scripts belo
 | 4 | `$request->post('name')` / `$request->get('id')` | PSR-7 `getParsedBody()` or typed DTOs via `yiisoft/input-http`; route args via `CurrentRoute` |
 | 5 | `rules()` and `behaviors()` on ActiveRecord models | Validation attributes on DTOs; PSR-14 events replace behaviors |
 | 6 | `ActiveForm::begin()` in templates | `Html::form()->post()->csrf($csrf)->open()` and `Field::text(...)` |
-| 7 | `Route::get('/path')` / `Group::create()` (router ≥ 4.0.3) | `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Group()` |
+| 7 | `Route::get('/path')` / `Group::create()` (deprecated since router 4.0.3 — `references/core-version-notes.md`) | `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Group()` |
 | 8 | `./yii migrate/up` (slash separator) | `./yii migrate:up` (colon separator) |
 | 9 | Editing `vendor/` or `config/.merge-plan.php` | Edit `config/**/params.php` / `di/*.php`, then `composer yii-config-rebuild` |
 | 10 | `echo`, `print`, `die()`, `exit()` in actions | Return a PSR-7 `ResponseInterface` instance |
@@ -138,6 +138,7 @@ Load only the active archetype's guides:
 - `references/core-utilities.md`, `core-utilities-niche.md` — ArrayHelper, StringHelper, Inflector, Json; VarDumper, Classifier, network utilities- `references/core-friendly-exceptions.md` — FriendlyException contract, web & console rendering
 - `references/core-di-and-config.md` — PSR-11 container, config tree, definition syntax, parameter inheritance
 - `references/core-events-and-listeners.md` — PSR-14 architecture, immutable events, post-commit dispatching
+- `references/core-version-notes.md` — version-gated behavior catalog (router factories, view renderer, dispatcher, log setters) with `composer.lock` verification
 
 ### HTTP & Presentation
 - `references/http-routes.md` — route syntax, constraints, groups, middleware ordering, URL generation
@@ -193,4 +194,4 @@ These are static heuristics: a green result never proves that DI wiring resolves
 
 ## Canonical examples
 
-- `examples/crud-slice/README.md` — canonical vertical slice template for new Yii 3 features, bottom-up: `Migration/` (ColumnBuilder DDL) → `Domain/` (aggregate with factory methods, `assignId()` guard, `PostStatus` enum, `PostCreated` event, repository contract) → `Persistence/` (`ConnectionInterface` + `Query` adapter) → `Application/` (command, handler: domain checks → `transaction()` → post-commit dispatch, listener) → `Presentation/` (thin actions, input DTO) → `Config/` (DI, events, routes) → `Tests/` (handler unit tests).
+- `examples/crud-slice/README.md` — canonical vertical slice template for new Yii 3 features, bottom-up: `Migration/` (DDL) → `Domain/` (aggregate: factory methods, `assignId()` guard, `PostStatus` enum, `PostCreated` event, repository contract) → `Persistence/` (`ConnectionInterface` + `Query`) → `Application/` (command, handler: domain checks → `transaction()` → post-commit dispatch, listener) → `Presentation/` (thin actions, input DTO) → `Config/` (DI, events, routes) → `Tests/` (handler tests).

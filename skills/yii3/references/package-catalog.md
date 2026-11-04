@@ -211,8 +211,8 @@ Packages below are prescribed or used by topic guides but are not part of the yi
 
 | Package | Role per guides | Referenced by |
 |---|---|---|
-| `psr/container` | PSR-11 container contract (`ContainerInterface`) | core-di-and-config, core-api-signatures |
-| `psr/http-message` | PSR-7 contract (`UploadedFileInterface`, request/response interfaces) | core-api-signatures, core-architecture-alignment, core-feature-recipes |
+| `psr/container` | PSR-11 container contract (`ContainerInterface`) | core-di-and-config |
+| `psr/http-message` | PSR-7 contract (`UploadedFileInterface`, request/response interfaces) | core-architecture-alignment, core-feature-recipes |
 | `olvlvl/composer-attribute-collector` | Composer plugin scanning classes for attribute routing | core-dependency-protocol, http-routes |
 | `vlucas/phpdotenv` | `.env` loading (`require-dev` convenience in `yiisoft/app`; not a production secrets mechanism) | core-di-and-config |
 | `predis/predis` | Redis client for `RedisCache` / `RedisMutexFactory` (strictly required — no PECL `\Redis`) | persistence-cache-drivers, infra-queue-mutex |

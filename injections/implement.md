@@ -11,7 +11,7 @@ Run this block right after Step 0 (pre) Handoff detection.
    * Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist.
    * Step 1: Migration -> Step 2: Domain Entity & Repository Interface -> Step 3: Repository Implementation -> Step 4: Use Case Handler & Events -> Step 5: Input DTO & Single-Action Handler (or Console Command) -> Step 6: Config Wiring (DI, Routes, Events) -> Step 7: Tests.
 5. **Mandatory Signature Lookup Protocol:**
-   * Before calling any `yiisoft/*` method or constructor with more than 1 argument, search the actual installed signature in `vendor/yiisoft/<pkg>/src` (or see `references/core-api-signatures.md`).
+   * Before calling any `yiisoft/*` method or constructor with more than 1 argument, search the actual installed signature in `vendor/yiisoft/<pkg>/src`.
    * Never invent method names from memory or copy Yii2 APIs.
 6. **Thin Actions & Focused Commands:** Action classes must only coordinate HTTP (extract/hydrate DTO, validate via `yiisoft/validator`, call Use Case, return `ResponseInterface` via `ResponseFactory\DataResponseFactoryInterface`). Console Commands must only configure CLI input/output (`SymfonyStyle`, `ExitCode`) and delegate processing to Use Cases. Never put SQL queries, password hashing, or email sending directly inside an Action or Command.
 7. **Per task (Source of Truth):** check `composer.json` against `references/package-catalog.md`; install missing packages per `references/core-dependency-protocol.md` BEFORE writing code that uses them. Inspect `vendor/yiisoft/<pkg>/src/` for real signatures and methods. Never write Yii2 APIs.

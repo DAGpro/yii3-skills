@@ -538,7 +538,25 @@ When a feature requires role-based or permission-based checks:
    - *Fail-closed pitfall:* `can()` returns `false` whenever no access checker is attached — the DI wiring must apply `CurrentUser::withAccessChecker(...)`. Guest requests have a `null` user id: either configure a guest role in the RBAC manager or the checks fail closed.
 2. **Dynamic Rule Implementation:**
    - Create class implementing `Yiisoft\Rbac\RuleInterface`.
-   - Notice exact Yii3 signature (never use Yii2 signatures). The canonical `AuthorRule` skeleton — `execute(?string $userId, Item $item, RuleContext $context): bool` with the `authorId` parameter comparison — lives in the [API Signatures Guide, §14](core-api-signatures.md); copy it from there rather than retyping.
+   - Notice exact Yii3 signature (never use Yii2 signatures). Canonical `AuthorRule` skeleton — `execute(?string $userId, Item $item, RuleContext $context): bool` with the `authorId` parameter comparison:
+     ```php
+     declare(strict_types=1);
+
+     use Yiisoft\Rbac\Item;
+     use Yiisoft\Rbac\RuleContext;
+     use Yiisoft\Rbac\RuleInterface;
+
+     final readonly class AuthorRule implements RuleInterface
+     {
+         public function execute(?string $userId, Item $item, RuleContext $context): bool
+         {
+             $authorId = $context->getParameterValue('authorId');
+
+             return $userId !== null && $userId === (string) $authorId;
+         }
+     }
+     ```
+   - `Item` is an `abstract class` and `RuleContext` is `final` (both in `Yiisoft\Rbac`); `RuleContext::getParameterValue(string $name): mixed` returns `mixed`, so compare the string-cast value against the `?string $userId`.
 3. **Wiring:**
    - Register rule in `config/common/params.php` under `'yiisoft/rbac-rules-container' => ['rules' => [...]]` (the package default params also carry `'validate' => true`; rule values are yiisoft/factory definitions — class-strings or alias maps).
    - Plan migration or RBAC seeder creating the Permission, attaching the Rule (`Item::withRuleName()`), and assigning to Roles (see the [Auth & RBAC Guide](infra-auth-and-rbac.md)).
@@ -642,7 +660,7 @@ Deprecation-sensitive and error-prone APIs, verified against installed package s
 
 | # | Pitfall | Guidance | Anchor |
 |---|---|---|---|
-| 1 | `ViewRenderer` deprecated | `Yiisoft\Yii\View\Renderer\ViewRenderer` is `@deprecated` since yii-view-renderer 7.4.0 — use `WebViewRenderer` (`render(...): ResponseInterface`; the deprecated `ViewRenderer::render(string $view, array $parameters = [])` returns the legacy `DataResponse`). Layout defaults to none when unset. Full signature surface: [API Signatures Guide, §11](core-api-signatures.md#11-html-view-renderer-yiisoftyii-view-renderer) | `vendor/yiisoft/yii-view-renderer/src/ViewRenderer.php`, `src/WebViewRenderer.php` |
+| 1 | `ViewRenderer` deprecated | `Yiisoft\Yii\View\Renderer\ViewRenderer` is `@deprecated` since yii-view-renderer 7.4.0 — use `WebViewRenderer` (`render(...): ResponseInterface`; the deprecated `ViewRenderer::render(string $view, array $parameters = [])` returns the legacy `DataResponse`). Layout defaults to none when unset. Full signature surface: inspect the installed sources under `vendor/yiisoft/yii-view-renderer/src/` | `vendor/yiisoft/yii-view-renderer/src/ViewRenderer.php`, `src/WebViewRenderer.php` |
 | 2 | Legacy data-response surface | Root-namespace `DataResponseFactoryInterface`, `DataResponse`, and the formatter middleware are `@deprecated` — use `Yiisoft\DataResponse\ResponseFactory\*` factories: `createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = '')` has no `$headers` parameter (chain `->withHeader()` afterwards). `JsonResponseFactory` is self-contained for JSON APIs | `vendor/yiisoft/data-response/src/` |
 | 3 | CSRF class rename | `Yiisoft\Csrf\CsrfMiddleware` is `@deprecated` (since csrf 2.2.0) — use `Yiisoft\Csrf\CsrfTokenMiddleware`: token read from the `_csrf` body param or `X-CSRF-Token` header, safe methods (GET/HEAD/OPTIONS) skipped, failure responds `422`. `SessionMiddleware` must precede it in the stack. Behavior details: [Middlewares Guide, §3.2](http-middlewares.md#32-csrf-middleware-behavior) | `vendor/yiisoft/csrf/src/CsrfTokenMiddleware.php` |
 | 4 | Mailer templates removed | Mailer template rendering (`MessageBodyRenderer`, `compose()`, `withTemplate()`) was removed in mailer 6.0.0 — render HTML via `yiisoft/view` and pass it to `withHtmlBody()`. The base package binds only `FileMailer`; the `MailerInterface => Mailer` binding ships with `yiisoft/mailer-symfony` | `vendor/yiisoft/mailer/` (CHANGELOG, `config/`) |

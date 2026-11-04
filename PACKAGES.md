@@ -214,8 +214,6 @@ $cache->getOrSet('key', fn() => expensiveCalculation(), 3600);
 | `yiisoft/translator-message-db` | Database-backed translation storage |
 | `yiisoft/translator-message-gettext` | Gettext-based translation storage |
 | `yiisoft/translator-message-php` | PHP arrays translation storage |
-| `yiisoft/i18n-message-gettext` | Gettext message source for i18n |
-| `yiisoft/i18n-message-php` | PHP arrays message source for i18n |
 
 **Usage:**
 ```php

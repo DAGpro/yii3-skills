@@ -15,6 +15,10 @@ declare(strict_types=1);
  * 4. Prohibition of legacy Yii 2 string route targets ('controller/action') without class references.
  * 5. Prohibition of legacy Yii 2 facades (Yii::$app) and deprecated namespaces (yii\web\UrlRule).
  * 6. Advisory check: Missing RequestBodyParser on state-changing POST/PUT/PATCH routes.
+ * 7. Legacy static route/group factories 'Route::get()/post()/...()' and 'Group::create()' — deprecated by
+ *    yiisoft/router 4.0.3 (Chg #295) in favor of 'new \Yiisoft\Router\Route\Get(...)' / 'new \Yiisoft\Router\Group()'.
+ *    Reported as an ERROR when the installed router is 4.0.3+ or its version cannot be proven from composer.lock;
+ *    downgraded to a WARNING when composer.lock proves an installed router below 4.0.3 (constructors do not exist there).
  *
  * Exit Codes:
  *   0: All route files passed verification (no blocking violations found).
@@ -41,9 +45,77 @@ final class RouteVerifier
     private int $filesScannedCount = 0;
     private int $routesCheckedCount = 0;
 
+    /**
+     * Installed yiisoft/router version from composer.lock, or null when unknown
+     * (lock absent, unparsable, or router not pinned). Null is treated conservatively
+     * as "modern router" — static factories are then reported as errors.
+     */
+    private ?string $routerVersion = null;
+
     public function __construct(array $argv)
     {
         $this->parseArguments($argv);
+        $this->routerVersion = $this->detectRouterVersion();
+    }
+
+    /**
+     * Reads the installed yiisoft/router version from composer.lock: looked up at
+     * <base-path>/composer.lock, and — when auditing a single file — also in the
+     * file's own directory tree (walking up a bounded number of levels).
+     * Returns null when no lock is found, it is unparsable, or it does not pin the router.
+     */
+    private function detectRouterVersion(): ?string
+    {
+        $candidates = [];
+        if ($this->specificFile !== null) {
+            $dir = dirname($this->specificFile);
+            for ($i = 0; $i < 5 && $dir !== '' && $dir !== '.'; $i++) {
+                $candidates[] = $dir . '/composer.lock';
+                $parent = dirname($dir);
+                if ($parent === $dir) {
+                    break;
+                }
+                $dir = $parent;
+            }
+        }
+        $candidates[] = $this->basePath . '/composer.lock';
+
+        foreach ($candidates as $lockFile) {
+            $version = $this->readRouterVersionFromLock($lockFile);
+            if ($version !== null) {
+                return $version;
+            }
+        }
+
+        return null;
+    }
+
+    private function readRouterVersionFromLock(string $lockFile): ?string
+    {
+        if (!is_file($lockFile)) {
+            return null;
+        }
+
+        $raw = @file_get_contents($lockFile);
+        if ($raw === false) {
+            return null;
+        }
+
+        $lock = json_decode($raw, true);
+        if (!is_array($lock)) {
+            return null;
+        }
+
+        foreach (['packages', 'packages-dev'] as $section) {
+            foreach ($lock[$section] ?? [] as $package) {
+                if (($package['name'] ?? null) === 'yiisoft/router') {
+                    $version = (string) ($package['version'] ?? '');
+                    return $version !== '' ? ltrim($version, 'vV') : null;
+                }
+            }
+        }
+
+        return null;
     }
 
     public function run(): int
@@ -151,6 +223,8 @@ Checks Performed:
   - Prohibition of legacy Yii 2 route parameter syntax '<id:\d+>' (enforces FastRoute '{id:\d+}').
   - Detection of duplicate route names within the same configuration file (->name('...')).
   - Prohibition of legacy Yii 2 string controllers ('site/index') and static facades (Yii::\$app).
+  - Legacy static factories 'Route::get/post/...()' and 'Group::create()': error on yiisoft/router >= 4.0.3
+    (or when the installed version cannot be proven from composer.lock), warning below 4.0.3.
   - Advisory warning for missing RequestBodyParser middleware on POST/PUT/PATCH routes.
 
 HELP;
@@ -226,7 +300,7 @@ HELP;
             return;
         }
 
-        $analyzer = new RouteTokenAnalyzer($relPath, $tokens);
+        $analyzer = new RouteTokenAnalyzer($relPath, $tokens, $this->routerVersion);
         $fileIssues = $analyzer->analyze();
 
         foreach ($fileIssues as $issue) {
@@ -328,16 +402,33 @@ final class RouteTokenAnalyzer
     /** @var PhpToken[] */
     private array $tokens;
 
+    /**
+     * Installed yiisoft/router version (null = unknown). Static factories are errors
+     * when unknown or >= 4.0.3, warnings when the lock proves a version below 4.0.3.
+     */
+    private ?string $routerVersion;
+
     /** @var array<int, array{type: 'error'|'warning', file: string, line: int, rule: string, message: string}> */
     private array $issues = [];
 
     private int $routesCount = 0;
 
+    private const VERB_CLASS_MAP = [
+        'get' => 'Get',
+        'post' => 'Post',
+        'put' => 'Put',
+        'delete' => 'Delete',
+        'patch' => 'Patch',
+        'head' => 'Head',
+        'options' => 'Options',
+    ];
+
     /** @param PhpToken[] $tokens */
-    public function __construct(string $file, array $tokens)
+    public function __construct(string $file, array $tokens, ?string $routerVersion = null)
     {
         $this->file = $file;
         $this->tokens = $tokens;
+        $this->routerVersion = $routerVersion;
     }
 
     /**
@@ -414,6 +505,14 @@ final class RouteTokenAnalyzer
                 }
             }
 
+            // 1b. Legacy static route/group factories (deprecated by yiisoft/router 4.0.3, Chg #295).
+            if ($token->id === T_STRING && ($token->text === 'Route' || $token->text === 'Group')) {
+                $factory = $this->matchStaticFactoryCall($i);
+                if ($factory !== null) {
+                    $this->reportStaticFactory($token, $factory);
+                }
+            }
+
             // 2. Count routes/groups & check method chains
             if ($token->id === T_STRING) {
                 if (in_array($token->text, ['Group', 'Route', 'Get', 'Post', 'Put', 'Delete', 'Patch', 'Options', 'Head'], true)) {
@@ -472,9 +571,91 @@ final class RouteTokenAnalyzer
         }
     }
 
-    private function extractSingleStringArgument(int $methodTokenIdx): ?string
+    /**
+     * Matches a legacy static factory call at the given index: 'Route::get('/...')' or 'Group::create(...)'.
+     * Returns the factory method name ('get', 'post', ..., 'create') or null.
+     */
+    private function matchStaticFactoryCall(int $classTokenIdx): ?string
     {
         $count = count($this->tokens);
+
+        $doubleColonIdx = $this->nextMeaningfulIndex($classTokenIdx);
+        if ($doubleColonIdx === null || !$this->tokens[$doubleColonIdx]->is(T_DOUBLE_COLON)) {
+            return null;
+        }
+
+        $methodIdx = $this->nextMeaningfulIndex($doubleColonIdx);
+        if ($methodIdx === null || !$this->tokens[$methodIdx]->is(T_STRING)) {
+            return null;
+        }
+
+        $method = strtolower($this->tokens[$methodIdx]->text);
+        $isRouteVerb = $this->tokens[$classTokenIdx]->text === 'Route'
+            && array_key_exists($method, self::VERB_CLASS_MAP);
+        $isGroupCreate = $this->tokens[$classTokenIdx]->text === 'Group' && $method === 'create';
+
+        if (!$isRouteVerb && !$isGroupCreate) {
+            return null;
+        }
+
+        // Must be an actual call (opening paren follows), not a reference.
+        $parenIdx = $this->nextMeaningfulIndex($methodIdx);
+        if ($parenIdx === null || !$this->tokens[$parenIdx]->is(ord('('))) {
+            return null;
+        }
+
+        return $method;
+    }
+
+    private function reportStaticFactory(PhpToken $classToken, string $method): void
+    {
+        $call = "{$classToken->text}::{$method}()";
+
+        if ($classToken->text === 'Route') {
+            $replacement = "new \\Yiisoft\\Router\\Route\\" . self::VERB_CLASS_MAP[strtolower($method)] . "()";
+        } else {
+            $replacement = 'new \\Yiisoft\\Router\\Group()';
+        }
+
+        $provenOld = $this->routerVersion !== null && version_compare($this->routerVersion, '4.0.3', '<');
+        if ($provenOld) {
+            $this->issues[] = [
+                'type' => 'warning',
+                'file' => $this->file,
+                'line' => $classToken->line,
+                'rule' => 'legacy_static_route_factory',
+                'message' => "Legacy static factory '{$call}' (deprecated by yiisoft/router 4.0.3). Installed router is "
+                    . "{$this->routerVersion}, where the replacement does not exist yet — upgrade yiisoft/router, "
+                    . "then use '{$replacement}' (constructors were introduced in 4.0.3).",
+            ];
+            return;
+        }
+
+        $versionNote = $this->routerVersion !== null
+            ? " (installed: {$this->routerVersion})"
+            : ' (installed version could not be proven from composer.lock — treating as modern)';
+        $this->issues[] = [
+            'type' => 'error',
+            'file' => $this->file,
+            'line' => $classToken->line,
+            'rule' => 'legacy_static_route_factory',
+            'message' => "Legacy static factory '{$call}'{$versionNote} — deprecated by yiisoft/router 4.0.3 (Chg #295). "
+                . "Use '{$replacement}' instead.",
+        ];
+    }
+
+    private function nextMeaningfulIndex(int $index): ?int
+    {
+        for ($i = $index + 1, $count = count($this->tokens); $i < $count; $i++) {
+            if (!$this->tokens[$i]->is(T_WHITESPACE) && !$this->tokens[$i]->is(T_COMMENT) && !$this->tokens[$i]->is(T_DOC_COMMENT)) {
+                return $i;
+            }
+        }
+        return null;
+    }
+
+    private function extractSingleStringArgument(int $methodTokenIdx): ?string
+    {        $count = count($this->tokens);
         $depth = 0;
         $foundString = null;
 

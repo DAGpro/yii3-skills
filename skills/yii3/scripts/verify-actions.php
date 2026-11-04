@@ -14,6 +14,9 @@ declare(strict_types=1);
  * 3. Thin Action Principle: Absence of direct SQL, ActiveRecord, or low-level DB/ORM queries.
  * 4. Prohibition of legacy Yii 2 remnants (Yii::$app, yii\* namespaces, superglobals, $model->load()).
  * 5. High-frequency Yii 3 presentation pitfalls (Cookie::create, withStatus on ViewRenderer, etc.).
+ * 6. Output / termination statements ('echo', 'print', 'die', 'exit') inside action methods — error;
+ *    statically provable non-response return expressions (array/string/number literals, json_encode()) — warning.
+ *    Closure bodies are skipped; variables and call results are not determinable statically.
  *
  * Exit Codes:
  *   0: All action files passed verification (no violations found).
@@ -959,9 +962,132 @@ final class ActionAstAnalyzer
         if ($isActionMethod) {
             $this->checkedActionsCount++;
             $this->validateActionReturnType($className, $methodName, $methodLine, $returnType);
+
+            // Body-level checks (output statements, non-response return expressions)
+            if ($k < $this->count && $this->tokens[$k]->is(ord('{'))) {
+                $k = $this->checkActionMethodBody($k, $className, $methodName);
+            }
         }
 
         return $k;
+    }
+
+    /**
+     * Scans an action method body for:
+     * - output / termination statements: `echo`, `print`, `die`, `exit` (error) —
+     *   actions must return a PSR-7 response, never print or terminate;
+     * - statically provable non-response `return` expressions (warning): array
+     *   literals, string/number literals, and json_encode() calls.
+     * Closure bodies are skipped (their returns belong to the callback, not the action).
+     * Returns the index of the method's closing brace.
+     */
+    private function checkActionMethodBody(int $openBraceIdx, string $className, string $methodName): int
+    {
+        $depth = 1;
+        $i = $openBraceIdx + 1;
+        $closureStartDepth = null;
+
+        while ($i < $this->count && $depth > 0) {
+            $tok = $this->tokens[$i];
+
+            // Skip closure bodies: their return values belong to the callback.
+            if ($closureStartDepth === null && $tok->is(T_FUNCTION)) {
+                for ($j = $i + 1; $j < $this->count; $j++) {
+                    if ($this->tokens[$j]->is(ord('{'))) {
+                        $closureStartDepth = $depth;
+                        $depth++;
+                        $i = $j;
+                        break;
+                    }
+                    if ($this->tokens[$j]->is(ord(';'))) {
+                        break; // signature ended without body (interface/abstract)
+                    }
+                }
+                $i++;
+                continue;
+            }
+
+            if ($tok->is(ord('{'))) {
+                $depth++;
+                $i++;
+                continue;
+            }
+
+            if ($tok->is(ord('}'))) {
+                $depth--;
+                if ($closureStartDepth !== null && $depth <= $closureStartDepth) {
+                    $closureStartDepth = null;
+                }
+                if ($depth === 0) {
+                    return $i;
+                }
+                $i++;
+                continue;
+            }
+
+            if ($closureStartDepth === null) {
+                // 0. Thin Action violations (parity with the class-level scan: the outer
+                // loop no longer visits action method bodies since they are consumed here).
+                $this->checkThinActionToken($i, $tok, $className);
+
+                // 1. Output / termination statements (ban #10 of the SKILL.md guard list).
+                if ($tok->is(T_ECHO) || $tok->is(T_PRINT) || $tok->is(T_EXIT)) {
+                    $word = strtolower($tok->text);
+                    $this->addIssue(
+                        'error',
+                        $tok->line,
+                        'action_output_statement',
+                        "Output statement '{$word}' in action method '{$className}::{$methodName}()'. "
+                            . 'Actions must not print or terminate; return a PSR-7 ResponseInterface built via an injected response factory.'
+                    );
+                    $i++;
+                    continue;
+                }
+
+                // 2. Statically provable non-response return expressions (best-effort warning).
+                if ($tok->is(T_RETURN)) {
+                    $this->checkActionReturnExpression($i, $className, $methodName);
+                }
+            }
+
+            $i++;
+        }
+
+        return $i;
+    }
+
+    private function checkActionReturnExpression(int $returnIdx, string $className, string $methodName): void
+    {
+        $idx = $this->getNextNonWhitespaceIndex($returnIdx);
+        if ($idx === null) {
+            return;
+        }
+
+        $tok = $this->tokens[$idx];
+        $what = null;
+
+        if ($tok->is(ord('[')) || $tok->is(T_ARRAY)) {
+            $what = 'an array literal';
+        } elseif ($tok->is(T_CONSTANT_ENCAPSED_STRING)) {
+            $what = 'a string literal';
+        } elseif ($tok->is(T_LNUMBER) || $tok->is(T_DNUMBER)) {
+            $what = 'a numeric literal';
+        } elseif ($tok->is(T_STRING) && strtolower($tok->text) === 'json_encode') {
+            $what = 'a json_encode() call';
+        }
+
+        if ($what === null) {
+            return; // variable / call / new-expression — not statically determinable
+        }
+
+        $this->addIssue(
+            'warning',
+            $tok->line,
+            'action_returns_non_response',
+            "Action method '{$className}::{$methodName}()' returns {$what}. "
+                . 'Actions must return a ResponseInterface — build responses via an injected DataResponseFactoryInterface. '
+                . '(Static best-effort check: variables and call results are not flagged.)'
+        );
     }
 
     private function validateActionReturnType(string $className, string $methodName, int $line, string $returnType): void

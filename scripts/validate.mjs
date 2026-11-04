@@ -7,6 +7,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -192,6 +193,32 @@ function checkSkill(skillEntry) {
   checkCatalogConsistency(skillDir);
 }
 
+// Optional PHP verifier self-test: the deterministic verifiers check their own
+// expectations against scripts/fixtures/. Skipped with a warning when PHP is absent.
+function runSelftest(rootDir) {
+  const php = process.env.PHP_BINARY || 'php';
+  const probe = spawnSync(php, ['--version'], { encoding: 'utf8', timeout: 30000 });
+  if (probe.error || probe.status !== 0) {
+    warn('skills/yii3/scripts/selftest.php', 0, 'selftest', 'PHP not available — verifier self-test skipped');
+    return 0;
+  }
+
+  const script = join(rootDir, 'skills', 'yii3', 'scripts', 'selftest.php');
+  if (!existsSync(script)) {
+    warn('skills/yii3/scripts/selftest.php', 0, 'selftest', 'selftest.php not found — skipped');
+    return 0;
+  }
+
+  const run = spawnSync(php, [script], { encoding: 'utf8', timeout: 120000 });
+  const output = `${run.stdout ?? ''}${run.stderr ?? ''}`.trim();
+  if (run.status !== 0) {
+    for (const line of output.split('\n')) err('skills/yii3/scripts/selftest.php', 0, 'selftest', line);
+    return 1;
+  }
+  if (output !== '') console.log(output.split('\n')[0]);
+  return 0;
+}
+
 function main() {
   const manifestPath = join(root, 'extension.json');
   let manifest = null;
@@ -254,6 +281,8 @@ function main() {
     }
   }
 
+  const selftestFailed = runSelftest(root);
+
   if (errors.length > 0) {
     for (const line of errors) console.log(line);
     for (const line of warnings) console.log(`WARN [validate] ${line}`);
@@ -264,7 +293,8 @@ function main() {
   for (const line of warnings) console.log(`WARN [validate] ${line}`);
   const skillCount = Array.isArray(manifest?.skills) ? manifest.skills.length : 0;
   const injectionCount = Array.isArray(manifest?.injections) ? manifest.injections.length : 0;
-  console.log(`validate: ok (${skillCount} skills, ${injectionCount} injections, ${warnings.length} warnings)`);
+  const selftestNote = selftestFailed > 0 ? `, selftest FAILED` : '';
+  console.log(`validate: ok (${skillCount} skills, ${injectionCount} injections, ${warnings.length} warnings${selftestNote})`);
   process.exit(0);
 }
 

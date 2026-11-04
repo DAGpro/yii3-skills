@@ -12,15 +12,15 @@ End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to
 
 Pick the mode at Stage 0 and print it.
 
-- **Light** — small, contained edits: a single route, a config/params/DI change, a one-file refactor or fix, a guide lookup. Flow: Stage 0 (guard + archetype only) → only the stages actually touched → deterministic gate → the touched Chain Integrity lines. The extended Finale (`references/core-definition-of-done.md`) is skipped.
-- **Full** — everything else, default. New features, and tasks touching runtime, auth, queues, or infrastructure, run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
+- **Light** — small, contained edits: a single route, config/DI change, one-file refactor or fix, a guide lookup. Flow: Stage 0 (guard + archetype) → only the stages actually touched → deterministic gate → the touched Chain Integrity lines. The extended Finale (`references/core-definition-of-done.md`) is skipped.
+- **Full** — everything else, default. New features and tasks touching runtime, auth, queues, or infrastructure run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
 
 ## AI Factory mode
 
 All workflow-integration specifics live here; the rest of this skill reads without them.
 
-- The skill was loaded by the `yii3` injection inside an `aif-*` workflow (`/aif-plan`, `/aif-implement`, `/aif-verify`, …): Stage 0 detects what the workflow already resolved — config + plan paths (`paths.architecture`, `paths.rules_file`, `paths.plans` from `.ai-factory/config.yaml` when present), architecture artifact, rules file (never redo).
-- In `HANDOFF_MODE=1` never ask the user: prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked.
+- The skill was loaded by the `yii3` injection inside an `aif-*` workflow (`/aif-plan`, `/aif-implement`, `/aif-verify`, …): Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present, architecture artifact, rules file — never redo).
+- `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked.
 - The Finale hands control to `/aif-verify` (findings merge into its `aif-gate-result`); Standalone runs close the Finale themselves.
 
 ## Stage 0 — Mission Bootstrap
@@ -28,14 +28,14 @@ All workflow-integration specifics live here; the rest of this skill reads witho
 Run first, in every mode. If the target project's `composer.json` contains no `yiisoft/*` packages, this skill does not apply — stop and report inapplicability.
 
 1. **Bootstrap checklist** (skip items the running workflow already resolved — never redo):
-   - Architecture source: the project's architecture artifact if present (note its vendor-isolation level — see `references/core-architecture-alignment.md`); otherwise mirror the real `src/` + `config/` layout and 2–3 similar existing features (Core rule 3).
+   - Architecture source: the project's architecture artifact if present (`references/core-architecture-alignment.md`); otherwise mirror the real `src/` + `config/` layout and 2–3 similar existing features (Core rule 3).
    - Rules: the configured rules file(s), else the project's existing conventions.
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages — re-anchor the SSOT hierarchy (Core rule 2) and check against `references/package-catalog.md`.
 2. **Cross-milestone consistency:** past milestones fixed the stack — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
 3. **Lifecycle position** — detect and print one of:
    - **(a) Plan task:** a plan artifact of the current milestone exists → execute the task per its phases (6-phase contract, see Mission Workflow).
-   - **(b) Standalone feature:** a new feature request → full Mission Workflow route.
-   - **(c) Bug / diagnostics:** root-cause checklist, in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. Never use a Yii2 static facade as a workaround.
+   - **(b) Standalone feature** → full Mission Workflow route.
+   - **(c) Bug / diagnostics:** root-cause checklist, in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. No Yii2 facades as workarounds.
 4. **Archetype & mode:** classify the task via the Task & Intent Routing Matrix; print `Light` or `Full`.
 5. **Mission plan** — print before implementing: `Architecture: <source>`, guides to load, Finale gate scripts.
 
@@ -56,15 +56,15 @@ Never implement an Action or Controller before its Input DTO, Repository Interfa
 
 **Mandatory Signature Lookup Protocol:** before calling any `yiisoft/*` method or constructor with more than 1 argument, look up the actual installed signature in `vendor/yiisoft/<pkg>/src`; never invent method names or copy Yii2 APIs. If `vendor/` is absent, request `composer install` first; when that is impossible, flag every API used as "not verified against sources" in the final report.
 
-- **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations.md`, `references/persistence-db.md` (or `persistence-cycle-orm.md`).
-- **Stage 2 — Domain Entity & Repository Interface (Phase 2).** Pure entity/aggregate, value objects, PSR-14 domain events, repository contract. Guides: `references/core-feature-recipes.md`, `references/core-events-and-listeners.md`.
+- **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations.md`, `references/persistence-db.md`.
+- **Stage 2 — Domain Entity & Repository Interface (Phase 2).** Pure aggregate, value objects, PSR-14 domain events, repository contract. Guides: `references/core-feature-recipes.md`, `references/core-events-and-listeners.md`.
 - **Stage 3 — Repository Implementation (Phase 3).** Strictly the project's one persistence path (`yiisoft/db` / Active Record / Cycle); wrap multi-step persistence in transactions. Guides: the matching persistence row in the matrix.
 - **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler; domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-and-listeners.md`.
 - **Stage 5 — Input DTO & Single-Action Handler (or Console Command) (Phase 5).** Typed input DTO with `yiisoft/validator` rule attributes (rule names must exist in the installed validator); separate Create/Update DTOs. Thin Action = HTTP orchestration only, returning `ResponseInterface` via `DataResponseFactoryInterface`; thin console command = CLI I/O only (`SymfonyStyle`, `ExitCode`) delegating to use cases. Guides: the matrix row for the archetype.
 - **Stage 6 — Config Wiring (Phase 6).** DI bindings in `config/**/di/*.php`; routes in `config/**/routes.php`; console commands in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`; custom RBAC rules in `config/common/params.php` under `'yiisoft/rbac-rules-container'`; events in `config/**/events.php`. Guide: `references/core-di-and-config.md`.
 - **Stage 7 — Tests (Phase 6).** Unit tests (use case / domain) + functional/HTTP tests on the project's single test runner. Guides: `references/testing-core.md` + the Testing row of the matrix.
 
-**Per-step wiring gates** — never batched: new `*Interface` → DI binding in `config/**/di/*.php`; new Action → route in `config/**/routes.php`; new console command → `config/console/params.php`; new RBAC rule → `'yiisoft/rbac-rules-container'`; side-effects → `config/**/events.php`. Every listing/query enforces an `OffsetPaginator` or an explicit SQL `limit`; mutating HTML-form routes carry `CsrfTokenMiddleware` after `SessionMiddleware` and before `Router`.
+**Per-step wiring gates** — never batched: new `*Interface` → DI binding; new Action → route; new console command → `config/console/params.php`; new RBAC rule → `'yiisoft/rbac-rules-container'`; side-effects → `config/**/events.php`. Every listing/query enforces an `OffsetPaginator` or an explicit SQL `limit`; mutating HTML-form routes carry `CsrfTokenMiddleware` after `SessionMiddleware` and before `Router`.
 
 Non-feature tasks (pure config, docs, refactoring): Stage 0 marks the inapplicable stages; execute only the relevant ones — wiring gates still apply.
 
@@ -75,12 +75,13 @@ Run after the last stage, in every mode.
 1. **Deterministic gate** — from the skill package directory, against the target project path: `php scripts/verify-all.php [project-path]` (or individual verifiers). Loop: fix every error and rerun until exit 0. Exit codes and flags: tooling section below; exit 2 means a misconfigured invocation — fix the invocation, never treat it as a pass.
 2. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Packages used in code must be declared in `composer.json`.
 3. **Chain Integrity Checklist** (blocking): every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
-4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
+4. **Runtime smoke** (optional, Full mode, when `vendor/` exists): run `./yii list` from the project root — it must exit 0 and list the new commands; catches container wiring failures the static gate cannot see (`references/infra-runners-and-runtimes.md`).
+5. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
 
 ## Core rules
 
 1. **Yii3 is not Yii2.** No `Yii::$app`, no `yii\` namespace, no static facades, no behaviors (`TimestampBehavior`), no `rules()` / `behaviors()` on persistence models. PSR-based, injected.
-2. **Source of Truth (SSOT) hierarchy:** Tier 1 — target project codebase (`src/`, `config/`, `composer.json`, architecture artifact); Tier 2 — installed package sources `vendor/yiisoft/<pkg>/src/` (exact signatures, argument order, config defaults); Tier 3 — the skill's `references/*.md` guides. Verify unfamiliar signatures in Tier 2, never guess. Inspect `composer.lock` for installed versions — newer majors change syntax. Never invent method signatures or configuration keys.
+2. **Source of Truth (SSOT) hierarchy:** Tier 1 — target project codebase (`src/`, `config/`, `composer.json`, architecture artifact); Tier 2 — installed package sources `vendor/yiisoft/<pkg>/src/` (exact signatures, argument order, config defaults); Tier 3 — the skill's `references/*.md` guides. Verify unfamiliar signatures in Tier 2. Inspect `composer.lock` for installed versions — newer majors change syntax.
 3. **Architecture decides placement:** the architecture artifact if it exists, otherwise the project's real structure (`src/`, `config/` + similar existing features). See `references/core-architecture-alignment.md`.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
 
@@ -109,7 +110,7 @@ Full grounded matrices: each topic guide's Anti-Pattern Matrix; the scripts belo
 ## References (read on demand)
 
 ### Task & Intent Routing Matrix
-Load only the guides for the active archetype:
+Load only the active archetype's guides:
 
 | Task Archetype | Primary Guides | Secondary | Template / Gate |
 |---|---|---|---|
@@ -121,12 +122,12 @@ Load only the guides for the active archetype:
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` | `examples/crud-slice/README.md` |
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` | `check-di-syntax.php` |
 | **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` | `check-di-syntax.php` |
-| **i18n / Localization** | `references/http-i18n-translation.md` | `references/http-routes.md`<br>`references/core-di-and-config.md` | `verify-actions.php` |
-| **API Docs (OpenAPI / Swagger)** | `references/http-openapi-swagger.md` | `references/http-routes.md` | `verify-routes.php` |
+| **i18n** | `references/http-i18n-translation.md` | `references/http-routes.md`<br>`references/core-di-and-config.md` | `verify-actions.php` |
+| **OpenAPI / Swagger** | `references/http-openapi-swagger.md` | `references/http-routes.md` | `verify-routes.php` |
 | **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md` | `check-di-syntax.php` |
 | **Persistence via Active Record** | `references/persistence-active-record.md` | `references/persistence-db.md`<br>`references/persistence-migrations.md` | `examples/crud-slice/Migration` |
 | **App Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-state-resetter.md` | `check-di-syntax.php` |
-| **Cross-cutting API / Helper Lookup** | `references/core-utilities.md` | `references/package-catalog.md`<br>`references/core-utilities-niche.md`<br>`references/core-friendly-exceptions.md` | Tier 2: `vendor/yiisoft/<pkg>/src/` |
+| **Helper Lookup** | `references/core-utilities.md` | `references/package-catalog.md`<br>`references/core-utilities-niche.md`<br>`references/core-friendly-exceptions.md` | Tier 2: `vendor/yiisoft/<pkg>/src/` |
 
 ### Core & Architecture
 - `references/core-architecture-alignment.md` — vendor boundaries, layer placement, composition root wiring
@@ -156,8 +157,7 @@ Load only the guides for the active archetype:
 
 ### Persistence & Data
 - `references/persistence-db.md` — Connection, Command, Query Builder, transactions, pagination, drivers & DSN
-- `references/persistence-active-record.md` — models, queries, relations, LazyLoadGuard
-- `references/persistence-cycle-orm.md` — Cycle ORM data mapper integration
+- `references/persistence-active-record.md`, `persistence-cycle-orm.md` — Active Record models, queries, relations; Cycle ORM data mapper
 - `references/persistence-migrations.md` — schema DDL, reversible migrations, seeding
 - `references/persistence-caching.md`, `persistence-cache-drivers.md` — PSR-16 caching, getOrSet, TagDependency; redis/db/APCu/memcached/wincache drivers
 
@@ -181,15 +181,16 @@ Load only the guides for the active archetype:
 
 ## Deterministic tooling
 
-All scripts are dependency-free token-level static analyzers, executed from this skill package directory; they require **PHP 8.1+** (older versions exit 2 with `[FATAL]` on STDERR). They accept `[project-path]` and `[--format=text|json] [--quiet] [--verbose]`. Exit codes (all scripts): **0** = pass or warnings only · **1** = at least one error (blocking) · **2** = fatal invocation error (PHP guard, wrong scan path / nothing to scan, `--file` not found). Warnings never block.
+All scripts are dependency-free token-level static analyzers run from this skill package directory; they require **PHP 8.1+** and accept `[project-path]`, `[--format=text|json]`, `[--quiet]`, `[--verbose]`. Exit codes (all scripts): **0** = pass or warnings only · **1** = at least one error (blocking) · **2** = fatal invocation error (PHP guard, wrong scan path / nothing to scan, `--file` not found). Warnings never block.
 
 - `scripts/verify-all.php` — runs all checkers below in one pass.
-- `scripts/check-di-syntax.php` — DI files (`config/**/di/*.php`) and `params.php`: config-key typos, missing `()`/`$`, PHP syntax, legacy `'__class'`; self-binding (`Interface => Interface`) is an error, unmapped `Reference::to(Interface)` and closures in `params.php` are warnings; reflection-verifies targets when `vendor/autoload.php` exists.
-- `scripts/verify-actions.php` — Actions: `declare(strict_types=1);` first, strict `ResponseInterface` returns, Thin Action rule (no SQL/query builders/transactions/DB injection in presentation), legacy Yii 2 constructs, common traps (`Cookie::create()`, `->send()`, `echo`/`print`/`die`/`exit`); deprecated `DataResponse` factory import is a warning.
-- `scripts/verify-routes.php` — `routes.php`: `declare(strict_types=1);`, legacy `<id:\d+>` syntax, duplicate route names, string action targets, static facades, legacy static route factories `Route::get/post/...()` / `Group::create()` (error on router ≥ 4.0.3, downgraded to a warning when `composer.lock` proves an older installed router).
+- `scripts/check-di-syntax.php` — DI files (`config/**/di/*.php`) and `params.php`: config-key typos, PHP syntax, legacy `'__class'`; self-binding (`Interface => Interface`) is an error; unmapped references and closures in `params.php` are warnings; reflection checks when `vendor/autoload.php` exists.
+- `scripts/verify-actions.php` — Actions: `declare(strict_types=1);` first, strict `ResponseInterface` returns, Thin Action rule (no SQL/DB injection in presentation), legacy Yii 2 constructs, traps (`Cookie::create()`, `->send()`, output statements `echo`/`print`/`die`/`exit`); deprecated `DataResponse` factory import is a warning.
+- `scripts/verify-routes.php` — `routes.php`: `declare(strict_types=1);`, legacy `<id:\d+>` syntax, duplicate route names, string action targets, static facades, legacy static route factories `Route::get/post/...()` / `Group::create()` (error on router ≥ 4.0.3; warning when `composer.lock` proves an older router).
+- `scripts/selftest.php` — regression self-test of the verifiers against `scripts/fixtures/` (positives exit 0; negatives report expected rule codes); optional step of the extension validator (skipped when PHP is absent).
 
 These are static heuristics: a green result never proves that DI wiring resolves or routes match at runtime.
 
 ## Canonical examples
 
-- `examples/crud-slice/README.md` — canonical vertical slice template for new Yii 3 features: `Migration/` (ColumnBuilder DDL), `Domain/` (pure aggregate with factory methods, `assignId()` guard, `PostStatus` enum, `PostCreated` event, repository contract), `Persistence/` (adapter over `ConnectionInterface` + `Query`), `Application/` (command, handler with domain checks → `transaction()` → post-commit dispatch, listener), `Presentation/` (thin invokable actions, input DTO), `Config/` (DI, events, routes), `Tests/` (handler unit tests).
+- `examples/crud-slice/README.md` — canonical vertical slice template for new Yii 3 features, bottom-up: `Migration/` (ColumnBuilder DDL) → `Domain/` (aggregate with factory methods, `assignId()` guard, `PostStatus` enum, `PostCreated` event, repository contract) → `Persistence/` (`ConnectionInterface` + `Query` adapter) → `Application/` (command, handler: domain checks → `transaction()` → post-commit dispatch, listener) → `Presentation/` (thin actions, input DTO) → `Config/` (DI, events, routes) → `Tests/` (handler unit tests).

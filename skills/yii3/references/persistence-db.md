@@ -1,5 +1,8 @@
 # Yii3 Persistence: Database, Query Builder & Transactions
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical guide for low-level database operations, explicit Query Builder queries, atomic transactions, memory-safe data streaming, and paginated data readers using `yiisoft/db` and `yiisoft/data-db`.
 >
 > Persistence details belong strictly to the Infrastructure Layer; Domain Entities and Application Use Cases must never execute raw database operations directly.

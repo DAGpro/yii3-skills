@@ -1,5 +1,8 @@
 # Yii3 Testing: Testo Runner (`testo/testo`)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for the `testo/testo` runner path in Yii3 projects: the mandatory exclusive runner rule (PHPUnit XOR Testo), installation, `testo.php` configuration, `#[Test]` classes with `Testo\Assert`, in-memory functional HTTP testing without PHPUnit, and Mockery integration via `php-testo/bridge-mockery`.
 
 **Scope & Ownership.** This guide is the single source of truth for the Testo runner and its bridges. The general test architecture, the PHPUnit runner, PSR test doubles from `yiisoft/test-support`, and PHPUnit mocking rules are owned by the [Testing Core Guide](testing-core.md). Testo is **mutually exclusive** with `phpunit/phpunit` — resolve what is installed via the project's `composer.json` (see [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family)). Codeception (an alternative actor-driven framework) is owned by the [Codeception Testing Guide](testing-codeception.md); Infection mutation testing (an optional layer on top of the runner, not an alternative runner) by the [Mutation Testing Guide](testing-infection.md).

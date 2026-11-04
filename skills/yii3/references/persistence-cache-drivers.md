@@ -1,5 +1,8 @@
 # Yii3 Cache Driver Adapters Guide (Redis, DB, APCu, Memcached, WinCache)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Configuration recipes for the external PSR-16 cache driver packages of `yiisoft/cache`: `yiisoft/cache-redis` (Predis client wiring), `yiisoft/cache-db` (storage-table initialization), `yiisoft/cache-apcu` (per-SAPI shared memory), `yiisoft/cache-memcached` (persistent connections and TTL semantics), and `yiisoft/cache-wincache`.
 
 **Scope & Ownership:** This guide is the single source of truth for external PSR-16 cache driver adapter wiring; it was extracted from the [Caching & Performance Guide, §2.2–§2.6](persistence-caching.md#2-cache-drivers--di-configuration). Exactly **ONE** external driver package is installed per project — `yiisoft/cache-redis` XOR `yiisoft/cache-db` XOR `yiisoft/cache-apcu` XOR `yiisoft/cache-memcached` XOR `yiisoft/cache-wincache`; the zero-dependency default `yiisoft/cache-file` and the `NullCache` / `PrefixedCache` development helpers are owned by the parent [Caching & Performance Guide, §2](persistence-caching.md#2-cache-drivers--di-configuration). Resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family), then read only the matching adapter section below.

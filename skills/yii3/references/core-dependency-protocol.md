@@ -1,5 +1,8 @@
 # Dependency Protocol
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > **Operational gate for the dependency lifecycle: check → decide → install → wire → learn.**
 > Per the [SKILL.md](../SKILL.md) core rules, every capability goes through this protocol **before** any code that uses it is written. It prevents package hallucinations, version drift, broken container graphs, and supply-chain mistakes.
 > Post-install code verification (deterministic scripts, project quality gates) is a separate, final step — see [§6](#6-verify-the-result).

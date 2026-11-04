@@ -1,5 +1,8 @@
 # Yii3 RBAC Storage Drivers Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference guide for persisting RBAC items (roles, permissions) and assignments: relational database storage with `yiisoft/rbac-db`, version-controlled PHP file storage with `yiisoft/rbac-php`, Cycle database storage with `yiisoft/rbac-cycle-db`, and hybrid storage architectures that combine drivers.
 
 **Scope & Ownership:** This guide is the single source of truth for RBAC storage drivers; it was extracted from the [Authentication & RBAC Guide, §8.4–8.7](infra-auth-and-rbac.md#84-relational-database-storage-yiisoftrbac-db). Exactly **one storage driver is installed per project**: `yiisoft/rbac-db` XOR `yiisoft/rbac-php` XOR `yiisoft/rbac-cycle-db` — resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The RBAC manager, dynamic business rules, and the rules container that sit on top of these storages are owned by the [Authentication & RBAC Guide, §8.1–8.3](infra-auth-and-rbac.md#81-rbac-items-roles-permissions-and-managerinterface).

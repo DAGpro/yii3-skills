@@ -1,5 +1,8 @@
 # Yii3 External OAuth2 / OIDC Login Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference guide for external identity provider login ("Sign in with Google / GitHub / Microsoft / X ...") with `yiisoft/yii-auth-client`: package architecture and core contracts, wiring the `AuthAction` callback middleware, configuring provider clients via `Collection` params, OpenID Connect, the `AuthChoice` button widget, and mapping provider attributes to your own identity.
 
 **Scope & Ownership:** This guide is the single source of truth for external OAuth2/OIDC login; it was extracted from the [Authentication & RBAC Guide, §6](infra-auth-and-rbac.md#6-external-oauth2--oidc-login-yiisoftyii-auth-client). OAuth2/OIDC login is one of the **mutually exclusive login methods**: a project picks either the stateful session lifecycle ([Authentication & RBAC Guide, §4](infra-auth-and-rbac.md#4-stateful-session-authentication-lifecycle-yiisoftuser)), stateless JWT ([Stateless JWT Authentication Guide](infra-auth-jwt.md)), or external OAuth2/OIDC login (this guide) — resolve which method is installed via the project's `composer.json` (`yiisoft/yii-auth-client` vs `yiisoft/auth-jwt`; session-only projects install neither) or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). RBAC authorization layers on top of any of these methods.

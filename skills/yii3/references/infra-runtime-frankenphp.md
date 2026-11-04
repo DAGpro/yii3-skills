@@ -1,5 +1,8 @@
 # Yii3 FrankenPHP Worker Runtime Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference guide for the FrankenPHP worker runtime (`yiisoft/yii-runner-frankenphp`): the Caddy CGO threading model and operating modes, `worker.php` implementation with `ignore_user_abort`, worker recycling via `MAX_REQUESTS`, production and development `Caddyfile` configurations, in-memory functional testing, and scoped request access with `yiisoft/request-provider`.
 
 **Scope & Ownership:** This guide is the single source of truth for the FrankenPHP worker runtime; it was extracted from the [Runners & Runtimes Guide, §5](infra-runners-and-runtimes.md#5-frankenphp-worker-runtime-yiisoftyii-runner-frankenphp). The standard HTTP runner (`yiisoft/yii-runner-http`) and console runner (`yiisoft/yii-runner-console`) are the default choices — worker runtimes are opt-in for high-throughput daemons. FrankenPHP and RoadRunner are **mutually exclusive** worker runtimes: resolve which one is installed via the project's `composer.json` (`yiisoft/yii-runner-frankenphp` vs `yiisoft/yii-runner-roadrunner`) or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The sibling guide for RoadRunner is the [RoadRunner Worker Runtime Guide](infra-runtime-roadrunner.md).

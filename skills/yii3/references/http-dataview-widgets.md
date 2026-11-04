@@ -1,5 +1,8 @@
 # Yii3 DataView Widgets Guide: GridView, ListView & DetailView (`yiisoft/yii-dataview`)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for the `yiisoft/yii-dataview` widget family: `GridView` table rendering and its column catalog, column filtering, `ListView` item lists, `DetailView` single-record display, and the standalone pagination and page-size widgets.
 
 **Scope & Ownership.** This guide is the single source of truth for DataView widgets. The surrounding view stack — the rendering pipeline, template anatomy, layouts, asset bundles, and core widgets — is owned by the [Views & Widgets Guide](http-views-and-widgets.md). The visual styling of the generated markup depends on which CSS-framework driver the project installed (`yiisoft/bootstrap5` or `yiisoft/yii-bulma` — resolve which one via the project's `composer.json` / [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family)).

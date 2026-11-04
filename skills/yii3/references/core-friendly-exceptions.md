@@ -1,5 +1,8 @@
 # Yii3 Friendly Exceptions Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference guide for `yiisoft/friendly-exception`: the `FriendlyExceptionInterface` contract that lets domain, infrastructure, and configuration exceptions carry a human-readable title (`getName()`) and actionable remediation steps (`getSolution()`), together with the automatic rendering behavior of the web error handler and the console application runner.
 
 **Scope & Ownership:** This guide is the single source of truth for Friendly Exceptions across the skill package; it consolidates the former sections in the [Utility Packages Guide, §9](core-utilities.md#9-yiisoftfriendly-exception--actionable-error-solution-contract), the [Error Handling Guide, §6](infra-error-handling.md#6-friendly-exceptions-friendlyexceptioninterface), and the [Console Commands Guide, §7](infra-commands.md#7-friendly-exceptions--global-error-handling). The surrounding error-handling pipeline (ErrorCatcher, exception mapping, custom renderers, `UserException` disclosure) is owned by the [Error Handling Guide](infra-error-handling.md); command authoring is owned by the [Console Commands Guide](infra-commands.md).

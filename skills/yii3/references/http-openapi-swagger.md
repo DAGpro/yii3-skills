@@ -1,5 +1,8 @@
 # Yii3 OpenAPI & Swagger Integration Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Comprehensive architectural and usage guide for `yiisoft/yii-swagger`: generating OpenAPI v3 specifications from PHP 8 attributes (`zircote/swagger-php`), serving interactive Swagger UI documentation, configuring performance caching, managing multi-version APIs, and securing documentation endpoints in Yii 3 applications.
 
 ---

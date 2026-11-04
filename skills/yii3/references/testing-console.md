@@ -1,5 +1,8 @@
 # Yii3 Testing: Console Commands (`yiisoft/yii-console`)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for testing Yii3 console commands: modern `#[AsCommand]` command definitions, `Symfony\Component\Console\Tester\CommandTester` execution with `ExitCode::*` codes, output assertion with line-ending normalization, failure scenarios, interactive prompt simulation, autocompletion testing, and container-aware command resolution.
 
 **Scope & Ownership.** This guide is the single source of truth for console command testing in Yii3. The non-testing console side — command anatomy, arguments/options, registration, lifecycle events, and the full `ExitCode` palette — is owned by the [Console Commands Guide](infra-commands.md). General test architecture, the runner ecosystem, PSR test doubles, and mocking rules are owned by the [Testing Core Guide](testing-core.md).

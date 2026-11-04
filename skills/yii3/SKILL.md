@@ -72,7 +72,7 @@ Non-feature tasks (pure config, docs, refactoring): Stage 0 marks the inapplicab
 
 Run after the last stage, in every mode.
 
-1. **Deterministic gate** — from the skill package directory, against the target project path: `php scripts/verify-all.php [project-path]` (or individual verifiers). Loop: fix every error and rerun until exit 0. Exit codes and flags: tooling section below; exit 2 means a misconfigured invocation — fix the invocation, never treat it as a pass.
+1. **Deterministic gate** — from the skill directory against the target project: `php scripts/verify-all.php [project-path]` (or individual verifiers). Loop: fix and rerun until exit 0. Exit codes and flags: tooling section below; exit 2 means a misconfigured invocation — fix the invocation, never treat it as a pass.
 2. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Packages used in code must be declared in `composer.json`.
 3. **Chain Integrity Checklist** (blocking): every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
 4. **Runtime smoke** (optional, Full mode, `vendor/` present): `./yii list` must exit 0 and list the new commands — catches container wiring failures the static gate cannot see (`references/infra-runners-and-runtimes.md`).
@@ -81,7 +81,7 @@ Run after the last stage, in every mode.
 ## Core rules
 
 1. **Yii3 is not Yii2.** No `Yii::$app`, no `yii\` namespace, no static facades, no behaviors (`TimestampBehavior`), no `rules()` / `behaviors()` on persistence models. PSR-based, injected.
-2. **Source of Truth (SSOT) hierarchy:** Tier 1 — target project codebase (`src/`, `config/`, `composer.json`, architecture artifact); Tier 2 — installed package sources `vendor/yiisoft/<pkg>/src/` (exact signatures, argument order, config defaults); Tier 3 — the skill's `references/*.md` guides. Verify unfamiliar signatures in Tier 2. Inspect `composer.lock` for installed versions — version-gated behavior is cataloged in `references/core-version-notes.md`.
+2. **Source of Truth (SSOT) hierarchy:** Tier 1 — target project codebase (`src/`, `config/`, `composer.json`, architecture artifact); Tier 2 — installed package sources `vendor/yiisoft/<pkg>/src/` (exact signatures, argument order, config defaults); Tier 3 — the skill's `references/*.md` guides: synthesis for patterns, never an API source of truth — verify signatures in Tier 2. Version-gated behavior: `references/core-version-notes.md` (verify via `composer.lock`).
 3. **Architecture decides placement:** the architecture artifact if it exists, otherwise the project's real structure (`src/`, `config/` + similar existing features). See `references/core-architecture-alignment.md`.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
 
@@ -190,7 +190,7 @@ All scripts are dependency-free token-level static analyzers run from this skill
 - `scripts/verify-routes.php` — `routes.php`: `declare(strict_types=1);`, legacy `<id:\d+>` syntax, duplicate route names, string action targets, static facades, legacy static route factories `Route::get/post/...()` / `Group::create()` (error on router ≥ 4.0.3; warning when `composer.lock` proves an older router).
 - `scripts/selftest.php` — regression self-test of the verifiers against `scripts/fixtures/` (positives exit 0; negatives report expected rule codes); optional step of the extension validator (skipped when PHP is absent).
 
-These are static heuristics: a green result never proves that DI wiring resolves or routes match at runtime.
+These are static heuristics: green does not prove that DI wiring resolves or routes match at runtime.
 
 ## Canonical examples
 

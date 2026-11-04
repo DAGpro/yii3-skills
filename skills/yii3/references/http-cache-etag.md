@@ -1,5 +1,8 @@
 # Yii3 HTTP Response Caching Guide (ETag & Conditional Requests)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > HTTP-layer caching around the PSR-15 middleware pipeline: RFC 7232 conditional-request mechanics, the declarative `HttpCacheMiddleware` from `yiisoft/http-middleware` (ETag / `Last-Modified` providers and suffix normalization), and programmatic action-level conditional GET.
 
 **Scope & Ownership:** This guide is the single source of truth for HTTP response caching with ETag and `Last-Modified` revalidation; it was extracted from the [Caching & Performance Guide, §6](persistence-caching.md#6-http-response-caching-etag--conditional-requests). This is **HTTP-layer caching** — client, browser, and CDN revalidation of whole responses around the middleware pipeline — and is distinct from **application data caching** (PSR-16 stores, `getOrSet()`, tag invalidation), which is owned by the parent [Caching & Performance Guide](persistence-caching.md). The middleware catalogue and pipeline placement rules are owned by the [PSR-15 Middlewares Guide](http-middlewares.md).

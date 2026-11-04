@@ -1,5 +1,8 @@
 # Yii3 Niche Utility Packages Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference guide for four niche, rarely-needed standalone Yii3 utility packages: variable dumping and closure export (`yiisoft/var-dumper`), filesystem class discovery (`yiisoft/classifier`), network, DNS and CIDR firewall utilities (`yiisoft/network-utilities`), and deployment pre-flight verification (`yiisoft/requirements`). These packages are pure, framework-independent libraries — zero DI container wiring, no configuration plugins, and no static facades.
 
 **Scope & Ownership:** This guide is the single source of truth for these four packages; it was extracted from the [Utility Packages Guide, §5–§8](core-utilities.md). Load this guide only when a task actually touches one of them — they are not part of the everyday core toolkit (`yiisoft/arrays`, `yiisoft/strings`, `yiisoft/json`, owned by the [Utility Packages Guide](core-utilities.md)).

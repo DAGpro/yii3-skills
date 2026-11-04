@@ -1,5 +1,8 @@
 # Yii3 Events & Listeners Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical recommendations and configuration recipes for PSR-14 event dispatching in Yii3 using `psr/event-dispatcher`, `yiisoft/event-dispatcher`, and `yiisoft/yii-event`.
 
 ---

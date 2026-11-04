@@ -1,5 +1,8 @@
 # Yii3 Logging Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical guide for PSR-3 logging with `yiisoft/log`, target packages (`log-target-file`, `log-target-db`,
 > `log-target-email`, `log-target-syslog`), message placeholders, context providers, custom formats, testing,
 > and DI wiring.

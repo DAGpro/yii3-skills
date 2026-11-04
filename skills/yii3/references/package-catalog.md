@@ -1,5 +1,8 @@
 # Yii3 Package Catalog & Dependency Reference
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference catalog of official `yiisoft/*` packages, capabilities, driver options, and companion packages.
 >
 > **Source of Truth:** For installed packages, inspect `vendor/yiisoft/<pkg>/src/` for exact class interfaces and method signatures. For packages not yet installed, use this catalog to identify the package name and drivers before running `composer require`.

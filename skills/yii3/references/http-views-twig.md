@@ -1,5 +1,8 @@
 # Yii3 Twig Template Engine Guide (`yiisoft/view-twig` & `yiisoft/yii-twig`)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for rendering Yii3 views with Twig: renderer registration, Twig layout and page lifecycle, the `WebViewExtension` function boundary, and the restrictions on static widget/helper invocation inside Twig templates.
 
 **Scope & Ownership.** This guide is the single source of truth for Twig template rendering in Yii3. The template-agnostic view stack — the rendering pipeline, native PHP template anatomy, layouts, view injections, and asset bundles — is owned by the [Views & Widgets Guide](http-views-and-widgets.md). Twig is **mutually exclusive** with native PHP templates: a project renders **either** PHP templates (Views & Widgets Guide, §2) **or** Twig — never both. Resolve which engine is actually installed via the project's `composer.json` (`yiisoft/view-twig` / `yiisoft/yii-twig` present → Twig; absent → native PHP) or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family).

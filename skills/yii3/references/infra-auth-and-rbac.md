@@ -1,5 +1,8 @@
 # Yii3 Authentication & RBAC Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical guide and configuration recipes for user authentication, password hashing, stateful session/cookie methods, user lifecycle events, and role-based access control (RBAC) in Yii3. The alternative login methods and RBAC storage drivers are owned by dedicated child guides: the [Stateless JWT Authentication Guide](infra-auth-jwt.md) (§5), the [OAuth2/OIDC Login Guide](infra-auth-oauth2.md) (§6), and the [RBAC Storage Drivers Guide](infra-rbac-storage.md) (§8.4–8.7).
 
 ---

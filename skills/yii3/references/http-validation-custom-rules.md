@@ -1,5 +1,8 @@
 # Yii3 Custom Validation Rules & Testing Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical architecture guide and testing reference for authoring custom validation rules (`RuleInterface`), service handlers (`RuleHandlerInterface`), dependency injection configuration (`RuleHandlerContainer`), compound rules, and isolated unit and integration testing strategies in Yii 3 with `yiisoft/validator`.
 
 ---

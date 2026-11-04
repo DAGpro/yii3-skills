@@ -1,5 +1,8 @@
 # Yii3 Testing: Codeception (`codeception/codeception` ^5)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for Codeception 5 testing in Yii3 projects: installation, root and suite configuration, actor roles (`ConsoleTester`, `ApiTester`, `UnitTester`, `FunctionalTester`), Cest implementation, and REST API testing with the REST module.
 
 **Scope & Ownership.** This guide is the single source of truth for Codeception in Yii3. Codeception is an alternative, actor-driven test framework that is **mutually exclusive** with plain PHPUnit/Testo suite setups — resolve what is installed via the project's `composer.json` (see [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family)). The PHPUnit and Testo runners, PSR test doubles, and mocking rules are owned by the [Testing Core Guide](testing-core.md); the canonical in-memory `HttpApplicationRunner` recipe reused by the in-memory actor below is owned by the [Functional HTTP Testing Guide, §5](testing-http.md#5-in-memory-http-testing-via-httpapplicationrunner).

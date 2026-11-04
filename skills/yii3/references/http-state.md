@@ -1,5 +1,8 @@
 # Yii3 HTTP State Guide: Sessions, Cookies & CSRF
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical guide for server-side state with `yiisoft/session` (sessions, flash messages), client-side state with
 > `yiisoft/cookies` (signing/encryption), and CSRF protection with `yiisoft/csrf`.
 

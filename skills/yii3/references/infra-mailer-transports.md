@@ -1,5 +1,8 @@
 # Yii3 Mailer Transports & DSN Configuration Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Production transport configuration for the `yiisoft/mailer-symfony` bridge: the `'yiisoft/mailer-symfony'` params block with the `esmtpTransport` DSN assembly rules and the `useSendmail` switch, plus the full `messageSettings` defaults map applied by `BaseMailer` at send time.
 
 **Scope & Ownership.** This guide is the single source of truth for production transport and message-default configuration of the `mail` package family. The mailer core contracts (`MailerInterface`, `Message`, `BaseMailer`) and the development/testing mailers (`FileMailer`, `StubMailer`, `NullMailer`) are owned by the [Mailer & Email Notifications Guide](infra-mailer.md). Which mailer/transport package is installed is an application decision — resolve it via the project's `composer.json` (`yiisoft/mailer` core alone suffices for development and tests; production SMTP delivery additionally requires the `yiisoft/mailer-symfony` bridge, the only transport adapter in the `mail` family) or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The optional queue-based delivery path and the `BeforeSend`/`AfterSend` lifecycle events are owned by the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md).

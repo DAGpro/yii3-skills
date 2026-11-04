@@ -1,5 +1,8 @@
 # Yii3 Bootstrap 5 Guide: Widgets, Assets & Form Theming (`yiisoft/bootstrap5`)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for the `yiisoft/bootstrap5` package: the 16-widget driver catalog with its value-object item factories and backed-enum styling constants, Bootstrap-flavored flash messages, the `BootstrapAsset` / `BootstrapCdnAsset` bundles with SRI, the `customizedBundles` override recipe, and the `ThemePath::BOOTSTRAP5_*` form-theme presets.
 
 **Scope & Ownership.** This guide is the single source of truth for the Bootstrap 5 widget driver and its Bootstrap-specific integrations (asset bundles, form theming presets, flash-message alerts). The framework-agnostic view stack — rendering pipeline, PHP templates, XSS escaping, layouts, custom widgets, HTML form field factories, and the general `ThemeContainer` mechanics — is owned by the [Views & Widgets Guide](http-views-and-widgets.md). Bootstrap 5 and Bulma are **mutually exclusive** CSS-framework widget drivers: a project picks **exactly ONE** — resolve which one is actually installed via the project's `composer.json` (`yiisoft/bootstrap5` vs `yiisoft/yii-bulma`) or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The sibling driver is the [Bulma Guide](http-views-bulma.md).

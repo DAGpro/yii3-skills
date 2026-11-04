@@ -1,5 +1,8 @@
 # Yii3 Bulma Widgets Guide (`yiisoft/yii-bulma`)
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Complete reference for the `yiisoft/yii-bulma` widget driver: the 11-widget catalog, associative-array item configuration, string class-constant styling, and the Bulma asset bundles (`BulmaAsset` plus per-widget JS bundles).
 
 **Scope & Ownership.** This guide is the single source of truth for the Bulma widget driver. The framework-agnostic view stack — rendering pipeline, PHP templates, XSS escaping, layouts, custom widgets, HTML form field factories, and the general form theming mechanics — is owned by the [Views & Widgets Guide](http-views-and-widgets.md). Bulma and Bootstrap 5 are **mutually exclusive** CSS-framework widget drivers: a project picks **exactly ONE** — resolve which one is actually installed via the project's `composer.json` (`yiisoft/yii-bulma` vs `yiisoft/bootstrap5`) or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The sibling driver is the [Bootstrap 5 Guide](http-views-bootstrap5.md).

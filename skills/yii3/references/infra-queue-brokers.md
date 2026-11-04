@@ -1,5 +1,8 @@
 # Yii3 Queue Broker Adapters Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Reference guide for multi-queue configuration and the transport adapter packages of `yiisoft/queue`: named queues in `config/params.php`, `QueueFactoryProvider` DI wiring, the `yiisoft/queue-db`, `yiisoft/queue-redis`, and `yiisoft/queue-amqp` broker adapters, the synchronous `SyncQueueProducer`, and the driver comparison matrix.
 
 **Scope & Ownership:** This guide is the single source of truth for multi-queue configuration and broker adapter wiring; it was extracted from the [Queue & Asynchronous Jobs Guide, §8](infra-queue-jobs.md#8-multi-queue-configuration--broker-adapters). Exactly **ONE** broker driver package is installed per project — `yiisoft/queue-db` XOR `yiisoft/queue-redis` XOR `yiisoft/queue-amqp`; the in-memory `SyncQueueProducer` ships with `yiisoft/queue` itself and serves tests/CI/local dev instead of a real broker. Resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family), then read only the matching adapter section below. Message payloads, handler mapping, and middleware pipelines are owned by the parent [Queue & Asynchronous Jobs Guide](infra-queue-jobs.md).

@@ -1,5 +1,8 @@
 # Yii3 Database Migrations Guide
 
+> [!IMPORTANT]
+> **Grounding rule:** this guide is authoring synthesis for navigation and patterns. The source of truth for every class name, method signature, constructor argument, and configuration key is the installed package source under `vendor/yiisoft/<pkg>/src/`. Verify there before writing code; never substitute this guide for vendor sources, and never write Yii 2 APIs.
+
 > Practical patterns for schema DDL, foreign keys, indexes, data seeding, multi-database management, and reversible migrations using `yiisoft/db-migration` and `yiisoft/db`.
 
 ---

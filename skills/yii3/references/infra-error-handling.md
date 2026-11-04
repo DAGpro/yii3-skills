@@ -12,7 +12,7 @@
 - [5. Custom Error Renderers](#5-custom-error-renderers)
   - [5.1. HTML Error Renderer (`HtmlRenderer` Configuration & Custom Templates)](#51-html-error-renderer-htmlrenderer-configuration--custom-templates)
   - [5.2. JSON Error Renderer (RFC 7807 Problem Details with `ThrowableRendererInterface`)](#52-json-error-renderer-rfc-7807-problem-details-with-throwablerendererinterface)
-- [6. Friendly Exceptions (`FriendlyExceptionInterface`)](#6-friendly-exceptions-friendlyexceptioninterface)
+- [6. Friendly Exceptions (`FriendlyExceptionInterface`)](#6-friendly-exceptions-friendlyexceptioninterface) — full reference in the [Friendly Exceptions Guide](core-friendly-exceptions.md)
 - [7. User Exceptions & Information Disclosure (`UserException` & `#[UserException]`)](#7-user-exceptions--information-disclosure-userexception--userexception)
 - [8. Logging & Sentry Monitoring (`yiisoft/yii-sentry`)](#8-logging--sentry-monitoring-yiisoftyii-sentry)
   - [8.1. PSR-14 Event Listener (`ApplicationError`)](#81-psr-14-event-listener-applicationerror)
@@ -539,56 +539,11 @@ return [
 
 ## 6. Friendly Exceptions (`FriendlyExceptionInterface`)
 
-`Yiisoft\FriendlyException\FriendlyExceptionInterface` allows domain, infrastructure, and configuration exceptions to provide explicit, human-readable diagnoses and actionable steps to resolve the issue:
+> **Ownership:** The complete Friendly Exceptions reference — the `FriendlyExceptionInterface` contract (`getName()` / `getSolution()`), the Markdown-only solution invariants, implementation recipes, and the automatic web (`yiisoft/error-handler`) and console (`yiisoft/yii-console`) rendering — **is owned by the** [Friendly Exceptions Guide](core-friendly-exceptions.md).
+>
+> One-line trap summary: solution text is parsed as Markdown **only** in verbose (debug) rendering — the production `render()` performs no solution handling — and `getSolution()` must be plain CommonMark without HTML tags.
 
-```php
-declare(strict_types=1);
-
-namespace Yiisoft\FriendlyException;
-
-use Throwable;
-
-interface FriendlyExceptionInterface extends Throwable
-{
-    public function getName(): string;
-    public function getSolution(): ?string;
-}
-```
-
-Implementation guidelines (from the interface docblock):
-- `getName()`: Short, human-understandable exception title.
-- `getSolution()`: Clear resolution advice. Make it as short as possible, do **not** use HTML tags, and use simple markdown (`*`, `` ` ``, `-`).
-
-In `src/Domain/User/Exception/UserNotFoundException.php`:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Domain\User\Exception;
-
-use RuntimeException;
-use Yiisoft\FriendlyException\FriendlyExceptionInterface;
-
-final class UserNotFoundException extends RuntimeException implements FriendlyExceptionInterface
-{
-    public function getName(): string
-    {
-        return 'User Account Not Found';
-    }
-
-    public function getSolution(): ?string
-    {
-        return "Verify that the provided user ID exists in the database.\n"
-            . "If testing locally, run `php yii fixture/load` to seed initial test users.";
-    }
-}
-```
-
-When caught:
-- `HtmlRenderer::renderVerbose()` (development) parses `$throwable->getSolution()` — or, for exceptions without the interface, the exception class PHPDoc description — via `cebe/markdown` (`GithubMarkdown`) and displays it as a diagnostic solution block. Markdown parsing happens **only** in verbose rendering; the production `render()` performs no solution/description handling. `parseMarkdown()` additionally strips HTML through an allow-list of roughly 30 tags.
-- The console runner (`Yiisoft\Yii\Console\Application::renderThrowable()`, public API over the protected `doRenderThrowable()`) prints the friendly title and the solution note directly in the terminal (styled via Symfony Console style helpers, or raw ANSI tags at low verbosity) and always appends the stack trace.
+> **For the complete reference on** Friendly Exceptions **see the** [Friendly Exceptions Guide](core-friendly-exceptions.md).
 
 ---
 
@@ -926,6 +881,7 @@ $errorHandler->register(); // Idempotent; once per process.
 
 ## 12. Related Topic Guides
 
+- [Friendly Exceptions Guide](core-friendly-exceptions.md) — `FriendlyExceptionInterface` contract, Markdown solution invariants, and automatic web/console rendering (§6 of this guide).
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Action handlers, PSR-7 response factories, and thin-action error delegation.
 - [PSR-15 Middlewares Guide](http-middlewares.md) — Canonical global-pipeline wiring (`Application` dispatcher, §4.1), `SessionMiddleware` commit/discard lifecycle (§3.1), and custom error middleware.
 - [Logging Guide](infra-logging.md) — PSR-3 logger configuration, log targets, and context logging.

@@ -17,7 +17,7 @@ Requiring `yiisoft/yii-runner-console` alone is sufficient — it pulls in `yiis
 - [4. Configuration & Lazy Command Registration](#4-configuration--lazy-command-registration)
 - [5. Interactive Terminal UX with SymfonyStyle](#5-interactive-terminal-ux-with-symfonystyle)
 - [6. Standard Exit Codes (Yiisoft\Yii\Console\ExitCode)](#6-standard-exit-codes-yiisoftyiiconsoleexitcode)
-- [7. Friendly Exceptions & Global Error Handling](#7-friendly-exceptions--global-error-handling)
+- [7. Friendly Exceptions & Global Error Handling](#7-friendly-exceptions--global-error-handling) — full reference in the [Friendly Exceptions Guide](core-friendly-exceptions.md)
 - [8. Testing Console Commands (CommandTester)](#8-testing-console-commands-commandtester)
 - [9. Built-in Ecosystem Commands](#9-built-in-ecosystem-commands)
 - [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
@@ -749,47 +749,11 @@ An unknown code yields `"Unknown exit code"`.
 
 ## 7. Friendly Exceptions & Global Error Handling
 
-Yii3 provides first-class support for `Yiisoft\FriendlyException\FriendlyExceptionInterface`. When a command throws a friendly exception, `Yiisoft\Yii\Console\Application` renders actionable guidance directly to the terminal user.
+> **Ownership:** The complete Friendly Exceptions reference — the `FriendlyExceptionInterface` contract, the CLI-friendly exception recipe, the `Application::renderThrowable()` output branches (plain buffered output vs. `SymfonyStyle` `! [NOTE]` rendering), and global console error logging via `ErrorListener` — **is owned by the** [Friendly Exceptions Guide](core-friendly-exceptions.md), sections 4–5.
+>
+> One-line trap summary: the real runner flow renders friendly exceptions as `<fg=red>` title + `<fg=yellow>` solution (the `! [NOTE]` style appears only when the output implements `StyleInterface`), and the stack trace is always appended.
 
-### 7.1. Implementing a CLI-Friendly Exception
-
-```php
-declare(strict_types=1);
-
-namespace App\Domain\User\Exception;
-
-use RuntimeException;
-use Yiisoft\FriendlyException\FriendlyExceptionInterface;
-
-final class DatabaseTablesNotMigratedException extends RuntimeException implements FriendlyExceptionInterface
-{
-    public function getName(): string
-    {
-        return 'Database Schema Not Initialized';
-    }
-
-    public function getSolution(): ?string
-    {
-        return 'Run "./yii migrate:up" to apply pending database migrations before creating users.';
-    }
-}
-```
-
-When thrown during command execution, the runner catches the throwable and `Application::renderThrowable()` prints it. The rendering has two branches. In the real runner flow the output object is a buffered plain console output (not a `SymfonyStyle`), so the friendly exception reaches the terminal in the red/yellow branch followed by the stack trace:
-
-```
-Database Schema Not Initialized            <- printed with <fg=red>
-Run "./yii migrate:up" to apply pending
-database migrations before creating users. <- printed with <fg=yellow>
-
-#0 /app/... (stack trace is always appended)
-```
-
-The `! [NOTE]`-styled rendering (title + note) applies only when the output object implements `StyleInterface` — for example, when a command itself passes a `SymfonyStyle` instance to `renderThrowable()` (the pattern used by yii-console's own tests).
-
-### 7.2. Global Console Error Logging (`ErrorListener`)
-
-`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` through the `events-console` group shipped by the package (`vendor/yiisoft/yii-console/config/events-console.php`; the shipped group contents are quoted in the [Events & Listeners Guide](core-events-and-listeners.md), section 6.2 — no application wiring needed). When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application).
+> **For the complete reference on** Friendly Exceptions and global console error handling **see the** [Friendly Exceptions Guide, §4–§5](core-friendly-exceptions.md).
 
 ---
 
@@ -929,6 +893,7 @@ Ecosystem details worth knowing:
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runner architecture, `ConsoleApplicationRunner`, and entry points.
 - [DI & Configuration Guide](core-di-and-config.md) — Console config groups (`params-console`, `di-console`), definition syntax, and environment parameters.
 - [Queue & Asynchronous Jobs Guide](infra-queue-jobs.md) — Console queue workers (`./yii queue:listen`) and mutex locks.
-- [Error Handling Guide](infra-error-handling.md) — Friendly Exceptions, CLI error formatting, and logging.
+- [Friendly Exceptions Guide](core-friendly-exceptions.md) — `FriendlyExceptionInterface` contract, CLI-friendly exception recipes, console rendering branches, and `ErrorListener` logging (§7 of this guide).
+- [Error Handling Guide](infra-error-handling.md) — Error catching pipelines, CLI error formatting, and logging.
 - [Console Testing Guide](testing-console.md) — The complete console command testing reference: `CommandTester`, exit codes, prompts, and autocompletion.
 - [Testing Core Guide](testing-core.md) — PSR test doubles, test runners, and unit testing architecture.

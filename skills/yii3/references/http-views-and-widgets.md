@@ -1,6 +1,6 @@
 # Yii3 Views, Layouts & Widgets Guide
 
-> Comprehensive guide for template rendering, XSS protection, layouts, view injections, asset bundles, custom widgets, CSS framework drivers, HTML forms, and DataView components using `yiisoft/view`, `yiisoft/yii-view-renderer`, `yiisoft/html`, `yiisoft/widget`, `yiisoft/assets`, `yiisoft/yii-widgets`, `yiisoft/form`, `yiisoft/form-model`, `yiisoft/yii-dataview`, `yiisoft/bootstrap5`, `yiisoft/yii-bulma`, `yiisoft/view-twig`, and `yiisoft/yii-twig`.
+> Comprehensive guide for template rendering, XSS protection, layouts, view injections, asset bundles, custom widgets, and HTML forms using `yiisoft/view`, `yiisoft/yii-view-renderer`, `yiisoft/html`, `yiisoft/widget`, `yiisoft/assets`, `yiisoft/yii-widgets`, `yiisoft/form`, and `yiisoft/form-model`. Package-specific material is split out into on-demand child guides owned by this one: the Twig template engine ([Twig Template Engine Guide](http-views-twig.md)), the CSS-framework widget drivers ([Bootstrap 5 Guide](http-views-bootstrap5.md), [Bulma Guide](http-views-bulma.md)), and the DataView widgets ([DataView Widgets Guide](http-dataview-widgets.md)).
 
 ---
 
@@ -15,11 +15,7 @@
   - [2.3. Parameter Exchange (setParameter / getParameter / addToParameter / removeParameter)](#23-parameter-exchange-setparameter--getparameter--addtoparameter--removeparameter)
   - [2.4. Application View Theming (Yiisoft\View\Theme)](#24-application-view-theming-yiisoftviewtheme)
   - [2.5. PSR-14 View Lifecycle Events](#25-psr-14-view-lifecycle-events)
-- [3. Alternative Template Engine: Twig (yiisoft/view-twig & yiisoft/yii-twig)](#3-alternative-template-engine-twig-yiisoftview-twig--yiisoftyii-twig)
-  - [3.1. Architecture & Renderer Registration (TwigTemplateRenderer)](#31-architecture--renderer-registration-twigtemplaterenderer)
-  - [3.2. Twig Template Anatomy & Page Lifecycle (|raw, {% do %})](#32-twig-template-anatomy--page-lifecycle-raw--do-)
-  - [3.3. WebViewExtension & Grounded Helper Boundaries](#33-webviewextension--grounded-helper-boundaries)
-  - [3.4. Static Widget & Helper Invocation Restrictions in Twig](#34-static-widget--helper-invocation-restrictions-in-twig)
+- [3. Alternative Template Engine: Twig (yiisoft/view-twig & yiisoft/yii-twig)](#3-alternative-template-engine-twig-yiisoftview-twig--yiisoftyii-twig) — owned by the [Twig Template Engine Guide](http-views-twig.md)
 - [4. Mandatory XSS Escaping & Safe HTML (Yiisoft\Html\Html)](#4-mandatory-xss-escaping--safe-html-yiisofthtmlhtml)
   - [4.1. Escaping Primitives (Html::encode, encodeAttribute, escapeJavaScriptStringValue)](#41-escaping-primitives-htmlencode-encodeattribute-escapejavascriptstringvalue)
   - [4.2. Tag Builders & NoEncodeStringableInterface](#42-tag-builders--noencodestringableinterface)
@@ -47,9 +43,8 @@
   - [7.1. Creating a Custom Widget (Yiisoft\Widget\Widget & Container Pattern)](#71-creating-a-custom-widget-yiisoftwidgetwidget--container-pattern)
   - [7.2. Widget Life Cycle, Factory & Themes (WidgetFactory in 2.2+)](#72-widget-life-cycle-factory--themes-widgetfactory-in-22)
   - [7.3. Built-in Core Widgets (yiisoft/yii-widgets: Breadcrumbs, FragmentCache, Menu, Alert, Dropdown)](#73-built-in-core-widgets-yiisoftyii-widgets-breadcrumbs-fragmentcache-menu-alert-dropdown)
-  - [7.4. CSS-Framework Widget Drivers: Bootstrap 5 (yiisoft/bootstrap5)](#74-css-framework-widget-drivers-bootstrap-5-yiisoftbootstrap5)
-  - [7.5. CSS-Framework Widget Drivers: Bulma (yiisoft/yii-bulma)](#75-css-framework-widget-drivers-bulma-yiisoftyii-bulma)
-  - [7.6. Comparison Matrix: Bootstrap 5 vs Bulma Drivers](#76-comparison-matrix-bootstrap-5-vs-bulma-drivers)
+  - [7.4. CSS-Framework Widget Drivers: Bootstrap 5 (yiisoft/bootstrap5)](#74-css-framework-widget-drivers-bootstrap-5-yiisoftbootstrap5) — owned by the [Bootstrap 5 Guide](http-views-bootstrap5.md)
+  - [7.5. CSS-Framework Widget Drivers: Bulma (yiisoft/yii-bulma)](#75-css-framework-widget-drivers-bulma-yiisoftyii-bulma) — owned by the [Bulma Guide](http-views-bulma.md)
 - [8. HTML Form Rendering (yiisoft/html, yiisoft/form-model, yiisoft/form)](#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform)
   - [8.1. Form Architecture: Tag Builders vs Field Binding](#81-form-architecture-tag-builders-vs-field-binding)
   - [8.2. Form Model Definition for Widgets (FormModel & UI Attributes)](#82-form-model-definition-for-widgets-formmodel--ui-attributes)
@@ -58,13 +53,7 @@
   - [8.5. Automatic Validation Rules Enrichment (ValidationRulesEnricher)](#85-automatic-validation-rules-enrichment-validationrulesenricher)
   - [8.6. Pure Fields (Ad-Hoc Forms Without FormModel)](#86-pure-fields-ad-hoc-forms-without-formmodel)
   - [8.7. Centralized Form Theming (ThemeContainer, ThemePath, params.php)](#87-centralized-form-theming-themecontainer-themepath-paramsphp)
-- [9. DataView Widgets: GridView, ListView & DetailView (yiisoft/yii-dataview)](#9-dataview-widgets-gridview-listview--detailview-yiisoftyii-dataview)
-  - [9.1. GridView Architecture & Table Rendering](#91-gridview-architecture--table-rendering)
-  - [9.2. Column Catalog (DataColumn, ActionColumn & ActionButton, CheckboxColumn, RadioColumn, SerialColumn)](#92-column-catalog-datacolumn-actioncolumn--actionbutton-checkboxcolumn-radiocolumn-serialcolumn)
-  - [9.3. Column Filtering in GridView (TextInputFilter, DropdownFilter)](#93-column-filtering-in-gridview-textinputfilter-dropdownfilter)
-  - [9.4. ListView (Yiisoft\Yii\DataView\ListView\ListView)](#94-listview-yiisoftyiidataviewlistviewlistview)
-  - [9.5. DetailView (Yiisoft\Yii\DataView\DetailView\DetailView & DataField)](#95-detailview-yiisoftyiidataviewdetailviewdetailview--datafield)
-  - [9.6. Standalone Pagination Widgets & Page Size Controls](#96-standalone-pagination-widgets--page-size-controls)
+- [9. DataView Widgets: GridView, ListView & DetailView (yiisoft/yii-dataview)](#9-dataview-widgets-gridview-listview--detailview-yiisoftyii-dataview) — owned by the [DataView Widgets Guide](http-dataview-widgets.md)
 - [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
 - [11. Related Topic Guides](#11-related-topic-guides)
 
@@ -312,115 +301,9 @@ When rendering a view `user/profile`, `Theme::applyTo($file)` searches `@themes/
 
 ## 3. Alternative Template Engine: Twig (`yiisoft/view-twig` & `yiisoft/yii-twig`)
 
-Yii3 supports Twig templates alongside native PHP templates via two official packages:
-- `yiisoft/view-twig`: Low-level template renderer implementing `Yiisoft\View\TemplateRendererInterface`.
-- `yiisoft/yii-twig`: Pre-configured DI definitions and Twig extension bridge.
+**Engine selection:** a Yii3 project renders its templates with **either** native PHP templates (§2) **or** Twig — never both. Resolve which engine the project actually uses from its `composer.json`: the presence of `yiisoft/view-twig` / `yiisoft/yii-twig` signals Twig; their absence means native PHP.
 
-### 3.1. Architecture & Renderer Registration (`TwigTemplateRenderer`)
-
-To enable `.twig` templates, register `TwigTemplateRenderer` in `config/params.php`:
-
-```php
-declare(strict_types=1);
-
-use Twig\Loader\FilesystemLoader;
-use Yiisoft\Definitions\Reference;
-use Yiisoft\View\Twig\TwigTemplateRenderer;
-
-return [
-    'yiisoft/view' => [
-        'renderers' => [
-            'twig' => Reference::to(TwigTemplateRenderer::class),
-        ],
-        // Note: use 'fallbackExtension' in modern yiisoft/view (not 'defaultExtension')
-        'fallbackExtension' => 'twig',
-    ],
-    'yiisoft/yii-twig' => [
-        'options' => [
-            'cache' => '@runtime/twig/cache',
-            'debug' => true,
-            'auto_reload' => true,
-        ],
-        'loader' => [
-            'paths' => [
-                '@views',
-            ],
-        ],
-    ],
-];
-```
-
-> [!NOTE]
-> `TwigTemplateRenderer::render()` automatically strips `$view->getBasePath()` from the template path so that Twig's `FilesystemLoader` receives relative paths matching its mounted roots. It also wraps rendering in output buffering to prevent exception leakage.
-
-### 3.2. Twig Template Anatomy & Page Lifecycle (`|raw`, `{% do %}`)
-
-In Twig templates, the `WebView` instance is injected into the context under the variable name `this`.
-
-Because page lifecycle methods echo HTML comments and CDATA markers (`<![CDATA[YII-BLOCK-HEAD-...]]>`), you **MUST** apply the `|raw` filter; otherwise, Twig's auto-escaping converts them to `&lt;![CDATA[...`, completely breaking script and stylesheet injection!
-
-**Main Layout in Twig (`views/layout/main.twig`):**
-```twig
-{{ this.beginPage()|raw }}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title() }}</title>
-    {{ head() }}
-</head>
-<body>
-{{ this.beginBody()|raw }}
-
-<header class="app-header">
-    <h1>{{ applicationParams.name }}</h1>
-</header>
-
-<main class="container py-4">
-    {{ content|raw }}
-</main>
-
-{{ this.endBody()|raw }}
-</body>
-</html>
-{{ this.endPage(true)|raw }}
-```
-
-**Executing Void Methods with `{% do %}`:**
-```twig
-{# Transfer published assets and set page metadata without unwanted string output #}
-{% do assetManager.register('App\\Presentation\\Asset\\AppAsset') %}
-{% do this.addCssFiles(assetManager.getCssFiles()) %}
-{% do this.addJsFiles(assetManager.getJsFiles()) %}
-{% do this.setTitle('Products Catalog') %}
-
-<div class="product-page">
-    <h2>{{ product.title }}</h2>
-    <p>Price: ${{ product.price }}</p>
-</div>
-```
-
-### 3.3. `WebViewExtension` & Grounded Helper Boundaries
-
-`Yiisoft\Yii\Twig\Extension\WebViewExtension` registers **EXACTLY TWO FUNCTIONS**:
-1. `{{ title() }}` — calls `$view->getTitle()`.
-2. `{{ head() }}` — calls `$view->head()`.
-
-> [!WARNING]
-> **Zero-Hallucination Guard:**
-> `yiisoft/yii-twig` does **NOT** provide `url()`, `asset()`, `csrf()`, or widget invocation functions. The legacy `YiiTwigExtension` from Yii2 was completely removed. Access all other view capabilities directly via `this` (e.g. `{{ this.render(...) }}`, `{{ csrf.hiddenInput()|raw }}`).
-
-### 3.4. Static Widget & Helper Invocation Restrictions in Twig
-
-Twig does not support static PHP method calls (`Widget::widget()`, `Html::a()`, `Field::text()`). To use Yii3 widgets in Twig:
-1. **Pre-render in Action:** Instantiate and render the widget in the PHP Action handler, passing the generated HTML string or `Stringable` object as a parameter into Twig:
-   ```php
-   return $this->viewRenderer->render('product/index.twig', [
-       'gridHtml' => GridView::widget()->dataReader($paginator)->columns(...)->render(),
-   ]);
-   ```
-2. **Register Custom Twig Functions:** Register custom extension functions in `params['yiisoft/yii-twig']['extensions']` wrapping widget factory calls.
+> **For the complete reference on** Twig rendering — renderer registration (`TwigTemplateRenderer` in `config/params.php`), the Twig layout/page lifecycle (`|raw`, `{% do %}`), the `WebViewExtension` two-function boundary, and the static widget/helper invocation restrictions — **see the** [Twig Template Engine Guide, §1–§4](http-views-twig.md), which owns this topic.
 
 ---
 
@@ -570,12 +453,11 @@ declare(strict_types=1);
 
 use App\Presentation\Asset\AppAsset;
 use Yiisoft\Assets\AssetManager;
-use Yiisoft\Bootstrap5\Alert;
-use Yiisoft\Bootstrap5\AlertVariant;
 use Yiisoft\Html\Html;
 use Yiisoft\Session\Flash\FlashInterface;
 use Yiisoft\View\WebView;
 use Yiisoft\Yii\View\Renderer\Csrf;
+use Yiisoft\Yii\Widgets\Alert;
 
 /**
  * @var WebView $this
@@ -609,29 +491,20 @@ $this->beginPage();
 <body>
 <?php $this->beginBody() ?>
 
-<header class="app-header navbar navbar-expand-lg navbar-dark bg-dark">
+<header class="app-header">
     <div class="container">
-        <a class="navbar-brand" href="/">My App</a>
+        <a class="app-brand" href="/">My App</a>
     </div>
 </header>
 
-<!-- Flash notifications block -->
+<!-- Flash notifications block (uses the framework-agnostic Yiisoft\Yii\Widgets\Alert) -->
 <?php if (isset($flash)): ?>
-<div class="flash-messages container my-3">
+<div class="flash-messages">
     <?php foreach ($flash->getAll() as $type => $messages): ?>
-        <?php
-        $variant = match ($type) {
-            'success' => AlertVariant::SUCCESS,
-            'danger', 'error' => AlertVariant::DANGER,
-            'warning' => AlertVariant::WARNING,
-            default => AlertVariant::INFO,
-        };
-        ?>
         <?php foreach ($messages as $message): ?>
             <?= Alert::widget()
-                ->variant($variant)
-                ->body(is_array($message) ? ($message['body'] ?? '') : (string) $message)
-                ->dismissable(true) ?>
+                ->class('flash flash-' . $type) // style these classes with the CSS framework your project uses
+                ->body(is_array($message) ? ($message['body'] ?? '') : (string) $message) ?>
         <?php endforeach ?>
     <?php endforeach ?>
 </div>
@@ -651,6 +524,8 @@ $this->beginPage();
 </html>
 <?php $this->endPage() ?>
 ```
+
+> **For the Bootstrap 5 flavored flash-message variant** — `Yiisoft\Bootstrap5\Alert` with the `AlertVariant` enum mapping — **see the** [Bootstrap 5 Guide, §3](http-views-bootstrap5.md#3-flash-messages-with-bootstrap-alerts), which owns it.
 
 > [!WARNING]
 > Omitting `$this->beginPage()` or `$this->endPage()` prevents asset placeholders (`<![CDATA[YII-BLOCK-HEAD-...]]>`) from being replaced. JavaScript and CSS files will NOT be rendered in the browser output. Furthermore, `$this->endPage()` automatically executes `$this->state->clear()`, preventing memory leaks in persistent worker runtimes (RoadRunner, FrankenPHP).
@@ -923,9 +798,10 @@ final class AppAsset extends AssetBundle
     // Script insertion position in HTML document:
     public ?int $jsPosition = WebView::POSITION_END;
 
-    // Dependent bundles loaded prior to this bundle:
+    // Dependent bundles loaded prior to this bundle
+    // (a shared application base bundle, or a vendor bundle such as a CSS framework asset):
     public array $depends = [
-        \Yiisoft\Bootstrap5\Assets\BootstrapAsset::class,
+        \App\Presentation\Asset\BaseAsset::class,
     ];
 
     // Directory publishing options passed to AssetPublisher:
@@ -966,25 +842,27 @@ namespace App\Presentation\Asset;
 use Yiisoft\Assets\AssetBundle;
 use Yiisoft\View\WebView;
 
-final class BootstrapCdnAsset extends AssetBundle
+final class ThirdPartyCdnAsset extends AssetBundle
 {
     public bool $cdn = true;
-    public ?string $baseUrl = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist';
+    public ?string $baseUrl = 'https://cdn.example.com/npm/some-library@1.2.3/dist';
 
-    public array $css = ['css/bootstrap.min.css'];
+    public array $css = ['some-library.min.css'];
     public array $cssOptions = [
-        'integrity' => 'sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH',
+        'integrity' => 'sha384-<base64 SRI hash published for the pinned css artifact>',
         'crossorigin' => 'anonymous',
     ];
 
-    public array $js = ['js/bootstrap.bundle.min.js'];
+    public array $js = ['some-library.bundle.min.js'];
     public array $jsOptions = [
-        'integrity' => 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz',
+        'integrity' => 'sha384-<base64 SRI hash published for the pinned js artifact>',
         'crossorigin' => 'anonymous',
         'position' => WebView::POSITION_END,
     ];
 }
 ```
+
+> **For a concrete CSS-framework CDN bundle** — `BootstrapCdnAsset` pinning Bootstrap with its SRI hashes, plus the `BootstrapAsset` dependency wiring — **see the** [Bootstrap 5 Guide, §4](http-views-bootstrap5.md#4-asset-bundles-bootstrapasset--cdn-with-sri).
 
 ### 6.2. Registering Asset Bundles (Layout vs Page-Specific)
 
@@ -1068,8 +946,7 @@ To replace a third-party asset bundle (e.g. substituting a local package bundle 
 ```php
 declare(strict_types=1);
 
-use App\Presentation\Asset\BootstrapCdnAsset;
-use Yiisoft\Bootstrap5\Assets\BootstrapAsset;
+use App\Presentation\Asset\ThirdPartyCdnAsset;
 
 return [
     'yiisoft/assets' => [
@@ -1077,8 +954,8 @@ return [
             // CRITICAL: The config key is 'customizedBundles', NOT 'bundles'!
             'customizedBundles' => [
                 // 1. Substitute local vendor bundle with an external CDN bundle:
-                BootstrapAsset::class => [
-                    'class' => BootstrapCdnAsset::class,
+                \Vendor\Package\SomeLibraryAsset::class => [
+                    'class' => ThirdPartyCdnAsset::class,
                 ],
                 // 2. Completely disable an unwanted bundle by mapping to false:
                 \Vendor\Package\UnwantedAsset::class => false,
@@ -1087,6 +964,8 @@ return [
     ],
 ];
 ```
+
+> **For the concrete CSS-framework recipe** — swapping `yiisoft/bootstrap5`'s local `BootstrapAsset` for its CDN variant — **see the** [Bootstrap 5 Guide, §5](http-views-bootstrap5.md#5-overriding-the-bootstrap-bundle-customizedbundles).
 
 > [!WARNING]
 > In Yii 2, asset bundle customizations were configured under `'bundles'`. In Yii 3 `yiisoft/assets`, the configuration key is strictly `'customizedBundles'`. Using `'bundles'` has no effect and will be silently ignored by `AssetManager`.
@@ -1324,73 +1203,13 @@ use Yiisoft\Yii\Widgets\Dropdown;
 
 ### 7.4. CSS-Framework Widget Drivers: Bootstrap 5 (`yiisoft/bootstrap5`)
 
-`yiisoft/bootstrap5` provides 16 widgets: `Alert`, `Accordion`, `Breadcrumbs`, `Button`, `ButtonGroup`, `ButtonToolbar`, `Carousel`, `Collapse`, `Dropdown`, `Modal`, `Nav`, `NavBar`, `Offcanvas`, `Progress`, `ProgressStack`, `Toast`.
+**Driver selection — pick exactly ONE:** `yiisoft/bootstrap5` and `yiisoft/yii-bulma` are mutually exclusive widget kits covering the same job (alerts, navigation, modals, progress, tabs). Resolve which driver the project actually installed via its `composer.json` or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family), and never mix widgets from both drivers in one project.
 
-Companion item classes (`AccordionItem`, `BreadcrumbLink`, `CarouselItem`, `DropdownItem`, `NavLink`) are **strictly typed value-object factories**:
-
-```php
-use Yiisoft\Bootstrap5\Alert;
-use Yiisoft\Bootstrap5\AlertVariant;
-use Yiisoft\Bootstrap5\Nav;
-use Yiisoft\Bootstrap5\NavLink;
-use Yiisoft\Bootstrap5\NavStyle;
-
-// 1. Alert with typed variant enum:
-<?= Alert::widget()
-    ->body('<strong>Warning!</strong> Check your settings.', false)
-    ->dismissable(true) // Parameter is $enabled: bool
-    ->variant(AlertVariant::WARNING) ?>
-
-// 2. Tabs assembled via Nav + NavStyle::TABS + NavLink::tab():
-<?= Nav::widget()
-    ->styles(NavStyle::TABS) // Notice: styles() is plural
-    ->fade(true) // Invariant: fade(true) MUST be called strictly AFTER styles(NavStyle::TABS)
-    ->items(
-        NavLink::tab('Overview', '<p>Overview Content</p>', active: true),
-        NavLink::tab('Specifications', '<p>Specs Content</p>'),
-    ) ?>
-```
-
-> [!WARNING]
-> **Strict Invocation Order: `styles()` Before `fade()`:**
-> In `Yiisoft\Bootstrap5\Nav`, `fade(bool $enabled)` checks `$this->isTabsOrPills()`. If `->fade(true)` is called before `->styles(NavStyle::TABS)`, `isTabsOrPills()` evaluates to `false`, throwing a fatal `RuntimeException: Fade effect can only be used with tabs or pills.`. Always call `->styles(NavStyle::TABS)` prior to `->fade(true)`. Also note that the method is plural `styles(...)`, not `style(...)`.
+> **For the complete reference on** the Bootstrap 5 driver — the 16-widget catalog, value-object item factories and backed-enum styling constants, flash-message alerts, `BootstrapAsset`/`BootstrapCdnAsset` bundles with SRI, the `customizedBundles` override recipe, and the `ThemePath::BOOTSTRAP5_*` form-theme presets — **see the** [Bootstrap 5 Guide](http-views-bootstrap5.md), which owns this topic.
 
 ### 7.5. CSS-Framework Widget Drivers: Bulma (`yiisoft/yii-bulma`)
 
-`yiisoft/yii-bulma` ships 11 widgets: `Breadcrumbs`, `Dropdown`, `Menu`, `Message`, `Modal`, `ModalCard`, `Nav`, `NavBar`, `Panel`, `ProgressBar`, `Tabs`.
-Items are configured using **associative arrays** and styling is driven by **class constants**:
-
-```php
-use Yiisoft\Yii\Bulma\ProgressBar;
-use Yiisoft\Yii\Bulma\Tabs;
-
-// 1. Progress bar using class constants:
-<?= ProgressBar::widget()
-    ->value(75)
-    ->color(ProgressBar::COLOR_SUCCESS) ?>
-
-// 2. Tabs using associative arrays and style constants:
-<?= Tabs::widget()
-    ->style(Tabs::STYLE_BOX)
-    ->items([
-        ['label' => 'Pictures', 'icon' => 'fa-image', 'active' => true],
-        ['label' => 'Music', 'icon' => 'fa-music'],
-        ['label' => 'Videos', 'icon' => 'fa-film'],
-    ]) ?>
-```
-
-### 7.6. Comparison Matrix: Bootstrap 5 vs Bulma Drivers
-
-| Feature / Aspect | `yiisoft/bootstrap5` | `yiisoft/yii-bulma` |
-|---|---|---|
-| **Namespace** | `Yiisoft\Bootstrap5` | `Yiisoft\Yii\Bulma` |
-| **Widget Count** | 16 widgets | 11 widgets |
-| **Element Items** | Value-object factories: `NavLink::to()`, `DropdownItem::link()`, `BreadcrumbLink::to()` | Associative arrays: `[['label' => ..., 'url' => ..., 'active' => ...]]` |
-| **Styling Constants** | Backed Enums: `AlertVariant::DANGER`, `NavStyle::TABS`, `ButtonVariant::PRIMARY` | String Class Constants: `ProgressBar::COLOR_SUCCESS`, `Tabs::STYLE_BOX` |
-| **Tabs Widget** | Composed: `Nav` + `styles(NavStyle::TABS)` + `NavLink::tab()` | Dedicated widget: `Yiisoft\Yii\Bulma\Tabs` |
-| **Modal Rendering** | Self-contained `->render()` with `triggerButton()` | Buffered pair: `Modal::widget()->begin(); ... Modal::end();` |
-| **Form Theming** | `ThemeContainer` with `ThemePath::BOOTSTRAP5_*` | Config in `config/params.php` under `'defaultTheme'` |
-| **Asset Bundles** | `BootstrapAsset`, `BootstrapCdnAsset` | `BulmaAsset` + per-widget JS bundles (`DropdownAsset`, `NavBarAsset`) |
+> **For the complete reference on** the Bulma driver — the 11-widget catalog, associative-array item configuration, string class-constant styling, and the `BulmaAsset` + per-widget JS bundles — **see the** [Bulma Guide](http-views-bulma.md), which owns this topic.
 
 ---
 
@@ -1561,21 +1380,26 @@ use Yiisoft\Html\Html;
 
 ### 8.7. Centralized Form Theming (`ThemeContainer`, `ThemePath`, `params.php`)
 
-To automatically apply Bootstrap 5 markup (`.form-control`, `.form-label`, `.is-invalid`, `.invalid-feedback`) without manually setting classes on every field, configure `config/params.php`:
+Field markup (container, label, input, hint, and error classes; the field template) is centralized in named themes instead of being set manually on every field. Each theme is an array of `Theme` constructor arguments (`containerClass`, `labelClass`, `inputClass`, `hintClass`, `errorClass`, `validClass`, `invalidClass`, `template`, `fieldConfigs`, ...). Themes are registered in `config/params.php` under `'yiisoft/form' => ['themes' => [...]]`, and the theme applied by default is named in `defaultTheme`:
 
 ```php
 declare(strict_types=1);
 
-use Yiisoft\Form\Theme\ThemePath;
-
 return [
     'yiisoft/form' => [
         'themes' => [
-            'bootstrap5-vertical' => require ThemePath::BOOTSTRAP5_VERTICAL,
-            'bootstrap5-horizontal' => require ThemePath::BOOTSTRAP5_HORIZONTAL,
+            // Your own theme: an array of Theme constructor arguments.
+            // CSS-framework preset bundles register their ready-made themes here as well.
+            'app' => [
+                'containerClass' => 'field',
+                'labelClass' => 'field-label',
+                'inputClass' => 'field-input',
+                'hintClass' => 'field-hint',
+                'errorClass' => 'field-error',
+            ],
         ],
         // CRITICAL: The key is named 'defaultTheme', NOT 'defaultConfig'!
-        'defaultTheme' => 'bootstrap5-vertical',
+        'defaultTheme' => 'app',
     ],
 ];
 ```
@@ -1583,313 +1407,13 @@ return [
 > [!WARNING]
 > Do NOT use `$params['yiisoft/form']['defaultConfig']`. The bootstrap loader checks `$params['yiisoft/form']['defaultTheme']`. Using `defaultConfig` causes an `Undefined array key "defaultTheme"` error.
 
+> **For the ready-made CSS-framework presets** — `ThemePath::BOOTSTRAP5_VERTICAL` / `ThemePath::BOOTSTRAP5_HORIZONTAL` registered as `bootstrap5-vertical` / `bootstrap5-horizontal` — **see the** [Bootstrap 5 Guide, §6](http-views-bootstrap5.md#6-form-theming-presets-themecontainer-themepath).
+
 ---
 
 ## 9. DataView Widgets: GridView, ListView & DetailView (`yiisoft/yii-dataview`)
 
-`yiisoft/yii-dataview` separates concerns cleanly:
-- `GridView` (table) and `ListView` (item list) render **multiple records** from a `ReadableDataInterface` (`OffsetPaginator`, `KeysetPaginator`) via `dataReader()`.
-- `DetailView` renders a **single record** (array or object) passed via `data()`.
-
-### 9.1. GridView Architecture & Table Rendering
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Domain\Model\User;
-use Stringable;
-use Yiisoft\Data\Paginator\OffsetPaginator;
-use Yiisoft\Html\Html;
-use Yiisoft\View\WebView;
-use Yiisoft\Yii\DataView\GridView\Column\ActionButton;
-use Yiisoft\Yii\DataView\GridView\Column\ActionColumn;
-use Yiisoft\Yii\DataView\GridView\Column\Base\DataContext;
-use Yiisoft\Yii\DataView\GridView\Column\DataColumn;
-use Yiisoft\Yii\DataView\GridView\Column\SerialColumn;
-use Yiisoft\Yii\DataView\GridView\GridView;
-
-/**
- * @var WebView $this
- * @var OffsetPaginator $paginator
- */
-
-$this->setTitle('Users Management');
-?>
-
-<?= GridView::widget()
-    ->dataReader($paginator)
-    ->columns(
-        new SerialColumn(),
-        new DataColumn(
-            property: 'id',
-            header: 'ID',
-            withSorting: true, // Default is true
-        ),
-        new DataColumn(
-            property: 'name',
-            header: 'Full Name',
-            // Returning a Tag object (implements NoEncodeStringableInterface) renders as raw HTML
-            content: static fn (User $user, DataContext $context): Stringable => Html::a(
-                content: $user->getName(),
-                url: '/users/' . $user->getId(),
-            ),
-        ),
-        new DataColumn(
-            property: 'email',
-            header: 'Email',
-            content: static fn (User $user): Stringable => Html::mailto($user->getEmail()),
-        ),
-        new DataColumn(
-            property: 'status',
-            header: 'Status',
-            bodyClass: static fn (User $user): string => $user->isActive() ? 'text-success' : 'text-muted',
-            withSorting: false, // Disables sorting for computed column
-        ),
-        new ActionColumn(
-            urlCreator: static fn (string $action, DataContext $context): string => sprintf(
-                '/users/%d/%s',
-                $context->data->getId(),
-                $action,
-            ),
-            buttons: [
-                'view' => new ActionButton(
-                    content: 'View',
-                    url: static fn (User $user, DataContext $context): string => "/users/{$user->getId()}",
-                    class: 'btn btn-sm btn-outline-info',
-                ),
-                'approve' => new ActionButton(
-                    content: 'Approve',
-                    url: static fn (User $user, DataContext $context): string => "/users/{$user->getId()}/approve",
-                    attributes: ['data-method' => 'post'],
-                    class: 'btn btn-sm btn-outline-success',
-                ),
-            ],
-            // Buttons NOT explicitly listed here are HIDDEN by default
-            // Notice: visibleButtons closure receives ($data, $key, $index) — it does NOT receive DataContext!
-            visibleButtons: [
-                'view' => static fn (User $user, mixed $key, int $index): bool => true,
-                'approve' => static fn (User $user, mixed $key, int $index): bool => $user->isPending(),
-                'delete' => static fn (User $user, mixed $key, int $index): bool => $user->isDeletable(),
-            ],
-        ),
-    )
-    ->summaryTemplate('Showing {begin}–{end} of {totalCount} users (Page {currentPage} of {totalPages})')
-    ->noResultsText('No users found.')
-    ->emptyCell('—')
-?>
-```
-
-> [!WARNING]
-> **Auto-Encoding in `DataColumn`:**
-> If `encodeContent` is `null` (default), plain `string` values returned by a `content` callable are automatically encoded via `Html::encode()`. A returned raw HTML string like `'<a href="...">...</a>'` will render as escaped text!
-> Always return a Tag object (e.g. `Html::a()`), or set `encodeContent: false` on the column.
-
-### 9.2. Column Catalog (`DataColumn`, `ActionColumn & ActionButton`, `CheckboxColumn`, `RadioColumn`, `SerialColumn`)
-
-1. **`DataColumn`:**
-   - Constructor parameters: `property:`, `header:`, `withSorting:` (default `true`; pass `withSorting: false` to disable column header sorting links), `content:`, `bodyClass:`, `filter:`, `encodeContent:`.
-   - Parameter name is `property:`, **NOT** `attribute:`.
-2. **`ActionColumn` & `ActionButton`:**
-   - Displays action buttons (`view`, `update`, `delete`, or custom buttons).
-   - `urlCreator` callback signature: `function (string $action, DataContext $context): string`.
-   - Buttons can be configured using `Yiisoft\Yii\DataView\GridView\Column\ActionButton`:
-     ```php
-     new ActionButton(
-         content: 'Edit', // Closure|string|Stringable
-         url: static fn (User $user, DataContext $context): string => "/users/{$user->getId()}/edit",
-         attributes: ['class' => 'btn btn-sm btn-primary'],
-         title: 'Edit User',
-     )
-     ```
-   - `visibleButtons` array: buttons not listed default to `false` (hidden).
-     > [!WARNING]
-     > **`visibleButtons` Callback Signature Invariant:**
-     > When a closure is passed in `visibleButtons[$name]`, its signature is:
-     > `function (array|object $data, mixed $key, int $index): bool`
-     > It does **NOT** receive `DataContext $context`! Typing `fn (User $user, DataContext $context) => ...` passes `$key` (an integer or string) as the second argument, immediately throwing a fatal `TypeError: Argument #2 must be of type DataContext, int given`.
-3. **`CheckboxColumn`:**
-   - Renders row selection checkboxes for batch actions.
-   - Master "select all" checkbox is automatically placed in the header when `$header === null` and `$multiple === true`.
-   - Default input name is `'checkbox-selection'`, value is row primary key `$context->key`.
-4. **`RadioColumn`:**
-   - Renders radio buttons for single row selection. Shared name `'radio-selection'`.
-5. **`SerialColumn`:**
-   - Renders 1-based sequential row numbers taking paginator offset into account: `$paginator->getOffset() + $index + 1`.
-
-### 9.3. Column Filtering in GridView (`TextInputFilter`, `DropdownFilter`)
-
-Yii3 does **NOT** use Yii2's `filterModel`. Instead, filters are configured directly on each `DataColumn`:
-
-```php
-use Yiisoft\Yii\DataView\Filter\Widget\DropdownFilter;
-use Yiisoft\Yii\DataView\Filter\Widget\TextInputFilter;
-use Yiisoft\Yii\DataView\GridView\Column\DataColumn;
-
-// 1. Standard text filter (<input type="text">):
-$nameCol = new DataColumn(
-    property: 'name',
-    filter: true,
-);
-
-// 2. Standard select filter (<select>):
-$statusCol = new DataColumn(
-    property: 'status',
-    filter: [
-        'active' => 'Active',
-        'blocked' => 'Blocked',
-    ],
-);
-
-// 3. Customized text filter with placeholder:
-$dateCol = new DataColumn(
-    property: 'created_at',
-    filter: (new TextInputFilter())->attributes(['placeholder' => 'YYYY-MM-DD']),
-);
-
-// 4. Customized dropdown filter:
-$roleCol = new DataColumn(
-    property: 'role',
-    filter: DropdownFilter::widget()->optionsData([
-        '' => 'All Roles', // Empty string key provides the prompt option label
-        'admin' => 'Administrator',
-        'editor' => 'Editor',
-    ]),
-);
-```
-
-> [!NOTE]
-> Only `TextInputFilter` and `DropdownFilter` exist in `yiisoft/yii-dataview`. `SelectFilter` and `DateFilter` are phantom classes.
-
-> [!WARNING]
-> **`DropdownFilter` Has No `prompt()` Method:**
-> `DropdownFilter` does **NOT** provide a `prompt()` method. Calling `->prompt('All Roles')` throws a fatal `Error: Call to undefined method Yiisoft\Yii\DataView\Filter\Widget\DropdownFilter::prompt()`. To configure a prompt option, pass an empty string key `'' => 'All Roles'` as the first item in `optionsData()`.
-
-### 9.4. ListView (`Yiisoft\Yii\DataView\ListView\ListView`)
-
-`ListView` renders items via a template closure or view file:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Domain\Product\Product;
-use Stringable;
-use Yiisoft\Data\Paginator\OffsetPaginator;
-use Yiisoft\Html\Html;
-use Yiisoft\View\WebView;
-use Yiisoft\Yii\DataView\ListView\ListItemContext;
-use Yiisoft\Yii\DataView\ListView\ListView;
-
-/**
- * @var WebView $this
- * @var OffsetPaginator $paginator
- */
-
-$this->setTitle('Products Catalog');
-?>
-
-<?= ListView::widget()
-    ->dataReader($paginator)
-    ->listTag('ul')
-    ->itemTag('li')
-    ->itemAttributes(['class' => 'product-card'])
-    ->itemView(static fn (Product $item, ListItemContext $context): string|Stringable => Html::a(
-        content: $item->getTitle(),
-        url: '/products/' . $item->getId(),
-    ) . ' — $' . Html::encode(number_format($item->getPrice(), 2)))
-    ->separator(PHP_EOL)
-    ->noResultsText('No products found.')
-?>
-```
-
-> [!IMPORTANT]
-> If `itemView` is omitted, calling `render()` throws `LogicException('"itemView" must be set.')`.
-> `ListItemContext` provides public readonly properties: `->data`, `->key`, `->index`, `->widget`.
-
-### 9.5. DetailView (`Yiisoft\Yii\DataView\DetailView\DetailView` & `DataField`)
-
-`DetailView` displays attributes of a single record:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Domain\Product\Product;
-use Yiisoft\View\WebView;
-use Yiisoft\Yii\DataView\DetailView\DataField;
-use Yiisoft\Yii\DataView\DetailView\DetailView;
-use Yiisoft\Yii\DataView\DetailView\GetValueContext;
-
-/**
- * @var WebView $this
- * @var Product $product
- */
-
-$this->setTitle('Product Details: ' . $product->getTitle());
-?>
-
-<?= DetailView::widget()
-    ->data($product)
-    ->containerTag('dl')
-    ->fields(
-        // Calling getter on object with private properties:
-        new DataField(property: 'getTitle()', label: 'Product Title'),
-        new DataField(
-            label: 'Formatted Price',
-            value: static fn (GetValueContext $context): string
-                => '$' . number_format($context->data->getPrice(), 2),
-        ),
-    )
-?>
-```
-
-> [!WARNING]
-> **Resolution Order in `DetailView::getValue()`:**
-> 1. `if ($field->value === null)` -> evaluates `ArrayHelper::getValue($this->data, $property)`.
-> 2. `if ($field->value instanceof Closure)` -> calls the closure with `GetValueContext` (`->field`, `->data`).
-> 3. Otherwise returns literal value `$field->value`.
->
-> **Private Entity Properties Trap:**
-> On domain objects with `private` properties, `ArrayHelper::getValue()` reads **public properties only**, or executes methods if the key ends with `()` (e.g. `'getTitle()'`). If `property: 'title'` is passed for an object with `private string $title`, it silently returns `null`! Always use `'getTitle()'` or a `value:` closure.
->
-> **`DataField` Validation:**
-> `InvalidArgumentException('Either "property" or "value" must be set.')` is thrown **ONLY** when both `$property` and `$value` are `null`. Setting both is valid: `$value` determines the output, and `$property` serves as fallback for the label.
-
-### 9.6. Standalone Pagination Widgets & Page Size Controls
-
-#### Standalone `OffsetPagination` & `KeysetPagination`
-While `GridView` and `ListView` render pagination automatically via `{pager}`, you can render pagination independently:
-
-```php
-use Yiisoft\Yii\DataView\Pagination\OffsetPagination;
-
-<?= OffsetPagination::widget()
-    ->paginator($paginator)
-    ->maxNavLinkCount(7)
-    ->labelFirst('«')
-    ->labelLast('»')
-    ->labelPrevious('‹')
-    ->labelNext('›')
-?>
-```
-
-#### Page Size Selection (`SelectPageSize`)
-Allow users to switch items per page dynamically:
-
-```php
-use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
-
-<?= GridView::widget()
-    ->dataReader($paginator)
-    ->pageSizeConstraint([10, 25, 50, 100]) // Enables dropdown when count >= 2
-    ->pageSizeWidget(SelectPageSize::widget()->addAttributes(['class' => 'form-select form-select-sm']))
-    ->pageSizeTemplate('Items per page: {widget}')
-?>
-```
+> **For the complete reference on** DataView widgets — `GridView` architecture and table rendering, the column catalog (`DataColumn`, `ActionColumn`/`ActionButton`, `CheckboxColumn`, `RadioColumn`, `SerialColumn`), column filtering (`TextInputFilter`, `DropdownFilter`), `ListView`, `DetailView`/`DataField`, and the standalone pagination/page-size widgets — **see the** [DataView Widgets Guide, §1–§6](http-dataview-widgets.md), which owns this topic.
 
 ---
 
@@ -1902,7 +1426,6 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 | **`Field::widget()->text(...)`** | Incorrect instance invocation on static helper. | Use static factory `Yiisoft\FormModel\Field::text($formModel, 'prop')`. |
 | **Calling non-existent `Field::submit()`, `Field::radio()`, `Field::reset()`, `Field::tel()`** | These method names do not exist on `Yiisoft\FormModel\Field` and cause fatal `Call to undefined method` errors. | Use `Field::submitButton()`, `Field::radioList()`, `Field::resetButton()`, and `Field::telephone()`. |
 | **`Field::submitButton('Sign In', ['class' => 'btn'])`** | Second parameter is `$config` (DI definitions), not HTML attributes. | Call `Field::submitButton('Sign In')->buttonAttributes(['class' => 'btn btn-primary'])` or `->buttonClass(...)`. |
-| **`$params['yiisoft/form']['defaultConfig'] = '...'`** | Bootstrap file reads `'defaultTheme'`. Causes `Undefined array key "defaultTheme"`. | Set `$params['yiisoft/form']['defaultTheme'] = 'bootstrap5-vertical'`. |
 | **`WebViewRenderer::withDefaultParameters(...)`** | Phantom method; does not exist on `WebViewRenderer`. | Configure an injection implementing `CommonParametersInjectionInterface` in `injections`. |
 | **`GridView::widget()->emptyText('...')`** | Yii2 legacy property; does not exist in `GridView` or `BaseListView`. | Use `->noResultsText('No records found.')` for empty lists, or `->emptyCell('—')` for individual empty cells. |
 | **`GridView::widget()->paginator($paginator)`** | Method does not exist on `GridView` or `BaseListView`. | Use `GridView::widget()->dataReader($paginator)` (accepts any `ReadableDataInterface`). |
@@ -1925,7 +1448,6 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 | **`FragmentCache::widget()->dynamicPlaceholders(...)`** | Method does not exist in Yii3. | Call `->dynamicContents(DynamicContent ...$dynamicContents)`. |
 | **`$this->registerCss($css, WebView::POSITION_HEAD, 'key')`** | 3rd parameter is `array $attributes = []`, 4th is `?string $key`. Passing a string key as 3rd parameter throws fatal `TypeError`. | Pass named argument `key: 'key'` or empty attributes array: `$this->registerCss($css, WebView::POSITION_HEAD, [], 'key')`. |
 | **`new LayoutSpecificInjections('layout.php', MyInjection::class)`** | Constructor parameter is `$layout` (not `$layoutFile`), and variadic arguments must be instantiated `object` instances, not class strings. | Use `new LayoutSpecificInjections('@views/layout.php', Reference::to(MyInjection::class))`. |
-| **`Nav::widget()->fade(true)->styles(NavStyle::TABS)`** | Method is plural `styles()`. Calling `fade(true)` before `styles(NavStyle::TABS)` throws `RuntimeException: Fade effect can only be used with tabs or pills.`. | Call `styles()` strictly prior to `fade(true)`: `Nav::widget()->styles(NavStyle::TABS)->fade(true)`. |
 | **`visibleButtons: ['edit' => fn($user, DataContext $context) => ...]`** | Visibility callback receives `($data, $key, $index)`, NOT `DataContext`. Typehinting `DataContext` throws fatal `TypeError` because `$key` is passed as argument #2. | Use `visibleButtons: ['edit' => fn(User $user, mixed $key, int $index): bool => ...]`. |
 | **`DropdownFilter::widget()->prompt('All')`** | `DropdownFilter` has no `prompt()` method; causes fatal `Error: Call to undefined method`. | Provide prompt option via empty string key: `->optionsData(['' => 'All', ...])`. |
 | **`Html::form()->post()->enctypeMultipart()`** | Method name does not exist; throws fatal `Error: Call to undefined method`. | Call `Html::form()->post()->enctypeMultipartFormData()`. |
@@ -1938,6 +1460,13 @@ use Yiisoft\Yii\DataView\PageSize\SelectPageSize;
 
 ## 11. Related Topic Guides
 
+Child guides owned and split out of this one:
+- [Twig Template Engine Guide](http-views-twig.md) — `yiisoft/view-twig` / `yiisoft/yii-twig` rendering: renderer registration, Twig layout lifecycle, extension boundaries (mutually exclusive with native PHP templates).
+- [Bootstrap 5 Guide](http-views-bootstrap5.md) — `yiisoft/bootstrap5` widget driver, flash-message alerts, Bootstrap asset bundles, and `ThemePath::BOOTSTRAP5_*` form-theme presets.
+- [Bulma Guide](http-views-bulma.md) — `yiisoft/yii-bulma` widget driver with associative-array items and class-constant styling.
+- [DataView Widgets Guide](http-dataview-widgets.md) — `yiisoft/yii-dataview`: GridView, ListView, DetailView, column filtering, and pagination widgets.
+
+Neighboring guides:
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Action handlers, parameter resolution, and injecting `WebViewRenderer`.
 - [Validation & Forms Guide](http-validation-and-forms.md) — Form models, validation rules, and `FormHydrator`.
 - [HTTP State Guide](http-state.md) — Flash messages, session handling, and cookie management.

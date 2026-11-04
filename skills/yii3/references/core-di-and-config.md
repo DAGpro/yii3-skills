@@ -321,7 +321,7 @@ return [
 ```
 
 > [!NOTE]
-> **`yiisoft/yii-view-renderer` schema:** the package default is `['viewPath' => null, 'layout' => null, 'injections' => []]`. `viewPath: null` disables relative view paths (reading the view path then throws `The view path is not set.`); `layout: null` means no layout. The template also fills `injections` (e.g. `Reference::to(CsrfViewInjection::class)`). View-domain coverage of this schema (renderers, layout injections, Twig) belongs to the [Views & Widgets Guide](http-views-and-widgets.md).
+> **`yiisoft/yii-view-renderer` schema:** the package default is `['viewPath' => null, 'layout' => null, 'injections' => []]`. `viewPath: null` disables relative view paths (reading the view path then throws `The view path is not set.`); `layout: null` means no layout. The template also fills `injections` (e.g. `Reference::to(CsrfViewInjection::class)`). View-domain coverage of this schema (renderers, layout injections) belongs to the [Views & Widgets Guide](http-views-and-widgets.md); the Twig engine variant is owned by the [Twig Template Engine Guide](http-views-twig.md).
 >
 > **Deprecated API note:** the three `Yiisoft\DataResponse\Formatter\*DataResponseFormatter` classes and `Yiisoft\DataResponse\Middleware\ContentNegotiator` are `@deprecated`. The replacement is `DataStream` together with `Yiisoft\DataResponse\Formatter\HtmlFormatter` / `JsonFormatter` / `XmlFormatter` and the `ContentNegotiatorDataResponseMiddleware` middleware. They remain the package's shipped defaults, so the block above keeps working as-is.
 

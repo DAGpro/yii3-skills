@@ -134,7 +134,7 @@ $list = $this->productListService->getList(currentPage: $page);
 return $this->dataResponseFactory->createResponse($list, Status::OK); // Yiisoft\Http\Status
 ```
 
-**Web listing:** render through `yiisoft/view` templates and the dataview widget — note the doubled sub-namespace: `Yiisoft\Yii\DataView\GridView\GridView::widget()->dataReader($paginator)->columns(new DataColumn(property: 'title', header: 'Title'))` (see the [Views & Widgets Guide](http-views-and-widgets.md)).
+**Web listing:** render through `yiisoft/view` templates and the dataview widget — note the doubled sub-namespace: `Yiisoft\Yii\DataView\GridView\GridView::widget()->dataReader($paginator)->columns(new DataColumn(property: 'title', header: 'Title'))` (rendering details are owned by the [DataView Widgets Guide, §1–§2](http-dataview-widgets.md)).
 
 ---
 

@@ -1019,4 +1019,6 @@ $writer->delete(items: [$oldUser]);
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
 - [Caching Guide](persistence-caching.md) — Query caching and cache invalidation strategies for repositories.
 - [Auth & RBAC Guide](infra-auth-and-rbac.md) — RBAC manager, permission checks, and `yiisoft/rbac-cycle-db` integration.
-- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — RoadRunner & FrankenPHP workers, StateResetter, and long-running process safety.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Runner architecture, standard HTTP/console runners, and the runtime selection matrix.
+- [RoadRunner Worker Runtime Guide](infra-runtime-roadrunner.md) and [FrankenPHP Worker Runtime Guide](infra-runtime-frankenphp.md) — mutually exclusive persistent worker runtimes.
+- [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md) — StateResetter and long-running process safety.

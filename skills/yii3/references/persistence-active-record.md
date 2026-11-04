@@ -1081,6 +1081,8 @@ try {
 > [!IMPORTANT]
 > Always call `LazyLoadGuard::resetCounters()` rather than `reset()`. `resetCounters()` purges the static `WeakMap` and iteration counters while preserving the configured `Strict` mode and logger. `reset()` resets the mode back to `Log` and the logger to `null`.
 
+> **For the complete reference on** container-level worker state safety — the DI `StateResetter` mechanics, the `StateResetter::class` definition trap, and the built-in package resetter catalog (which covers the ORM-adjacent services used alongside Active Record) — **see the** [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md).
+
 ---
 
 ## 7. Grid Pagination & Sorting (`QueryDataReader` & `OffsetPaginator`)

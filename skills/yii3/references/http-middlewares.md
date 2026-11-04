@@ -877,7 +877,8 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Authentication middleware methods, identity repositories, OAuth2/OIDC login (`AuthAction`), and RBAC rules.
 - [HTTP State Guide](http-state.md) — Session/cookie APIs, flash messages, CSRF token implementations, and state-side DI wiring.
 - [Error Handling & Exception Management Guide](infra-error-handling.md) — `ErrorCatcher` / `ExceptionResponder` internals, error renderers, and Sentry capture around the pipeline.
-- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and StateResetter configuration.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and the runtime selection matrix.
+- [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md) — StateResetter configuration and per-service resetters for persistent worker runtimes.
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting API endpoints and middleware-protected routes.
 - [Utility Packages Guide](core-utilities.md) — `IpHelper`/`IpRanges` for building custom IP allow/deny guards, and `DnsHelper` for domain validation.
 

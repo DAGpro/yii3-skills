@@ -544,12 +544,12 @@ CurrentUser::class => [
 ],
 ```
 
-All official packages (`yiisoft/user`, `yiisoft/session`, `yiisoft/router`, etc.) contribute their own `'reset'` callbacks automatically — see the ground-truth catalog in [runners-and-runtimes.md](infra-runners-and-runtimes.md), section 6.4. No application-level registration is required.
+All official packages (`yiisoft/user`, `yiisoft/session`, `yiisoft/router`, etc.) contribute their own `'reset'` callbacks automatically — see the ground-truth catalog in [infra-state-resetter.md](infra-state-resetter.md), section 4. No application-level registration is required.
 
-**Custom stateful application services** declare a `'reset'` key directly on their own DI definition in `config/di-web.php` — full per-service examples: [Runners & Runtimes Guide, §6.3](infra-runners-and-runtimes.md).
+**Custom stateful application services** declare a `'reset'` key directly on their own DI definition in `config/di-web.php` — full per-service examples: [Long-Running Worker Safety & StateResetter Guide, §3](infra-state-resetter.md#3-idiomatic-service-resetter-declaration).
 
 > [!CAUTION]
-> **Never define or override `StateResetter::class` in application DI configuration.** An app-level definition is treated as a full override and silently disables every built-in package resetter — identity, session, route, and view state then leak across worker requests. Internal mechanics and full analysis: [Runners & Runtimes Guide, §6.2](infra-runners-and-runtimes.md), and the DI & Configuration Guide's anti-pattern matrix.
+> **Never define or override `StateResetter::class` in application DI configuration.** An app-level definition is treated as a full override and silently disables every built-in package resetter — identity, session, route, and view state then leak across worker requests. Internal mechanics and full analysis: [Long-Running Worker Safety & StateResetter Guide, §2](infra-state-resetter.md#2-the-stateresetterclass-definition-trap), and the DI & Configuration Guide's anti-pattern matrix.
 
 ### 4.5. Remember-Me Auto-Login Cookies (`CookieLogin`)
 
@@ -1455,7 +1455,7 @@ final readonly class PostAuthorizationService
 | **8** | Omitting `withSuccessUrl()` in `AuthAction` | Callbacks returning `void` fall back to `$this->successUrl`. If omitted, PHP 8.2 throws an uninitialized typed property fatal error. | Always configure `withSuccessUrl()` and `withCancelUrl()`, or return a `ResponseInterface` from the callback. |
 | **9** | Using deprecated `CsrfMiddleware` or `UserAuth` | Both are `@deprecated` and scheduled for removal. | Use `Yiisoft\Csrf\CsrfTokenMiddleware` and `Yiisoft\User\Method\WebAuth`. |
 | **10** | Binding `AuthenticationMethodInterface` | Deprecated interface in `yiisoft/auth`. | Bind `AuthenticatorWithChallengeInterface` or `AuthenticatorInterface`. |
-| **11** | Defining `StateResetter::class` in DI (or omitting worker state reset) | `CurrentUser` cached identity bleeds into subsequent worker requests in RoadRunner/FrankenPHP; worse, an application-level `StateResetter::class` definition acts as a full override and silently disables **all** built-in package resetters. | Rely on built-in package resetters (catalog: [runners-and-runtimes.md](infra-runners-and-runtimes.md) §6.4); for custom services use the per-service `'reset'` definition key (§6.3). `yiisoft/user` already ships `'reset' => $this->clear()` for `CurrentUser`. |
+| **11** | Defining `StateResetter::class` in DI (or omitting worker state reset) | `CurrentUser` cached identity bleeds into subsequent worker requests in RoadRunner/FrankenPHP; worse, an application-level `StateResetter::class` definition acts as a full override and silently disables **all** built-in package resetters. | Rely on built-in package resetters (catalog: [infra-state-resetter.md](infra-state-resetter.md#4-ground-truth-catalog-of-built-in-package-resetters) §4); for custom services use the per-service `'reset'` definition key (§3). `yiisoft/user` already ships `'reset' => $this->clear()` for `CurrentUser`. |
 | **12** | Missing `signatureKey` for `CookieLogin` | Remember-me cookies are unsigned, allowing attackers to forge user IDs. | Always set a strong, random `signatureKey` in `CookieLogin` configuration. |
 | **13** | Mutating state in `RuleInterface::execute()` | Rules are executed during evaluation checks and must remain pure and side-effect free. | Only return `bool`. Perform state mutations in Application Use Cases. |
 | **14** | Storing plaintext tokens or passwords | Severe security vulnerability. | Hash passwords with `PasswordHasher` and sign tokens with cryptographic HMAC or asymmetric keys. |
@@ -1468,6 +1468,7 @@ final readonly class PostAuthorizationService
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Authentication and permission checks (`CurrentUser::can()`) inside presentation actions.
 - [PSR-15 Middlewares Guide](http-middlewares.md) — Global pipeline registration with the canonical authenticated order, the RBAC permission guard, rate limiting, CORS preflight ordering, and custom middleware implementations.
 - [HTTP State Guide](http-state.md) — Session authentication, cookie parameters, and remember-me state.
-- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and `StateResetter` configuration.
+- [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Application runners, worker event loops, and the runtime selection matrix.
+- [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md) — `StateResetter` configuration and per-service resetters for persistent worker runtimes.
 - [Caching Guide](persistence-caching.md) — PSR-16 cache configuration required for OpenID Connect discovery.
 - [OpenAPI & Swagger Guide](http-openapi-swagger.md) — Documenting authenticated endpoints and security schemes.

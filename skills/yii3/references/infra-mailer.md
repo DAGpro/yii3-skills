@@ -1,13 +1,13 @@
 # Yii3 Mailer & Email Notifications Guide
 
-> Practical guide and configuration recipes for composing, rendering HTML templates, attaching files, embedding inline assets, and sending emails via `yiisoft/mailer` and `yiisoft/mailer-symfony`, including background delivery through `yiisoft/queue`.
+> Practical guide and configuration recipes for composing, rendering HTML templates, attaching files, embedding inline assets, and sending emails via `yiisoft/mailer` and `yiisoft/mailer-symfony`. Production transport DSN configuration, asynchronous queue delivery, and mailer lifecycle events live in dedicated child guides.
 
 ---
 
 ## Table of Contents
 - [1. Mailer Architecture & Contracts](#1-mailer-architecture--contracts)
 - [2. Transport & DSN Configuration](#2-transport--dsn-configuration)
-  - [2.1. Production SMTP Configuration (yiisoft/mailer-symfony)](#21-production-smtp-configuration-yiisoftmailer-symfony)
+  - [2.1. Production SMTP Configuration (yiisoft/mailer-symfony)](#21-production-smtp-configuration-yiisoftmailer-symfony) — full reference in the [Mailer Transports & DSN Guide](infra-mailer-transports.md)
   - [2.2. Development & Testing Mailers (FileMailer, StubMailer, NullMailer)](#22-development--testing-mailers-filemailer-stubmailer-nullmailer)
 - [3. Composing & Sending Messages](#3-composing--sending-messages)
   - [3.1. Basic Plain Text & HTML Message Service](#31-basic-plain-text--html-message-service)
@@ -21,17 +21,11 @@
   - [5.1. Attaching Files from Disk](#51-attaching-files-from-disk)
   - [5.2. Attaching In-Memory Generated Content](#52-attaching-in-memory-generated-content)
   - [5.3. Embedding Inline Images with Content-ID (CID)](#53-embedding-inline-images-with-content-id-cid)
-- [6. Asynchronous Background Sending via Queue & PSR-14](#6-asynchronous-background-sending-via-queue--psr-14)
-  - [6.1. Domain Event DTO](#61-domain-event-dto)
-  - [6.2. Queue Message DTO](#62-queue-message-dto)
-  - [6.3. PSR-14 Listener Enqueuing Job](#63-psr-14-listener-enqueuing-job)
-  - [6.4. Queue Consumer Handler](#64-queue-consumer-handler)
-  - [6.5. Queue & Event Configuration](#65-queue--event-configuration)
-- [7. Mailer Lifecycle Events (BeforeSend & AfterSend)](#7-mailer-lifecycle-events-beforesend--aftersend)
-  - [7.1. Suppressing Delivery via BeforeSend](#71-suppressing-delivery-via-beforesend)
-  - [7.2. Audit Logging via AfterSend](#72-audit-logging-via-aftersend)
+- [6. Asynchronous Background Sending via Queue & PSR-14](#6-asynchronous-background-sending-via-queue--psr-14) — full reference in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md)
+- [7. Mailer Lifecycle Events (BeforeSend & AfterSend)](#7-mailer-lifecycle-events-beforesend--aftersend) — full reference in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md)
 - [8. Testing Recipes (StubMailer)](#8-testing-recipes-stubmailer)
 - [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
+- [Related Topic Guides](#related-topic-guides)
 
 ---
 
@@ -64,91 +58,9 @@ Yii3 separates email composition, transport implementations, and lifecycle event
 
 ### 2.1. Production SMTP Configuration (`yiisoft/mailer-symfony`)
 
-`yiisoft/mailer-symfony` wraps Symfony Mailer transports. The transport and global message defaults are configured under the `'yiisoft/mailer-symfony'` params key, conventionally in `config/common/params.php`:
+> **For the complete reference on production transport & DSN configuration** — the `'yiisoft/mailer-symfony'` params block, ESMTP transport DSN assembly, the `useSendmail` switch, and the full `messageSettings` defaults map — **see the** [Mailer Transports & DSN Guide, §1–§2](infra-mailer-transports.md#1-transport-configuration-usesendmail-esmtptransport).
 
-```php
-<?php
-
-declare(strict_types=1);
-
-return [
-    'yiisoft/mailer-symfony' => [
-        // false (default): build an EsmtpTransport from 'esmtpTransport' below.
-        // true: swap the transport definition to SendmailTransport instead.
-        'useSendmail' => false,
-        'esmtpTransport' => [
-            'scheme' => 'smtps', // "smtps" = using TLS; "smtp" = without using TLS
-            'host' => 'smtp.example.com',
-            'port' => 465,
-            'username' => (string) ($_ENV['MAILER_USERNAME'] ?? 'apikey'),
-            'password' => (string) ($_ENV['MAILER_PASSWORD'] ?? ''), // never hardcode SMTP credentials
-            'options' => [], // Free-form options array forwarded to the transport Dsn (TLS peer verification per the package comment)
-        ],
-        'messageSettings' => [
-            'from' => ['no-reply@example.com' => 'My Application'],
-            'convertHtmlToText' => true, // Package default: fills the text body from HTML when no text body is set
-        ],
-    ],
-];
-```
-
-Transport notes:
-
-- The package documents only two scheme semantics: `"smtps": using TLS`, `"smtp": without using TLS`. The shipped `smtps` default pairs with port `465`. Do not assume any other scheme/port mapping (e.g. STARTTLS) beyond what your SMTP provider documents.
-- The package assembles the transport Dsn from these keys as `new Dsn($scheme, $host, $username, $password, $port, $options)` — note that the username and password precede the port positionally in the Dsn constructor.
-- There is **no** sendmail-path parameter and **no** raw `'dsn'` string parameter — configuration is limited to the structured keys above. If you need a raw DSN string, override the `TransportInterface` DI definition manually in application config.
-- Setting `'useSendmail' => true` swaps the `TransportInterface::class` definition to `SendmailTransport::class`.
-
-The package auto-registers `MailerInterface::class => Yiisoft\Mailer\Symfony\Mailer::class` and the `TransportInterface` definition via its config plugin. It does **not** bind `Psr\EventDispatcher\EventDispatcherInterface` — supply one to enable the lifecycle events described in §7.
-
-**Message defaults (`messageSettings`).** The full 25-key set, in package order (keys map onto `Yiisoft\Mailer\MessageSettings`):
-
-```php
-<?php
-
-declare(strict_types=1);
-
-return [
-    'yiisoft/mailer-symfony' => [
-        'messageSettings' => [
-            // Plain keys fill only message fields that are still NULL at send time:
-            'charset' => null,
-            'from' => null,            // [email => name] map, plain string, or list of emails
-            'addFrom' => null,         // "add*" keys ALWAYS append to the corresponding field
-            'to' => null,
-            'addTo' => null,
-            'replyTo' => null,
-            'addReplyTo' => null,
-            'cc' => null,
-            'addCc' => null,
-            'bcc' => null,
-            'addBcc' => null,
-            'subject' => null,
-            'date' => null,
-            'priority' => null,
-            'returnPath' => null,
-            'sender' => null,
-            'textBody' => null,
-            'htmlBody' => null,
-            'attachments' => null,
-            'addAttachments' => null,
-            'embeddings' => null,
-            'addEmbeddings' => null,
-            'headers' => null,          // merged with message headers; message headers win
-            'overwriteHeaders' => null, // always applied via withHeader()
-            'convertHtmlToText' => true,
-        ],
-    ],
-];
-```
-
-Semantics (applied inside `BaseMailer::send()` **before** the `BeforeSend` dispatch, via `MessageSettings::applyTo()`):
-
-- Package defaults: every key is `null` except `'convertHtmlToText' => true`.
-- Plain keys fill only message fields that are still `null`; `add*` keys always append.
-- `'headers'` merges with the message headers — message headers win on name conflicts; `'overwriteHeaders'` is always applied via `withHeader()`.
-- `'convertHtmlToText' => true` fills the text body from the HTML body **only when the message has no text body**, using `Yiisoft\Mailer\HtmlToTextBodyConverter`: it extracts the `<body>` inner HTML, strips `<style>`/`<script>` blocks, applies `strip_tags` + `html_entity_decode`, and normalizes whitespace.
-- Address-valued keys accept a plain string, a list of emails, or an `[email => name]` map.
+Transport selection is an application decision resolved from what is actually installed: `yiisoft/mailer` alone provides the core contracts plus the development/testing mailers (§2.2); production SMTP delivery additionally requires the `yiisoft/mailer-symfony` bridge — the only transport adapter in the `mail` family ([package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family)). When the bridge is installed, its config plugin auto-registers `MailerInterface::class => Yiisoft\Mailer\Symfony\Mailer::class` and the `TransportInterface` definition; it does **not** bind `Psr\EventDispatcher\EventDispatcherInterface` — lifecycle events live in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md), §7.
 
 ### 2.2. Development & Testing Mailers (`FileMailer`, `StubMailer`, `NullMailer`)
 
@@ -730,400 +642,17 @@ final readonly class BrandedNotificationSender
 
 ## 6. Asynchronous Background Sending via Queue & PSR-14
 
-> [!IMPORTANT]
-> **Performance Rule:** Never send emails synchronously inside an HTTP request action. The SMTP handshake, TLS negotiation, and network roundtrips block the request process for the entire transport duration, and any network interruption stalls or times out the HTTP request while the transport waits.
-> Always offload email delivery to a background queue.
+> **For the complete reference on asynchronous queue sending** — the domain event DTO, queue message DTO, PSR-14 listener enqueuing the job, queue consumer handler, and the full queue/event configuration — **see the** [Mailer Async Sending & Lifecycle Events Guide, §1–§6](infra-mailer-async-queue.md#1-when-async-sending-applies-performance-rule).
 
-Install `composer require yiisoft/queue` plus exactly **one** transport adapter package: `yiisoft/queue-redis`, `yiisoft/queue-db`, or `yiisoft/queue-amqp`.
-
-### 6.1. Domain Event DTO
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Domain\User\Event;
-
-final readonly class UserRegisteredEvent
-{
-    public function __construct(
-        public string $userId,
-        public string $email,
-        public string $name,
-    ) {}
-}
-```
-
-### 6.2. Queue Message DTO
-
-In `yiisoft/queue`, message classes must implement `Yiisoft\Queue\Message\MessageInterface`. Extending `Yiisoft\Queue\Message\Message` gives you `final getMeta()` / `final withMeta()` for free but still requires implementing **`fromPayload()`, `getType()`, AND `getPayload()`** — the abstract base implements none of them, and omitting any one is a PHP fatal error.
-
-The payload contract is strict: only `null`, scalars (`bool`, `int`, `float`, `string`), or arrays of the same types recursively. `fromPayload()` must declare the canonical union signature `fromPayload(string $type, bool|int|float|string|array|null $payload): static`. The interface declares `getPayload(): bool|int|float|string|array|null`; concrete classes may narrow the return type to `array` (as in the example below):
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Application\Queue\Message;
-
-use InvalidArgumentException;
-use Yiisoft\Queue\Message\Message;
-
-final class SendWelcomeEmailMessage extends Message
-{
-    public const NAME = 'email.welcome';
-
-    public function __construct(
-        private readonly string $email,
-        private readonly string $name,
-    ) {}
-
-    public static function fromPayload(string $type, bool|int|float|string|array|null $payload): static
-    {
-        if (!is_array($payload) || !isset($payload['email'], $payload['name'])) {
-            throw new InvalidArgumentException('Invalid payload for SendWelcomeEmailMessage.');
-        }
-
-        return new self(
-            email: (string) $payload['email'],
-            name: (string) $payload['name'],
-        );
-    }
-
-    public function getType(): string
-    {
-        return self::NAME;
-    }
-
-    public function getPayload(): array
-    {
-        return [
-            'email' => $this->email,
-            'name' => $this->name,
-        ];
-    }
-
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-}
-```
-
-### 6.3. PSR-14 Listener Enqueuing Job
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Application\User\Listener;
-
-use App\Application\Queue\Message\SendWelcomeEmailMessage;
-use App\Domain\User\Event\UserRegisteredEvent;
-use Yiisoft\Queue\QueueProducerInterface;
-
-final readonly class EnqueueWelcomeEmailListener
-{
-    public function __construct(
-        private QueueProducerInterface $queueProducer,
-    ) {}
-
-    public function __invoke(UserRegisteredEvent $event): void
-    {
-        $this->queueProducer->push(
-            new SendWelcomeEmailMessage(
-                email: $event->email,
-                name: $event->name,
-            ),
-        );
-    }
-}
-```
-
-`QueueProducerInterface::push(MessageInterface $message): MessageInterface` takes a typed message and returns the (possibly enriched) message representation — it is **not** `void`. The interface also offers `status(string|int $id): MessageStatus` and `getQueueName(): string`.
-
-### 6.4. Queue Consumer Handler
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Application\Queue\Handler;
-
-use App\Application\Notification\Service\EmailNotificationService;
-use Yiisoft\Queue\Message\Handler\HandlerInterface;
-use Yiisoft\Queue\Message\MessageInterface;
-
-final readonly class SendWelcomeEmailHandler implements HandlerInterface
-{
-    public function __construct(
-        private EmailNotificationService $notificationService,
-    ) {}
-
-    public function handle(MessageInterface $message): void
-    {
-        $payload = (array) $message->getPayload();
-
-        $this->notificationService->sendWelcomeNotification(
-            recipientEmail: (string) ($payload['email'] ?? ''),
-            recipientName: (string) ($payload['name'] ?? ''),
-        );
-    }
-}
-```
-
-### 6.5. Queue & Event Configuration
-
-#### Queue Message & Handler Registration
-
-Register both the message type and the handler under the `'yiisoft/queue'` params key — **both maps are keyed by the message TYPE string** (the `getType()` value), not the class name:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Application\Queue\Handler\SendWelcomeEmailHandler;
-use App\Application\Queue\Message\SendWelcomeEmailMessage;
-
-return [
-    'yiisoft/queue' => [
-        'messages' => [
-            SendWelcomeEmailMessage::NAME => SendWelcomeEmailMessage::class,
-        ],
-        'handlers' => [
-            SendWelcomeEmailMessage::NAME => SendWelcomeEmailHandler::class,
-        ],
-        'middlewares-push' => [],
-        'middlewares-consume' => [],
-        'middlewares-fail' => [],
-    ],
-];
-```
-
-Handler values may be a class name implementing `HandlerInterface`, a callable, or any DI definition (`[Class::class, 'method']`). Zero-config shortcut: if the message type equals a `HandlerInterface` FQCN, no `'messages'`/`'handlers'` entries are needed — the resolver falls back to the container. Registering only `'handlers'` still works (handlers fire independently), but the serializer then reconstructs a `GenericMessage` instead of your typed DTO.
-
-#### Producer DI Wiring (Application Decision)
-
-The core `yiisoft/queue` package does **not** bind `QueueProducerInterface` — a constructor-injected producer resolves only after the application wires it. The documented pattern is the `'queues'` role map (only the `producer` and `consumer` keys are valid):
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use Yiisoft\Queue\Adapter\AdapterInterface;
-use Yiisoft\Queue\AsyncQueueProducer;
-use Yiisoft\Queue\QueueConsumer;
-
-return [
-    'yiisoft/queue' => [
-        'queues' => [
-            'yii-queue' => [ // default queue name
-                'producer' => [
-                    AsyncQueueProducer::class,
-                    '__construct()' => ['adapter' => AdapterInterface::class],
-                ],
-                'consumer' => [
-                    QueueConsumer::class,
-                    '__construct()' => ['adapter' => AdapterInterface::class],
-                ],
-            ],
-        ],
-    ],
-];
-```
-
-For synchronous in-process processing (development/tests), `Yiisoft\Queue\SyncQueueProducer` executes handlers immediately; its `status()` always reports `MessageStatus::NOT_FOUND`.
-
-#### Running the Worker
-
-The queue package registers three console commands (invoke via the application's `./yii` entry script):
-
-- `yii queue:run [queueName] --limit|-m N` — drains existing messages and exits when done.
-- `yii queue:listen [queueName]` — long-running subscribe loop (default queue when the name is omitted).
-- `yii queue:listen-all --pause|-p --limit|-m` — subscribes to all queues; development only.
-
-The loop implementation is chosen at DI setup time: `SignalLoop` when `ext-pcntl` is loaded, otherwise `SimpleLoop`.
-
-#### Failure Handling, Retries & Delayed Execution
-
-Without `'middlewares-fail'`, a throwing handler is logged and rethrown as `Yiisoft\Queue\Exception\MessageFailureException` — there are **no automatic retries**. Built-in retry middlewares are configured under the same `'yiisoft/queue'` params key:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use Yiisoft\Queue\Middleware\FailureHandling\FailureMiddlewareDispatcher;
-use Yiisoft\Queue\Middleware\FailureHandling\Implementation\ExponentialDelayMiddleware;
-use Yiisoft\Queue\Middleware\FailureHandling\Implementation\SendAgainMiddleware;
-
-return [
-    'yiisoft/queue' => [
-        'middlewares-fail' => [
-            FailureMiddlewareDispatcher::DEFAULT_PIPELINE => [
-                SendAgainMiddleware::class,
-                ExponentialDelayMiddleware::class,
-            ],
-        ],
-    ],
-];
-```
-
-The `'middlewares-fail'` value feeds `FailureMiddlewareDispatcher::__construct()` directly (`vendor/yiisoft/queue/config/di.php`), so it is a **map of pipeline name → definitions** — a flat class-string list is silently ignored. Per-queue failure pipelines are keyed by queue name (see the [Queue Jobs Guide](infra-queue-jobs.md)).
-
-Handlers must be **idempotent** — for example, the Redis adapter deletes a message only after successful handling.
-
-For delayed execution, wrap the message before pushing: `Yiisoft\Queue\Message\IdEnvelope` adds a `yii-id` meta entry with `getId(): string|int|null`, and `Yiisoft\Queue\Message\DelayEnvelope` (constructor `(MessageInterface $message, float $delaySeconds)`) adds a `yii-delay` meta entry for deferred handling. Message status is the `MessageStatus` int enum: `NOT_FOUND = 0`, `WAITING = 1`, `RESERVED = 2`, `DONE = 3`.
-
-#### PSR-14 Listener Registration
-
-Register the domain event listener in an events file, e.g. `config/common/events.php` — the listener map is **single-nested**:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Application\User\Listener\EnqueueWelcomeEmailListener;
-use App\Domain\User\Event\UserRegisteredEvent;
-
-return [
-    UserRegisteredEvent::class => [
-        EnqueueWelcomeEmailListener::class, // one flat list of listeners per event
-    ],
-];
-```
-
-> [!WARNING]
-> Do **not** double-nest the map (`Event::class => [[Listener::class]]`). The inner array is not a valid listener definition; it throws `InvalidListenerConfigurationException` at the first dispatch of that event.
-
-Valid listener definitions per event key: the full six-form table is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2. The event object is passed as the first argument; additional parameters are DI-resolved at call time; return values are discarded (`: void` is convention). Map keys must reference existing classes.
-
-Wiring steps (the app template ships `'events' => []` and no events file; the full group-declaration and merge-plan recipe is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1):
-
-1. Create `config/common/events.php` with the single-nested map.
-2. Register it in `config/configuration.php`: `'events' => 'common/events.php'`.
-3. Run `composer yii-config-rebuild`.
-4. Install the dispatcher: `composer require yiisoft/yii-event` — see §7 for what it binds and why mailer events are silently skipped without it.
+Plain synchronous sending (§3) remains the default path. Trap: never send emails synchronously inside an HTTP action — the SMTP handshake, TLS negotiation, and network roundtrips block the request process for the entire transport duration; offload delivery to a background queue when latency matters.
 
 ---
 
 ## 7. Mailer Lifecycle Events (`BeforeSend` & `AfterSend`)
 
-`Yiisoft\Mailer\BaseMailer` dispatches two events through its optional constructor dependency `Psr\EventDispatcher\EventDispatcherInterface`:
-1. `Yiisoft\Mailer\Event\BeforeSend`: dispatched prior to transport delivery. Setting `$event->preventSendingMessage = true;` cancels transmission immediately.
-2. `Yiisoft\Mailer\Event\AfterSend`: dispatched right after successful delivery (never when `sendMessage()` throws).
+> **For the complete reference on mailer lifecycle events** — `BeforeSend` delivery suppression, `AfterSend` audit logging, event wiring in the events config group, and dispatcher validation — **see the** [Mailer Async Sending & Lifecycle Events Guide, §7](infra-mailer-async-queue.md#7-mailer-lifecycle-events-beforesend--aftersend).
 
-The `BaseMailer::send()` pipeline: apply `MessageSettings` defaults → dispatch `BeforeSend` → check `$event->preventSendingMessage` → `sendMessage()` → dispatch `AfterSend`. Cancellation is an explicit `BaseMailer` check after dispatch — `BeforeSend` is a plain final class, not a `StoppableEventInterface`.
-
-> [!IMPORTANT]
-> **The dispatcher dependency is nullable.** `yiisoft/mailer-symfony` binds `TransportInterface` and `MailerInterface` but **not** `EventDispatcherInterface`. Without a bound dispatcher the events are silently skipped and mail still sends — your suppression and audit listeners never run, with no error. Install the wiring package: `composer require yiisoft/yii-event` — what it binds and why is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 1.
-
-### 7.1. Suppressing Delivery via `BeforeSend`
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Application\Notification\Listener;
-
-use Psr\Log\LoggerInterface;
-use Yiisoft\Mailer\Event\BeforeSend;
-
-final readonly class SuppressBlacklistedRecipientsListener
-{
-    public function __construct(
-        private LoggerInterface $logger,
-    ) {}
-
-    public function __invoke(BeforeSend $event): void
-    {
-        $to = (array) $event->message->getTo();
-
-        foreach ($to as $address => $name) {
-            $email = is_string($address) ? $address : (string) $name;
-
-            if (str_ends_with(strtolower($email), '@dispostable.com')) {
-                // Cancel sending for disposable/blacklisted domains
-                $event->preventSendingMessage = true;
-
-                $this->logger->warning('Suppressed email delivery to blacklisted domain: {email}', [
-                    'email' => $email,
-                ]);
-                return;
-            }
-        }
-    }
-}
-```
-
-### 7.2. Audit Logging via `AfterSend`
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Application\Notification\Listener;
-
-use Psr\Log\LoggerInterface;
-use Yiisoft\Mailer\Event\AfterSend;
-
-final readonly class EmailAuditLogListener
-{
-    public function __construct(
-        private LoggerInterface $logger,
-    ) {}
-
-    public function __invoke(AfterSend $event): void
-    {
-        $this->logger->info('Email dispatched successfully: "{subject}" to {to}', [
-            'subject' => $event->message->getSubject(),
-            'to' => json_encode($event->message->getTo()),
-        ]);
-    }
-}
-```
-
-Wiring in `config/common/events.php`:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use App\Application\Notification\Listener\EmailAuditLogListener;
-use App\Application\Notification\Listener\SuppressBlacklistedRecipientsListener;
-use Yiisoft\Mailer\Event\AfterSend;
-use Yiisoft\Mailer\Event\BeforeSend;
-
-return [
-    BeforeSend::class => [
-        SuppressBlacklistedRecipientsListener::class,
-    ],
-    AfterSend::class => [
-        EmailAuditLogListener::class,
-    ],
-];
-```
-
-Register the file as described in §6.5 and in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1. Map keys must reference existing classes — `BeforeSend` and `AfterSend` are final classes with no marker interfaces to register against.
-
-Development validation: run `Yiisoft\Yii\Event\ListenerConfigurationChecker::check($config->get('events-web'))` — it eagerly resolves every listener definition and catches bad format, non-existent event classes, and non-callable listeners (dev/test only; mechanics in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.3).
-
-To deliver application log records by email through the same `MailerInterface`, `yiisoft/log-target-email` provides `EmailTarget` (constructor `(MailerInterface $mailer, array|string $emailTo, string $subjectEmail = '', array $levels = [])`; default subject `'Application Log'`; it sends a `Message` with a word-wrapped plain-text body).
+Trap (applies to synchronous sends too): `BaseMailer`'s `Psr\EventDispatcher\EventDispatcherInterface` constructor dependency is nullable, and `yiisoft/mailer-symfony` does not bind it — without a bound dispatcher the `BeforeSend`/`AfterSend` events are silently skipped and mail still sends, with no error. Install `yiisoft/yii-event`.
 
 ---
 
@@ -1150,7 +679,7 @@ public function testWelcomeNotificationIsSent(): void
 
 - Batch semantics: `sendMultiple()` appends every message to the same internal list and reports all of them as successful — the returned `SendResults` DTO lists them in `$successMessages` with an empty `$failMessages` (full failure semantics live in §3.2; the `$results->getErrors()` phantom-method trap lives in the §9 anti-pattern matrix).
 
-To assert lifecycle events (§7), inject a `Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` into the mailer, `send()` one message, and assert `isClassTriggered(BeforeSend::class)` / `isClassTriggered(AfterSend::class)` — no separate mailer double ships in `yiisoft/test-support`; `StubMailer` comes from `yiisoft/mailer` itself.
+To assert lifecycle events (owned by the [Mailer Async Sending & Lifecycle Events Guide, §7](infra-mailer-async-queue.md#7-mailer-lifecycle-events-beforesend--aftersend)), inject a `Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher` into the mailer, `send()` one message, and assert `isClassTriggered(BeforeSend::class)` / `isClassTriggered(AfterSend::class)` — no separate mailer double ships in `yiisoft/test-support`; `StubMailer` comes from `yiisoft/mailer` itself.
 
 > [!TIP]
 > **Mailer Testing Reference:**
@@ -1166,13 +695,21 @@ To assert lifecycle events (§7), inject a `Yiisoft\Test\Support\EventDispatcher
 | Calling `$results->getErrors()` on `SendResults` | Phantom method; `SendResults` has no `getErrors()` method and throws an `Error: Call to undefined method`. | Inspect the public property `$results->failMessages`, which is an array of `['message' => MessageInterface, 'error' => \Throwable]`. |
 | Passing `WebViewRenderer::renderPartial()` or `ViewRenderer::renderPartial()` to `withHtmlBody()` | `renderPartial()` returns a PSR-7 response object — an `@internal` `ViewResponse` from `WebViewRenderer`, or the deprecated `DataResponse` from the deprecated `ViewRenderer` — causing a Fatal `TypeError` when passed to `withHtmlBody(?string $html)`. | Use `Yiisoft\View\ViewInterface::render()` to return a `string`, or call `WebViewRenderer::renderPartialAsString()`. |
 | Mutating `$message` without capturing return value (`$message->withTo('...')`) | `Message` is an immutable value object. Calling `with*()` returns a cloned instance; dropping the assignment silently discards modifications. | Reassign the returned instance: `$message = $message->withTo('user@domain.com');`. |
-| Synchronous SMTP delivery inside HTTP action controllers | The SMTP handshake, TLS negotiation, and network roundtrips block the request process for the entire transport duration; network interruptions stall the HTTP request until it times out. | Dispatch a PSR-14 domain event and offload transmission to a background job in `yiisoft/queue`. |
 | Passing unpacked arrays directly to `withAttachments()` or `withEmbeddings()` | Methods accept variadic arguments: `File ...$files`. Passing a single array without the splat operator (`...`) causes a `TypeError`. | Use unpacking: `$message->withAttachments(...$attachments);` or pass arguments individually: `withAttachments($file1, $file2);`. |
-| Implementing a queue message without `fromPayload()` / `getType()` / `getPayload()`, or declaring `fromPayload(string $type, mixed $payload)` | Extending `Yiisoft\Queue\Message\Message` covers only `getMeta()`/`withMeta()` (both final); the abstract base implements none of `fromPayload()`, `getType()`, `getPayload()` — omitting any one is a PHP fatal error. The canonical `fromPayload()` signature is the union form; `mixed` widening is legal but non-canonical. | Extend `Yiisoft\Queue\Message\Message` and implement `fromPayload(string $type, bool|int|float|string|array|null $payload): static`, `getType(): string`, and `getPayload(): bool|int|float|string|array|null` (narrowing to `array` is allowed). |
-| Storing objects in queue message payloads | The `MessageInterface` payload contract allows only `null`, scalars, and arrays of the same types recursively; the default `JsonMessageEncoder` fails at push time with `MessageSerializerException` (`json_encode` with `JSON_THROW_ON_ERROR`). | Store only scalar identifiers (`string`, `int`) in message payloads and re-query required entities in the queue handler. |
-| Defining a double-nested listener map (`Event::class => [[Listener::class]]`) | Each inner element of the map must be ONE listener definition; a nested array is not callable and throws `InvalidListenerConfigurationException` at the first dispatch of that event. | Use single nesting: `Event::class => [Listener::class, ...]`. |
 | Repeating `withHeader()` expecting header values to accumulate | `withHeader()` replaces all values stored under the given name on every call. | Append values with `withAddedHeader(string $name, string $value)`; bulk-set with `withHeaders(?array)`. |
-| Relying on lifecycle events without binding `EventDispatcherInterface` | `BaseMailer`'s dispatcher dependency is nullable; without a binding the events are silently skipped — suppression and audit listeners never run, with no error. | Install `yiisoft/yii-event` (auto-binds the PSR-14 interfaces) and register listeners in the events config group (see §6.5 / §7). |
 | Neglecting HTML escaping in email view templates | Unescaped user-supplied input renders unescaped HTML, exposing email clients to layout breakage and script/phishing injection. | Always wrap dynamic user data with `Yiisoft\Html\Html::encode($content)` in view templates; use `Html::encodeAttribute()` for HTML attribute values. |
 | Hardcoding absolute mail spool paths for `FileMailer` | Hardcoded filesystem paths break portability across local environments, Docker containers, and CI. | Resolve paths via `Yiisoft\Aliases\Aliases::get('@runtime/mail')` or configure `'yiisoft/mailer' => ['fileMailer' => ['path' => '@runtime/mail']]`. |
-| Omitting message type mapping in `'yiisoft/queue'['messages']` | If only `'handlers'` is registered without `'messages'`, `MessageSerializer` reconstructs `GenericMessage` instead of your typed DTO. | Register both `'messages' => [MyMessage::NAME => MyMessage::class]` and `'handlers' => [MyMessage::NAME => MyHandler::class]`. |
+
+Queue-based sending and lifecycle-event anti-patterns (synchronous SMTP in HTTP actions, queue message contract violations, double-nested listener maps, unbound event dispatchers) are owned by the [Mailer Async Sending & Lifecycle Events Guide, §8](infra-mailer-async-queue.md#8-anti-pattern-matrix).
+
+---
+
+## Related Topic Guides
+
+- [Mailer Transports & DSN Guide](infra-mailer-transports.md) — Production SMTP configuration: the `esmtpTransport` DSN assembly, the `useSendmail` switch, and the full `messageSettings` defaults map.
+- [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md) — Optional queue-based background delivery (§1–§6) and `BeforeSend`/`AfterSend` lifecycle events (§7).
+- [Queue & Asynchronous Jobs Guide](infra-queue-jobs.md) — Queue adapters, middlewares, message contracts, and worker lifecycle in depth.
+- [Events & Listeners Guide](core-events-and-listeners.md) — PSR-14 listener registration, config groups, and `yiisoft/yii-event` wiring.
+- [Logging Guide](infra-logging.md) — `EmailTarget` for delivering log records by email through the mailer.
+- [Testing Core Guide](testing-core.md) — `SimpleEventDispatcher` and `SimpleLogger` test doubles used in mailer assertions.
+- [DI & Configuration Guide](core-di-and-config.md) — Config groups, params merging, and DI definition overrides referenced throughout this guide.

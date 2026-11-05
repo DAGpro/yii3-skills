@@ -22,8 +22,7 @@ Single catalog of version-gated behavior referenced across the skill. Every row 
 | 5 | `Logger::setTraceLevel()` / `setExcludedTracePaths()` | Deprecated since `yiisoft/log` **2.1**, removal in 3.0 (they also throw with a custom context provider) | Constructor arguments on the logger / targets | `composer.lock` → `yiisoft/log` `version`. See [Logging Guide, §4](infra-logging.md) |
 | 6 | `Target` setters (`setLevels()`, `setCategories()`, `setExcept()`, `setFormat()`, `setPrefix()`, `setExportInterval()`, `setTimestampFormat()`, `setEnabled()`) | Deprecated, to be removed in `yiisoft/log` **3.0** | Constructor arguments on the target | `composer.lock` → `yiisoft/log` `version`. See [Logging Guide, §4](infra-logging.md) |
 
-## Rules for guides and verifiers
+## Rules for guides
 
 - Guides keep their grounded per-topic deprecation notes; this file is the cross-topic index — when a guide gains a new version-gated statement, add a row here and link the guide.
-- `scripts/verify-routes.php` applies row 1 automatically: static route/group factories are reported as errors on router ≥ 4.0.3 (or when the installed version cannot be proven from `composer.lock`), and downgraded to warnings below 4.0.3.
 - Never state version-gated syntax without anchoring the row above (or a new grounded row) — zero-hallucination policy from `SKILL.md` Core rule 2 applies to version facts as well.

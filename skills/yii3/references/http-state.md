@@ -431,7 +431,7 @@ For AJAX: send the token via the `X-CSRF-Token` header, or use one of the two of
 
 ## 6. Worker Mode Notes
 
-Under long-running runners (RoadRunner, FrankenPHP — see [Package Catalog](package-catalog.md) §5.9, High-Performance Workers):
+Under long-running runners (RoadRunner, FrankenPHP — see [Package Catalog](package-catalog.md) §4.9, High-Performance Workers):
 
 - Do **not** store per-request state in PHP superglobals or singleton properties; the `Session` object is a
   stateful wrapper around PHP session functions — it holds the current session id internally, so middleware-driven

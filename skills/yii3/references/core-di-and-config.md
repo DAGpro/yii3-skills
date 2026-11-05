@@ -16,7 +16,6 @@
 - [6. Dynamic Invocation & Factories (yiisoft/injector & yiisoft/factory)](#6-dynamic-invocation--factories-yiisoftinjector--yiisoftfactory)
 - [7. Hidden Pitfalls & Execution Realities](#7-hidden-pitfalls--execution-realities)
 - [8. Anti-Pattern Matrix: DI & Configuration](#8-anti-pattern-matrix-di--configuration)
-  - [8.1. Automated Verification with check-di-syntax.php](#81-automated-verification-with-check-di-syntaxphp)
 - [9. Related Topic Guides](#9-related-topic-guides)
 
 ---
@@ -1093,18 +1092,6 @@ Container resolution failures surface as a small, well-defined exception set. Kn
 | ❌ **Hardcoding credentials in DI definition files** | Leaks secrets into version control and breaks multi-environment deployments. | ✅ Put secrets in real environment variables, read them via `params.php` (`$_ENV['SECRET']`), and inject via `$params['key']`. (`.env` via `vlucas/phpdotenv` is a `require-dev` convenience in the templates; production values come from the server/container.) |
 | ❌ **Using `$_GET` or `$_POST` inside DI definitions** | Superglobals break CLI runners, queue workers, tests, and persistent HTTP runtimes. | ✅ Read parameters from `$params` or inject PSR-7 `ServerRequestInterface` / `CurrentRoute` at the presentation layer. |
 | ❌ **Specifying `environment` as `?environments/{$environment}/di.php`** | `yiisoft/config` does not evaluate `{$environment}` strings in group paths. | ✅ Use `config-plugin-environments` in `composer.json` or `config/configuration.php`. |
-
-### 8.1. Automated Verification with `check-di-syntax.php`
-
-To catch configuration typos, invalid keys, unmapped interface bindings, and closure violations before booting the application or running tests, execute the deterministic static checker from the skill package directory:
-
-```bash
-php scripts/check-di-syntax.php [path-to-project]
-```
-
-- **Checks:** PHP syntax of `config/**/di/*.php` (including `di.php` and `di-*.php` files) and `params*.php` files; Yii 2 legacy keys (`'__class'`); constructor typos (`'__construct'`, plus `constructor` / `construct` variants); class-key typos (`classname`, `target`, `class_name`); `tag` / `resetter` key typos; missing `()` on method calls; missing `$` on properties; interface self-bindings and unbound interfaces; a warning when closures are stored in params; reflection-based checks when a vendor autoloader is available.
-- **Flags:** `--path=`, `--file=`, `--format=text|json`, `--quiet`, `--verbose`, `--help`. Exit codes: `0` — pass, `1` — issues found, `2` — fatal error.
-- **CI / Agent Automation:** Use `--format=json` for machine-readable output and automated quality gates in AI Factory verification loops. JSON schema: `{status, exit_code, summary: {files_scanned, definitions_count, errors_count, warnings_count}, issues: [{type, file, line, rule, message}]}`.
 
 ---
 

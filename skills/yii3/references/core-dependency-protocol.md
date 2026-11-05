@@ -5,7 +5,7 @@
 
 > **Operational gate for the dependency lifecycle: check → decide → install → wire → learn.**
 > Per the [SKILL.md](../SKILL.md) core rules, every capability goes through this protocol **before** any code that uses it is written. It prevents package hallucinations, version drift, broken container graphs, and supply-chain mistakes.
-> Post-install code verification (deterministic scripts, project quality gates) is a separate, final step — see [§6](#6-verify-the-result).
+> Post-install code verification (project quality gates) is a separate, final step — see [§6](#6-verify-the-result).
 
 ---
 
@@ -261,15 +261,7 @@ To guarantee zero hallucination and complete fidelity to the installed codebase,
 
 ## 6. Verify the Result
 
-After dependencies are installed and wired, run the deterministic verification suite shipped with the skill:
-
-```bash
-# Unified orchestrator — runs every checker in one pass:
-php scripts/verify-all.php [project-path]
-# or individual checkers: check-di-syntax.php, verify-actions.php, verify-routes.php
-```
-
-Exit codes: **0** = pass (warnings exit 0 and are reported separately, never blocking) · **1** = at least one blocking error · **2** = fatal invocation error (fix the invocation, never treat it as a pass). Fix every reported error and rerun until exit 0. Full script capabilities and the report template live in [SKILL.md → "Deterministic tooling & validation scripts"](../SKILL.md); the blocking gate in AI Factory workflows is defined by `injections/verify.md`. After the deterministic gate passes, run the target project's own test suite and static analysis per [SKILL.md → "Workflow per task", step 5](../SKILL.md).
+After dependencies are installed and wired, run the target project's own quality gates — tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured — and confirm the wiring per [SKILL.md → Finale](../SKILL.md); the blocking gate in AI Factory workflows is defined by `injections/verify.md`.
 
 ---
 

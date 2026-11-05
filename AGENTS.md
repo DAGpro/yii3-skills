@@ -112,11 +112,7 @@ yii3-skills/ (Current baseline structure — subject to evolution)
 
 │   │   ├── SKILL.md      # Entry point (YAML frontmatter + Task Routing Matrix + TOC)
 
-│   │   ├── references/   # Specialized topic guides and recipes (incl. runtime package-catalog.md)
-
-│   │   ├── examples/     # Canonical vertical-slice example (crud-slice/)
-
-│   │   └── scripts/      # Deterministic PHP verification suite (verify-all, check-di, verify-actions, verify-routes)
+│   │   └── references/   # Specialized topic guides, recipes, and the runtime package-catalog.md
 
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
 
@@ -182,7 +178,7 @@ Agents **MUST NOT** rely on pre-trained parametric memory, assumptions, or gener
 
 - **Strictly Read-Only:** The `references/` directory (130 cloned packages) is strictly read-only authoring reference material. Agents must **NEVER** edit, delete, move, or stage (`git add`) any files within `references/`.
 
-- **Targeted Search:** Never run unconstrained recursive searches across the entire `references/` folder. Resolve the relevant package names via `PACKAGES.md` first, then always target specific packages (e.g., `references/yiisoft/router/...`) to avoid context overflow and timeouts.
+- **Targeted Search:** Never run unconstrained recursive searches across the entire `references/` folder. Resolve the relevant package names via `PACKAGES.md` first, then always target specific packages (e.g., `references/router/...`) to avoid context overflow and timeouts.
 
 ### 4.4. Language Invariant (English-Only Deliverables)
 

@@ -4,7 +4,7 @@
 > **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 Finale extension for the `yii3` skill: the checks that run only when they earn their cost.
-Load this guide at the Finale when the task is a **new feature**, or when it touches **runtime, auth, queues, or infrastructure** (runners, workers, error handling, logging, caching). Small Light-mode tasks (single route, config/DI edit, one-file refactor) stop at the deterministic gate + Chain Integrity checklist in `SKILL.md` and skip this guide.
+Load this guide at the Finale when the task is a **new feature**, or when it touches **runtime, auth, queues, or infrastructure** (runners, workers, error handling, logging, caching). Small Light-mode tasks (single route, config/DI edit, one-file refactor) stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.
 
 ---
 
@@ -17,7 +17,7 @@ Load this guide at the Finale when the task is a **new feature**, or when it tou
 
 ## 1. Architecture & Decomposition Checks
 
-The same checks the verify workflow runs; most are already covered by the deterministic gate (`verify-actions.php`), the Chain Integrity checklist, and the gate below — keep an explicit checklist line only for what remains uncovered:
+The same checks the verify workflow runs; most are already covered by the Chain Integrity checklist and the gate below — keep an explicit checklist line only for what remains uncovered:
 
 - **Thin Actions:** no SQL/ActiveRecord persistence, hashing, or notifications in Actions (side-effects live in use case handlers and listeners).
 - **Strict `Psr\Http\Message\ResponseInterface` return** on every action method.
@@ -47,11 +47,9 @@ Execute the gate in Standalone mode; in AI Factory mode verify the checklist and
 Bind the verification report to the Finale and extend it with added packages, changed config files, and the Production Readiness Gate status:
 
 ```
-verify-all.php <scope> -> exit 1 (1 error)
-- verify-actions.php: config/common/di/db.php:5 — typo_class_key — invalid class key 'classname'
-fixes applied: renamed 'classname' to 'class'
-rerun: verify-all.php <scope> -> exit 0
-warnings (exit 0, non-blocking): params.php:4 — closure_in_params — closure in parameters file
+fixes applied: persistence moved from CreateCommentAction to CommentRepository
+tests: pass | fail
+static analysis (Psalm/PHPStan, Rector): pass | fail
 packages added: <list | none>
 config files changed: <list | none>
 production readiness gate: pass | fail (<items>)

@@ -426,7 +426,7 @@ family in DI, or an abstraction with no driver registered (fails at first use).
 ### 16.5 Not installable as named
 
 Some names commonly suggested by models do not exist as `yiisoft/*` packages — verify against the
-phantom list in `skills/yii3/references/package-catalog.md` §3 before adding them to `composer require`:
+phantom list below before adding them to `composer require`:
 
 - CORS is covered by `yiisoft/http-middleware` and `yiisoft/yii-middleware` (there is no separate CORS package).
 - Outgoing HTTP has no `yiisoft/*` client wrapper — use a PSR-18 client such as `guzzlehttp/guzzle`.
@@ -435,10 +435,11 @@ phantom list in `skills/yii3/references/package-catalog.md` §3 before adding th
 
 ## 17. Architectural Layering
 
-> **Canonical full copy:** `skills/yii3/references/architecture-alignment.md` — section
-> "Pattern placement tables (aif-architecture)" — edit there and keep this stub pointing to it.
-> The deliverable reference carries: pattern → folder structure (Layered; Structured Modules ×2;
-> Explicit Architecture ×3; Microservices), package categories → placement per pattern, dependency
+> **Canonical full copy:** `skills/yii3/references/core-architecture-alignment.md` —
+> §2 "Vendor Policy per Architecture Pattern" and §4 "Package Placement Matrix by Pattern" —
+> edit there and keep this stub pointing to it.
+> The deliverable reference carries: pattern → folder structure (Layered; Structured Modules;
+> Explicit Architecture), package categories → placement per pattern, dependency
 > rules per pattern, universal dependency rules, and the responsibility → package categories reference.
 
 ---

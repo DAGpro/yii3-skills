@@ -1,7 +1,11 @@
 ---
 name: yii3
 description: >-
-  Yii 3 (PHP 8.2+, yiisoft/* packages) end-to-end development workflow: mission bootstrap, bottom-up implementation stages, production readiness gate. Use when user says "Yii3", "Yii 3", "yiisoft", "yii3 action", "yii3 route", "yii3 DI configuration", "yii3 migration", "yii3 middleware", "yii3 console command", "yii3 CRUD", "yii3 form validation", "yiisoft/db", "yiisoft/validator", "PSR-14 events in Yii3", "yii3 vertical slice".
+  Yii 3 (PHP 8.2+, yiisoft/* packages) end-to-end development workflow:
+  mission bootstrap, bottom-up implementation stages, production readiness
+  gate. Use when user says "Yii3", "Yii 3", "yiisoft", "yii3 action",
+  "yii3 route", "yii3 DI configuration", "yii3 migration", "yii3 middleware",
+  "yii3 console command", "yiisoft/db", "yiisoft/validator".
 ---
 
 # Yii3 development

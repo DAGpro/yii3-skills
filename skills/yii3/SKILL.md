@@ -61,7 +61,7 @@ Never implement an Action or Controller before its Input DTO, Repository Interfa
 
 **Mandatory Signature Lookup Protocol:** before calling any `yiisoft/*` method or constructor with more than 1 argument, look up the installed signature in `vendor/yiisoft/<pkg>/src` (Core rule 2, API row); never invent method names or copy Yii2 APIs. If `vendor/` is absent, request `composer install` first; when that is impossible, flag every API used as "not verified against sources" in the final report.
 
-- **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations.md`, `references/persistence-db.md`.
+- **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations-schema.md`, `references/persistence-migrations-operations.md`, `references/persistence-db.md`.
 - **Stage 2 — Domain Entity & Repository Interface (Phase 2).** Pure aggregate, value objects, PSR-14 domain events, repository contract. Guides: `references/core-feature-recipes.md`, `references/core-events-and-listeners.md`.
 - **Stage 3 — Repository Implementation (Phase 3).** Strictly the project's one persistence path (`yiisoft/db` / Active Record / Cycle); wrap multi-step persistence in transactions. Guides: the matching persistence row in the matrix.
 - **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler; domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-and-listeners.md`.
@@ -125,18 +125,18 @@ Load only the archetype's guides:
 
 | Task Archetype | Primary Guides | Secondary |
 |---|---|---|
-| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db.md`<br>`references/infra-error-handling.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
+| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db-connection-and-queries.md`<br>`references/infra-error-handling.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
 | **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` |
 | **HTML UI / Forms / Grid** | `references/http-views.md`<br>`references/http-widgets-and-assets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
 | **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-state.md`<br>`references/infra-auth-jwt.md`<br>`references/infra-auth-oauth2.md`<br>`references/infra-rbac-storage.md` |
-| **Database & Schema Migrations** | `references/persistence-migrations.md`<br>`references/persistence-db.md` | `references/core-di-and-config.md`<br>`references/persistence-caching.md` |
+| **Database & Schema Migrations** | `references/persistence-migrations-schema.md`<br>`references/persistence-migrations-operations.md`<br>`references/persistence-db-connection-and-queries.md` | `references/core-di-and-config.md`<br>`references/persistence-caching.md` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` |
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` |
 | **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` |
 | **i18n** | `references/http-i18n-translation.md` | `references/http-routes-url-and-middleware.md`<br>`references/core-di-and-config.md` |
 | **OpenAPI / Swagger** | `references/http-openapi-setup.md`<br>`references/http-openapi-endpoints.md` | `references/http-routes.md`<br>`references/http-openapi-ui-and-ops.md` |
 | **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md` |
-| **Active Record** | `references/persistence-active-record.md` | `references/persistence-db.md`<br>`references/persistence-migrations.md` |
+| **Active Record** | `references/persistence-active-record.md` | `references/persistence-db-connection-and-queries.md`<br>`references/persistence-migrations-schema.md` |
 | **Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-state-resetter.md` |
 | **Helper Lookup** | `references/core-utilities.md` | `references/package-catalog.md`<br>`references/core-utilities-niche.md`<br>`references/core-friendly-exceptions.md` · Tier 2: `vendor/yiisoft/<pkg>/src/` |
 
@@ -183,10 +183,14 @@ Load only the archetype's guides:
 - `references/http-i18n-translation.md` — translator API, message storage, locale routing
 
 ### Persistence & Data
-- `references/persistence-db.md` — Connection, Command, Query Builder, transactions, pagination, drivers & DSN
+- `references/persistence-db.md` — split index: anti-pattern matrix, related guides
+- `references/persistence-db-connection-and-queries.md` — Connection, Command, Query Builder, transactions
+- `references/persistence-db-readers-and-drivers.md` — pagination & data readers, drivers & DSN, signatures
 - `references/persistence-active-record.md` — Active Record models, queries, relations
 - `references/persistence-cycle-orm.md` — Cycle ORM data mapper
-- `references/persistence-migrations.md` — schema DDL, reversible migrations, seeding
+- `references/persistence-migrations.md` — split index: schema vs operations guides
+- `references/persistence-migrations-schema.md` — migration contracts, naming, ColumnBuilder, FKs, DDL, seeding
+- `references/persistence-migrations-operations.md` — params config, console command catalog, CI automation
 - `references/persistence-caching.md` — PSR-16 caching, getOrSet, TagDependency
 - `references/persistence-cache-drivers.md` — redis/db/APCu/memcached/wincache drivers
 

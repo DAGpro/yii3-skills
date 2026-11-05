@@ -27,7 +27,7 @@
 - [6. Asynchronous Background Sending via Queue & PSR-14](#6-asynchronous-background-sending-via-queue--psr-14) — full reference in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md)
 - [7. Mailer Lifecycle Events (BeforeSend & AfterSend)](#7-mailer-lifecycle-events-beforesend--aftersend) — full reference in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md)
 - [8. Testing Recipes (StubMailer)](#8-testing-recipes-stubmailer)
-- [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
+- [9. Anti-Pattern Matrix](persistence-migrations-operations.md#9-anti-pattern-matrix)
 - [Related Topic Guides](#related-topic-guides)
 
 ---

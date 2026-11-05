@@ -513,7 +513,7 @@ Tables are **not** created automatically. Two verified options:
 > For the complete reference on writing migrations — the `MigrationInterface` / `RevertibleMigrationInterface`
 > contracts, `MigrationBuilder` and `ColumnBuilder` schema construction, `addForeignKey()` named-argument
 > semantics with `ReferentialAction::*`, and the `migrate:*` console commands — see the
-> [Migrations Guide, §3 "Schema Construction with Modern `ColumnBuilder`"](persistence-migrations.md#3-schema-construction-with-modern-columnbuilder).
+> [Migrations Guide, §3 "Schema Construction with Modern `ColumnBuilder`"](persistence-migrations-schema.md#3-schema-construction-with-modern-columnbuilder).
 
 ```php
 // Revertible migration creating the translation schema (i18n-specific skeleton).

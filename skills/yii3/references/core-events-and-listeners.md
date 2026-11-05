@@ -32,7 +32,7 @@
   - [6.6. Active Record Lifecycle (yiisoft/active-record)](#66-active-record-lifecycle-yiisoftactive-record)
   - [6.7. View Template Lifecycle (yiisoft/view, View)](#67-view-template-lifecycle-yiisoftview-view)
   - [6.8. Web View Lifecycle (yiisoft/view, WebView)](#68-web-view-lifecycle-yiisoftview-webview)
-- [7. PHP 8 Named Arguments & Signatures Reference](#7-php-8-named-arguments--signatures-reference)
+- [7. PHP 8 Named Arguments & Signatures Reference](persistence-db-readers-and-drivers.md#7-php-8-named-arguments--signatures-reference)
 - [8. Testing Events & Listeners](#8-testing-events--listeners)
 - [9. Anti-Pattern Matrix: Events & Listeners](#9-anti-pattern-matrix-events--listeners)
 
@@ -188,7 +188,7 @@ A listener is a single-purpose class focused on one specific side-effect (e.g., 
 
 Listeners should implement `__invoke(EventClass $event): void`.
 
-- When registering **programmatically** via `ListenerCollection::add()`, the event argument type-hint is auto-inferred from the listener's first parameter when no event class names are passed (see [Section 7](#7-php-8-named-arguments--signatures-reference)).
+- When registering **programmatically** via `ListenerCollection::add()`, the event argument type-hint is auto-inferred from the listener's first parameter when no event class names are passed (see [Section 7](persistence-db-readers-and-drivers.md#7-php-8-named-arguments--signatures-reference)).
 - When registering **declaratively** in config arrays, `ListenerCollectionFactory::create()` always registers each listener under the **explicit event class name used as the config array key** — no inference happens in the factory (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`).
 
 ```php
@@ -430,7 +430,7 @@ Note: `dispatch()` returns the same (possibly mutated) event object that was pas
 
 > [!TIP]
 > **Database Guide Reference:**
-> For the complete `transaction()` reference — the closure contract (zero-argument closures are accepted), the isolation-level second argument forwarded to `beginTransaction()`, and the `TransactionInterface` isolation-constant catalog — see the [Database Guide, §4.1](persistence-db.md#41-idiomatic-closure-transactions-transaction) and [§4.3](persistence-db.md#43-isolation-levels--post-commit-event-rule).
+> For the complete `transaction()` reference — the closure contract (zero-argument closures are accepted), the isolation-level second argument forwarded to `beginTransaction()`, and the `TransactionInterface` isolation-constant catalog — see the [Database Guide, §4.1](persistence-db-connection-and-queries.md#41-idiomatic-closure-transactions-transaction) and [§4.3](persistence-db-connection-and-queries.md#43-isolation-levels--post-commit-event-rule).
 
 ### Recommended Aggregate Event-Recording Pattern
 

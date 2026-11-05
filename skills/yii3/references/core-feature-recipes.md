@@ -127,7 +127,7 @@ final readonly class ProductListService
 
 > [!TIP]
 > **Pagination & Sorting Reference:**
-> For the complete reference on `QueryDataReader` sorting (`Sort::only()` / `Sort::any()`) and `OffsetPaginator` behavior, see the [Persistence: Plain DB Guide, §5.1](persistence-db.md#51-querydatareader--sorting-sortonly-sortany) and [§5.2](persistence-db.md#52-offset-pagination-offsetpaginator).
+> For the complete reference on `QueryDataReader` sorting (`Sort::only()` / `Sort::any()`) and `OffsetPaginator` behavior, see the [Persistence: Plain DB Guide, §5.1](persistence-db-readers-and-drivers.md#51-querydatareader--sorting-sortonly-sortany) and [§5.2](persistence-db-readers-and-drivers.md#52-offset-pagination-offsetpaginator).
 
 **API response composition** (fragment of an Archetype B list action):
 
@@ -308,7 +308,7 @@ Processes background or maintenance tasks via command line interface (`yiisoft/y
 > [!TIP]
 > **Console & Batch Reference:**
 > For the complete reference on styled terminal I/O (`SymfonyStyle` banners, tables, prompts, progress bars), see the [Console Commands Guide, §5](infra-commands.md#5-interactive-terminal-ux-with-symfonystyle); for exit-code conventions, see [§6](infra-commands.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode).
-> For memory-safe cursor streaming (`Query::each()` / `Query::batch()`) and bulk inserts, see the [Persistence: Plain DB Guide, §3.4](persistence-db.md#34-memory-safe-cursor-streaming-each--batch).
+> For memory-safe cursor streaming (`Query::each()` / `Query::batch()`) and bulk inserts, see the [Persistence: Plain DB Guide, §3.4](persistence-db-connection-and-queries.md#34-memory-safe-cursor-streaming-each--batch).
 
 **Reference command class** (Symfony Console imports follow the standard `Symfony\Component\Console\*` layout per Symfony docs — symfony/console is not re-exported by the yiisoft packages, so verify those exact class paths against `vendor/symfony/console/`):
 

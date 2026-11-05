@@ -46,7 +46,7 @@
   - [7.2. Whitelist Sorting with `Sort::only()`](#72-whitelist-sorting-with-sortonly)
 - [8. PHP 8 Named Arguments & Signatures Reference](#8-php-8-named-arguments--signatures-reference)
 - [9. Anti-Pattern Matrix: Active Record](#9-anti-pattern-matrix-active-record)
-- [10. Related Topic Guides](#10-related-topic-guides)
+- [10. Related Topic Guides](persistence-migrations-operations.md#10-related-topic-guides)
 
 ---
 

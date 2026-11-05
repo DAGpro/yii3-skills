@@ -16,7 +16,7 @@
 - [6. Distributed Concurrency & Mutex Locks (yiisoft/mutex)](#6-distributed-concurrency--mutex-locks-yiisoftmutex) — full reference in the [Queue Mutex & Distributed Concurrency Guide](infra-queue-mutex.md)
 - [7. Worker CLI Management & Memory Recycling](#7-worker-cli-management--memory-recycling)
 - [8. Multi-Queue Configuration & Broker Adapters](#8-multi-queue-configuration--broker-adapters) — full reference in the [Queue Broker Adapters Guide](infra-queue-brokers.md)
-- [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
+- [9. Anti-Pattern Matrix](persistence-migrations-operations.md#9-anti-pattern-matrix)
 
 ---
 

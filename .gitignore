@@ -1,17 +1,18 @@
+# Dependencies / build output
 node_modules/
 vendor/
 
+# Local helper files
 package.json
-.idea/
-.vscode/
-.osp/
 
-.devin/
-.gemini/
-.opencode/
-.agents/
-.ai-factory/
-.zcode/
+# Editors, AI assistants, and agent tooling: every root-level dot-directory
+# is local-only by default, so a new tool never needs a new rule. Negate
+# here anything the repository actually tracks.
+/.*/
+!/.github/
 
-/references/
-anthropic-skills-guide*.md
+# Root-level local dot-files (assistant / MCP state)
+/.*.json
+
+/references/*
+!/references/README.md

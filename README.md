@@ -55,6 +55,10 @@ Ask the agent (in a Yii 3 project): *"Add a comment to a post"* — expected beh
 
 The 130 `yiisoft/*` package clones under `references/` (at the extension repository root) are the offline source of truth used to author and re-verify the guides. Authoring rules, grounding protocol, and the synchronization cascade (SKILL.md ↔ package catalog ↔ injections ↔ manifests) are defined in [AGENTS.md](AGENTS.md).
 
+## Contributing
+
+Ground rules, the synchronization cascade, and the quality gate for changes are described in [CONTRIBUTING.md](CONTRIBUTING.md); the full project constitution lives in [AGENTS.md](AGENTS.md).
+
 ## License
 
 MIT

@@ -92,7 +92,7 @@ The repository is strictly divided into **Distributable Deliverables** and **Int
 
 | **Authoring References** | `references/` *(130 repos)*, `PACKAGES.md` (package navigation index) | Offline source of truth for APIs and doc examples; the index telling agents which packages to study per task | `references/` does not exist; `PACKAGES.md` is not used by target agents |
 
-| **Internal Workflows & Rules** | `.agent/`, `.agents/`, `AGENTS.md`, `anthropic-skills-guide*.md` | AI Factory workflow engines, constitution, and spec references for developing *this* repo | Target uses its own installed AI Factory skills/workflows |
+| **Internal Workflows & Rules** | `.agent/`, `.agents/`, `AGENTS.md`, `.docs/` (local spec references) | AI Factory workflow engines, constitution, and spec references for developing *this* repo | Target uses its own installed AI Factory skills/workflows |
 
 | **IDE Adapters & Tooling** | `.cursor/`, `.gemini/`, `.devin/`, `.opencode/` | Multi-environment development configurations and linters | Not distributed to end-user applications |
 

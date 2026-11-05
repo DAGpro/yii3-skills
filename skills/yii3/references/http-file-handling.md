@@ -287,7 +287,7 @@ No `yiisoft/*` package wraps the upload flow. The idiomatic pipeline:
    validates string paths, `SplFileInfo`, and PSR-7 `UploadedFileInterface` values. The complete constructor with
    all message parameters, size/exclusivity and upload-error traps, the `trustClientMediaType` warning, and
    string-keyed validation-call semantics are owned by the
-   [Validation & Forms Guide, §5.1](http-validation-and-forms.md#51-file-rule--safe-post-validation-storage).
+   [Validation & Forms Guide, §5.1](http-validation-advanced.md#51-file-rule--safe-post-validation-storage).
 
 3. **Move** — check `$uploaded->getError() === UPLOAD_ERR_OK` first (PSR-7; the `File` rule already reports
    non-OK codes as validation errors), then persist with `$uploadedFile->moveTo($destination)`. Build the
@@ -306,7 +306,7 @@ For a list of uploads apply the `File` / `Image` rules to every element with `Yi
 
 > [!TIP]
 > **Multi-File Validation Reference:**
-> For the complete multi-file recipe (DTO attribute usage with `#[Each]`, count limits, per-element checks), see the [Validation & Forms Guide, §5.3](http-validation-and-forms.md#53-validating-psr-7-uploadedfileinterface--multi-file-collections).
+> For the complete multi-file recipe (DTO attribute usage with `#[Each]`, count limits, per-element checks), see the [Validation & Forms Guide, §5.3](http-validation-advanced.md#53-validating-psr-7-uploadedfileinterface--multi-file-collections).
 
 ### 4.2. Image Dimension Rules (`Rule\Image\Image`)
 
@@ -314,7 +314,7 @@ For a list of uploads apply the `File` / `Image` rules to every element with `Yi
 
 > [!TIP]
 > **Image Rule Reference:**
-> For the complete `Image` / `ImageAspectRatio` usage (DTO attribute example, constructor options, and dimension traps), see the [Validation & Forms Guide, §5.2](http-validation-and-forms.md#52-image--aspect-ratio-rules-ruleimageimage-imageaspectratio).
+> For the complete `Image` / `ImageAspectRatio` usage (DTO attribute example, constructor options, and dimension traps), see the [Validation & Forms Guide, §5.2](http-validation-advanced.md#52-image--aspect-ratio-rules-ruleimageimage-imageaspectratio).
 
 ## 5. Placement & Wiring
 

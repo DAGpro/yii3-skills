@@ -491,7 +491,7 @@ $uploadedFile = $request->getUploadedFiles()['avatar'] ?? null;
 
 > [!TIP]
 > **File Upload Reference:**
-> For the complete reference on `File` / `Image` validation rules and safe post-validation storage, see the [Validation & Forms Guide, §5](http-validation-and-forms.md#5-file--image-validation); for the upload pipeline and storage/wiring placement, see the [File Handling Guide, §4](http-file-handling.md#4-file-uploads-psr-7--validator) and [§5](http-file-handling.md#5-placement--wiring).
+> For the complete reference on `File` / `Image` validation rules and safe post-validation storage, see the [Validation & Forms Guide, §5](http-validation-advanced.md#5-file--image-validation); for the upload pipeline and storage/wiring placement, see the [File Handling Guide, §4](http-file-handling.md#4-file-uploads-psr-7--validator) and [§5](http-file-handling.md#5-placement--wiring).
 
 ---
 
@@ -680,6 +680,6 @@ Deprecation-sensitive and error-prone APIs, verified against installed package s
 | 15 | Upload contract is PSR-7 | `UploadedFileInterface` comes from `psr/http-message` (NOT `yiisoft/http`, which only ships header/status/method classes); `moveTo()` and temp-file semantics are PSR-7 contract — verify against `vendor/psr/http-message/` | `vendor/yiisoft/validator/src/Rule/File.php` |
 | 16 | Active Record `tableName()` | Non-static instance method (`public function tableName(): string`); overriding is optional (`{{%snake_case}}` derived from the class short name). A stale `public static` docblock example inside the package's `ActiveRecord.php` must not be copied. `save()` returns `void` | `vendor/yiisoft/active-record/src/` |
 | 17 | Dispatch is synchronous | PSR-14 listeners run inline before `dispatch()` returns (no outbox/deferral) — this is why the post-commit invariant in §4 matters | `vendor/yiisoft/event-dispatcher/src/Dispatcher/Dispatcher.php` |
-| 18 | form-model strict fill | Only properties carrying validation rules are populated from request data by default — `#[Safe]` opts a property out. Hydration & mass-assignment details: [Validation & Forms Guide, §8.2](http-validation-and-forms.md#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection) | `vendor/yiisoft/form-model/src/FormHydrator.php` |
+| 18 | form-model strict fill | Only properties carrying validation rules are populated from request data by default — `#[Safe]` opts a property out. Hydration & mass-assignment details: [Validation & Forms Guide, §8.2](http-forms-and-hydration.md#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection) | `vendor/yiisoft/form-model/src/FormHydrator.php` |
 | 19 | Views are not auto-escaped | Template output is NOT escaped automatically — escape with `Html::encode()`. Escaping catalog: [Views & Widgets Guide, §4](http-views-and-widgets.md#4-mandatory-xss-escaping--safe-html-yiisofthtmlhtml) | `vendor/yiisoft/view/` (docs: use-in-web-environment) |
 | 20 | Event config fails late | Config-format errors throw at build time, but bad listener definitions pass config build and fail at dispatch — run `ListenerConfigurationChecker::check()` in development (timing details: [Events & Listeners Guide](core-events-and-listeners.md), section 4.3) | `vendor/yiisoft/yii-event/src/ListenerConfigurationChecker.php` |

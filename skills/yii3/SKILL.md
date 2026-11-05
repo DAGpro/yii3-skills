@@ -134,7 +134,7 @@ Load only the archetype's guides:
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` |
 | **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` |
 | **i18n** | `references/http-i18n-translation.md` | `references/http-routes-url-and-middleware.md`<br>`references/core-di-and-config.md` |
-| **OpenAPI / Swagger** | `references/http-openapi-swagger.md` | `references/http-routes.md` |
+| **OpenAPI / Swagger** | `references/http-openapi-setup.md`<br>`references/http-openapi-endpoints.md` | `references/http-routes.md`<br>`references/http-openapi-ui-and-ops.md` |
 | **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md` |
 | **Active Record** | `references/persistence-active-record.md` | `references/persistence-db.md`<br>`references/persistence-migrations.md` |
 | **Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-state-resetter.md` |
@@ -161,7 +161,10 @@ Load only the archetype's guides:
 - `references/http-routes-url-and-middleware.md` — route middleware ordering, URL generation, file routing
 - `references/http-middlewares.md` — PSR-15 pipeline, official middleware catalog
 - `references/http-actions-and-controllers.md` — request parsing, DTO hydration, data-response
-- `references/http-openapi-swagger.md` — OpenAPI generation, Swagger UI
+- `references/http-openapi-swagger.md` — split index: anti-patterns, related guides
+- `references/http-openapi-setup.md` — architecture, installation, DI params, serving documentation
+- `references/http-openapi-endpoints.md` — PHP 8 attribute annotations, multi-version API docs
+- `references/http-openapi-ui-and-ops.md` — CLI spec generator, Swagger UI customization, env protection & caching
 - `references/http-validation-and-forms.md` — split index: decision matrix, anti-pattern matrix, related guides
 - `references/http-validation-rules.md` — validator package architecture, core engine, declaring rules
 - `references/http-validation-advanced.md` — custom rules, file/image validation, cross-property, messages & i18n

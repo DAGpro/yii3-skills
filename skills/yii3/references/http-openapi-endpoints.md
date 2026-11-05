@@ -551,7 +551,7 @@ final readonly class CreateProductAction
 > **Request Parsing & Validation Reference:**
 > For the complete reference on the manual hydrate → validate → 422 loop and the RFC 7807
 > `ValidationProblemDetailsResponder` (which serializes `invalid-params` as a path-indexed map via
-> `getErrorMessagesIndexedByPath()`), see the [Actions & Controllers Guide, §3.2 — Request Parsing & DTO Hydration](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator) and [§3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-and-controllers.md#5-rfc-7807-problem-details-error-responder).
+> `getErrorMessagesIndexedByPath()`), see the [Actions & Controllers Guide, §3.2 — Request Parsing & DTO Hydration](http-actions-core.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator) and [§3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-core.md#5-rfc-7807-problem-details-error-responder).
 
 ### 5.7. File Uploads (`multipart/form-data`)
 
@@ -752,7 +752,7 @@ final readonly class ProblemDetails
 > `Result::getErrorMessagesIndexedByPath()`, e.g. `{"sku": "SKU must be uppercase alphanumeric with dashes."}` —
 > not as a list of `{name, reason}` objects. The object-list items modeled above are a **custom-shape
 > variant**, not the framework default; only commit to them deliberately across the whole API.
-> For the canonical responder, see the [Actions & Controllers Guide, §3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-and-controllers.md#5-rfc-7807-problem-details-error-responder).
+> For the canonical responder, see the [Actions & Controllers Guide, §3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-core.md#5-rfc-7807-problem-details-error-responder).
 
 ---
 

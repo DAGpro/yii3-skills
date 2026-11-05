@@ -958,7 +958,7 @@ if (!$this->currentUser->can('posts.editOwn', ['authorId' => $post->getAuthorId(
 
 > [!TIP]
 > **Action Authorization Reference:**
-> For the complete reference on authentication and authorization in presentation actions — guest/401 handling, the full `can()` signature (`can(string|BackedEnum $permissionName, array $params = []): bool`), and the "no access checker attached → `can()` always returns `false`" trap — see the [Actions & Controllers Guide, §3.8 "Authentication & Authorization"](http-actions-and-controllers.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt).
+> For the complete reference on authentication and authorization in presentation actions — guest/401 handling, the full `can()` signature (`can(string|BackedEnum $permissionName, array $params = []): bool`), and the "no access checker attached → `can()` always returns `false`" trap — see the [Actions & Controllers Guide, §3.8 "Authentication & Authorization"](http-actions-concerns.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt).
 
 ### 9.2. In Application Services / Use Cases (`AccessCheckerInterface`)
 

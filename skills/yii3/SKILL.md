@@ -125,9 +125,9 @@ Load only the archetype's guides:
 
 | Task Archetype | Primary Guides | Secondary |
 |---|---|---|
-| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db-connection-and-queries.md`<br>`references/infra-error-handling-web.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
+| **REST API Endpoint / CRUD** | `references/http-actions-core.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db-connection-and-queries.md`<br>`references/infra-error-handling-web.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
 | **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` |
-| **HTML UI / Forms / Grid** | `references/http-views.md`<br>`references/http-widgets-and-assets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
+| **HTML UI / Forms / Grid** | `references/http-views.md`<br>`references/http-widgets-and-assets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-concerns.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
 | **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-state.md`<br>`references/infra-auth-jwt.md`<br>`references/infra-auth-oauth2.md`<br>`references/infra-rbac-storage.md` |
 | **Database & Schema Migrations** | `references/persistence-migrations-schema.md`<br>`references/persistence-migrations-operations.md`<br>`references/persistence-db-connection-and-queries.md` | `references/core-di-and-config.md`<br>`references/persistence-caching.md` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` |
@@ -162,7 +162,9 @@ Load only the archetype's guides:
 - `references/http-routes-definition.md` — route syntax & verb classes, FastRoute patterns, groups, route arguments
 - `references/http-routes-url-and-middleware.md` — route middleware ordering, URL generation, file routing
 - `references/http-middlewares.md` — PSR-15 pipeline, official middleware catalog
-- `references/http-actions-and-controllers.md` — request parsing, DTO hydration, data-response
+- `references/http-actions-and-controllers.md` — split index: anti-pattern matrix, related guides
+- `references/http-actions-core.md` — action principles, route args, DTO hydration, validation, REST responses
+- `references/http-actions-concerns.md` — web views, downloads, pagination, auth, sessions, i18n, dispatching
 - `references/http-openapi-swagger.md` — split index: anti-patterns, related guides
 - `references/http-openapi-setup.md` — architecture, installation, DI params, serving documentation
 - `references/http-openapi-endpoints.md` — PHP 8 attribute annotations, multi-version API docs

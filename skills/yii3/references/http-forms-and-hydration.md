@@ -152,7 +152,7 @@ final class ContactForm extends FormModel
 #### 2. Web Form Architecture & Presentation Boundaries
 
 In Yii 3, `FormModel` strictly defines the **data structure and validation constraints**, while execution and rendering belong to their respective layers:
-- **Action Controller & PRG Flow:** Handling POST submission, flash messages, and `UrlGeneratorInterface` redirects is owned by the [Actions & Controllers Guide, §3.5](http-actions-and-controllers.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
+- **Action Controller & PRG Flow:** Handling POST submission, flash messages, and `UrlGeneratorInterface` redirects is owned by the [Actions & Controllers Guide, §3.5](http-actions-concerns.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
 - **View Template & Widget Rendering:** Opening forms with CSRF (`Html::form()->post()->csrf($csrf)->open()`), field widget binding (`Field::text($form, 'name')`), and Bootstrap 5/Bulma theming are owned by the [Views & Widgets Guide, §8](http-widgets-and-assets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform).
 
 ---
@@ -402,4 +402,4 @@ In Yii 3, HTTP request inputs are mapped directly into action parameters and DTO
 
 > [!TIP]
 > **Action Parameter Mapping & Problem Details Reference:**
-> For the complete reference on parameter attributes (`#[Body]`, `#[Query]`, `#[Request]`, `#[UploadedFiles]`), direct action parameter resolution via `HydratorAttributeParametersResolver`, exception-driven validation (`throwInputValidationException`), and RFC 7807 Problem Details error responders, see the [HTTP Actions & Controllers Guide, §3.2](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator).
+> For the complete reference on parameter attributes (`#[Body]`, `#[Query]`, `#[Request]`, `#[UploadedFiles]`), direct action parameter resolution via `HydratorAttributeParametersResolver`, exception-driven validation (`throwInputValidationException`), and RFC 7807 Problem Details error responders, see the [HTTP Actions & Controllers Guide, §3.2](http-actions-core.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator).

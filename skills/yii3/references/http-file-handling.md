@@ -227,7 +227,7 @@ return $this->downloads->sendStreamAsFile(
 
 > [!TIP]
 > **Download Action Reference:**
-> For action-layer wiring of `DownloadResponseFactory` (constructor injection, repository lookups, 404 handling for missing files), see the [Actions & Controllers Guide, §3.6](http-actions-and-controllers.md#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp).
+> For action-layer wiring of `DownloadResponseFactory` (constructor injection, repository lookups, 404 handling for missing files), see the [Actions & Controllers Guide, §3.6](http-actions-concerns.md#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp).
 
 ### 3.2. x-Sendfile Support
 
@@ -279,7 +279,7 @@ No `yiisoft/*` package wraps the upload flow. The idiomatic pipeline:
 1. **Extract** — uploaded files arrive as `Psr\Http\Message\UploadedFileInterface` (PSR-7) from
    `$request->getUploadedFiles()` or via the `#[UploadedFiles]` parameter attribute from `yiisoft/input-http`
    (the attribute's type-hint-based mapping semantics are owned by the
-   [Actions & Controllers Guide, §3.2](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator)).
+   [Actions & Controllers Guide, §3.2](http-actions-core.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator)).
    Native `$_FILES` arrays are **not** accepted by the validator — convert to PSR-7 upload objects first;
    `php://input` body streams are not supported either.
 2. **Validate** — apply `Yiisoft\Validator\Rule\File` (extensions, MIME, size) and/or
@@ -298,7 +298,7 @@ No `yiisoft/*` package wraps the upload flow. The idiomatic pipeline:
 
 > [!TIP]
 > **Upload Action Reference:**
-> For the canonical upload action (validation call, HTTP 422 error payload via `getErrorMessagesIndexedByPath()`, use-case dispatch with `DataResponseFactoryInterface`), see the [Actions & Controllers Guide, §3.2](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator).
+> For the canonical upload action (validation call, HTTP 422 error payload via `getErrorMessagesIndexedByPath()`, use-case dispatch with `DataResponseFactoryInterface`), see the [Actions & Controllers Guide, §3.2](http-actions-core.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator).
 
 ### 4.1. Multi-File Upload (`Each`)
 

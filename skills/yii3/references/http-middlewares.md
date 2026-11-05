@@ -238,7 +238,7 @@ public function __invoke(ServerRequestInterface $request): ResponseInterface
 > **Actions & Controllers Reference:**
 > For the complete action-layer recipes on authentication and authorization (login/logout actions, guarding route
 > groups, identity injection into action signatures, and permission checks), see the
-> [Actions & Controllers Guide, §3.8 "Authentication & Authorization"](http-actions-and-controllers.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt).
+> [Actions & Controllers Guide, §3.8 "Authentication & Authorization"](http-actions-concerns.md#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt).
 
 ---
 

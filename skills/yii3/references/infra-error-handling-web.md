@@ -380,7 +380,7 @@ Yii3 ships three built-in non-HTML renderers, all consuming `ThrowableRendererIn
 There is **no** built-in RFC 7807 support: `JsonRenderer` always emits `application/json`, never `application/problem+json`. Implement `ThrowableRendererInterface` yourself to return compliant Problem Details responses.
 
 > [!TIP]
-> **Scope note:** this renderer slice covers uncaught `Throwable`s at the pipeline level. Converting a validation `Result` / `Yiisoft\Input\Http\InputValidationException` into a `422` `application/problem+json` response is the action-layer concern, owned by the [Actions & Controllers Guide, §3.2 "Request Parsing & DTO Hydration"](http-actions-and-controllers.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator) (`ValidationProblemDetailsResponder`).
+> **Scope note:** this renderer slice covers uncaught `Throwable`s at the pipeline level. Converting a validation `Result` / `Yiisoft\Input\Http\InputValidationException` into a `422` `application/problem+json` response is the action-layer concern, owned by the [Actions & Controllers Guide, §3.2 "Request Parsing & DTO Hydration"](http-actions-core.md#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator) (`ValidationProblemDetailsResponder`).
 
 > [!IMPORTANT]
 > `Yiisoft\ErrorHandler\ErrorData` holds string content and headers. It implements `\Stringable`.

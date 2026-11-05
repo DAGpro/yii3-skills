@@ -27,7 +27,7 @@ return $this->viewRenderer->render('user/profile', [
 
 > [!TIP]
 > **Action Handler Wiring Reference:**
-> For the complete reference on injecting `WebViewRenderer` into action handlers, resolving route arguments, handling 404 branches, and chaining `->withStatus()` on the returned response, see the [Actions & Controllers Guide, §3.5](http-actions-and-controllers.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
+> For the complete reference on injecting `WebViewRenderer` into action handlers, resolving route arguments, handling 404 branches, and chaining `->withStatus()` on the returned response, see the [Actions & Controllers Guide, §3.5](http-actions-concerns.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
 
 ### 1.2. Key `WebViewRenderer` API Methods
 
@@ -47,7 +47,7 @@ return $this->viewRenderer->render('user/profile', [
 
 > [!TIP]
 > **HTTP Status Chaining Reference:**
-> For chaining `->withStatus()` on the returned `ResponseInterface` inside action handlers, see the [Actions & Controllers Guide, §3.5](http-actions-and-controllers.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
+> For chaining `->withStatus()` on the returned `ResponseInterface` inside action handlers, see the [Actions & Controllers Guide, §3.5](http-actions-concerns.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
 
 ### 1.3. Template Placement: Colocation (Style A) vs Centralized (Style B)
 

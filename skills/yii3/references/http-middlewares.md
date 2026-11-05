@@ -7,6 +7,9 @@
 
 ---
 
+> **TL;DR:** PSR-15 pipeline architecture (§1); implementation recipes (§2); the official Yii3 middleware catalog (§3); registration scopes & pipeline ordering (§4); accepted definition formats (§5).
+> **Read in full when:** implementing a custom middleware, debugging execution order, or wiring definitions into the DI pipeline.
+
 ## Table of Contents
 - [1. PSR-15 Specification & Pipeline Architecture](#1-psr-15-specification--pipeline-architecture)
   - [1.1. Pipeline Flow (The Onion Model)](#11-pipeline-flow-the-onion-model)

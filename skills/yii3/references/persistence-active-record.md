@@ -9,6 +9,9 @@
 
 ---
 
+> **TL;DR:** Model definition with typed properties (§2); `ActiveQuery` engine (§3); lifecycle, mutations & concurrency (§4); relations (§5); eager loading & N+1 prevention with `LazyLoadGuard` (§6).
+> **Read in full when:** implementing Active Record models end-to-end, or deciding AR vs plain DB vs Cycle (see also §1 and the persistence strategy rules in core-feature-recipes.md §4).
+
 ## Table of Contents
 - [1. Clean Architecture Persistence with Active Record](#1-clean-architecture-persistence-with-active-record)
   - [1.1. Architecture Placement & Boundary Separation](#11-architecture-placement--boundary-separation)

@@ -7,6 +7,9 @@
 
 ---
 
+> **TL;DR:** Layer boundaries & runner selection (§1–§2); ready-made PSR test doubles from `yiisoft/test-support` (§3); mocking rules & AI pitfalls (§4); unit-testing use cases, validation, fixtures & state isolation (§5).
+> **Read in full when:** designing the project's test architecture, choosing a runner, or writing domain/use-case unit tests with mocks.
+
 ## Table of Contents
 - [1. Testing Pyramid & Layer Boundaries](#1-testing-pyramid--layer-boundaries)
 - [2. Test Runner Ecosystem & Quality Gates](#2-test-runner-ecosystem--quality-gates)

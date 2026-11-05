@@ -13,6 +13,9 @@ Requiring `yiisoft/yii-runner-console` alone is sufficient — it pulls in `yiis
 
 ---
 
+> **TL;DR:** Command class anatomy & constructor injection (§2); arguments & options (§3); lazy registration in `config/console/params.php` (§4); `SymfonyStyle` terminal UX (§5); `ExitCode` (§6).
+> **Read in full when:** writing a new console command end-to-end or registering it (the per-step wiring gate points here).
+
 ## Table of Contents
 - [1. Console Architecture & Presentation Layer Principle](#1-console-architecture--presentation-layer-principle)
 - [2. Command Class Anatomy & Constructor Injection](#2-command-class-anatomy--constructor-injection)

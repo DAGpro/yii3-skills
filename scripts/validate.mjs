@@ -188,8 +188,8 @@ function collectHeadingAnchors(text) {
 function checkAnchors(absPath, text, anchorsCache) {
   const dir = dirname(absPath);
   const combined = [
-    ...text.matchAll(/\]\((?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[^)\s]+)\)/g),
-    ...text.matchAll(/`(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[A-Za-z0-9._-]+)`/g),
+    ...text.matchAll(/\]\(((?:references\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[^)\s]+)\)/g),
+    ...text.matchAll(/`((?:references\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[A-Za-z0-9._-]+)`/g),
   ];
   const seen = new Set();
   for (const match of combined) {

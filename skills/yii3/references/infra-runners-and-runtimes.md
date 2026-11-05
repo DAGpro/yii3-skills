@@ -7,6 +7,9 @@
 
 ---
 
+> **TL;DR:** Runner architecture & lifecycle events (§1); the standard HTTP runner (§2); console runner (§3); runtime comparison matrix (§7). Worker runtimes and state safety are child guides (§4–§6 pointers below).
+> **Read in full when:** choosing or configuring the application entry point (web vs console vs worker) or debugging application lifecycle events.
+
 ## Table of Contents
 - [1. Application Runner Architecture & Lifecycle](#1-application-runner-architecture--lifecycle)
   - [1.1. Decoupled Bootstrapping & Runner Hierarchy](#11-decoupled-bootstrapping--runner-hierarchy)

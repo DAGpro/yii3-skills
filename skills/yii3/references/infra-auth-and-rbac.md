@@ -7,6 +7,9 @@
 
 ---
 
+> **TL;DR:** Identity & identity repository implementation (§2); password hashing (§3); stateful session login lifecycle (§4); route protection & RBAC architecture (§7–§8). JWT, OAuth2/OIDC, and storage drivers are child guides (§5, §6, §8.4–8.7 links below).
+> **Read in full when:** wiring a complete login flow or building the RBAC hierarchy; for stateless APIs jump to the child guides first.
+
 ## Table of Contents
 - [1. Authentication Architecture & Core Contracts](#1-authentication-architecture--core-contracts)
 - [2. Identity & Identity Repository Implementation](#2-identity--identity-repository-implementation)

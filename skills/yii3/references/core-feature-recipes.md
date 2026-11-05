@@ -11,6 +11,9 @@
 
 ---
 
+> **TL;DR:** Feature archetypes with complete artifact graphs (§1); authorization protocol (§3); persistence strategy selection (§4); layering & placement rules (§5); the Chain Integrity Checklist (§6); verified pitfalls & deprecations (§7).
+> **Read in full when:** decomposing a new business feature (Full mode) — §1 and §6 are the decomposition contract referenced by SKILL.md Mission Workflow.
+
 ## Table of Contents
 - [1. Feature Archetypes](#1-feature-archetypes)
   - [Archetype A: State-Changing Business Process (e.g., checkout, registration, booking, payment)](#archetype-a-state-changing-business-process-eg-checkout-registration-booking-payment)

@@ -5,7 +5,7 @@
 ## What is inside
 
 - **`skills/yii3/SKILL.md`** — the skill entry point: mode selection (Light vs Full), Stage 0 bootstrap, Mission Workflow (Stages 1–7), Finale with the Chain Integrity checklist, core rules with the Yii 2 ban list, and the task routing matrix.
-- **`skills/yii3/references/`** — 56 topic guides (core/DI/events, HTTP, persistence, infrastructure, testing) plus the runtime package catalog and version-gated behavior notes.
+- **`skills/yii3/references/`** — 78 topic guides (core/DI/events, HTTP, persistence, infrastructure, testing — large topics split into focused subtopic guides with index files) plus the runtime package catalog and version-gated behavior notes.
 - **`injections/*.md`** — thin workflow hooks for AI Factory (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, `aif-architecture`); the skill itself is the single source of rules.
 
 ## Operating modes
@@ -50,6 +50,14 @@ Ask the agent (in a Yii 3 project): *"Add a comment to a post"* — expected beh
    config files changed: config/common/di/post.php, config/common/routes.php
    production readiness gate: pass
    ```
+
+## Known limitations
+
+- **Not a runtime.** The skill generates and reviews code; it does not execute it. Every runtime check (tests, static analysis, migrations) runs through the target project's own toolchain — the skill only prescribes which checks to run.
+- **Grounding scope.** `Yiisoft\...` classes and methods quoted in the guides are verified against the offline clones (`node scripts/check-symbols.mjs`, currently 1384 classes / 437 method pairs confirmed). Claims about **external** dependencies (`symfony/console` attributes) and **PHP language** deprecations are verified via the target project's `composer.lock` / PHP version, not the clones; the `#[Override]` ban ([core-version-notes.md, R10](skills/yii3/references/core-version-notes.md)) is a **convention claim** — no `RemoveOverrideAttributeRector` reference exists in any cloned package source, so treat it as a suggestion unless the project's Rector preset enables it.
+- **Verified package versions.** Guides were grounded against the `master`/stable branches of the 130 `yiisoft/*` clones as of **November 2026** (e.g. router 4.0.3, yii-view-renderer 7.4.x, data-response 2.2.x, log 2.1+). Version-gated behavior is centralized in [`core-version-notes.md`](skills/yii3/references/core-version-notes.md); at runtime, agents must re-verify versions against the target project's `composer.lock` — the clones may drift from what a given project installs.
+- **Standalone vs AI Factory.** Standalone mode resolves plan artifacts itself (`PLAN.md`, `docs/plans|docs/plan/*.md`, or an explicit argument — Stage 0 item 3(a)) and closes its own Finale. It does **not** get `/aif-verify` handoff, `aif-gate-result` merging, or `.ai-factory/config.yaml` path resolution; those exist only in AI Factory mode (see the skill's "AI Factory mode" section).
+- **Out of scope topics.** The skill does not cover: front-end build pipelines (beyond `yiisoft/assets`), GraphQL, third-party non-`yiisoft` package ecosystems beyond the Cycle ORM persistence path, and application-level security hardening beyond the CSRF/auth/RBAC recipes in the guides.
 
 ## Updating the references
 

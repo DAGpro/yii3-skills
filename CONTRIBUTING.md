@@ -75,6 +75,8 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 
 When reporting a wrong API claim or a Yii 2 leak in a guide, point to the file and line, and — if possible — to the exact source that contradicts it (a file under `references/<package>/`, or a live `vendor/yiisoft/` tree from a real project). Evidence-based corrections get merged fastest.
 
+**Every found agent failure becomes a new eval scenario.** If an agent followed the skill and still produced a Yii 2 leak, a hallucinated API, a skipped wiring gate, or a wrong placement — do not just patch the guide: capture the failure as a reproducible eval scenario (task prompt + expected guard/guide behavior + the actual wrong output) and link it in the PR that fixes the rule. A failure fixed only in prose will recur; a failure converted into an eval scenario keeps the whole rule set honest.
+
 ## License
 
 By contributing, you agree that your contributions are licensed under the MIT License stated in [README.md](README.md).

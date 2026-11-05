@@ -262,7 +262,7 @@ The routing-relevant placement invariant is:
 
 > [!TIP]
 > **Canonical Global Pipeline Wiring:**
-> For the canonical `Application::class` / `MiddlewareDispatcher` wiring with the full middleware stack, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp). For the outermost `ErrorCatcher` layer and pipeline ordering, see the [Error Handling Guide, §2](infra-error-handling.md#2-errorcatcher-middleware--pipeline-ordering).
+> For the canonical `Application::class` / `MiddlewareDispatcher` wiring with the full middleware stack, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp). For the outermost `ErrorCatcher` layer and pipeline ordering, see the [Error Handling Guide, §2](infra-error-handling-web.md#2-errorcatcher-middleware--pipeline-ordering).
 
 ### 6.4. Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)
 

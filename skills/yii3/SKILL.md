@@ -125,7 +125,7 @@ Load only the archetype's guides:
 
 | Task Archetype | Primary Guides | Secondary |
 |---|---|---|
-| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db-connection-and-queries.md`<br>`references/infra-error-handling.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
+| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db-connection-and-queries.md`<br>`references/infra-error-handling-web.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
 | **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` |
 | **HTML UI / Forms / Grid** | `references/http-views.md`<br>`references/http-widgets-and-assets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
 | **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-state.md`<br>`references/infra-auth-jwt.md`<br>`references/infra-auth-oauth2.md`<br>`references/infra-rbac-storage.md` |
@@ -213,7 +213,9 @@ Load only the archetype's guides:
 - `references/infra-mailer-transports.md` — transports & DSN
 - `references/infra-mailer-async-queue.md` — async queue sending
 - `references/infra-logging.md` — PSR-3 injection, targets, context providers
-- `references/infra-error-handling.md` — ErrorCatcher, ProblemDetails renderers, Sentry
+- `references/infra-error-handling.md` — split index: anti-pattern matrix, related guides
+- `references/infra-error-handling-web.md` — ErrorCatcher, exception mapping, renderers, friendly/user exceptions
+- `references/infra-error-handling-ops.md` — Sentry monitoring, console error handling, low-level ErrorHandler
 - `references/testing-core.md` — test architecture, PHPUnit canon, PSR test doubles, mocking rules
 - `references/testing-testo.md` — Testo alternative runner
 - `references/testing-codeception.md` — Codeception alternative runner

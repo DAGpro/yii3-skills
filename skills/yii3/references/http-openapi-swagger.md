@@ -1303,7 +1303,7 @@ return [
 
 Copy `vendor/yiisoft/yii-swagger/views/swagger-ui.php` to your application at `views/swagger/swagger-ui.php` and customize the HTML header, corporate logos, or analytics scripts.
 
-Theme path mapping mechanics (`Yiisoft\View\Theme`, `pathMap`) are owned by the [Views & Widgets Guide, §2.4 — Application View Theming](http-views-and-widgets.md#24-application-view-theming-yiisoftviewtheme).
+Theme path mapping mechanics (`Yiisoft\View\Theme`, `pathMap`) are owned by the [Views & Widgets Guide, §2.4 — Application View Theming](http-views.md#24-application-view-theming-yiisoftviewtheme).
 
 ### 8.3. Custom CSS Theme & Dark Mode
 
@@ -1340,7 +1340,7 @@ Register this bundle globally in `config/packages/yiisoft/assets.php` or inside 
 $assetManager->register(\App\Infrastructure\Asset\SwaggerDarkThemeAsset::class);
 ```
 
-Asset bundle declaration (`AssetBundle` properties, `depends`, publishing, CDN with SRI) is owned by the [Views & Widgets Guide, §6.1 — Declaring an Asset Bundle](http-views-and-widgets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
+Asset bundle declaration (`AssetBundle` properties, `depends`, publishing, CDN with SRI) is owned by the [Views & Widgets Guide, §6.1 — Declaring an Asset Bundle](http-widgets-and-assets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
 
 ### 8.4. CDN Asset Serving for Serverless Deployments
 
@@ -1364,7 +1364,7 @@ return [
 ];
 ```
 
-Full `customizedBundles` semantics (overriding and disabling bundles in `params.php`) are documented in the [Views & Widgets Guide, §6.7 — Overriding & Disabling Bundles](http-views-and-widgets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp).
+Full `customizedBundles` semantics (overriding and disabling bundles in `params.php`) are documented in the [Views & Widgets Guide, §6.7 — Overriding & Disabling Bundles](http-widgets-and-assets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp).
 
 ---
 

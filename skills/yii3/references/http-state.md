@@ -405,8 +405,8 @@ Shipped DI (`config/di-web.php`): `CsrfTokenInterface::class` → `MaskedCsrfTok
 Inject `CsrfTokenInterface` (the DI default already includes masking) into the action that renders a form and pass the
 value to the template. Form-side CSRF injection — opening the form with the token and rendering the hidden field — is
 owned by the [Views & Widgets Guide](http-views-and-widgets.md):
-[§5.5](http-views-and-widgets.md#55-csrf-token-object-csrf--injected-security) for the injected `Csrf` view object and
-[§8](http-views-and-widgets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform) for HTML form
+[§5.5](http-views.md#55-csrf-token-object-csrf--injected-security) for the injected `Csrf` view object and
+[§8](http-widgets-and-assets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform) for HTML form
 rendering. Two state-side facts to keep in sync:
 
 - The hidden field name must match the middleware configuration — use the `CsrfTokenMiddleware::PARAMETER_NAME`

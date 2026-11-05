@@ -127,7 +127,7 @@ Load only the archetype's guides:
 |---|---|---|
 | **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes.md` | `references/persistence-db.md`<br>`references/infra-error-handling.md`<br>`references/http-validation-advanced.md` |
 | **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` |
-| **HTML UI / Forms / Grid** | `references/http-views-and-widgets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
+| **HTML UI / Forms / Grid** | `references/http-views.md`<br>`references/http-widgets-and-assets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
 | **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-state.md`<br>`references/infra-auth-jwt.md`<br>`references/infra-auth-oauth2.md`<br>`references/infra-rbac-storage.md` |
 | **Database & Schema Migrations** | `references/persistence-migrations.md`<br>`references/persistence-db.md` | `references/core-di-and-config.md`<br>`references/persistence-caching.md` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` |
@@ -165,7 +165,9 @@ Load only the archetype's guides:
 - `references/http-validation-advanced.md` — custom rules, file/image validation, cross-property, messages & i18n
 - `references/http-forms-and-hydration.md` — FormModel + FormHydrator, ValidatingHydrator, input-http
 - `references/http-validation-custom-rules.md` — custom rules, handlers, DI wiring
-- `references/http-views-and-widgets.md` — view placement, XSS escaping, layouts, assets, widgets
+- `references/http-views-and-widgets.md` — split index: anti-pattern matrix, related guides, child guides
+- `references/http-views.md` — WebViewRenderer pipeline, template anatomy, XSS escaping, layouts, theming
+- `references/http-widgets-and-assets.md` — asset bundles, widgets, CSS-framework drivers, HTML form rendering
 - `references/http-views-twig.md` — Twig renderer, layouts, `WebViewExtension`
 - `references/http-views-bootstrap5.md` — Bootstrap 5 CSS framework widget driver
 - `references/http-views-bulma.md` — Bulma CSS framework widget driver

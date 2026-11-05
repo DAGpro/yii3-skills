@@ -632,7 +632,7 @@ final class ContactForm extends FormModel
 **WebViewRenderer Capabilities:**
 - Full layout rendering: `$this->webViewRenderer->render('contact/index', ['form' => $form])` returns a typed `ResponseInterface` and sets `Content-Type: text/html; charset=UTF-8` (customizable via `withContentType()` / `withEncoding()`).
 - Partial rendering (no layout, for HTMX/AJAX/modals): `$this->webViewRenderer->renderPartial('partial/_modal', [...])`.
-- Custom layout per action: `$this->webViewRenderer->withLayout('@views/layout/blank.php')->render('login', [...])` — for layout path/alias argument semantics and layout configuration, see the [Views, Layouts & Widgets Guide, §1.2](http-views-and-widgets.md#12-key-webviewrenderer-api-methods).
+- Custom layout per action: `$this->webViewRenderer->withLayout('@views/layout/blank.php')->render('login', [...])` — for layout path/alias argument semantics and layout configuration, see the [Views, Layouts & Widgets Guide, §1.2](http-views.md#12-key-webviewrenderer-api-methods).
 - Controller-to-view path mapping: `$this->webViewRenderer->withController($this)` or `->withControllerName('contact')` prefixes relative view names.
 - Setting HTTP status: Call `->withStatus(Status::BAD_REQUEST)` on the **returned `ResponseInterface`**, NOT on the renderer itself (which does not have a `withStatus()` method).
 

@@ -71,7 +71,7 @@ The contrasting Bulma conventions (associative-array items, string class constan
 
 ## 3. Flash Messages with Bootstrap Alerts
 
-The layout lifecycle sequence itself (registering bundles, `beginPage()`/`head()`/`beginBody()`/`endBody()`/`endPage()`) is owned by the [Views & Widgets Guide, §5.1](http-views-and-widgets.md#51-main-layout-structure--lifecycle-sequence). The Bootstrap-flavored flash-message block uses the typed `Yiisoft\Bootstrap5\Alert` widget with the `AlertVariant` enum:
+The layout lifecycle sequence itself (registering bundles, `beginPage()`/`head()`/`beginBody()`/`endBody()`/`endPage()`) is owned by the [Views & Widgets Guide, §5.1](http-views.md#51-main-layout-structure--lifecycle-sequence). The Bootstrap-flavored flash-message block uses the typed `Yiisoft\Bootstrap5\Alert` widget with the `AlertVariant` enum:
 
 Layout file imports:
 
@@ -109,7 +109,7 @@ Flash notifications block:
 
 ## 4. Asset Bundles: BootstrapAsset & CDN with SRI
 
-The package ships two asset bundles under `Yiisoft\Bootstrap5\Assets\`: `BootstrapAsset` (locally published files) and `BootstrapCdnAsset` (CDN URLs with integrity attributes pre-configured). The general `AssetBundle` property reference and publishing pipeline are owned by the [Views & Widgets Guide, §6.1](http-views-and-widgets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
+The package ships two asset bundles under `Yiisoft\Bootstrap5\Assets\`: `BootstrapAsset` (locally published files) and `BootstrapCdnAsset` (CDN URLs with integrity attributes pre-configured). The general `AssetBundle` property reference and publishing pipeline are owned by the [Views & Widgets Guide, §6.1](http-widgets-and-assets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
 
 **Dependency on the Bootstrap bundle.** Application bundles typically declare `BootstrapAsset` as a dependency:
 
@@ -152,7 +152,7 @@ final class BootstrapCdnAsset extends AssetBundle
 
 ## 5. Overriding the Bootstrap Bundle (customizedBundles)
 
-To substitute the local `BootstrapAsset` with an external CDN bundle — or to disable any unwanted third-party bundle — configure `customizedBundles` in `config/params.php` (the full override mechanics and the `customizedBundles` vs `'bundles'` trap are owned by the [Views & Widgets Guide, §6.7](http-views-and-widgets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp)):
+To substitute the local `BootstrapAsset` with an external CDN bundle — or to disable any unwanted third-party bundle — configure `customizedBundles` in `config/params.php` (the full override mechanics and the `customizedBundles` vs `'bundles'` trap are owned by the [Views & Widgets Guide, §6.7](http-widgets-and-assets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp)):
 
 ```php
 declare(strict_types=1);
@@ -201,7 +201,7 @@ return [
 > [!WARNING]
 > Do NOT use `$params['yiisoft/form']['defaultConfig']`. The bootstrap loader checks `$params['yiisoft/form']['defaultTheme']`. Using `defaultConfig` causes an `Undefined array key "defaultTheme"` error.
 
-The general theming mechanics — registering custom themes as `Theme` constructor argument arrays and the `ThemeContainer` lifecycle — are owned by the [Views & Widgets Guide, §8.7](http-views-and-widgets.md#87-centralized-form-theming-themecontainer-themepath-paramsphp).
+The general theming mechanics — registering custom themes as `Theme` constructor argument arrays and the `ThemeContainer` lifecycle — are owned by the [Views & Widgets Guide, §8.7](http-widgets-and-assets.md#87-centralized-form-theming-themecontainer-themepath-paramsphp).
 
 ## 7. Bootstrap-Specific Anti-Patterns
 

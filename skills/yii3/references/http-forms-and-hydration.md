@@ -153,7 +153,7 @@ final class ContactForm extends FormModel
 
 In Yii 3, `FormModel` strictly defines the **data structure and validation constraints**, while execution and rendering belong to their respective layers:
 - **Action Controller & PRG Flow:** Handling POST submission, flash messages, and `UrlGeneratorInterface` redirects is owned by the [Actions & Controllers Guide, §3.5](http-actions-and-controllers.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model).
-- **View Template & Widget Rendering:** Opening forms with CSRF (`Html::form()->post()->csrf($csrf)->open()`), field widget binding (`Field::text($form, 'name')`), and Bootstrap 5/Bulma theming are owned by the [Views & Widgets Guide, §8](http-views-and-widgets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform).
+- **View Template & Widget Rendering:** Opening forms with CSRF (`Html::form()->post()->csrf($csrf)->open()`), field widget binding (`Field::text($form, 'name')`), and Bootstrap 5/Bulma theming are owned by the [Views & Widgets Guide, §8](http-widgets-and-assets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform).
 
 ---
 
@@ -175,7 +175,7 @@ When rendering HTML form fields via `Yiisoft\FormModel\Field::*`, `Yiisoft\FormM
 
 > [!TIP]
 > **Field Widgets, Themes & Pure Fields Reference:**
-> For the complete factory catalog of form inputs (`Field::text`, `Field::select`, `Field::checkboxList`, `Field::radioList`), theme-aware DI with `FieldFactory`, and model-agnostic forms with `PureField`, see the [Views & Widgets Guide, §8](http-views-and-widgets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform).
+> For the complete factory catalog of form inputs (`Field::text`, `Field::select`, `Field::checkboxList`, `Field::radioList`), theme-aware DI with `FieldFactory`, and model-agnostic forms with `PureField`, see the [Views & Widgets Guide, §8](http-widgets-and-assets.md#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform).
 
 ---
 

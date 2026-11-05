@@ -133,7 +133,7 @@ Load only the archetype's guides:
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` |
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` |
 | **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` |
-| **i18n** | `references/http-i18n-translation.md` | `references/http-routes-url-and-middleware.md`<br>`references/core-di-and-config.md` |
+| **i18n** | `references/http-i18n-translation-api.md`<br>`references/http-i18n-storage-and-locale.md` | `references/http-routes-url-and-middleware.md`<br>`references/core-di-and-config.md` |
 | **OpenAPI / Swagger** | `references/http-openapi-setup.md`<br>`references/http-openapi-endpoints.md` | `references/http-routes.md`<br>`references/http-openapi-ui-and-ops.md` |
 | **Events & Listeners** | `references/core-events-design.md` | `references/core-events-reference.md`<br>`references/core-di-and-config.md` |
 | **Active Record** | `references/persistence-active-record.md` | `references/persistence-db-connection-and-queries.md`<br>`references/persistence-migrations-schema.md` |
@@ -182,7 +182,9 @@ Load only the archetype's guides:
 - `references/http-cache-etag.md` — ETag & conditional requests
 - `references/http-state.md` — sessions, flash, cookies, CSRF wiring
 - `references/http-file-handling.md` — FileHelper, downloads, uploads
-- `references/http-i18n-translation.md` — translator API, message storage, locale routing
+- `references/http-i18n-translation.md` — split index: anti-pattern matrix, related guides
+- `references/http-i18n-translation-api.md` — package map, translator API, categories, formatters
+- `references/http-i18n-storage-and-locale.md` — storage backends, extraction, locale routing & events, testing
 
 ### Persistence & Data
 - `references/persistence-db.md` — split index: anti-pattern matrix, related guides

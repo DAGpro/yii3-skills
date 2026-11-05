@@ -311,7 +311,7 @@ return [
 
 > [!TIP]
 > **Locale Resolution Reference:**
-> For the complete locale resolution mechanics — the 4-stage resolution priority (URL path prefix → `_language` query parameter → cookie → `Accept-Language`), cookie/header gating, `SetLocaleEvent` translator synchronization, the constructor signature, and DI registration — see the [I18n & Translation Guide, §6.2 "Locale Middleware (`yii-middleware`)"](http-i18n-translation.md#62-locale-middleware-yii-middleware).
+> For the complete locale resolution mechanics — the 4-stage resolution priority (URL path prefix → `_language` query parameter → cookie → `Accept-Language`), cookie/header gating, `SetLocaleEvent` translator synchronization, the constructor signature, and DI registration — see the [I18n & Translation Guide, §6.2 "Locale Middleware (`yii-middleware`)"](http-i18n-storage-and-locale.md#62-locale-middleware-yii-middleware).
 
 ### 6.5. Declarative Route Redirects (`Yiisoft\Yii\Middleware\Redirect`)
 

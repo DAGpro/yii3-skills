@@ -21,11 +21,12 @@ Pick and print the mode at Stage 0.
 
 ## AI Factory mode
 
-Integration specifics live here; the rest reads without them.
+Integration specifics live here; the rest of the skill is mode-neutral. "External workflow" means the skill was loaded by a workflow step (an `aif-*` command or any other automation) rather than invoked directly by the user.
 
-- The skill was loaded by the `yii3` injection inside an `aif-*` workflow: Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present, architecture artifact, rules file — never redo).
-- `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked.
-- The Finale hands control to `/aif-verify` (findings merge into `aif-gate-result`); Standalone closes it.
+- The skill was loaded by the `yii3` injection inside an `aif-*` workflow: Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present — including the configured plans directory — architecture artifact, rules file; never redo).
+- `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked. This is the non-interactive contract; the same behavior applies to any external workflow that cannot ask questions.
+- Plan artifacts: an external workflow supplies the active plan from its own configured plans location; without it, Stage 0 falls back to the standalone resolution order in item 3(a).
+- The Finale hands control to `/aif-verify` (findings merge into `aif-gate-result`); a direct invocation closes the Finale itself.
 
 ## Stage 0 — Mission Bootstrap
 
@@ -37,7 +38,7 @@ Run first, in every mode. If the target project's `composer.json` contains no `y
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages — re-anchor SSOT (Core rule 2), check against `references/package-catalog.md`.
 2. **Cross-milestone consistency:** past milestones fixed the stack — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
 3. **Lifecycle position** — detect and print one of:
-   - **(a) Plan task:** a plan artifact of the current milestone exists → execute the task per its phases (6-phase contract, see Mission Workflow).
+   - **(a) Plan task:** a plan artifact exists → execute the task per its phases (6-phase contract, see Mission Workflow). Resolution order, first match wins — print the chosen path: (1) a plan file explicitly passed by the user or the invoking command (argument, path, or link); (2) `PLAN.md` at the project root; (3) the most recently modified `*.md` under `docs/plans/` or `docs/plan/`. Nothing matched → treat as (b). An external workflow overrides this with its own plan location (see AI Factory mode).
    - **(b) Standalone feature** → full Mission Workflow route.
    - **(c) Bug / diagnostics:** root-cause checklist, in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. No Yii2 facade workarounds.
 4. **Archetype & mode:** classify the task via the Task & Intent Routing Matrix; print `Light` or `Full`.
@@ -92,7 +93,7 @@ Run after the last stage, in every mode.
    | **Implementation patterns** — transactions, events, thin actions, DTOs | Skill guides (`references/*.md`); project divergence = `legacy drift` — flag, never copy. |
    | **Project conventions** — namespaces, layout, naming, chosen DB/cache/queue drivers | Architecture artifact when present; else dominant style of existing `src/` — new code continues it. |
 
-   **Conflict rule:** a project convention that contradicts a guide wins unless correctness or security is violated (e.g. event dispatch inside a transaction) — then follow the guide and, outside `HANDOFF_MODE`, ask the user first. Record every divergence in the report.
+   **Conflict rule:** a project convention that contradicts a guide wins unless correctness or security is violated (e.g. event dispatch inside a transaction) — then follow the guide and, in interactive runs, ask the user first (inside an external workflow, record the decision and continue; see AI Factory mode). Record every divergence in the report.
 3. **Placement:** per `references/core-architecture-alignment.md`; a resolved architecture artifact overrides guide defaults. Existing `src/` + `config/` are drift checks for rows 1–2 and the convention source for row 3.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
 

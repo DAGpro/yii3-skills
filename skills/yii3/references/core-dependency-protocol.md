@@ -66,7 +66,7 @@ Clear boundaries govern when an agent may install dependencies autonomously vers
                            YES            NO
                            /               \
             Has architectural impact?     MUST ASK USER
-             (ORM, DB engine, template)   (or BLOCKED in HANDOFF_MODE)
+             (ORM, DB engine, template)   (or BLOCKED in non-interactive mode)
                    /             \
                  YES              NO
                  /                 \
@@ -95,9 +95,9 @@ The three persistence architectures in Yii 3 are mutually distinct and cannot be
 | **Cycle ORM** | `yiisoft/yii-cycle`<br>`cycle/orm`<br>`cycle/annotated`<br>`cycle/migrations`<br>`yiisoft/data-cycle`<br>`yiisoft/rbac-cycle-db` | Plain PHP classes with attributes `#[Entity]`, `#[Column]`. | `$em->persist($user);`<br>`$em->run();` |
 | **Plain DB** | `yiisoft/db`<br>`yiisoft/db-<driver>`<br>`yiisoft/db-migration`<br>`yiisoft/data-db`<br>`yiisoft/rbac-db` | Plain PHP DTOs or arrays; queries written via query builder. | `$db->createCommand(...)`<br>`$query->from('user')->all();` |
 
-### 2.2. Autonomous Mode Invariants (`HANDOFF_MODE=1`)
+### 2.2. Autonomous Mode Invariants (non-interactive runs)
 
-When executing in an unattended pipeline or autonomous runner (`HANDOFF_MODE=1`):
+When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see SKILL.md, "AI Factory mode"):
 
 1. **Never Prompt:** Do not emit interactive clarification prompts.
 2. **Follow Existing Stack:** Adopt whatever architecture is already present in `composer.json` and `config/`.
@@ -154,7 +154,7 @@ Yii 3 applications rely on Composer plugins during build and autoload dumping. T
 >
 > If Composer prompts to trust an unknown plugin:
 > - In **interactive mode**, request user authorization.
-> - In **autonomous mode (`HANDOFF_MODE=1`)**, do not approve unknown plugins silently; transition task to `blocked`.
+> - In **autonomous (non-interactive) mode**, do not approve unknown plugins silently; transition task to `blocked`.
 
 ### 3.4. Version Conflict Diagnostics
 

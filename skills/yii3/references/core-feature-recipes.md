@@ -591,10 +591,10 @@ When a Use Case involves both database mutation and Domain Events:
 
 ## 5. Layering & Directory Placement Rules
 
-Match the project's architecture style (discovered from `.ai-factory/ARCHITECTURE.md` or existing `src/`):
+Match the project's architecture style (the resolved architecture artifact, else the dominant existing `src/` style — SKILL.md Core rule 3):
 
 **Choosing a style (decision rule):**
-1. If the target `.ai-factory/ARCHITECTURE.md` prescribes a layout, follow it — it is the supreme structural authority.
+1. If a resolved architecture artifact prescribes a layout, follow it — it is the supreme structural authority.
 2. Otherwise match the dominant existing `src/` layout: one module, one style; never mix styles within the same module/context (mirrors the persistence rule in §4).
 3. Greenfield: Style 1 (vertical slice) is common in modern Yii3 apps; Style 2 suits larger teams with strict layer boundaries.
 

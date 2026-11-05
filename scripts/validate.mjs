@@ -156,10 +156,129 @@ function checkCatalogConsistency(skillDir) {
   }
 }
 
+// GitHub-style heading slug: lowercase, strip punctuation except letters,
+// digits, underscores, spaces, and hyphens, then replace spaces with hyphens.
+// Handles the GitHub duplicate-suffix rule (second occurrence gets `-1`).
+function githubSlugify(text) {
+  return text
+    .trim()
+    .replace(/#+$/, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}_\s-]/gu, '')
+    .replace(/\s/g, '-');
+}
+
+function collectHeadingAnchors(text) {
+  const anchors = new Set();
+  const seen = new Map();
+  for (const match of text.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)) {
+    const base = githubSlugify(match[1]);
+    if (base === '') continue;
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    anchors.add(n === 0 ? base : `${base}-${n}`);
+  }
+  return anchors;
+}
+
+// Anchor links are recognized in two forms:
+//  1. markdown links: [text](file.md#anchor) / [text](references/file.md#anchor)
+//  2. backticked tokens: `references/file.md#anchor`
+// Targets resolve relative to the directory of the referencing file.
+function checkAnchors(absPath, text, anchorsCache) {
+  const dir = dirname(absPath);
+  const combined = [
+    ...text.matchAll(/\]\((?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[^)\s]+)\)/g),
+    ...text.matchAll(/`(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[A-Za-z0-9._-]+)`/g),
+  ];
+  const seen = new Set();
+  for (const match of combined) {
+    const targetName = match[1];
+    const anchor = match[2].slice(1);
+    const key = `${targetName}#${anchor}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const targetPath = join(dir, targetName);
+    if (!existsSync(targetPath)) {
+      err(displayPath(absPath), lineOf(text, match.index), 'anchor-link', `link target "${targetName}" does not exist`);
+      continue;
+    }
+    if (!anchorsCache.has(targetPath)) {
+      anchorsCache.set(targetPath, collectHeadingAnchors(readText(targetPath)));
+    }
+    if (!anchorsCache.get(targetPath).has(anchor)) {
+      err(displayPath(absPath), lineOf(text, match.index), 'anchor-link', `anchor "#${anchor}" does not exist in ${targetName}`);
+    }
+  }
+}
+
+// The `## References` section is the skill's inventory of its topic guides:
+// every guide file must be listed exactly once, and every listing must be a
+// single-file bullet (`- `references/<name>.md` — description`). This is what
+// catches merged/glued entries like `...network utilities- `references/x.md``.
+function checkReferencesInventory(skillDir, skillMdPath, text) {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => /^##\s+References\b/.test(line));
+  if (start === -1) {
+    err(displayPath(skillMdPath), 0, 'references-inventory', 'no "## References" section found');
+    return;
+  }
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^##\s+/.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  const sectionLines = lines.slice(start, end);
+  const sectionText = sectionLines.join('\n');
+
+  const guidesDir = join(skillDir, 'references');
+  if (!existsSync(guidesDir)) {
+    err(displayPath(skillMdPath), lineOf(text, 0), 'references-inventory', 'references/ directory not found');
+    return;
+  }
+  const bulletPattern = /^- `references\/([A-Za-z0-9][A-Za-z0-9._-]*\.md)` — /;
+  const tokenPattern = /`(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)`/g;
+  const mentioned = new Set();
+  for (let i = 0; i < sectionLines.length; i++) {
+    const line = sectionLines[i];
+    if (!/\.md/.test(line)) continue;
+    if (/^#{1,6}\s+/.test(line) || /^\s*$/.test(line)) continue;
+    if (!bulletPattern.test(line)) {
+      err(displayPath(skillMdPath), start + i + 1, 'references-bullet-format', `listing lines in "## References" must match "- \`references/<name>.md\` — description" (got: ${line.slice(0, 90)})`);
+    }
+    const tokens = [...line.matchAll(tokenPattern)];
+    if (tokens.length !== 1) {
+      err(displayPath(skillMdPath), start + i + 1, 'references-bullet-format', `listing lines in "## References" must name exactly one guide file (found ${tokens.length})`);
+    }
+    for (const token of tokens) {
+      const name = token[1].replace(/^references\//, '');
+      mentioned.add(name);
+    }
+  }
+  for (const absPath of walkMarkdownFiles(guidesDir)) {
+    const name = displayPath(absPath).split('/').pop();
+    if (mentioned.has(name)) {
+      const occurrences = [...sectionText.matchAll(new RegExp(`(?<![A-Za-z0-9._-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9._-])`, 'g'))].length;
+      if (occurrences !== 1) {
+        err(displayPath(skillMdPath), start + 1, 'references-inventory', `references/${name} is mentioned ${occurrences} times in the References section (must be exactly once)`);
+      }
+      mentioned.delete(name);
+    } else {
+      err(displayPath(skillMdPath), start + 1, 'references-inventory', `references/${name} is not listed in the References section`);
+    }
+  }
+  for (const name of mentioned) {
+    err(displayPath(skillMdPath), start + 1, 'references-inventory', `References section lists "${name}" but references/${name} does not exist`);
+  }
+}
+
 function checkSkill(skillEntry) {
   const skillDir = join(root, skillEntry);
   const skillMdPath = join(skillDir, 'SKILL.md');
   const text = readText(skillMdPath);
+  const anchorsCache = new Map();
 
   const fields = parseFrontmatter(text);
   if (fields === null) {
@@ -186,9 +305,12 @@ function checkSkill(skillEntry) {
   }
 
   for (const mdPath of walkMarkdownFiles(skillDir)) {
-    scanPurity(mdPath, readText(mdPath), `${skillEntry.replace(/\\/g, '/')}/`);
+    const mdText = readText(mdPath);
+    scanPurity(mdPath, mdText, `${skillEntry.replace(/\\/g, '/')}/`);
+    checkAnchors(mdPath, mdText, anchorsCache);
   }
 
+  checkReferencesInventory(skillDir, skillMdPath, text);
   checkCatalogConsistency(skillDir);
 }
 

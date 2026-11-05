@@ -192,7 +192,7 @@ The `! [NOTE]`-styled rendering (title + note) applies only when the output obje
 
 ## 5. Global Console Error Logging (`ErrorListener`)
 
-`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` through the `events-console` group shipped by the package (`vendor/yiisoft/yii-console/config/events-console.php`; the shipped group contents are quoted in the [Events & Listeners Guide, §6.2](core-events-and-listeners.md#62-console-application-lifecycle-yiisoftyii-console) — no application wiring needed). When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application).
+`Yiisoft\Yii\Console\ErrorListener` automatically subscribes to `Symfony\Component\Console\Event\ConsoleErrorEvent` through the `events-console` group shipped by the package (`vendor/yiisoft/yii-console/config/events-console.php`; the shipped group contents are quoted in the [Events & Listeners Guide, §6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console) — no application wiring needed). When a command terminates with an uncaught exception, it logs the failure to the optional PSR-3 logger with the message format `'%s: %s in %s:%s while running console command "%s".'` and the exception in the `exception` context entry; without a bound logger it is a no-op. Roles stay separated: logging (ErrorListener) is independent from rendering (Application).
 
 ---
 

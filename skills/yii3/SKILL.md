@@ -114,9 +114,8 @@ Full grounded matrices: each guide's Anti-Pattern Matrix:
 | 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` |
 | 15 | `#[Override]` attribute on methods | Omit it — forbidden by Yii 3 conventions, stripped by Rector (`RemoveOverrideAttributeRector`) |
 
-## References (read on demand)
+## Task & Intent Routing Matrix
 
-### Task & Intent Routing Matrix
 Load only the archetype's guides:
 
 | Task Archetype | Primary Guides | Secondary |
@@ -136,13 +135,17 @@ Load only the archetype's guides:
 | **Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-state-resetter.md` |
 | **Helper Lookup** | `references/core-utilities.md` | `references/package-catalog.md`<br>`references/core-utilities-niche.md`<br>`references/core-friendly-exceptions.md` · Tier 2: `vendor/yiisoft/<pkg>/src/` |
 
+## References (read on demand)
+
 ### Core & Architecture
 - `references/core-architecture-alignment.md` — vendor boundaries, layer placement, composition root wiring
 - `references/core-definition-of-done.md` — architecture checks, Production Readiness Gate, report format
 - `references/core-feature-recipes.md` — archetypes, decomposition, directory placement, wiring checklist
 - `references/core-dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
-- `references/core-utilities.md`, `core-utilities-niche.md` — ArrayHelper, StringHelper, Inflector, Json; VarDumper, Classifier, network utilities- `references/core-friendly-exceptions.md` — FriendlyException contract, web & console rendering
+- `references/core-utilities.md` — ArrayHelper, StringHelper, Inflector, Json
+- `references/core-utilities-niche.md` — VarDumper, Classifier, network utilities
+- `references/core-friendly-exceptions.md` — FriendlyException contract, web & console rendering
 - `references/core-di-and-config.md` — PSR-11 container, config tree, definition syntax, parameter inheritance
 - `references/core-events-and-listeners.md` — PSR-14 architecture, immutable events, post-commit dispatching
 - `references/core-version-notes.md` — version-gated behavior catalog with `composer.lock` verification
@@ -156,7 +159,8 @@ Load only the archetype's guides:
 - `references/http-validation-custom-rules.md` — custom rules, handlers, DI wiring
 - `references/http-views-and-widgets.md` — view placement, XSS escaping, layouts, assets, widgets
 - `references/http-views-twig.md` — Twig renderer, layouts, `WebViewExtension`
-- `references/http-views-bootstrap5.md`, `http-views-bulma.md` — CSS framework widget drivers
+- `references/http-views-bootstrap5.md` — Bootstrap 5 CSS framework widget driver
+- `references/http-views-bulma.md` — Bulma CSS framework widget driver
 - `references/http-dataview-widgets.md` — GridView, ListView, DetailView
 - `references/http-cache-etag.md` — ETag & conditional requests
 - `references/http-state.md` — sessions, flash, cookies, CSRF wiring
@@ -165,24 +169,34 @@ Load only the archetype's guides:
 
 ### Persistence & Data
 - `references/persistence-db.md` — Connection, Command, Query Builder, transactions, pagination, drivers & DSN
-- `references/persistence-active-record.md`, `persistence-cycle-orm.md` — Active Record models, queries, relations; Cycle ORM data mapper
+- `references/persistence-active-record.md` — Active Record models, queries, relations
+- `references/persistence-cycle-orm.md` — Cycle ORM data mapper
 - `references/persistence-migrations.md` — schema DDL, reversible migrations, seeding
-- `references/persistence-caching.md`, `persistence-cache-drivers.md` — PSR-16 caching, getOrSet, TagDependency; redis/db/APCu/memcached/wincache drivers
+- `references/persistence-caching.md` — PSR-16 caching, getOrSet, TagDependency
+- `references/persistence-cache-drivers.md` — redis/db/APCu/memcached/wincache drivers
 
 ### Infrastructure & Async
 - `references/infra-runners-and-runtimes.md` — entry points, runners, runtime selection
-- `references/infra-runtime-roadrunner.md`, `infra-runtime-frankenphp.md` — worker runtimes
+- `references/infra-runtime-roadrunner.md` — RoadRunner worker runtime
+- `references/infra-runtime-frankenphp.md` — FrankenPHP worker runtime
 - `references/infra-state-resetter.md` — long-running worker state safety
 - `references/infra-commands.md` — thin console commands, SymfonyStyle, ExitCode, registration
 - `references/infra-queue-jobs.md` — queue jobs, message DTOs, workers, failure pipelines
-- `references/infra-queue-brokers.md`, `infra-queue-mutex.md` — broker adapters (queue-db/redis/amqp, SyncQueue); distributed mutex locks
+- `references/infra-queue-brokers.md` — broker adapters (queue-db/redis/amqp, SyncQueue)
+- `references/infra-queue-mutex.md` — distributed mutex locks
 - `references/infra-auth-and-rbac.md` — identity, session lifecycle, RBAC rules, route protection
-- `references/infra-auth-jwt.md`, `infra-auth-oauth2.md` — JWT authentication; OAuth2/OIDC clients
+- `references/infra-auth-jwt.md` — JWT authentication
+- `references/infra-auth-oauth2.md` — OAuth2/OIDC clients
 - `references/infra-rbac-storage.md` — rbac-db, rbac-php, rbac-cycle-db drivers
 - `references/infra-mailer.md` — email composition, sending, templating, testing
-- `references/infra-mailer-transports.md`, `infra-mailer-async-queue.md` — transports & DSN; async queue sending
+- `references/infra-mailer-transports.md` — transports & DSN
+- `references/infra-mailer-async-queue.md` — async queue sending
 - `references/infra-logging.md` — PSR-3 injection, targets, context providers
 - `references/infra-error-handling.md` — ErrorCatcher, ProblemDetails renderers, Sentry
 - `references/testing-core.md` — test architecture, PHPUnit canon, PSR test doubles, mocking rules
-- `references/testing-testo.md`, `testing-codeception.md`, `testing-infection.md`, `testing-console.md` — alternative runners, mutation gate, console tests
-- `references/testing-http.md`, `testing-database.md` — functional HTTP testing & middleware testing; transactional DB testing, SQLite fixtures, repository tests
+- `references/testing-testo.md` — Testo alternative runner
+- `references/testing-codeception.md` — Codeception alternative runner
+- `references/testing-infection.md` — mutation testing gate
+- `references/testing-console.md` — console command tests
+- `references/testing-http.md` — functional HTTP testing & middleware testing
+- `references/testing-database.md` — transactional DB testing, SQLite fixtures, repository tests

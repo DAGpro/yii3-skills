@@ -125,7 +125,7 @@ Load only the archetype's guides:
 
 | Task Archetype | Primary Guides | Secondary |
 |---|---|---|
-| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes.md` | `references/persistence-db.md`<br>`references/infra-error-handling.md`<br>`references/http-validation-advanced.md` |
+| **REST API Endpoint / CRUD** | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-routes-definition.md` | `references/persistence-db.md`<br>`references/infra-error-handling.md`<br>`references/http-validation-advanced.md`<br>`references/http-routes-url-and-middleware.md` |
 | **CLI Command / Worker** | `references/infra-commands.md`<br>`references/infra-queue-jobs.md` | `references/infra-logging.md`<br>`references/core-di-and-config.md`<br>`references/infra-queue-brokers.md` |
 | **HTML UI / Forms / Grid** | `references/http-views.md`<br>`references/http-widgets-and-assets.md`<br>`references/http-forms-and-hydration.md`<br>`references/http-state.md` | `references/http-actions-and-controllers.md`<br>`references/http-validation-rules.md`<br>`references/http-file-handling.md`<br>`references/http-dataview-widgets.md` |
 | **Auth / Identity / RBAC** | `references/infra-auth-and-rbac.md`<br>`references/http-middlewares.md` | `references/http-state.md`<br>`references/infra-auth-jwt.md`<br>`references/infra-auth-oauth2.md`<br>`references/infra-rbac-storage.md` |
@@ -133,7 +133,7 @@ Load only the archetype's guides:
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` |
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` |
 | **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` |
-| **i18n** | `references/http-i18n-translation.md` | `references/http-routes.md`<br>`references/core-di-and-config.md` |
+| **i18n** | `references/http-i18n-translation.md` | `references/http-routes-url-and-middleware.md`<br>`references/core-di-and-config.md` |
 | **OpenAPI / Swagger** | `references/http-openapi-swagger.md` | `references/http-routes.md` |
 | **Events & Listeners** | `references/core-events-and-listeners.md` | `references/core-di-and-config.md` |
 | **Active Record** | `references/persistence-active-record.md` | `references/persistence-db.md`<br>`references/persistence-migrations.md` |
@@ -156,7 +156,9 @@ Load only the archetype's guides:
 - `references/core-version-notes.md` — version-gated behavior catalog with `composer.lock` verification
 
 ### HTTP & Presentation
-- `references/http-routes.md` — route syntax, constraints, groups, middleware ordering, URL generation
+- `references/http-routes.md` — split index: worker-environment caveats, anti-pattern matrix, related guides
+- `references/http-routes-definition.md` — route syntax & verb classes, FastRoute patterns, groups, route arguments
+- `references/http-routes-url-and-middleware.md` — route middleware ordering, URL generation, file routing
 - `references/http-middlewares.md` — PSR-15 pipeline, official middleware catalog
 - `references/http-actions-and-controllers.md` — request parsing, DTO hydration, data-response
 - `references/http-openapi-swagger.md` — OpenAPI generation, Swagger UI

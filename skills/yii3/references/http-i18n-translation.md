@@ -838,7 +838,7 @@ return [
 > For the complete reference on the routing side of locale handling — multilingual route table setup
 > (`Group('/{_language:[a-z]{2}}')`), `_language` URL generation coupling, ingress path rewriting, 302
 > canonicalization, and the `Subfolder` → `Locale` → `Router` pipeline ordering — see the
-> [Routing Guide, §6.4 "Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)"](http-routes.md#64-multilingual-routing--locale-management-yiisoftyiimiddlewarelocale).
+> [Routing Guide, §6.4 "Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)"](http-routes-url-and-middleware.md#64-multilingual-routing--locale-management-yiisoftyiimiddlewarelocale).
 
 ## 7. Missing Translation Events
 

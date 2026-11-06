@@ -283,8 +283,8 @@ Two details on these defaults:
 - `dirMode` is **not** a contradiction: the params value `0755` overrides the constructor default `0775` when the
   target is wired through the shipped package config (`config/di.php` passes params into the constructor), while
   instantiating `new FileTarget()` directly uses the constructor default `0775`.
-- The `'@runtime/logs/app.log'` alias is resolved by the shipped `config/di.php` via `Aliases::get()`
-  (`Yiisoft\Aliases\Aliases`, package `yiisoft/aliases`). Constructing `new FileTarget('@runtime/logs/app.log')`
+- The `'@runtime/logs/app.log'` alias is resolved by the shipped `config/di.php` via the injected `Aliases` service
+  (`$aliases->get()`; `Yiisoft\Aliases\Aliases`, package `yiisoft/aliases`). Constructing `new FileTarget('@runtime/logs/app.log')`
   manually would create a **literal `@runtime` directory** — resolve the alias yourself first.
 
 ### 6.2. DbTarget (`yiisoft/log-target-db`)
@@ -521,10 +521,15 @@ verified contract:
 function (Message $message, array $commonContext): string
 ```
 
-It receives the message and the merged common context (§7) and must return a string — anything else throws
-`RuntimeException`. If a `$prefix` callable is configured, its result is prepended to the formatted output.
-`Message` exposes only getters — `level(): string`, `message(): string`, `context(?string $name = null,
-mixed $default = null): mixed`, `category(): string`, `trace(): ?array`, `time(): DateTimeImmutable`. A JSON line
+It receives the message and `Target::$commonContext` — the raw array set via the **deprecated** `setCommonContext()`
+(deprecated since 2.1, removed in 3.0; replaced by `CommonContextProvider`), **not** the merged provider context:
+provider-derived context is merged into each `Message` at `Logger::log()` time and is reachable inside the callable
+via `$message->context()` (§7). The callable must return a string — anything else throws `RuntimeException`.
+If a `$prefix` callable is configured, its result is prepended to the formatted output.
+`Message` exposes getters only — `level(): string`, `message(): string`, `context(?string $name = null,
+mixed $default = null): mixed`, `category(): string`, `trace(): ?array`, `time(): DateTimeImmutable` — but note
+that `category()` and `time()` throw `LogicException` on invalid context values (a non-string `category`, or an
+unparseable `time`). A JSON line
 format follows naturally (the example below is derived from this verified callable contract and the `Message` API):
 
 ```php
@@ -648,7 +653,7 @@ final class OrderProcessorTest extends TestCase
 | Expecting a "from" option on `EmailTarget` | The constructor has no from parameter | Configure the sender on the mailer level ([Mailer Transports & DSN Guide](infra-mailer-transports.md)) |
 | Logging to files in worker mode (RoadRunner/FrankenPHP) without stdout | `FileTarget` holds no open handle between exports, but the logger buffers in memory: a killed worker loses the buffered tail (final flush only in the `Logger` destructor), and copy+truncate rotation is uncoordinated between worker processes; containerized stdout is the expected sink | Use `StreamTarget('php://stdout')` for Docker/FrankenPHP setups; under RoadRunner use `StreamTarget('php://stderr')` — `stdout` is the Goridge pipe there (§6.5, [RoadRunner Worker Runtime Guide, §3–§4](infra-runtime-roadrunner.md#3-workerphp-implementation--stderr-redirection)) |
 | Relying on the `Logger` destructor to flush in long-running workers | The destructor never runs between tasks; buffered messages are lost when the worker is killed | Call `$logger->flush(true)` explicitly at task boundaries (§9) |
-| Constructing `new FileTarget('@runtime/logs/app.log')` manually | Aliases are resolved by the shipped package config (`Aliases::get()`), not by `FileTarget`; a literal `@runtime` directory is created | Wire the target through DI or resolve the alias yourself first (§6.1) |
+| Constructing `new FileTarget('@runtime/logs/app.log')` manually | Aliases are resolved by the shipped package config (the injected `Aliases` service, `$aliases->get()`), not by `FileTarget`; a literal `@runtime` directory is created | Wire the target through DI or resolve the alias yourself first (§6.1) |
 | String-building messages with `sprintf()` + full object dumps in context | Loses structured context; huge payloads in every sink | Use `{placeholder}` interpolation with scalar context; pass the `Throwable` under `'exception'` (§5) |
 | Logging sensitive data (passwords, tokens) into unfiltered targets | Plain-text sinks (file/db/email) keep them forever | Keep secrets out of context; filter noisy/sensitive categories via `exceptCategories` |
 | Expecting `trace` in every message by default | `SystemContextProvider` defaults to `traceLevel = 0` | Construct the provider with a `traceLevel > 0` when traces are needed (§7) |

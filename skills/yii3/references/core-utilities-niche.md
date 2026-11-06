@@ -50,7 +50,7 @@ declare(strict_types=1);
 
 use Yiisoft\VarDumper\VarDumper;
 
-// 1. d(...$vars) — Outputs dump with SAPI awareness (HTML <pre> in Web, ANSI in CLI)
+// 1. d(...$vars) — Outputs dump with SAPI awareness (Web: highlight_string HTML markup with <br> separators; CLI: plain text with PHP_EOL — no ANSI)
 d($order, $user);
 
 // 2. dump(...$vars) — Exact alias of d(). Does NOT die!
@@ -279,7 +279,7 @@ $firewall->isAllowed('8.8.8.8');      // false (matches '!' . IpRanges::ANY)
 - `IpRanges::LINK_LOCAL` (`'linklocal'`): `169.254.0.0/16`, `fe80::/10`
 - `IpRanges::MULTICAST` (`'multicast'`): `224.0.0.0/4`, `ff00::/8`
 - `IpRanges::DOCUMENTATION` (`'documentation'`): `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`, `2001:db8::/32`
-- `IpRanges::SYSTEM` (`'system'`): Aggregates localhost, private, linklocal, multicast, documentation.
+- `IpRanges::SYSTEM` (`'system'`): Aggregates multicast, linklocal, localhost, documentation — **`private` is NOT included** (it is a separate alias).
 
 > [!CAUTION]
 > **CRITICAL SECURITY GOTCHA: Empty `$ranges` Defaults to ALLOW ALL!**
@@ -371,7 +371,7 @@ $requirements = [
 // Execute check suite
 $checker->check($requirements);
 
-// Auto-detects CLI (ANSI colored table) vs Web (HTML report)
+// Auto-detects CLI (plain-text report: OK / FAILED!!! / WARNING!!!) vs Web (HTML report)
 $checker->render();
 
 // Extract structured result for exit code determination

@@ -289,9 +289,9 @@ The base class `Yiisoft\Db\Schema\Column\ColumnBuilder` defines 29 standard stat
 | `uuid()` | None | `ColumnInterface` | `uuid` / `binary(16)` / `blob(16)` |
 | `timestamp(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `timestamp` / `timestamp` / `timestamp` |
 | `datetime(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `timestamp` / `datetime` / `datetime` |
-| `datetimeWithTimezone(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `timestamptz` / `datetime` / `datetime` |
+| `datetimeWithTimezone(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `timestamptz` / `datetime` / `datetimetz` |
 | `time(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `time` / `time` / `time` |
-| `timeWithTimezone(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `timetz` / `time` / `time` |
+| `timeWithTimezone(?int $size = 0)` | `$size = 0` | `ColumnInterface` | `timetz` / `time` / `timetz` |
 | `date()` | None | `ColumnInterface` | `date` / `date` / `date` |
 | `array(?ColumnInterface $column = null)` | `$column = null` | `ColumnInterface` | `<type>[]` (native PG) / `json` (emulated) / `json` (emulated) |
 | `structured(?string $dbType = null, array $columns = [])` | `$dbType = null, $columns = []` | `ColumnInterface` | `jsonb` or custom type / `json` / `json` |
@@ -519,8 +519,8 @@ Class `Yiisoft\Db\Constant\ReferentialAction` defines standard referential actio
 | **PostgreSQL** (`db-pgsql`) | All actions supported | All actions supported | Fully compliant with ANSI SQL. |
 | **MySQL / MariaDB** (`db-mysql`) | All actions supported | All actions supported | InnoDB engine required for foreign key enforcement. |
 | **SQLite** (`db-sqlite`) | ❌ `NotSupportedException` | ❌ `NotSupportedException` | SQLite does not support `addForeignKey()` via `ALTER TABLE`. Must define inline in `createTable` or use Copy-and-Rename. |
-| **MS SQL Server** (`db-mssql`) | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | **`RESTRICT` is unsupported in T-SQL and is silently dropped:** the builder omits the `ON DELETE`/`ON UPDATE` clause entirely, leaving SQL Server's default `NO ACTION` behavior. Use `ReferentialAction::NO_ACTION` explicitly or `null`. |
-| **Oracle** (`db-oracle`) | `CASCADE`, `SET NULL` only | ❌ **Completely unsupported** | Passing non-null `$update` throws `Exception: Oracle does not support ON UPDATE clause.`. On delete, any action other than `CASCADE`/`SET NULL` (including `RESTRICT`) is **silently dropped** — the generated DDL simply omits the clause, leaving Oracle's default `NO ACTION` behavior. |
+| **MS SQL Server** (`db-mssql`) | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | `CASCADE`, `SET NULL`, `NO ACTION`, `SET DEFAULT` | Two paths differ for `RESTRICT` (unsupported in T-SQL): inline column definitions (the `->reference()` path) **silently drop** it — the `ON DELETE`/`ON UPDATE` clause is omitted, leaving SQL Server's default `NO ACTION` behavior — while `addForeignKey()` emits the clause **verbatim**, producing DDL that SQL Server rejects with a syntax error at execution. Use `ReferentialAction::NO_ACTION` explicitly or `null`. |
+| **Oracle** (`db-oracle`) | `CASCADE`, `SET NULL` only | ❌ **Completely unsupported** | Passing non-null `$update` to `addForeignKey()` throws `Exception: Oracle does not support ON UPDATE clause.` (the inline path always omits it). Two paths differ on delete: inline column definitions emit only `CASCADE`/`SET NULL` and **silently drop** any other action (including `RESTRICT`), leaving Oracle's default `NO ACTION` behavior — while `addForeignKey()` emits `$delete` **verbatim**, so `RESTRICT` reaches the DDL and Oracle rejects it at execution. |
 
 > [!TIP]
 > **Cross-DBMS Foreign Key Rule:**
@@ -649,7 +649,7 @@ $b->execute(string $sql, array $params = []): void
 
 ### 5.3. SQLite Schema Alteration Restrictions & Copy-and-Rename Workaround
 
-SQLite has severe architectural limitations regarding `ALTER TABLE`. `Yiisoft\Db\Sqlite\DDLQueryBuilder` throws `Yiisoft\Db\Exception\NotSupportedException` on **18 alteration methods**, including:
+SQLite has severe architectural limitations regarding `ALTER TABLE`. `Yiisoft\Db\Sqlite\DDLQueryBuilder` throws `Yiisoft\Db\Exception\NotSupportedException` on **17 alteration methods** unconditionally (plus `dropTable()` when called with `$cascade = true`), including:
 - `alterColumn()`, `dropColumn()`, `renameColumn()`
 - `addForeignKey()`, `dropForeignKey()`
 - `addPrimaryKey()`, `dropPrimaryKey()`
@@ -704,10 +704,27 @@ final class M261022143000ModifyUserTableStructure implements RevertibleMigration
 
     public function down(MigrationBuilder $b): void
     {
-        // Inverse operation
+        // Inverse operation — `alterColumn()` / `dropColumn()` throw NotSupportedException
+        // on SQLite, so down() needs the same driver guard as up().
+        $db = $b->getDb();
         $columns = $b->columnBuilder();
-        $b->alterColumn(self::OLD_TABLE, 'username', $columns::string(64)->notNull());
-        $b->dropColumn(self::OLD_TABLE, 'phone');
+
+        if ($db->getDriverName() === 'sqlite') {
+            // Copy-and-Rename inverse: recreate the original schema and copy data back
+            $b->createTable(self::NEW_TABLE, [
+                'id' => $columns::primaryKey(),
+                'username' => $columns::string(64)->notNull(), // original size, no phone column
+                'email' => $columns::string(255)->notNull(),
+            ]);
+
+            $b->execute('INSERT INTO ' . self::NEW_TABLE . ' (id, username, email) SELECT id, username, email FROM ' . self::OLD_TABLE);
+
+            $b->dropTable(self::OLD_TABLE);
+            $b->renameTable(self::NEW_TABLE, self::OLD_TABLE);
+        } else {
+            $b->alterColumn(self::OLD_TABLE, 'username', $columns::string(64)->notNull());
+            $b->dropColumn(self::OLD_TABLE, 'phone');
+        }
     }
 }
 ```

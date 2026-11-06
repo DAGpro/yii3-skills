@@ -294,7 +294,7 @@ return [
 > **The `Route::defaults()` Matching vs. Generation Trap:**
 > `Route::defaults()` applies **strictly to route matching** (`UrlMatcher`).
 > `UrlGenerator` **never** reads `Route::defaults()`. If a route pattern has a parameter without a value passed to `$urlGenerator->generate('route')`, it throws `RuntimeException`, even if `defaults()` was configured on the route!
-> To provide default values for URL generation, use `$urlGenerator->setDefaultArgument('page', '1')` (see §6.1).
+> To provide default values for URL generation, use `$urlGenerator->setDefaultArgument('page', '1')` (see the [Middleware Ordering & URL Generation Guide, §6](http-routes-url-and-middleware.md#6-url-generation--reverse-routing-urlgeneratorinterface)).
 
 ### 2.3. Host-Based Matching & Subdomains
 
@@ -333,7 +333,7 @@ return [
 
 > [!CAUTION]
 > **Host Placeholders with Multiple Hosts:**
-> When calling `->hosts('tenant1.com', 'tenant2.com')` with multiple hosts, `UrlMatcher` combines them into an internal regex `({_host:tenant1.com|tenant2.com})`. Variable placeholders are **strictly forbidden** when multiple hosts are provided (`RuntimeException: Placeholders are not allowed with multiple host names`). Placeholders are only allowed on single-host definitions.
+> When calling `->hosts('tenant1.com', 'tenant2.com')` with multiple hosts, `UrlMatcher` combines them into the internal placeholder `{_host:tenant1.com|tenant2.com}` (no surrounding parentheses), which is prepended to the route pattern before dispatch. Variable placeholders are **strictly forbidden** when multiple hosts are provided (`RuntimeException: Placeholders are not allowed with multiple host names`). Placeholders are only allowed on single-host definitions.
 
 ### 2.4. FastRoute Dispatch Caching (`enableCache` & PSR-16)
 

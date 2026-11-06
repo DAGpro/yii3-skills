@@ -134,7 +134,9 @@ Uses relational tables via `yiisoft/db`. Ideal for projects with zero external i
 ```php
 declare(strict_types=1);
 
+use RuntimeException;
 use Yiisoft\Db\Connection\ConnectionInterface;
+use Yiisoft\Db\Driver\Pdo\PdoConnectionInterface;
 use Yiisoft\Definitions\Reference;
 use Yiisoft\Mutex\MutexFactoryInterface;
 use Yiisoft\Mutex\Pgsql\PgsqlMutexFactory;
@@ -147,7 +149,14 @@ return [
     MutexFactoryInterface::class => [
         'class' => PgsqlMutexFactory::class,
         '__construct()' => [
-            'connection' => static fn (ConnectionInterface $db) => $db->getActivePdo(),
+            'connection' => static function (ConnectionInterface $db): \PDO {
+                // getActivePdo() is declared on PdoConnectionInterface, not on ConnectionInterface.
+                if (!$db instanceof PdoConnectionInterface) {
+                    throw new RuntimeException('Database connection must implement PdoConnectionInterface.');
+                }
+
+                return $db->getActivePdo();
+            },
         ],
     ],
 

@@ -188,7 +188,7 @@ $response = $this->tester->doRequest(
 > **Common Hallucinations:**
 > - `FunctionalTestCase` does **NOT** provide `$this->assertResponseStatusCode()` or `$this->getResponseJson()`. It extends standard `PHPUnit\Framework\TestCase`. Use `$this->assertSame(Status::OK, $response->getStatusCode())` and `$response->getContentAsJson()`.
 > - `FunctionalTestCase::doRequest(string $method, string $url)` only takes two arguments. To send custom headers, JSON body, or query parameters, call `$this->tester->doRequest(method: ..., url: ..., queryParams: ..., postParams: ..., body: ..., headers: ...)`.
-> - Always call `$this->mockService(...)` **BEFORE** `$this->bootstrapApplication()`. The DI container is built and frozen during bootstrap.
+> - `$this->bootstrapApplication()` does **NOT** build the DI container: it only creates `TestApplicationRunner` and registers the shared `MockServiceProvider`. The container is compiled lazily — per `doRequest()` / `getContainer()` call — and rebuilt for each request, re-reading the mock provider every time. A mock therefore affects every request issued after it was registered; still call `$this->mockService(...)` before the request that must see it.
 
 ---
 
@@ -302,7 +302,7 @@ public function testMiddlewareSetsCustomAttribute(): void
 
 By default, `FunctionalTester` registers `Yiisoft\Session\NullSession` as the default test double for `Yiisoft\Session\SessionInterface`.
 
-If your endpoints rely on stateful sessions (e.g. login, shopping cart, multi-step wizards), override `SessionInterface` before bootstrap with an in-memory session:
+If your endpoints rely on stateful sessions (e.g. login, shopping cart, multi-step wizards), override `SessionInterface` before bootstrap with a real `Yiisoft\Session\Session` instance — it uses the native PHP session (`session_start()`) with `use_cookies` forced to `0` internally, so its state lives in `$_SESSION` rather than being in-memory:
 
 ```php
 declare(strict_types=1);
@@ -324,7 +324,7 @@ final class SessionAuthTest extends FunctionalTestCase
     {
         parent::setUp();
 
-        // 1. Create a stateful in-memory Session instance
+        // 1. Create a stateful real Session instance (native session, cookies disabled; state lives in $_SESSION)
         $this->session = new Session();
         $this->session->open();
 
@@ -495,15 +495,15 @@ The full test-double example — stream inspection, pointer/rewind semantics, an
 | Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
 |---|---|---|
 | **Request without bootstrap: `$this->tester->doRequest(...)`** | Throws `RuntimeException: The application was not initialized. Initialize the application before the request`. | Always call `$this->bootstrapApplication()` in `setUp()` before invoking requests. |
-| **Late service mocking after `bootstrapApplication()`** | DI container is built and frozen during bootstrap; mock registrations after bootstrap are ignored. | Always call `$this->mockService(...)` **before** calling `$this->bootstrapApplication()`. |
-| **Calling `$this->doRequest($method, $url, $headers, ...)` with extra arguments** | `FunctionalTestCase::doRequest()` accepts strictly only 2 arguments (`$method, $url`). Passing extra arguments throws `ArgumentCountError`. | Call `$this->tester->doRequest(method: ..., url: ..., queryParams: ..., postParams: ..., body: ..., headers: ...)`. |
+| **Late service mocking after `bootstrapApplication()`** | Not broken — the shared `MockServiceProvider` is re-consulted each time the container is compiled (every `doRequest()` / `getContainer()`). A mock only affects requests issued **after** it was registered; earlier responses were already served from the previous container build. | Register mocks before the request that must see them (a mock registered before `bootstrapApplication()` applies to all requests). |
+| **Calling `$this->doRequest($method, $url, $headers, ...)` with extra arguments** | `FunctionalTestCase::doRequest()` declares exactly 2 parameters (`$method, $url`). Surplus **positional** arguments are silently ignored — headers/body never reach the request (a silent test blind spot); an unknown **named** argument throws `Error: Unknown named parameter`. | Call `$this->tester->doRequest(method: ..., url: ..., queryParams: ..., postParams: ..., body: ..., headers: ...)` — `FunctionalTester::doRequest()` accepts these named parameters. |
 | **Phantom methods: `$this->assertResponseStatusCode(...)`** | `FunctionalTestCase` extends PHPUnit `TestCase` and has no custom assertions; throws fatal undefined method. | Use standard PHPUnit assertions: `$this->assertSame(Status::OK, $response->getStatusCode())`. |
 | **Phantom method: `$response->getResponseJson()`** | `ResponseAccessor` method is `getContentAsJson()`; calling `getResponseJson()` throws undefined method error. | Call `$data = $response->getContentAsJson();`. |
 | **Real network HTTP calls in functional tests** | Flaky tests, slow CI, port collisions, requires running external HTTP daemon. | Use in-memory `FunctionalTestCase` or `HttpApplicationRunner::runAndGetResponse()`. |
 | **Unrewound PSR-7 streams: reading `$body->getContents()` repeatedly** | Streams advance pointer to EOF. Subsequent reads return empty string `""`. | Check `$stream->isSeekable()` and call `$stream->rewind()` before reading, or use `ResponseAccessor::getContent()`. |
 | **Polluting superglobals (`$_POST`, `$_GET`, `$_SERVER`)** | Yii3 is purely PSR-7; superglobals are ignored by request handlers and leak into worker runners. | Pass query/post params via PSR-7 request or `$this->tester->doRequest(...)`. |
 | **Asserting JSON as formatted raw strings** | Whitespace, key order, or encoding differences cause fragile, false-positive test failures. | Use `$response->getContentAsJson()` and assert structured PHP arrays, or use `assertJsonStringEqualsJsonString()`. |
-| **Omitting `parent::setUp()` in `FunctionalTestCase`** | Skips `$this->tester` initialization, causing null pointer exceptions on `doRequest()` or `mockService()`. | Always call `parent::setUp()` at the start of overridden `setUp(): void`. |
+| **Omitting `parent::setUp()` in `FunctionalTestCase`** | Skips `$this->tester` initialization; any later access to the uninitialized typed property `protected ?FunctionalTester $tester` throws `Error: Typed property ... $tester must not be accessed before initialization` (the nullsafe `$this->tester?->...` in `mockService()` does not save you — uninitialized is not `null`). | Always call `parent::setUp()` at the start of overridden `setUp(): void`. |
 | **Extending `FunctionalTestCase` inside Codeception Cest classes** | `FunctionalTestCase` is a PHPUnit `TestCase`. Codeception Cest classes do not extend `TestCase`; violates test runner lifecycles. | In Codeception Cests, inject actors (e.g. `FunctionalTester $I`); use `FunctionalTestCase` only under PHPUnit. |
 
 ---

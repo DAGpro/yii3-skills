@@ -9,7 +9,7 @@
 
 For full-page web applications, inject `Yiisoft\Yii\View\Renderer\WebViewRenderer` — the current renderer (the older `ViewRenderer` is `@deprecated`, see the note at the end of this section) — for template rendering, and `FormHydrator` for populating and validating HTML forms.
 
-**The Form Model** (compact skeleton; the full lifecycle example — hydration → validation → redirect — lives in the [Validation & Forms Guide, §8.3](http-validation-and-forms.md)):
+**The Form Model** (compact skeleton; the full lifecycle example — hydration → validation → redirect — lives in the [Forms & Typed DTO Hydration Guide, §8.3](http-forms-and-hydration.md)):
 
 ```php
 final class ContactForm extends FormModel
@@ -31,7 +31,7 @@ final class ContactForm extends FormModel
 **The Action Handler** — thin invokable: `populateFromPostAndValidate($form, $request)` → on success delegate to the use case (`$this->useCase->execute(new ContactDto(...))`), add a flash message, and redirect via `UrlGeneratorInterface`; on failure render the view with `WebViewRenderer` and return 422 when the request was POST and `$form->isValid()` is `false`.
 
 > [!WARNING]
-> **The Form Name / Scope Trap:** with no explicit `scope`, `populateFromPostAndValidate()` falls back to `FormModel::getFormName()` — the hydrator looks for nested data `$request->getParsedBody()['ContactForm']`; pass `scope: ''` for flat inputs (or override `getFormName(): string { return ''; }`). Missing scope data is not silent: the method deterministically returns `false` — always branch on the returned `bool`. Full semantics: [Validation & Forms Guide, §8.2](http-validation-and-forms.md).
+> **The Form Name / Scope Trap:** with no explicit `scope`, `populateFromPostAndValidate()` falls back to `FormModel::getFormName()` — the hydrator looks for nested data `$request->getParsedBody()['ContactForm']`; pass `scope: ''` for flat inputs (or override `getFormName(): string { return ''; }`). Missing scope data is not silent: the method deterministically returns `false` — always branch on the returned `bool`. Full semantics: [Forms & Typed DTO Hydration Guide, §8.2](http-forms-and-hydration.md).
 
 > [!TIP]
 > For layout configurations, page lifecycle, asset bundles, and custom widgets, see [Views, Layouts & Widgets Guide](http-views-and-widgets.md); for `GridView`, `ListView`, and `DetailView`, see the [DataView Widgets Guide](http-dataview-widgets.md).

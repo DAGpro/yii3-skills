@@ -416,7 +416,8 @@ rendering. Two state-side facts to keep in sync:
 
 For AJAX: send the token via the `X-CSRF-Token` header, or use one of the two official client flows:
 
-- **Token endpoint:** an **OPTIONS** route — `Route::options('/csrf-token')` — responding with the token in the
+- **Token endpoint:** an **OPTIONS** route — `new \Yiisoft\Router\Route\Options('/csrf-token')` (the static
+  factory `Route::options()` is deprecated) — responding with the token in the
   body and an `X-CSRF-TOKEN` header (it is not a GET endpoint).
 - **Cookie flow:** `CsrfTokenCookieMiddleware` publishes `XSRF-TOKEN`; the client sends it back as
   `X-XSRF-TOKEN`, matched with `->withHeaderName('X-XSRF-TOKEN')`. Official wiring order:

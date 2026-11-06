@@ -49,7 +49,7 @@
   - [7.2. Whitelist Sorting with `Sort::only()`](#72-whitelist-sorting-with-sortonly)
 - [8. PHP 8 Named Arguments & Signatures Reference](#8-php-8-named-arguments--signatures-reference)
 - [9. Anti-Pattern Matrix: Active Record](#9-anti-pattern-matrix-active-record)
-- [10. Related Topic Guides](persistence-migrations-operations.md#10-related-topic-guides)
+- [10. Related Topic Guides](#10-related-topic-guides)
 
 ---
 
@@ -287,7 +287,7 @@ final readonly class User
 > Calling `new UserRecord($db)` succeeds silently without error, but `$db` is completely **ignored**. All queries continue executing against the default connection provider!
 
 Connection resolution delegates to the static registry `ConnectionProvider`:
-- `AbstractActiveRecord::db()` calls `Yiisoft\Db\Connection\ConnectionProvider::get(ConnectionProvider::DEFAULT)`.
+- `AbstractActiveRecord::db()` calls `Yiisoft\Db\Connection\ConnectionProvider::get()` with no argument — the default connection name (`ConnectionProvider::DEFAULT`, i.e. `'default'`) is the method's parameter default.
 - If a custom connection is needed (e.g. read replica or sharded database), register it via `ConnectionProvider::set($connection, 'my-connection')` or use `CustomConnectionTrait`.
 
 ### 2.2. Table Name Method Contract (Non-Static Rule) & Typed Properties
@@ -444,6 +444,7 @@ namespace App\Infrastructure\Persistence\ActiveRecord;
 use Yiisoft\ActiveRecord\ActiveQuery;
 use Yiisoft\ActiveRecord\ActiveQueryInterface;
 use Yiisoft\ActiveRecord\ActiveRecord;
+use Yiisoft\ActiveRecord\ActiveRecordInterface;
 
 final class CustomerQuery extends ActiveQuery
 {
@@ -460,7 +461,7 @@ final class CustomerRecord extends ActiveRecord
         return '{{%customer}}';
     }
 
-    public static function query(ActiveRecord|string|null $modelClass = null): ActiveQueryInterface
+    public static function query(ActiveRecordInterface|string|null $modelClass = null): ActiveQueryInterface
     {
         return new CustomerQuery($modelClass ?? static::class);
     }

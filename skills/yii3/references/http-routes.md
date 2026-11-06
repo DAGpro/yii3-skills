@@ -17,7 +17,7 @@ Read this file for worker-environment caveats (§8), the anti-pattern matrix (§
 
 ### 8.1. Immutability of Route and Group
 
-Every configuration method on `Route` and `Group` (`name()`, `action()`, `middleware()`, `defaults()`, `host()`, `pattern()`, `withCors()`, `disableMiddleware()`) returns a **cloned instance** (`$route = clone $this`).
+Every configuration method returns a **cloned instance** (`$route = clone $this`). The method sets differ per class: on `Route` — `name()`, `pattern()`, `host()`, `hosts()`, `override()`, `defaults()`, `action()`, `middleware()`, `prependMiddleware()`, `disableMiddleware()`; on `Group` — `routes()`, `withCors()`, `host()`, `hosts()`, `namePrefix()`, `middleware()`, `prependMiddleware()`, `disableMiddleware()` (e.g. `withCors()` exists only on `Group`, and `name()`/`action()` only on `Route`).
 
 ```php
 declare(strict_types=1);
@@ -134,7 +134,7 @@ return [
 | **Kebab-case URLs in FileRouter: `/user-profile`** | `#/.#u` leaves hyphens alone; resolves to illegal PHP class `User-profileController`. | Use camelCase (`/userProfile`) or single-word paths (`/user`). |
 | **Lowercase keys in `FileRouter::$actions`** | `$request->getMethod()` returns uppercase `'GET'`; lowercase keys evaluate to `null`. | Use uppercase HTTP verbs as keys: `['GET' => 'index', 'POST' => 'update']`. |
 | **Using `#[RouteArgument]` with `FileRouter`** | `FileRouter` does not populate `CurrentRoute`; attributes evaluate to `null`. | Read parameters from `$request->getQueryParams()` or request body. |
-| **Calling `generateAbsolute()` in CLI without host configuration** | In CLI, `$uri` is `null`; without configured host/scheme, falls back to returning relative URL `/path`. | Configure `$params['yiisoft/router-fastroute']['host']` and `'scheme'` in `config/params-console.php`. |
+| **Calling `generateAbsolute()` in CLI without host configuration** | In CLI, `$uri` is `null`; without configured host/scheme, falls back to returning relative URL `/path`. | Configure `$params['yiisoft/router-fastroute']['host']` and `'scheme'` in `config/console/params.php` (merged into the `params-console` group) or `config/common/params.php`. |
 | **Expecting custom 404 handler to catch 405 errors** | `Router` handles 405 directly with `Allow` header; does not delegate to `$handler`. | Configure 405 error rendering in a dedicated response decorator or global error catcher. |
 | **Disabling FastRoute cache in production** | Recompiles all routes on every request, creating unnecessary CPU overhead. | Set `'enableCache' => true` in production and clear/pre-warm cache during deployment. |
 

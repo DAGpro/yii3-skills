@@ -5,7 +5,7 @@
 
 > Configuration recipes for the external PSR-16 cache driver packages of `yiisoft/cache`: `yiisoft/cache-redis` (Predis client wiring), `yiisoft/cache-db` (storage-table initialization), `yiisoft/cache-apcu` (per-SAPI shared memory), `yiisoft/cache-memcached` (persistent connections and TTL semantics), and `yiisoft/cache-wincache`.
 
-**Scope & Ownership:** This guide is the single source of truth for external PSR-16 cache driver adapter wiring; it was extracted from the [Caching & Performance Guide, §2.2–§2.6](persistence-caching.md#2-cache-drivers--di-configuration). Exactly **ONE** external driver package is installed per project — `yiisoft/cache-redis` XOR `yiisoft/cache-db` XOR `yiisoft/cache-apcu` XOR `yiisoft/cache-memcached` XOR `yiisoft/cache-wincache`; the zero-dependency default `yiisoft/cache-file` and the `NullCache` / `PrefixedCache` development helpers are owned by the parent [Caching & Performance Guide, §2](persistence-caching.md#2-cache-drivers--di-configuration). Resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family), then read only the matching adapter section below.
+**Scope & Ownership:** This guide is the single source of truth for external PSR-16 cache driver adapter wiring; it was extracted from the [Caching & Performance Guide, §2.2](persistence-caching.md#2-cache-drivers--di-configuration). Exactly **ONE** external driver package is installed per project — `yiisoft/cache-redis` XOR `yiisoft/cache-db` XOR `yiisoft/cache-apcu` XOR `yiisoft/cache-memcached` XOR `yiisoft/cache-wincache`; the zero-dependency default `yiisoft/cache-file` and the `NullCache` / `PrefixedCache` development helpers are owned by the parent [Caching & Performance Guide, §2](persistence-caching.md#2-cache-drivers--di-configuration). Resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family), then read only the matching adapter section below.
 
 ---
 
@@ -55,7 +55,7 @@ return [
 ];
 ```
 
-Redis cluster configurations are supported natively: pass multiple node configurations to `Predis\Client`, and `RedisCache` executes cluster-aware command routing and cluster-wide `flushdb` operations on `clear()`.
+Redis cluster configurations are supported via Predis: pass multiple node configurations to `Predis\Client` **together with the `'cluster' => 'redis'` client option** — Predis itself routes commands to the appropriate nodes based on the keys. `RedisCache` wraps this client; on `clear()` it runs `flushdb` against every cluster node.
 
 ## 2. Database Cache (yiisoft/cache-db)
 
@@ -157,7 +157,7 @@ return [
 ```
 
 > [!WARNING]
-> **TTL Semantics:** Numeric TTLs **greater than 2,592,000 (30 days)** are treated by Memcached as absolute Unix timestamps; the driver converts them via `$ttl + time()`. Storing `set($key, $val, 31 * 86400)` expires in 31 days, but passing an absolute timestamp smaller than 2,592,000 causes immediate expiration.
+> **TTL Semantics:** The driver's `normalizeTtl()` applies three branches to numeric TTLs: **`0` or negative** normalizes to `TTL_EXPIRED`, so `set()` deletes the key immediately; values in **`(0, 2,592,000]`** (30 days) are treated as **relative seconds**; values **greater than 2,592,000** are always re-shifted via `$ttl + time()` — the number is still interpreted as a relative offset, so a genuine absolute Unix timestamp is never honored. Storing `set($key, $val, 31 * 86400)` therefore expires 31 days after the call.
 >
 > Memcached provides **no authentication or access control**: any client capable of connecting to the port can read or wipe all data. Never cache unencrypted sensitive data in Memcached.
 

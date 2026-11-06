@@ -50,16 +50,18 @@ use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\HttpMiddleware\HttpCache\ETag;
 use Yiisoft\HttpMiddleware\HttpCache\ETagProvider\ETagProviderInterface;
 use Yiisoft\HttpMiddleware\HttpCache\LastModifiedProvider\LastModifiedProviderInterface;
+use Yiisoft\Router\CurrentRoute;
 
 final readonly class BlogPostETagProvider implements ETagProviderInterface
 {
     public function __construct(
         private BlogPostRepositoryInterface $repository,
+        private CurrentRoute $currentRoute,
     ) {}
 
     public function get(ServerRequestInterface $request): ?ETag
     {
-        $id = (string) $request->getAttribute('id', '');
+        $id = (string) $this->currentRoute->getArgument('id', '');
         $post = $this->repository->findById($id);
         if ($post === null) {
             return null;
@@ -75,11 +77,12 @@ final readonly class BlogPostLastModifiedProvider implements LastModifiedProvide
 {
     public function __construct(
         private BlogPostRepositoryInterface $repository,
+        private CurrentRoute $currentRoute,
     ) {}
 
     public function get(ServerRequestInterface $request): ?DateTimeImmutable
     {
-        $id = (string) $request->getAttribute('id', '');
+        $id = (string) $this->currentRoute->getArgument('id', '');
         $post = $this->repository->findById($id);
 
         return $post?->getUpdatedAt();
@@ -137,6 +140,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Header;
 use Yiisoft\Http\Status;
+use Yiisoft\Router\CurrentRoute;
 
 final readonly class ViewPostAction
 {
@@ -146,11 +150,12 @@ final readonly class ViewPostAction
         // into a DataStream body). The deprecated root-namespace twin must not be used.
         private \Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface $dataResponseFactory,
         private ResponseFactoryInterface $responseFactory,
+        private CurrentRoute $currentRoute,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $id = (string) $request->getAttribute('id', '');
+        $id = (string) $this->currentRoute->getArgument('id', '');
         $post = $this->repository->findById($id);
 
         if (!$post instanceof BlogPost) {
@@ -161,7 +166,12 @@ final readonly class ViewPostAction
         $clientEtag = $request->getHeaderLine(Header::IF_NONE_MATCH);
 
         if ($clientEtag === $etag) {
-            return $this->responseFactory->createResponse(Status::NOT_MODIFIED);
+            // RFC 7232 §4.1: a 304 must carry the ETag and Cache-Control headers
+            // (this mirrors what HttpCacheMiddleware itself adds to 304 responses).
+            return $this->responseFactory
+                ->createResponse(Status::NOT_MODIFIED)
+                ->withHeader(Header::ETAG, $etag)
+                ->withHeader(Header::CACHE_CONTROL, 'public, max-age=3600, must-revalidate');
         }
 
         return $this->dataResponseFactory
@@ -171,6 +181,9 @@ final readonly class ViewPostAction
     }
 }
 ```
+
+> [!NOTE]
+> The strict `$clientEtag === $etag` comparison above handles a **single plain ETag value** only. It fails on multi-value headers (`"tag1", "tag2"`) and weak validators (`W/"..."`), which §1 documents. `HttpCacheMiddleware` parses the full `If-None-Match` line itself — splitting on commas and stripping `W/` prefixes and quotes — so for multi-value or weak-validator revalidation, prefer the declarative middleware from §2.
 
 ## Related Topic Guides
 

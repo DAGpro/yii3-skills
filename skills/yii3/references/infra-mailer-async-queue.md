@@ -313,9 +313,9 @@ return [
 > [!WARNING]
 > Do **not** double-nest the map (`Event::class => [[Listener::class]]`). The inner array is not a valid listener definition; it throws `InvalidListenerConfigurationException` at the first dispatch of that event.
 
-Valid listener definitions per event key: the full six-form table is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2. The event object is passed as the first argument; additional parameters are DI-resolved at call time; return values are discarded (`: void` is convention). Map keys must reference existing classes.
+Valid listener definitions per event key: the full seven-form table is owned by the [Events & Listeners Guide, §4.2](core-events-design.md#42-declarative-event-mapping--supported-listener-formats). The event object is passed as the first argument; additional parameters are DI-resolved at call time; return values are discarded (`: void` is convention). Map keys must reference existing classes.
 
-Wiring steps (the app template ships `'events' => []` and no events file; the full group-declaration and merge-plan recipe is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1):
+Wiring steps (the app template ships `'events' => []` and no events file; the full group-declaration and merge-plan recipe is owned by the [Events & Listeners Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes)):
 
 1. Create `config/common/events.php` with the single-nested map.
 2. Register it in `config/configuration.php`: `'events' => 'common/events.php'`.
@@ -331,7 +331,7 @@ Wiring steps (the app template ships `'events' => []` and no events file; the fu
 The `BaseMailer::send()` pipeline: apply `MessageSettings` defaults → dispatch `BeforeSend` → check `$event->preventSendingMessage` → `sendMessage()` → dispatch `AfterSend`. Cancellation is an explicit `BaseMailer` check after dispatch — `BeforeSend` is a plain final class, not a `StoppableEventInterface`.
 
 > [!IMPORTANT]
-> **The dispatcher dependency is nullable.** `yiisoft/mailer-symfony` binds `TransportInterface` and `MailerInterface` but **not** `EventDispatcherInterface`. Without a bound dispatcher the events are silently skipped and mail still sends — your suppression and audit listeners never run, with no error. Install the wiring package: `composer require yiisoft/yii-event` — what it binds and why is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 1.
+> **The dispatcher dependency is nullable.** `yiisoft/mailer-symfony` binds `TransportInterface` and `MailerInterface` but **not** `EventDispatcherInterface`. Without a bound dispatcher the events are silently skipped and mail still sends — your suppression and audit listeners never run, with no error. Install the wiring package: `composer require yiisoft/yii-event` — what it binds and why is owned by the [Events & Listeners Guide, §1](core-events-design.md#1-psr-14-event-architecture-in-yii3).
 
 ### 7.1. Suppressing Delivery via `BeforeSend`
 
@@ -422,9 +422,9 @@ return [
 ];
 ```
 
-Register the file as described in §6.5 and in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1. Map keys must reference existing classes — `BeforeSend` and `AfterSend` are final classes with no marker interfaces to register against.
+Register the file as described in §6.5 and in the [Events & Listeners Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes). Map keys must reference existing classes — `BeforeSend` and `AfterSend` are final classes with no marker interfaces to register against.
 
-Development validation: run `Yiisoft\Yii\Event\ListenerConfigurationChecker::check($config->get('events-web'))` — it eagerly resolves every listener definition and catches bad format, non-existent event classes, and non-callable listeners (dev/test only; mechanics in the [Events & Listeners Guide](core-events-and-listeners.md), section 4.3).
+Development validation: resolve the checker from the container and call its instance method — `$container->get(Yiisoft\Yii\Event\ListenerConfigurationChecker::class)->check($config->get('events-web'))` — it eagerly resolves every listener definition and catches bad format, non-existent event classes, and non-callable listeners (dev/test only; mechanics in the [Events & Listeners Guide, §4.3](core-events-design.md#43-verifying-event-configurations-ahead-of-time)).
 
 To deliver application log records by email through the same `MailerInterface`, `yiisoft/log-target-email` provides `EmailTarget` (constructor `(MailerInterface $mailer, array|string $emailTo, string $subjectEmail = '', array $levels = [])`; default subject `'Application Log'`; it sends a `Message` with a word-wrapped plain-text body).
 

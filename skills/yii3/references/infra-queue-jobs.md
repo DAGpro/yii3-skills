@@ -16,7 +16,7 @@
 - [6. Distributed Concurrency & Mutex Locks (yiisoft/mutex)](#6-distributed-concurrency--mutex-locks-yiisoftmutex) — full reference in the [Queue Mutex & Distributed Concurrency Guide](infra-queue-mutex.md)
 - [7. Worker CLI Management & Memory Recycling](#7-worker-cli-management--memory-recycling)
 - [8. Multi-Queue Configuration & Broker Adapters](#8-multi-queue-configuration--broker-adapters) — full reference in the [Queue Broker Adapters Guide](infra-queue-brokers.md)
-- [9. Anti-Pattern Matrix](persistence-migrations-operations.md#9-anti-pattern-matrix)
+- [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
 
 ---
 
@@ -591,7 +591,7 @@ When a message handler throws a `Throwable`, `Worker::process()` catches it, con
 ### Complete Middleware Configuration (`config/params.php`)
 
 > [!NOTE]
-> **Vendor exception to the primitives-only params rule:** the `middlewares-push` / `middlewares-consume` / `middlewares-fail` keys ship as `[]` in `vendor/yiisoft/queue/config/params.php`, and the package's own `config/di.php` feeds them into the `MiddlewareDispatcher` / `FailureMiddlewareDispatcher` constructors, whose factories create middleware from *definitions* — arrays, class strings, or **closures** (the constructor docblock type is `array[][]|callable[][]|...[][]`). Closures inside these specific keys are therefore the documented vendor pattern, not a violation of the DI & Configuration Guide's params rules (see [core-di-and-config.md](core-di-and-config.md), section 3.1). Do not copy the pattern into custom, non-`middlewares-*` params keys.
+> **Vendor exception to the primitives-only params rule:** the `middlewares-push` / `middlewares-consume` / `middlewares-fail` keys ship as `[]` in `vendor/yiisoft/queue/config/params.php`, and the package's own `config/di.php` wires them: `middlewares-push` into `PushMiddlewareConfig` (`commonMiddlewareDefinitions`), `middlewares-consume` into `ConsumeMiddlewareDispatcher`, and `middlewares-fail` into `FailureMiddlewareDispatcher` (`middlewareDefinitions`), whose factories create middleware from *definitions* — arrays, class strings, or **closures**. Closures inside these specific keys are therefore the documented vendor pattern, not a violation of the DI & Configuration Guide's params rules (see [core-di-and-config.md](core-di-and-config.md), section 3.1). Do not copy the pattern into custom, non-`middlewares-*` params keys.
 
 ```php
 declare(strict_types=1);
@@ -627,7 +627,7 @@ return [
                         'maxAttempts' => 3,
                         'delayInitial' => 5.0,    // 5 seconds initial delay
                         'delayMaximum' => 60.0,   // Max 1 minute delay
-                        'exponent' => 2.0,        // Delays: 5s, 10s, 20s
+                        'exponent' => 2.0,        // Delays: 10s, 20s, 40s (first delay = delayInitial × exponent)
                         'producerProvider' => QueueProducerProviderInterface::class,
                     ],
                 ],
@@ -771,7 +771,7 @@ sudo systemctl enable --now yii-queue@{1..4}.service
 | **Configuring handlers in `di.php` instead of `params.php`** | `yiisoft/queue` reads message and handler mappings from `$params['yiisoft/queue']['handlers']` and `['messages']`. | Place queue handler mappings in `config/params.php` under `'yiisoft/queue'`. |
 | **Pushing queue messages inside an active DB transaction** | If the worker picks up the job before the transaction commits, the record is not found. If the transaction rolls back, an orphaned job executes anyway. | Dispatch queue messages strictly post-commit after `$db->transaction(...)` succeeds. |
 | **Swallowing exceptions silently inside worker handlers** | Prevents the failure middleware pipeline and dead-letter queue from activating; failing jobs are falsely marked as successful. | Log errors and re-throw `Throwable` to trigger retry policies or dead-letter routing. |
-| **Omitting `fromPayload()` in custom `MessageInterface` classes** | Unserializing messages from JSON requires `fromPayload(string $type, mixed $payload): static` to reconstruct the typed message object. | Always implement `public static function fromPayload(string $type, bool\|int\|float\|string\|array\|null $payload): static`. |
+| **Omitting `fromPayload()` in custom `MessageInterface` classes** | Unserializing messages from JSON requires `fromPayload(string $type, bool\|int\|float\|string\|array\|null $payload): static` to reconstruct the typed message object. (Custom classes may widen `$payload` to `mixed`.) | Always implement `public static function fromPayload(string $type, bool\|int\|float\|string\|array\|null $payload): static`. |
 | **Instantiating abstract class `Message` directly via `new Message(...)`** | `Yiisoft\Queue\Message\Message` is an abstract class; attempting `new Message(...)` triggers PHP `Cannot instantiate abstract class` Fatal Error. | Instantiate `GenericMessage` or a custom domain class extending `Message`. |
 | **Attempting to use Yii 2 queue events or searching for `src/Event/`** | `BeforePush`, `AfterPush`, `BeforeConsume`, `AfterConsume`, and `JobFailure` events do **not** exist in Yii 3. There is no `src/Event/` directory. | Use the three middleware pipelines: `middlewares-push` (`PushMiddlewareInterface`), `middlewares-consume` (`ConsumeMiddlewareInterface`), and `middlewares-fail` (`FailureMiddlewareInterface`). |
 | **Assuming single monolithic worker loop for all queues in production** | `./yii queue:listen` only listens to one queue (`DefaultQueue::NAME` by default). `./yii queue:listen-all` is strictly designed for local development. | Configure separate Supervisor or systemd worker daemon processes for each named queue channel in production. |

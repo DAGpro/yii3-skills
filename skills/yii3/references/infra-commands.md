@@ -82,11 +82,11 @@ Operating System Process Exit ($exitCode)
 
 ### Console Lifecycle Events
 
-Yii3 console dispatches explicit lifecycle events during execution: `Yiisoft\Yii\Console\Event\ApplicationStartup`, `Yiisoft\Yii\Console\Event\ApplicationShutdown`, and — bridged to the PSR-14 event dispatcher via `Yiisoft\Yii\Console\SymfonyEventDispatcher` — standard Symfony events (`ConsoleCommandEvent`, `ConsoleErrorEvent`, `ConsoleTerminateEvent`). Payloads, dispatch points, and the bridge mechanics are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.2.
+Yii3 console dispatches explicit lifecycle events during execution: `Yiisoft\Yii\Console\Event\ApplicationStartup`, `Yiisoft\Yii\Console\Event\ApplicationShutdown`, and — bridged to the PSR-14 event dispatcher via `Yiisoft\Yii\Console\SymfonyEventDispatcher` — standard Symfony events (`ConsoleCommandEvent`, `ConsoleErrorEvent`, `ConsoleTerminateEvent`). Payloads, dispatch points, and the bridge mechanics are owned by the [Events & Listeners Guide, §6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console).
 
 ### Subscribing to Lifecycle Events
 
-Listeners are registered in the `events-console` configuration group. Create an app-level `config/common/events.php` file returning a map of event class to listener list and map it into the shared `events` group in `config/configuration.php` (`'events' => 'common/events.php'`) — the base runner reverse-merges `events` into `events-web` and `events-console`, so the file reaches console listeners too (see [Events Guide, §4.1](core-events-and-listeners.md)):
+Listeners are registered in the `events-console` configuration group. Create an app-level `config/common/events.php` file returning a map of event class to listener list and map it into the shared `events` group in `config/configuration.php` (`'events' => 'common/events.php'`) — the base runner reverse-merges `events` into `events-web` and `events-console`, so the file reaches console listeners too (see [Events Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes)):
 
 ```php
 // config/common/events.php
@@ -116,10 +116,10 @@ return [
 
 Wiring details:
 
-- Listener formats (`[Class::class, 'method']`, closures, invokables) and the config-to-collection pipeline are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2; group declaration and the `events` → `events-web`/`events-console` reverse-merge by its section 4.1.
-- The dispatcher is wired automatically by `yiisoft/yii-console` (its default `di-console.php` sets `Yiisoft\Yii\Console\SymfonyEventDispatcher` on the `Application` — [Events Guide, §6.2](core-events-and-listeners.md)). Without a dispatcher configured, lifecycle events are not dispatched at all.
+- Listener formats (`[Class::class, 'method']`, closures, invokables) and the config-to-collection pipeline are owned by the [Events & Listeners Guide, §4.2](core-events-design.md#42-declarative-event-mapping--supported-listener-formats); group declaration and the `events` → `events-web`/`events-console` reverse-merge by its [§4.1](core-events-design.md#41-configuration-architecture--scopes).
+- The dispatcher is wired automatically by `yiisoft/yii-console` (its default `di-console.php` sets `Yiisoft\Yii\Console\SymfonyEventDispatcher` on the `Application` — [Events Guide, §6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console)). Without a dispatcher configured, lifecycle events are not dispatched at all.
 - Real-world examples: `yiisoft/yii-debug` subscribes `Debugger::start` to `ApplicationStartup` and `Debugger::stop` to `ApplicationShutdown` (see `vendor/yiisoft/yii-debug/config/events-console.php`); `yiisoft/log` registers a closure that flushes the logger on `ConsoleTerminateEvent` (see `vendor/yiisoft/log/config/events-console.php`).
-- Nuances: `ApplicationStartup` carries the first raw argv token (e.g. `serve`), not the resolved command name — payload details in [Events Guide, §6.2](core-events-and-listeners.md).
+- Nuances: `ApplicationStartup` carries the first raw argv token (e.g. `serve`), not the resolved command name — payload details in [Events Guide, §6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console).
 
 ---
 
@@ -680,7 +680,7 @@ $answer = $helper->ask($input, $output, $question);
 ```
 
 > [!NOTE]
-> `SymfonyStyle` also exposes `ask()`, `askHidden()`, and `choice()` convenience methods (see Symfony Console documentation); they are not exercised in official `yiisoft/*` package sources, which use `confirm()` and the `QuestionHelper` API shown above.
+> `SymfonyStyle` also exposes `ask()`, `askHidden()`, and `choice()` convenience methods (see Symfony Console documentation). Of these, only `choice()` is exercised in official `yiisoft/*` package sources — once, by `yiisoft/yii-dev-tool`'s release tooling (`OutputManager::choice()` delegating to `SymfonyStyle::choice()` in `Release/MakeCommand.php`); `ask()` and `askHidden()` are not exercised anywhere. Official packages otherwise use `confirm()` and the `QuestionHelper` API shown above.
 
 ### 5.4. Long-Running Output & Non-Interactive Runs
 

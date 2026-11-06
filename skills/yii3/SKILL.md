@@ -117,7 +117,7 @@ Full grounded matrices: each guide's Anti-Pattern Matrix:
 | 12 | `$session->getFlash(...)` / `$session->setFlash(...)` | Inject `FlashInterface` separately |
 | 13 | `if ($currentUser->getIdentity() === null)` | `$currentUser->isGuest()` — `getIdentity()` never returns null (`references/core-version-notes.md#r7-currentusergetidentity-never-returns-null-user`) |
 | 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` |
-| 15 | `#[Override]` attribute on methods | Omit it — forbidden by Yii 3 conventions, stripped by Rector (`RemoveOverrideAttributeRector` — convention claim, see `references/core-version-notes.md#r10-override-attribute-ban-convention-not-grounded-in-package-sources`) |
+| 15 | `#[Override]` attribute on methods | Omit it — forbidden by Yii 3 conventions, stripped by Rector (`RemoveOverrideAttributeRector` — grounded: shipped by `yiisoft/code-style` in the `YII_CORE` set, see `references/core-version-notes.md#r10-override-attribute-ban-code-style-yii_core-set`) |
 
 ## Task & Intent Routing Matrix
 

@@ -179,11 +179,28 @@ $manager = new TransactionalManagerDecorator(
 );
 ```
 
-Run Cycle migrations via:
-```shell
-./vendor/bin/cycle-migrate --path=vendor/yiisoft/rbac-cycle-db/migrations/items
-./vendor/bin/cycle-migrate --path=vendor/yiisoft/rbac-cycle-db/migrations/assignments
+There is no standalone `cycle-migrate` binary. Run the migrations through `yiisoft/yii-cycle`'s console command: register the package's vendor migration directories under the Cycle migration config (`vendorDirectories` — the `directory` option does not support multiple directories) and run `./yii migrate:up`:
+
+```php
+// config/params.php
+return [
+    'yiisoft/yii-cycle' => [
+        'migrations' => [
+            'directory' => '@root/migrations', // alias-resolved by yii-cycle
+            'vendorDirectories' => [           // passed through to Cycle MigrationConfig as-is (no alias resolution)
+                dirname(__DIR__) . '/vendor/yiisoft/rbac-cycle-db/migrations/items',
+                dirname(__DIR__) . '/vendor/yiisoft/rbac-cycle-db/migrations/assignments',
+            ],
+        ],
+    ],
+];
 ```
+
+```shell
+./yii migrate:up
+```
+
+Alternatively, run the migrations programmatically with `Cycle\Migrations\Migrator` (`$migrator->configure()` once, then loop `$migrator->run($capsule)`) — see the "Configuring migrator and capsule" and "Applying migrations" sections of the `yiisoft/rbac-cycle-db` README.
 
 ## 4. Hybrid Storage Architectures
 

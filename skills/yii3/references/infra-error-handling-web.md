@@ -19,7 +19,7 @@ In Yii3, HTTP errors and unhandled exceptions are caught through a PSR-15 middle
 | **`ErrorData`** | `Yiisoft\ErrorHandler\ErrorData` | Final immutable value object implementing `\Stringable`. Holds the response body string plus headers; public API is exactly `__construct()`, `__toString()`, `addToResponse()` — there is no `getData()` method. |
 | **`HeadersProvider`** | `Yiisoft\ErrorHandler\HeadersProvider` | Manages HTTP headers appended to every error response (e.g. security headers). Consumed by `ThrowableResponseFactory`, not by `ErrorCatcher`. |
 | **`ContentTypeRendererProvider`** | `Yiisoft\ErrorHandler\RendererProvider\ContentTypeRendererProvider` | Resolves the renderer (`HtmlRenderer`, `JsonRenderer`, `XmlRenderer`, `PlainTextRenderer`) based on the request `Accept` header (q-factor sorted, exact-string match). |
-| **`ErrorHandler`** | `Yiisoft\ErrorHandler\ErrorHandler` | Low-level handler for out-of-memory errors, fatals, warnings, notices and exceptions outside the PSR-15 pipeline (see section 10). |
+| **`ErrorHandler`** | `Yiisoft\ErrorHandler\ErrorHandler` | Low-level handler for out-of-memory errors, fatals, warnings, notices and exceptions outside the PSR-15 pipeline (see [§10 of the Error Handling Ops Guide](infra-error-handling-ops.md#10-low-level-php-error-handling-errorhandler)). |
 | **`ThrowableHandler`** | `Yiisoft\Yii\Http\Handler\ThrowableHandler` | PSR-15 request handler (package `yiisoft/yii-http`) that re-throws a stored `Throwable`. Used by the HTTP runner to re-enter `ErrorCatcher` from outside the pipeline. |
 | **`NotFoundHandler`** | `Yiisoft\Yii\Http\Handler\NotFoundHandler` | Pipeline-end fallback request handler from `yiisoft/yii-http` (not an error renderer): returns a bare 404 with body `We were unable to find the page "$path".` when no middleware produced a response. Wired explicitly via `Application`'s `fallbackHandler`; the code-level default is `UnhandledRequestHandler`, which throws `RuntimeException('No response was generated.')`. |
 | **`FriendlyExceptionInterface`** | `Yiisoft\FriendlyException\FriendlyExceptionInterface` | Exception contract providing human-readable titles (`getName()`) and markdown fix recommendations (`getSolution()`). |
@@ -38,7 +38,7 @@ In Yii3, HTTP errors and unhandled exceptions are caught through a PSR-15 middle
 > Ordering still matters, because:
 > - exceptions thrown before `ErrorCatcher` bypass everything nested inside it — `SentryMiddleware` capture and `ExceptionResponder` mapping never run for them;
 > - the safety net is a feature of `yiisoft/yii-runner-http` — a custom runner would let the throwable escape to the global PHP error handler registered by `ErrorHandler::register()`;
-> - in the safety-net path the `BeforeRequest` / `AfterRequest` application events observe a `null` response, and emitter failures (e.g. headers already sent) propagate.
+> - in the safety-net path, `BeforeRequest` carries only the request (it never carries a response), the failing `Application::handle()` run dispatches `AfterRequest` with a `null` response, and the runner's recovery pass (`ErrorCatcher::process()` executed outside `Application::handle()`) dispatches no event pair of its own; emitter failures (e.g. headers already sent) propagate.
 
 The standard execution sequence (first-listed middleware = outermost = executed first):
 
@@ -78,7 +78,8 @@ return [
                         ErrorCatcher::class,
 
                         // 2. Captures exceptions into Sentry, then re-throws so
-                        //    `ErrorCatcher` can format the HTTP response (see section 8.2).
+                        //    `ErrorCatcher` can format the HTTP response
+                        //    (see §8.2 of the Error Handling Ops Guide).
                         SentryMiddleware::class,
 
                         // 3. Maps anticipated domain exceptions to HTTP responses (see section 3).

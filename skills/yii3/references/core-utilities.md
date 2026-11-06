@@ -42,7 +42,7 @@ Yii3 decomposes monolithic framework helpers into focused, independent packages.
 | Package | Composer Command | Key Classes & Contracts | Primary Purpose & Key Details |
 |---|---|---|---|
 | `yiisoft/arrays` | `composer require yiisoft/arrays` | `ArrayHelper`, `ArraySorter`, `ArrayableInterface`, `ArrayableTrait`, `ArrayAccessTrait` | Nested array access, direct/by-path mutations, stable sorting, data transformations. Direct Composer requirement on `"yiisoft/strings": "^2.6"`. |
-| `yiisoft/strings` | `composer require yiisoft/strings` | `StringHelper`, `Inflector`, `NumericHelper`, `CombinedRegexp`, `MemoizedCombinedRegexp`, `WildcardPattern` | Multibyte UTF-8 operations, pluralization, case conversions, slug generation, branch-reset regex optimizations. Requires `ext-mbstring`; recommends `ext-intl`. |
+| `yiisoft/strings` | `composer require yiisoft/strings` | `StringHelper`, `Inflector`, `NumericHelper`, `CombinedRegexp`, `MemoizedCombinedRegexp`, `WildcardPattern` | Multibyte UTF-8 operations, pluralization, case conversions, slug generation, branch-reset regex optimizations. Requires `ext-mbstring`; uses `ext-intl` opportunistically when loaded (opt out via `Inflector->withoutIntl()`). |
 | `yiisoft/json` | `composer require yiisoft/json` | `Json` | Exception-safe JSON codec (`JSON_THROW_ON_ERROR`). Deliberate XSS defense via `htmlEncode()`; native PHP 8.1+ `BackedEnum` support. |
 | `yiisoft/var-dumper` | `composer require yiisoft/var-dumper` | `VarDumper`, `ClosureExporter` | Debugging dumps and evaluatable code export — owned by the [Niche Utility Packages Guide, §1](core-utilities-niche.md#1-yiisoftvar-dumper--vardumper--closureexporter). |
 | `yiisoft/classifier` | `composer require yiisoft/classifier` | `Classifier` | Directory class discovery by interface, parent, or attribute (console/build steps only) — owned by the [Niche Utility Packages Guide, §2](core-utilities-niche.md#2-yiisoftclassifier--class-discovery). |
@@ -322,8 +322,8 @@ StringHelper::endsWithIgnoringCase('photo.JPG', '.jpg');           // true
 
 // Truncation (Defaults to '…' marker. Note: $asHtml parameter does NOT exist in Yii3!)
 StringHelper::truncateBegin('Very long content string', length: 14); // '…ontent string'
-StringHelper::truncateMiddle('Long file description header', length: 15); // 'Long f… header'
-StringHelper::truncateEnd('Detailed product description', length: 10); // 'Detailed p…'
+StringHelper::truncateMiddle('Long file description header', length: 15); // 'Long fi… header' (result is 15 chars including the marker)
+StringHelper::truncateEnd('Detailed product description', length: 10); // 'Detailed…' (marker included in the length; trailing whitespace is rtrimmed)
 StringHelper::truncateWords('Three blind mice went to town', count: 3); // 'Three blind mice…'
 StringHelper::truncateWordsByLength('Alpha Beta Gamma Delta', length: 14); // 'Alpha Beta…'
 
@@ -353,23 +353,24 @@ $inflector = new Inflector();
 $inflector->toPascalCase('user-profile-setting'); // 'UserProfileSetting' (Inverse of pascalCaseToId)
 $inflector->toCamelCase('user-profile-setting');  // 'userProfileSetting'
 $inflector->toSnakeCase('UserProfileSetting');   // 'user_profile_setting'
-$inflector->toHumanReadable('user_id');          // 'user'
+$inflector->toHumanReadable('user_id');          // 'User' (first character is uppercased by default)
 $inflector->toSentence('user_first_name');       // 'User first name'
-$inflector->toWords('UserAddressDTO');           // 'User Address DTO'
+$inflector->toWords('UserAddressDTO');           // 'user address dto' (lowercased via mb_strtolower)
 $inflector->pascalCaseToId('UserProfileSetting'); // 'user-profile-setting'
 
 // Database Table <-> Class Name Conventions
-$inflector->classToTable('App\\Entity\\BlogPost'); // 'blog_posts'
+$inflector->classToTable('BlogPost');              // 'blog_posts'
+$inflector->classToTable('App\\Entity\\BlogPost'); // 'app\entity\blog_posts' — namespace separators survive; pass the bare class name
 $inflector->tableToClass('blog_posts');            // 'BlogPost'
 
-// English Pluralization & Singularization (covers 114 irregular special rules)
+// English Pluralization & Singularization (covers 113 irregular special rules)
 $inflector->toPlural('ox');        // 'oxen'
 $inflector->toPlural('child');     // 'children'
 $inflector->toPlural('criterion'); // 'criteria'
 $inflector->toSingular('people');  // 'person'
 
 // Slug generation with automated transliteration
-$inflector->toSlug('Hélène & François'); // 'helene-and-francois'
+$inflector->toSlug('Hélène & François'); // 'helene-francois' (non-alphanumeric runs collapse into a single separator; no `&` → 'and' expansion)
 ```
 
 > [!NOTE]
@@ -380,7 +381,7 @@ $inflector->toSlug('Hélène & François'); // 'helene-and-francois'
 - `Inflector::TRANSLITERATE_LOOSE` (default): Converts to ASCII and strips remaining non-ASCII characters (`Any-Latin; Latin-ASCII; [\u0080-\uffff] remove`).
 - `Inflector::TRANSLITERATE_MEDIUM`: Converts to Latin-1 (`Any-Latin; Latin-ASCII`).
 - `Inflector::TRANSLITERATE_STRICT`: Preserves non-ASCII diacritics (`Any-Latin; NFKD`).
-- `->withoutIntl()`: Forces usage of the built-in 64-character Latin-1 fallback map (useful to guarantee identical slug generation across environments lacking `ext-intl`).
+- `->withoutIntl()`: Forces usage of the built-in 66-character Latin-1 fallback map (useful to guarantee identical slug generation across environments lacking `ext-intl`).
 
 ### 3.3. NumericHelper: Ordinals, Sizing, Normalization
 
@@ -449,7 +450,7 @@ $pattern = (new WildcardPattern('src/**/*.php', delimiters: ['/', '\\']))->ignor
 $pattern->match('src/Domain/Model/User.PHP'); // true
 
 WildcardPattern::isDynamic('templates/*.html'); // true (contains wildcard markers)
-WildcardPattern::quote('user.*.profile');       // 'user\.\*\.profile' (escapes wildcards)
+WildcardPattern::quote('user.*.profile');       // 'user.\*.profile' (escapes only the pattern chars `\ ? * [ ]` — dots are left untouched)
 ```
 
 ---

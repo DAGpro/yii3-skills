@@ -200,7 +200,7 @@ The map above is the complete `yiisoft/app` set — **19 groups**. There is deli
 **Package-side configuration.** Packages participate through their own `composer.json` `extra`: a `config-plugin` map (group => files), `config-plugin-options`, or a `config-plugin-file` pointing to a PHP map with the same schema as above (when `config-plugin-file` is set, inline `config-plugin*` extras are ignored). The plugin scans every installed package of the configured `package-types` and merges their groups into the merge plan.
 
 > [!NOTE]
-> **The `events*` groups are consumed by `yiisoft/yii-event`.** The package's params key selects the active group — `'yiisoft/yii-event' => ['eventsConfigGroup' => 'events-web']` (or `'events-console'`) — and its own DI wiring loads that group through the `$config` local variable (see [3.1](#31-rules-for-parameters)): `ListenerCollection::class => static fn (Factory $factory) => $factory->create($config->get($params['yiisoft/yii-event']['eventsConfigGroup']))`. Event names inside an events group must be event class names — no wildcards. The shipped PSR-14 DI bindings and the empty-group availability guarantees are owned by the [Events & Listeners Guide](core-events-and-listeners.md), sections 1 and 4.1.
+> **The `events*` groups are consumed by `yiisoft/yii-event`.** The package's params key selects the active group — `'yiisoft/yii-event' => ['eventsConfigGroup' => 'events-web']` (or `'events-console'`) — and its own DI wiring loads that group through the `$config` local variable (see [3.1](#31-rules-for-parameters)): `ListenerCollection::class => static fn (Factory $factory) => $factory->create($config->get($params['yiisoft/yii-event']['eventsConfigGroup']))`. Event names inside an events group must be event class names — no wildcards. The shipped PSR-14 DI bindings and the empty-group availability guarantees are owned by the [Events & Listeners Guide](core-events-and-listeners.md), sections 1 and 4.1 ([Events: Design, Configuration & Post-Commit Rule](core-events-design.md)).
 
 ### 2.4. File Syntax Markers in Config Groups
 
@@ -673,7 +673,7 @@ return [
 > - **`Dsn` in params is the documented vendor shape** (immutable value object, not a service) — an explicit exception to the primitives-only convention in [3.1](#31-rules-for-parameters). Credentials themselves still come from `$_ENV`, never hardcoded (see the anti-pattern matrix in 8).
 > - **`charset()` is a method, not a constructor parameter** — pass the charset via the Dsn attributes (as above) or call `charset()` on the driver; `'charset' => ...` inside the Driver constructor arguments is an error.
 > - The `Dsn` is an immutable `Stringable` object: per-environment overrides must replace the whole value, not a fragment. For SQLite (`yiisoft/db-sqlite`), the same shape applies with that package's `Dsn`: `new Dsn('sqlite', '/path/to/app.db')` (constructor `__construct(string $driver = 'sqlite', string $databaseName = '')`).
-> - Per-driver `Dsn` variants (`DsnSocket`, PostgreSQL, SQLite in-memory/file, MSSQL, Oracle) are catalogued in the [Databases Guide](persistence-db.md), section 6.2.
+> - Per-driver `Dsn` variants (`DsnSocket`, PostgreSQL, SQLite in-memory/file, MSSQL, Oracle) are catalogued in the [Databases: Readers & Drivers Guide, §6.2](persistence-db-readers-and-drivers.md#62-canonical-connection-configuration).
 > - **Schema caching:** the default `new SchemaCache()` falls back to `NullCache` (no caching). For production, pass a `SchemaCache` built over your PSR-16 cache as the `schemaCache` constructor argument.
 
 ---
@@ -819,18 +819,33 @@ final class UserModuleServiceProvider implements ServiceProviderInterface
 
 Providers are accepted as class-strings or instances; class-strings are instantiated with `new $provider()`, so a provider needs a no-argument constructor. `getDefinitions()` runs at container construction; extensions collected from all providers are applied after all definitions, so an extension may target another provider's service.
 
-Register service providers in your runner or `configuration.php` under `'di-providers'` / `'di-providers-web'`:
+Register service providers in your runner or `configuration.php` under `'di-providers'` / `'di-providers-web'`. Config-plugin group values are **file paths** (or `'$group'` references to other groups) — never class names; the referenced file returns the list of provider class-strings:
 ```php
+// configuration.php
 <?php
 
 declare(strict_types=1);
 
 return [
     'config-plugin' => [
+        'di-providers' => 'common/di-providers.php',
         'di-providers-web' => [
-            \App\Infrastructure\Provider\UserModuleServiceProvider::class,
+            '$di-providers',
+            'web/di-providers.php',
         ],
     ],
+];
+```
+```php
+// common/di-providers.php
+<?php
+
+declare(strict_types=1);
+
+use App\Infrastructure\Provider\UserModuleServiceProvider;
+
+return [
+    UserModuleServiceProvider::class,
 ];
 ```
 
@@ -959,7 +974,7 @@ $connection = $factory->create([
 Signature: `Factory::__construct(?ContainerInterface $container = null, array $definitions = [], bool $validate = true)`.
 **The second argument is a map of pre-registered definitions (service ID => definition), NOT a list of default option values.** Passing an arbitrary array such as `['defaultTimeout' => 30]` fails validation with `InvalidConfigException` (`Invalid definition: 30` — the message contains only the offending value, not the key). Pre-registered definitions are merged with same-class definitions passed to `create()`, which wins per key.
 
-`Factory::create(mixed $config)` — the parameter is named `$config` — accepts a registered ID string, an existing class-string (autowired), an array definition, or a callable; an unknown class-string throws `Yiisoft\Factory\NotFoundException` (`No definition or class found or resolvable for "<id>".`). Every `create()` call produces a fresh object: `Factory` is a per-call replacement for `new`, not a service container. `withDefinitions(array $definitions)` **replaces** the whole definitions map instead of merging.
+`Factory::create(mixed $config)` — the parameter is named `$config` — accepts a registered ID string, an existing class-string (autowired), an array definition, or a callable; an unknown class-string throws `Yiisoft\Factory\NotFoundException` (`No definition or class found or resolvable for <id>.`). Every `create()` call produces a fresh object: `Factory` is a per-call replacement for `new`, not a service container. `withDefinitions(array $definitions)` **replaces** the whole definitions map instead of merging.
 
 > [!NOTE]
 > **`validate=false`** (third constructor argument) defers validation: the `Factory` constructs successfully even with invalid definitions, and the failure surfaces at `create()` as `InvalidConfigException`. This is the documented production tuning.
@@ -996,7 +1011,7 @@ $connection = $factory->create(CustomConnection::class);
 
 Signature: `StrictFactory::__construct(array $definitions, ?ContainerInterface $container = null, bool $validate = true)` (definitions come **first**), `create(string $id): mixed`, `has(string $id): bool`. Available since `yiisoft/factory` 1.3.0; dependencies of created objects still resolve through the injected container.
 
-`create()` is **string-typed**. An unregistered class-string throws `Yiisoft\Factory\NotFoundException` (`No definition or class found or resolvable for "<id>".`). An inline definition array (or a callable) **cannot be passed at all** — it fails with a PHP `TypeError` at the call site, not `NotFoundException`.
+`create()` is **string-typed**. An unregistered class-string throws `Yiisoft\Factory\NotFoundException` (`No definition or class found or resolvable for <id>.`). An inline definition array (or a callable) **cannot be passed at all** — it fails with a PHP `TypeError` at the call site, not `NotFoundException`.
 
 ---
 
@@ -1065,7 +1080,7 @@ Container resolution failures surface as a small, well-defined exception set. Kn
 | `Yiisoft\Di\BuildingException` | `yiisoft/di` | A non-PSR error occurs while building a service | `Caught unhandled error "<message>" while building "<stack>".` |
 | `CircularReferenceException` | `Yiisoft\Definitions\Exception\` (`yiisoft/definitions`) | A service (indirectly) depends on itself | `Circular reference to "<id>" detected while building: <stack>.` |
 | `NotInstantiableException` / `NotInstantiableClassException` | `yiisoft/definitions` (same `Yiisoft\Definitions\Exception\` namespace) | A scalar/class-typed constructor parameter has no value and no default | `Can not determine value of the "<param>" parameter of type "<type>" ...` |
-| `Yiisoft\Factory\NotFoundException` | `yiisoft/factory` | `Factory::create()` / `StrictFactory::create()` gets an unknown class-string | `No definition or class found or resolvable for "<id>".` |
+| `Yiisoft\Factory\NotFoundException` | `yiisoft/factory` | `Factory::create()` / `StrictFactory::create()` gets an unknown class-string | `No definition or class found or resolvable for <id>.` (no quotes — unlike the `yiisoft/di` variant) |
 | `Yiisoft\Injector\MissingRequiredArgumentException` | `yiisoft/injector` | A required scalar argument is not provided | `Missing required argument "<param>" when calling "<callable>" ...` |
 | `Yiisoft\Injector\InvalidArgumentException` | `yiisoft/injector` | A scalar value is passed positionally | `Invalid argument "<arg>" when calling "<callable>"... Non-interface argument should be named explicitly when passed.` |
 

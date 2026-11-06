@@ -59,7 +59,7 @@ Implementation guidelines (from the interface docblock):
 - `getName()`: Short, human-understandable exception title.
 - `getSolution()`: Clear resolution advice. Make it as short as possible, do **not** use HTML tags, and use simple markdown (`*`, `` ` ``, `-`).
 
-Over 25 packages in the Yii3 ecosystem implement this interface (including `yiisoft/di`, `yiisoft/error-handler`, `yiisoft/yii-console`, `yiisoft/middleware-dispatcher`, and `yiisoft/validator`). Application code never needs custom try-catch rendering blocks for friendly exceptions — the ecosystem handlers render them automatically (see §3 and §4).
+Over 20 official `yiisoft/*` packages implement this interface (22 known implementers, including `yiisoft/di`, `yiisoft/error-handler`, `yiisoft/middleware-dispatcher`, and `yiisoft/validator`; `yiisoft/yii-console` does not implement it — it consumes the interface for console rendering). Application code never needs custom try-catch rendering blocks for friendly exceptions — the ecosystem handlers render them automatically (see §3 and §4).
 
 ---
 
@@ -130,7 +130,7 @@ final class UserNotFoundException extends RuntimeException implements FriendlyEx
     public function getSolution(): ?string
     {
         return "Verify that the provided user ID exists in the database.\n"
-            . "If testing locally, run `php yii fixture/load` to seed initial test users.";
+            . "If testing locally, run `./yii migrate:up` and seed test users via fixtures in the test bootstrap (see the Database Testing Guide, §5 Test Fixtures & Data Seeding).";
     }
 }
 ```
@@ -148,7 +148,7 @@ During web requests the error handler renders friendly exceptions automatically 
 
 ## 4. Console Rendering (`yiisoft/yii-console`)
 
-Yii3 provides first-class support for `Yiisoft\FriendlyException\FriendlyExceptionInterface` in the console. When a command throws a friendly exception, `Yiisoft\Yii\Console\Application` renders actionable guidance directly to the terminal user: the runner catches the throwable and `Application::renderThrowable()` (public API over the protected `doRenderThrowable()`) prints the friendly title and the solution note (styled via Symfony Console style helpers, or raw ANSI tags at low verbosity) and always appends the stack trace.
+Yii3 provides first-class support for `Yiisoft\FriendlyException\FriendlyExceptionInterface` in the console. When a command throws a friendly exception, `Yiisoft\Yii\Console\Application` renders actionable guidance directly to the terminal user: the runner catches the throwable and `Application::renderThrowable()` (public API over the protected `doRenderThrowable()`) prints the friendly title and the solution note (styled via Symfony Console style helpers when the output implements `StyleInterface`, or raw `<fg=...>` ANSI tags when it does not — the branch is the `instanceof StyleInterface` check, not the verbosity level) and always appends the stack trace.
 
 ### 4.1. Implementing a CLI-Friendly Exception
 
@@ -200,6 +200,6 @@ The `! [NOTE]`-styled rendering (title + note) applies only when the output obje
 
 - [Error Handling Guide](infra-error-handling.md) — ErrorCatcher middleware, exception mapping with `ExceptionResponder`, custom HTML/JSON renderers, `UserException` information disclosure, and Sentry monitoring.
 - [Console Commands Guide](infra-commands.md) — Command class anatomy, `SymfonyStyle` terminal UX, exit codes, and testing with `CommandTester`.
-- [Events & Listeners Guide](core-events-and-listeners.md) — The `events-console` configuration group contents (`ErrorListener` subscription), section 6.2.
+- [Events & Listeners Guide, §6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console) — The `events-console` configuration group contents (`ErrorListener` subscription).
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Console application runner lifecycle, including the friendly-exception rendering summary (§3.6).
 - [Utility Packages Guide](core-utilities.md) — Core everyday standalone helpers (`yiisoft/arrays`, `yiisoft/strings`, `yiisoft/json`).

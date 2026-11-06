@@ -7,7 +7,7 @@
 
 ## 1. Overview & Architecture
 
-The `yiisoft/yii-swagger` package provides OpenAPI v3 specification generation and interactive Swagger UI rendering for Yii 3 applications. Unlike legacy frameworks that relied on runtime reflection hacks or docblock parsing, Yii 3 pairs native PHP 8 attributes with [zircote/swagger-php](https://github.com/zircote/swagger-php) (v5+) and client assets from [swagger-api/swagger-ui](https://swagger.io/tools/swagger-ui/).
+The `yiisoft/yii-swagger` package provides OpenAPI v3 specification generation and interactive Swagger UI rendering for Yii 3 applications. Unlike legacy frameworks that relied on runtime reflection hacks or docblock parsing, Yii 3 pairs native PHP 8 attributes with [zircote/swagger-php](https://github.com/zircote/swagger-php) (composer constraint `^5.0`) and client assets from [swagger-api/swagger-ui](https://swagger.io/tools/swagger-ui/).
 
 ### 1.1. Core Architectural Components
 
@@ -134,7 +134,7 @@ return [
 ```
 
 > [!IMPORTANT]
-> **Zero Manual DI Wiring:** Never write custom DI factories for `SwaggerService`, `SwaggerJson`, or `SwaggerUi` in your application's `config/web/di/swagger.php`. All dependencies and parameter bindings are wired automatically. All customizations must be done through `config/params.php` or route modifiers.
+> **Zero Manual DI Wiring:** Never write custom DI factories for `SwaggerService`, `SwaggerJson`, or `SwaggerUi` in your application's `config/common/di/swagger.php`. All dependencies and parameter bindings are wired automatically. All customizations must be done through `config/params.php` or route modifiers. **Single exception:** if you need custom OpenAPI processors, inject a pre-configured `OpenApi\Generator` into `SwaggerService` via a container definition (see §3.3).
 
 ### 3.2. Comprehensive Parameters Configuration
 

@@ -85,7 +85,10 @@ final class SwaggerGenerateCommand extends Command
 }
 ```
 
-### 7.2. Console DI Wiring (`config/console/di/swagger.php`)
+### 7.2. Console DI Wiring (`config/common/di/swagger.php`)
+
+> [!NOTE]
+> The app template's `di-console` group is just the common DI (`'di-console' => '$di'` in `config/configuration.php`); no template scans `config/console/di/*.php`. Definitions for console commands therefore belong in `config/common/di/`, which is loaded for both web and console.
 
 ```php
 declare(strict_types=1);
@@ -134,7 +137,9 @@ The `ui-params` array in `config/params.php` configures the browser client:
 
 ### 8.2. Customizing the HTML View Template via `Theme::$pathMap`
 
-`SwaggerUi::handle()` resolves its template file `swagger-ui.php` via `$swaggerService->getViewPath()`. To override the template without touching vendor files, use Yii 3 View Theme mapping in `config/web/params.php`:
+`SwaggerUi::handle()` resolves its template file `swagger-ui.php` via `$swaggerService->getViewPath()`. To override the template without touching vendor files, use Yii 3 View Theme mapping in three steps.
+
+**Step 1 — map the vendor `views/` directory** to your override directory in `config/web/params.php`. Mind the `dirname(..., 3)`: `getFileName()` returns the class *file* path (`src/Service/SwaggerService.php`), so it takes 3 levels to reach the package root where `views/` lives:
 
 ```php
 declare(strict_types=1);
@@ -147,11 +152,33 @@ return [
     'yiisoft/view' => [
         'theme' => [
             'pathMap' => [
-                dirname((new \ReflectionClass(SwaggerService::class))->getFileName(), 2) . '/views' => '@views/swagger',
+                dirname((new \ReflectionClass(SwaggerService::class))->getFileName(), 3) . '/views' => '@views/swagger',
             ],
         ],
     ],
 ];
+```
+
+**Step 2 — attach the theme to `WebView`.** Params alone are inert: the `yiisoft/view` package builds the `Yiisoft\View\Theme` service from these params, but nothing sets it on the view. Add a setter injection in `config/web/di/view.php`:
+
+```php
+declare(strict_types=1);
+
+use Yiisoft\Definitions\Reference;
+use Yiisoft\View\Theme;
+use Yiisoft\View\WebView;
+
+return [
+    WebView::class => [
+        'setTheme()' => [Reference::to(Theme::class)],
+    ],
+];
+```
+
+**Step 3 — define the `@views` alias** (the `app` template does not ship it; only `app-api` does) in `config/common/aliases.php`:
+
+```php
+'@views' => '@root/views',
 ```
 
 Copy `vendor/yiisoft/yii-swagger/views/swagger-ui.php` to your application at `views/swagger/swagger-ui.php` and customize the HTML header, corporate logos, or analytics scripts.
@@ -186,7 +213,19 @@ final class SwaggerDarkThemeAsset extends AssetBundle
 }
 ```
 
-Register this bundle globally in `config/packages/yiisoft/assets.php` or inside your customized `views/swagger/swagger-ui.php`:
+Register this bundle globally via the `yiisoft/assets` params — `AssetManager` registers everything listed under the `register` key (e.g. in `config/web/params.php`):
+
+```php
+'yiisoft/assets' => [
+    'assetManager' => [
+        'register' => [
+            \App\Infrastructure\Asset\SwaggerDarkThemeAsset::class,
+        ],
+    ],
+],
+```
+
+Or register it inside your customized `views/swagger/swagger-ui.php` (the vendor template registers `SwaggerUiAsset` the same way):
 
 ```php
 /** @var Yiisoft\Assets\AssetManager $assetManager */
@@ -384,7 +423,13 @@ return $routes;
 
 When deploying new code releases in production:
 
-1. **Clear the Entire Cache Pool:** Run `./yii cache/flush` during your deployment pipeline.
+1. **Clear the Entire Cache Pool:** Yii 3 ships no cache console command (there is no `cache/flush`). Flush the PSR-16 pool programmatically during your deployment pipeline — e.g. from your own console command or deployment hook:
+   ```php
+   use Yiisoft\Cache\CacheInterface;
+
+   /** @var CacheInterface $cache */
+   $cache->psr()->clear();
+   ```
 2. **Programmatic Key Invalidation:** If using selective invalidation, remove the specific cache key:
    ```php
    use Yiisoft\Cache\CacheInterface;

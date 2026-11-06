@@ -42,4 +42,4 @@ Read this file for the anti-pattern table (§10) and related guides (§11).
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Implementing JWT bearer tokens and OAuth 2.0 flows documented in OpenAPI security schemes.
 - [Console Commands Guide](infra-commands.md) — Building Symfony Console CLI tools like offline specification generators.
 - [File Handling Guide](http-file-handling.md) — Handling binary uploads (`multipart/form-data`) and stream responses.
-- [Views & Widgets Guide](http-views-and-widgets.md) — View rendering, theme path mapping (`Theme::$pathMap`), and asset bundle architecture.
+- [Views & Widgets Guide](http-views-and-widgets.md) — View rendering and asset bundle architecture. Swagger UI view-template customization via `Theme::$pathMap` lives in §8.2 of the [OpenAPI UI & Operations Guide](http-openapi-ui-and-ops.md#82-customizing-the-html-view-template-via-themepathmap).

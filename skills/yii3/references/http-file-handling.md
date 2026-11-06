@@ -36,7 +36,7 @@
 | `yiisoft/response-download` | Factory for PSR-7 download responses (attachment/inline, x-sendfile, byte ranges) | `Yiisoft\ResponseDownload\DownloadResponseFactory`. **Concrete class, no factory interface exists.** |
 | `yiisoft/validator` | Upload validation rules: `Yiisoft\Validator\Rule\File` (extensions, MIME, size), `Yiisoft\Validator\Rule\Image\Image` (dimensions) | The file rule is the **flat class** `Rule\File` — `Rule\File\File` does not exist. See [Validation & Forms Guide](http-validation-and-forms.md) §5.1. |
 | `yiisoft/input-http` | `#[UploadedFiles]` parameter attribute to pull uploaded files into action arguments | See [Actions & Controllers Guide](http-actions-and-controllers.md) §3.2. |
-| `yiisoft/http` | HTTP constants: `Yiisoft\Http\Status`, `Yiisoft\Http\Header`, `Yiisoft\Http\ContentDispositionHeader` (`ATTACHMENT` / `INLINE`) | Final constant-only classes. **No** `ContentType` or `StatusCode` classes exist. |
+| `yiisoft/http` | HTTP constants: `Yiisoft\Http\Status`, `Yiisoft\Http\Header`, `Yiisoft\Http\ContentDispositionHeader` (`ATTACHMENT` / `INLINE`) | `Status` and `Header` are constant-only; `ContentDispositionHeader` also adds static helpers (`name()`, `value()`, `inline()`, `attachment()`). **No** `ContentType` or `StatusCode` classes exist. |
 | `yiisoft/data-response` | Data/JSON responses: `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface::createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = '')` | The data parameter is `mixed`, not `array`. Root-namespace `DataResponse*` classes are `@deprecated` — use `ResponseFactory\*`. |
 | `yiisoft/aliases` | Alias resolution: `Yiisoft\Aliases\Aliases::get('@alias')` | `final`, **no interface** — inject the concrete class. Ships no predefined aliases; `@runtime` is defined by the app template, `@uploads` must be registered by the project (§5). |
 | `yiisoft/strings` | Pattern engine behind `PathPattern` (`Yiisoft\Strings\WildcardPattern`) | `WildcardPattern` itself has **no** `caseSensitive()` / `onlyFiles()` / `onlyDirectories()` — those tuners belong to `Yiisoft\Files\PathMatcher\PathPattern`. |
@@ -310,7 +310,7 @@ For a list of uploads apply the `File` / `Image` rules to every element with `Yi
 
 ### 4.2. Image Dimension Rules (`Rule\Image\Image`)
 
-`Yiisoft\Validator\Rule\Image\Image` checks dimensions alongside the `File` rule; it requires PHP `ext-gd`.
+`Yiisoft\Validator\Rule\Image\Image` checks dimensions alongside the `File` rule. It needs no `ext-gd`: dimensions come from the core `getimagesize()` function (`NativeImageInfoProvider`), and MIME checks use `mime_content_type()` from `ext-fileinfo` (listed under `suggest` in the package's `composer.json` — without it, MIME-backed checks fail validation).
 
 > [!TIP]
 > **Image Rule Reference:**

@@ -239,7 +239,7 @@ $this->setTitle('Products Catalog');
 ```
 
 > [!IMPORTANT]
-> If `itemView` is omitted, calling `render()` throws `LogicException('"itemView" must be set.')`.
+> If `itemView` is omitted, calling `render()` throws `LogicException('"itemView" must be set.')` — but only for **non-empty** datasets: an empty set is handled first and renders the `noResultsText` without touching `itemView`.
 > `ListItemContext` provides public readonly properties: `->data`, `->key`, `->index`, `->widget`.
 
 ## 5. DetailView (`Yiisoft\Yii\DataView\DetailView\DetailView` & `DataField`)
@@ -267,7 +267,8 @@ $this->setTitle('Product Details: ' . $product->getTitle());
 
 <?= DetailView::widget()
     ->data($product)
-    ->containerTag('dl')
+    // Do NOT set containerTag('dl'): `containerTag` is the optional outer wrapper
+    // (default null); the `<dl>` already comes from `listTag()` by default.
     ->fields(
         // Calling getter on object with private properties:
         new DataField(property: 'getTitle()', label: 'Product Title'),
@@ -287,7 +288,7 @@ $this->setTitle('Product Details: ' . $product->getTitle());
 > 3. Otherwise returns literal value `$field->value`.
 >
 > **Private Entity Properties Trap:**
-> On domain objects with `private` properties, `ArrayHelper::getValue()` reads **public properties only**, or executes methods if the key ends with `()` (e.g. `'getTitle()'`). If `property: 'title'` is passed for an object with `private string $title`, it silently returns `null`! Always use `'getTitle()'` or a `value:` closure.
+> On domain objects with `private` properties, `ArrayHelper::getValue()` reads **public properties only**, or executes methods if the key ends with `()` (e.g. `'getTitle()'`). If `property: 'title'` is passed for an object with `private string $title`, it throws a fatal `Error: Cannot access private property`! Always use `'getTitle()'` or a `value:` closure.
 >
 > **`DataField` Validation:**
 > `InvalidArgumentException('Either "property" or "value" must be set.')` is thrown **ONLY** when both `$property` and `$value` are `null`. Setting both is valid: `$value` determines the output, and `$property` serves as fallback for the label.

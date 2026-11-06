@@ -641,7 +641,7 @@ Cycle ORM compiles an in-memory schema describing table layouts, column types, r
 
 `MetadataSchemaConveyor` automatically registers **14 standard schema generators** across three internal compilation stages:
 - **STAGE_INDEX:** `ResetTables`, `Embeddings`, `Entities`, `TableInheritance`, `MergeColumns`
-- **STAGE_RENDER:** `MergeIndexes`, `GenerateRelations`, `GenerateModifiers`, `ValidateEntities`, `RenderTables`, `RenderRelations`, `RenderModifiers`, `ForeignKeys`
+- **STAGE_RENDER:** `GenerateRelations`, `GenerateModifiers`, `ValidateEntities`, `RenderTables`, `RenderRelations`, `RenderModifiers`, `ForeignKeys`, `MergeIndexes` (appended last by `MetadataSchemaConveyor`)
 - **STAGE_POSTPROCESS:** `GenerateTypecast` (`\Cycle\Schema\Generator\GenerateTypecast::class`)
 
 > [!WARNING]
@@ -797,9 +797,9 @@ return [
 ];
 ```
 
-#### 2. Register Vendor Migrations in `config/params.php`
+#### 2. Register Vendor Migrations in `config/common/params.php`
 
-To run the official migrations included with `yiisoft/rbac-cycle-db`:
+To run the official migrations included with `yiisoft/rbac-cycle-db`. The `dirname(__DIR__, 2)` depth below assumes the file sits two directory levels under the project root (the standard `config/common/params.php` layout); adjust the level for a different location:
 
 ```php
 return [

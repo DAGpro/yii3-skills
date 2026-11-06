@@ -61,7 +61,7 @@ Creates or modifies domain state and involves side-effects.
      - *Anti-pattern:* Never put SQL queries, password hashing, or email sending directly inside the Action.
 5. **Configuration & Wiring (Mandatory):**
    - **DI:** Bind `OrderRepositoryInterface => SqlOrderRepository` in `config/common/di/*.php`. Definition forms: `Interface::class => Class::class` or the full form `['class' => ..., '__construct()' => [...]]`.
-   - **Events:** Map listeners in the events config group selected by the `'yiisoft/yii-event' => ['eventsConfigGroup' => ...]` param (`events-web` for HTTP, `events-console` for console). Group declaration, the `$events` reference wiring, and the file-mapping recipe (e.g. `config/common/events.php`) are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.1.
+   - **Events:** Map listeners in the events config group selected by the `'yiisoft/yii-event' => ['eventsConfigGroup' => ...]` param (`events-web` for HTTP, `events-console` for console). Group declaration, the `$events` reference wiring, and the file-mapping recipe (e.g. `config/common/events.php`) are owned by the [Events & Listeners Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes).
    - **Routes:** Register routes in `config/common/routes.php` (the only routes group in the canonical template — there is no `routes-web` group). Use version-aware route syntax — see Archetype F and the [Routing Guide](http-routes.md).
 
 ---
@@ -245,6 +245,7 @@ namespace App\User\Action;
 use App\User\Form\SignupForm;
 use App\User\Signup\SignupUseCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\FormModel\FormHydrator;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
@@ -261,11 +262,11 @@ final readonly class SignupAction
         private SignupUseCase $signup, // application use case
     ) {}
 
-    public function __invoke(): ResponseInterface
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $form = new SignupForm();
 
-        if (!$this->formHydrator->populateFromPostAndValidate($form)) {
+        if (!$this->formHydrator->populateFromPostAndValidate($form, $request)) {
             // Re-render with errors: $form->getValidationResult() carries the Result.
             // withController($this) / withControllerName() scope the view path if needed.
             return $this->viewRenderer->render('user/signup', ['form' => $form]);
@@ -584,7 +585,7 @@ Inspect `composer.json` and existing repositories to detect storage engine:
 ### Post-Commit Event Dispatching Invariant
 When a Use Case involves both database mutation and Domain Events:
 
-**Strict rule: never dispatch side-effect events (email, SMS, queue push) inside an uncommitted transaction.** Collect the events on the aggregate and dispatch them strictly after `$db->transaction()` returns — the full pattern (aggregate `recordEvent()` / `releaseEvents()` plus the use-case dispatch loop) is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 5.
+**Strict rule: never dispatch side-effect events (email, SMS, queue push) inside an uncommitted transaction.** Collect the events on the aggregate and dispatch them strictly after `$db->transaction()` returns — the full pattern (aggregate `recordEvent()` / `releaseEvents()` plus the use-case dispatch loop) is owned by the [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule).
 
 > `releaseEvents()` is an application convention — no yiisoft package provides it; model it on your own aggregate base class.
 > The commit happens inside `transaction()` before it returns (rollback + rethrow on any `Throwable`), so dispatching after the call provably runs post-commit.
@@ -651,8 +652,8 @@ Every feature implementation plan must satisfy these integrity invariants:
 - [ ] **DI registered:** Every newly introduced interface has a binding in `config/common/di/*.php` or `config/web/di/*.php`.
 - [ ] **Route reachable:** Every newly created Action is mounted in `config/common/routes.php` (the canonical template has no `routes-web` group) with correct HTTP method and typed parameter tokens (`{id:\d+}`).
 - [ ] **Console command wired:** Every Console Command is registered in `config/console/params.php`.
-- [ ] **Events wired:** Any Domain Event has listeners mapped in the events config group selected by `eventsConfigGroup` (see [Events & Listeners Guide](core-events-and-listeners.md), section 4.1).
-- [ ] **Events post-commit:** All event dispatches with external side-effects (mail, sms, queue) occur outside/after DB transactions (see [Events & Listeners Guide](core-events-and-listeners.md), section 5).
+- [ ] **Events wired:** Any Domain Event has listeners mapped in the events config group selected by `eventsConfigGroup` (see [Events & Listeners Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes)).
+- [ ] **Events post-commit:** All event dispatches with external side-effects (mail, sms, queue) occur outside/after DB transactions (see [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)).
 - [ ] **Input sanitized:** Any user input passes through a DTO validated with `yiisoft/validator` attributes.
 - [ ] **Forms protected:** Web forms are covered by the active CSRF middleware `Yiisoft\Csrf\CsrfTokenMiddleware` (with `SessionMiddleware` before it) and token validation.
 - [ ] **Action is thin:** Action only coordinates HTTP: Request -> Hydrate DTO -> Validate -> Call Handler/Service -> Build Response.
@@ -685,4 +686,4 @@ Deprecation-sensitive and error-prone APIs, verified against installed package s
 | 17 | Dispatch is synchronous | PSR-14 listeners run inline before `dispatch()` returns (no outbox/deferral) — this is why the post-commit invariant in §4 matters | `vendor/yiisoft/event-dispatcher/src/Dispatcher/Dispatcher.php` |
 | 18 | form-model strict fill | Only properties carrying validation rules are populated from request data by default — `#[Safe]` opts a property out. Hydration & mass-assignment details: [Validation & Forms Guide, §8.2](http-forms-and-hydration.md#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection) | `vendor/yiisoft/form-model/src/FormHydrator.php` |
 | 19 | Views are not auto-escaped | Template output is NOT escaped automatically — escape with `Html::encode()`. Escaping catalog: [Views & Widgets Guide, §4](http-views.md#4-mandatory-xss-escaping--safe-html-yiisofthtmlhtml) | `vendor/yiisoft/view/` (docs: use-in-web-environment) |
-| 20 | Event config fails late | Config-format errors throw at build time, but bad listener definitions pass config build and fail at dispatch — run `ListenerConfigurationChecker::check()` in development (timing details: [Events & Listeners Guide](core-events-and-listeners.md), section 4.3) | `vendor/yiisoft/yii-event/src/ListenerConfigurationChecker.php` |
+| 20 | Event config fails late | Config-format errors throw at build time, but bad listener definitions pass config build and fail at dispatch — run `ListenerConfigurationChecker::check()` in development (timing details: [Events & Listeners Guide, §4.3](core-events-design.md#43-verifying-event-configurations-ahead-of-time)) | `vendor/yiisoft/yii-event/src/ListenerConfigurationChecker.php` |

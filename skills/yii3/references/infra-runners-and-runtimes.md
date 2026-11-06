@@ -191,7 +191,7 @@ final class BootstrapRunner implements RunnerInterface
 
 ### 1.4. Application Lifecycle Events (HTTP & Console)
 
-Yii3 applications dispatch PSR-14 events at critical lifecycle boundaries. The event classes, payloads, and exact dispatch points are owned by the [Events & Listeners Guide](core-events-and-listeners.md), sections 6.1 (HTTP: `ApplicationStartup`, `BeforeRequest`, `AfterRequest`, `AfterEmit`, `ApplicationShutdown`) and 6.2 (Console: `ApplicationStartup`, `ApplicationShutdown`) — subscribe to them exactly as described there.
+Yii3 applications dispatch PSR-14 events at critical lifecycle boundaries. The event classes, payloads, and exact dispatch points are owned by the [Events Reference Guide](core-events-reference.md), sections [6.1](core-events-reference.md#61-http-application-lifecycle-yiisoftyii-http) (HTTP: `ApplicationStartup`, `BeforeRequest`, `AfterRequest`, `AfterEmit`, `ApplicationShutdown`) and [6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console) (Console: `ApplicationStartup`, `ApplicationShutdown`) — subscribe to them exactly as described there.
 
 What matters for runtime selection is the **execution frequency**, which differs substantially between classic short-lived SAPI runtimes and persistent worker daemons:
 
@@ -634,5 +634,5 @@ When an unhandled exception implements `Yiisoft\FriendlyException\FriendlyExcept
 - [Error Handling Guide](infra-error-handling.md) — ErrorCatcher middleware, friendly exceptions, and temporary error handlers.
 - [HTTP State Guide](http-state.md) — Sessions, cookies, and CSRF token handling.
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — `CurrentUser` lifecycle and identity management.
-- [Events & Listeners Guide](core-events-and-listeners.md) — Application lifecycle event classes, payloads, and dispatch points (its sections 6.1–6.2).
+- [Events Reference Guide](core-events-reference.md) — Application lifecycle event classes, payloads, and dispatch points (§6.1–§6.2).
 - [HTTP Testing Guide](testing-http.md) — Functional HTTP testing dispatched in-memory through `HttpApplicationRunner::runAndGetResponse()` (§5).

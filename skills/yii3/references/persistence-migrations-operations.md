@@ -59,7 +59,7 @@ return [
 > **Mutual Exclusivity Invariant in `migrate:create`:**
 > `newMigrationNamespace` and `newMigrationPath` are mutually exclusive.
 > If both keys contain non-empty strings, `migrate:create` will terminate with:
-> `Only one of "newMigrationNamespace" or "newMigrationPath" should be specified.`
+> ``Only one of `newMigrationNamespace` or `newMigrationPath` should be specified.``
 > In modern Yii3 applications using PSR-4 autoloading, always set `newMigrationNamespace` and leave `'newMigrationPath' => ''`.
 
 ---
@@ -186,11 +186,14 @@ Running `--command=junction --and=<table2>` automatically generates:
 > When running migrations inside CI/CD runners, deployment scripts, or Docker container entrypoints, **always pass the `--force-yes` (or `-y`) flag**. Without `-y`, the command waits indefinitely for interactive confirmation (`Apply the above migration? (yes/no) [no]:`), causing the build pipeline to hang or timeout.
 
 #### Multi-Database Execution Behavior
-Once additional databases are configured under `'yiisoft/db-migration' => ['databases' => [...]]` in `config/params.php`, the `--db` option is **mandatory** for every migration command. Running `./yii migrate:up` without `--db` does **not** fan out to all configured databases — the command aborts with the error:
-```text
-The --db option is required when multiple databases are configured.
-```
-Only when no additional databases are configured does the command fall back to the `default` database automatically. Targeted runs (`--namespace`, `--path`) must always name the database explicitly.
+Once additional databases are configured under `'yiisoft/db-migration' => ['databases' => [...]]` in `config/params.php`, the `--db` requirement differs **per command** (each command resolves missing `--db` via its own `resolveDatabaseNamesWithMissingOption()`):
+
+- **`migrate:up` / `migrate:new`** — **fan out to all configured databases** when `--db` is omitted. They require `--db` only in combination with `--path`/`--namespace`, aborting with: `The --db option is required with --path or --namespace when multiple databases are configured.`
+- **`migrate:down` / `migrate:redo` / `migrate:mark`** — `--db` is **mandatory**; without it the command aborts with: `The --db option is required when multiple databases are configured.`
+- **`migrate:history`** — fans out to all configured databases.
+- **`migrate:create`** — never requires `--db`; it always generates against the `default` database.
+
+Only when no additional databases are configured does every command fall back to the `default` database automatically.
 
 ---
 

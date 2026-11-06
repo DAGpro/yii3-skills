@@ -27,7 +27,7 @@
 - [6. Asynchronous Background Sending via Queue & PSR-14](#6-asynchronous-background-sending-via-queue--psr-14) — full reference in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md)
 - [7. Mailer Lifecycle Events (BeforeSend & AfterSend)](#7-mailer-lifecycle-events-beforesend--aftersend) — full reference in the [Mailer Async Sending & Lifecycle Events Guide](infra-mailer-async-queue.md)
 - [8. Testing Recipes (StubMailer)](#8-testing-recipes-stubmailer)
-- [9. Anti-Pattern Matrix](persistence-migrations-operations.md#9-anti-pattern-matrix)
+- [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
 - [Related Topic Guides](#related-topic-guides)
 
 ---
@@ -110,7 +110,7 @@ return [
 `FileMailer` facts:
 
 - Constructor: `__construct(string $path, ?callable $filenameCallback = null, ?MessageSettings $messageSettings = null, ?EventDispatcherInterface $eventDispatcher = null)` — `path` is required and first (named arguments `path:`, `filenameCallback:`, `messageSettings:`, `eventDispatcher:`).
-- `sendMessage()` writes `(string) $message` to `<path>/<filename>`, creating the directory recursively (`mkdir(..., 0777, true)`). The default filename is a timestamped `.eml` name (date prefix with microsecond and random suffixes); `$filenameCallback` (`fn(MessageInterface $message): string`) overrides it — a non-string return throws `LogicException('Filename must be a string. "%s" received.')`.
+- `sendMessage()` writes `(string) $message` to `<path>/<filename>`, creating the directory recursively (`mkdir(..., 0777, true)`). The default filename is a timestamped `.eml` name (date prefix + epoch-seconds + random suffix — no microseconds: `microtime(true)` is cast to `int`); `$filenameCallback` (`fn(MessageInterface $message): string`) overrides it — a non-string return throws `LogicException('Filename must be a string. "%s" received.')`.
 - The `@`-prefixed `'@runtime/mail'` default is resolved by the package's DI definition via `Yiisoft\Aliases\Aliases` inside a `DynamicReference` closure. Without an Aliases service it throws `LogicException('yiisoft/aliases dependency is required to resolve path "@runtime/mail".')`. An absolute path needs no aliases; `FileMailer` itself never resolves aliases.
 - **`.eml` caveat:** the file content is `Message::__toString()`, which serializes **only custom headers + text body** — not the HTML body, attachments, or standard headers. The `.eml` file is a debug artifact, not a full RFC-822 rendering.
 

@@ -156,7 +156,7 @@ $this->registerMetaTag(Html::meta()->name('robots')->content('noindex, follow'))
 
 // Link tags (<link>)
 $this->registerLink(['rel' => 'icon', 'type' => 'image/png', 'href' => '/favicon.png']);
-$this->registerLinkTag(Html::link()->toCssFile('/theme.css'));
+$this->registerLinkTag(\Yiisoft\Html\Tag\Link::toCssFile('/theme.css'));
 
 // Custom inline CSS
 // Signature: registerCss(string $css, int $position = self::POSITION_HEAD, array $attributes = [], ?string $key = null): self
@@ -230,8 +230,8 @@ return [
                     '@themes/default',
                 ],
             ],
-            'basePath' => '@assets',
-            'baseUrl' => '@assetsUrl',
+            'basePath' => '/assets',
+            'baseUrl' => '/assets/base/url',
         ],
     ],
 ];
@@ -239,9 +239,14 @@ return [
 
 When rendering a view `user/profile`, `Theme::applyTo($file)` searches `@themes/christmas/user/profile.php` first; if it exists on disk, it takes precedence. If missing, it falls back to `@themes/default/user/profile.php`, and lastly to `@views/user/profile.php`.
 
+> [!NOTE]
+> Only `pathMap` entries are alias-resolved by the package DI (`view/config/di-web.php` resolves both keys
+> and values through `Aliases`). `basePath` and `baseUrl` are stored raw by `Theme::__construct()` — pass
+> real filesystem/URL paths, not `@aliases`.
+
 ### 2.5. PSR-14 View Lifecycle Events
 
-`WebView` dispatches 7 PSR-14 events during rendering under `Yiisoft\View\Event\WebView\`: `BeforeRender`, `AfterRender`, `PageBegin`, `Head`, `BodyBegin`, `BodyEnd`, `PageEnd`. The full event table with payload accessors, the stoppable-`BeforeRender` cancellation semantics, and the critical trap — the `Yiisoft\View\Event\View\*` group (plain `View`) and the `Yiisoft\View\Event\WebView\*` group are parallel: a listener registered for the wrong group **silently never fires** — are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.8.
+`WebView` dispatches 7 PSR-14 events during rendering under `Yiisoft\View\Event\WebView\`: `BeforeRender`, `AfterRender`, `PageBegin`, `Head`, `BodyBegin`, `BodyEnd`, `PageEnd`. The full event table with payload accessors, the stoppable-`BeforeRender` cancellation semantics, and the critical trap — the `Yiisoft\View\Event\View\*` group (plain `View`) and the `Yiisoft\View\Event\WebView\*` group are parallel: a listener registered for the wrong group **silently never fires** — are owned by the [Events Reference Guide](core-events-reference.md), section 6.8.
 
 ---
 
@@ -350,7 +355,7 @@ Alternatively, wrap trusted strings in `Yiisoft\Html\NoEncode::string('<strong>T
 | `Html::addCssStyle` | `addCssStyle(array &$attributes, array\|string $style, bool $overwrite = true): void` | Adds or merges CSS style properties into `$attributes['style']`. Set `$overwrite = false` to preserve existing style properties. |
 | `Html::removeCssStyle` | `removeCssStyle(array &$attributes, string\|array $properties): void` | Removes specified CSS properties from `$attributes['style']`. |
 | `Html::renderTagAttributes` | `renderTagAttributes(array $attributes): string` | Formats an associative array of attributes into an HTML attribute string (e.g. ` id="btn-1" class="btn"`). |
-| `Html::generateId` | `generateId(string $prefix = 'i'): string` | Generates a sequential, unique HTML tag identifier (e.g. `'i1'`, `'i2'`). |
+| `Html::generateId` | `generateId(string $prefix = 'i'): string` | Generates a unique HTML tag identifier. By default `IdGenerator::$useSeed = true` appends an `hrtime()` seed to the prefix, so IDs are not short sequential (`'i1'`). Set `Yiisoft\Html\IdGenerator::$useSeed = false` (e.g. via the package's `disableSeed()` test helper) to get deterministic `'i1'`, `'i2'`, ... IDs. |
 
 ```php
 use Yiisoft\Html\Html;
@@ -358,8 +363,9 @@ use Yiisoft\Html\Html;
 $attributes = ['class' => 'btn btn-secondary', 'style' => 'margin: 5px;'];
 
 // Add CSS classes:
+// NOTE: an array $class keeps $attributes['class'] an array — pass a string to keep it a string.
 Html::addCssClass($attributes, ['btn-lg', 'btn-primary']);
-// Result: $attributes['class'] === 'btn btn-secondary btn-lg btn-primary'
+// Result: $attributes['class'] === ['btn', 'btn-secondary', 'btn-lg', 'btn-primary']
 
 // Remove a class:
 Html::removeCssClass($attributes, 'btn-secondary');
@@ -371,8 +377,8 @@ Html::addCssStyle($attributes, ['display' => 'inline-block', 'margin' => '10px']
 // Render attributes to string:
 $attrString = Html::renderTagAttributes($attributes);
 
-// Generate unique element ID:
-$fieldId = Html::generateId('field-'); // 'field-1'
+// Generate unique element ID (default hrtime seed → e.g. 'field-1700000000123451', not 'field-1'):
+$fieldId = Html::generateId('field-');
 ```
 
 ---
@@ -505,7 +511,7 @@ declare(strict_types=1);
 namespace App\Presentation\ViewInjection;
 
 use App\Domain\User\CurrentUser;
-use Yiisoft\Html\Html;
+use Yiisoft\Html\Tag\Link;
 use Yiisoft\Yii\View\Renderer\CommonParametersInjectionInterface;
 use Yiisoft\Yii\View\Renderer\LayoutParametersInjectionInterface;
 use Yiisoft\Yii\View\Renderer\LinkTagsInjectionInterface;
@@ -539,7 +545,7 @@ final readonly class SiteThemeInjection implements
     public function getLinkTags(): array
     {
         return [
-            Html::link()->toCssFile('/css/theme.css'),
+            Link::toCssFile('/css/theme.css'),
             ['rel' => 'icon', 'type' => 'image/png', 'href' => '/favicon.png'],
         ];
     }
@@ -580,7 +586,6 @@ Use `LayoutSpecificInjections` when injections should only trigger for a specifi
 declare(strict_types=1);
 
 use App\Presentation\ViewInjection\AdminNavigationInjection;
-use Yiisoft\Definitions\Reference;
 use Yiisoft\Yii\View\Renderer\LayoutSpecificInjections;
 
 return [
@@ -588,7 +593,7 @@ return [
         'injections' => [
             new LayoutSpecificInjections(
                 '@views/layout/admin.php',
-                Reference::to(AdminNavigationInjection::class),
+                new AdminNavigationInjection(),
             ),
         ],
     ],
@@ -599,11 +604,12 @@ return [
 > **`LayoutSpecificInjections` Constructor Invariants:**
 > Constructor signature: `public function __construct(private readonly string $layout, object ...$injections)`
 > 1. The first parameter is named `$layout` (not `$layoutFile`).
-> 2. Variadic parameters are typed `object ...$injections`. Unlike `WebViewRenderer::withInjections()`, which accepts string class names, `LayoutSpecificInjections` requires instantiated objects or DI definition references (`Reference::to(AdminNavigationInjection::class)`). Passing a raw class string like `AdminNavigationInjection::class` throws a fatal `TypeError: LayoutSpecificInjections::__construct(): Argument #2 must be of type object, string given`.
+> 2. Variadic parameters are typed `object ...$injections`. Unlike `WebViewRenderer::withInjections()`, which accepts string class names, `LayoutSpecificInjections` requires instantiated objects. Passing a raw class string like `AdminNavigationInjection::class` throws a fatal `TypeError: LayoutSpecificInjections::__construct(): Argument #2 must be of type object, string given`.
+> 3. Do NOT nest `Reference::to(...)` inside the variadic arguments. A `Reference` object passes the `object` type check, but `WebViewRenderer` matches injections with `instanceof` against the injection interfaces (`LinkTagsInjectionInterface`, etc.) — a `Reference` matches none and is **silently dropped** at render time. If the injection has constructor dependencies, register the injection via DI and build `LayoutSpecificInjections` around the resolved instance (e.g. a closure definition), or construct it directly when it has no dependencies.
 
 ### 5.5. CSRF Token Object (`Csrf`) & Injected Security
 
-`CsrfViewInjection` is pre-configured in `yiisoft/yii-view-renderer` and automatically injects `$csrf` into all templates and layouts.
+`CsrfViewInjection` is pre-configured in the Yii application template (`config/common/params.php` adds it to `'yiisoft/yii-view-renderer'['injections']` — the `yiisoft/yii-view-renderer` package itself ships this param empty) and automatically injects `$csrf` into all templates and layouts.
 `$csrf` is a `Yiisoft\Yii\View\Renderer\Csrf` object implementing `Stringable`:
 
 ```php

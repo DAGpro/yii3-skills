@@ -102,6 +102,7 @@ use App\Infrastructure\IdentityMap;
 use App\Infrastructure\MemoryCache;
 use Psr\Container\ContainerInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
+use Yiisoft\Db\Sqlite\Connection;
 
 return [
     // 1. Resetting internal arrays in custom repository / identity map
@@ -113,8 +114,15 @@ return [
         },
     ],
 
-    // 2. Rolling back uncommitted database transactions left by errors
+    // 2. Rolling back uncommitted database transactions left by errors.
+    //    The 'reset' key must be attached to the FULL service definition — the same array that
+    //    declares 'class' for ConnectionInterface (typically config/common/di/db.php, wired per
+    //    the db package docs). A standalone reset-only array on the interface ID is INVALID:
+    //    with no 'class' key the container resolves the interface ID itself as the class name
+    //    and instantiation fails. Alternatively, wrap a complete definition in the 'definition'
+    //    meta key (see the DI & Configuration Guide).
     ConnectionInterface::class => [
+        'class' => Connection::class, // constructor/driver wiring per the db package docs — abbreviated here
         'reset' => function (): void {
             /** @var ConnectionInterface $this */
             if ($this->getTransaction() !== null) {
@@ -168,14 +176,14 @@ When `StateResetter::class` is **not** overridden, all official packages automat
 
 | Package | Config File | Service ID | Grounded Reset Closure | State Protected from Leaking |
 |:---|:---|:---|:---|:---|
-| **`yiisoft/user`** | `config/di-web.php` | `Yiisoft\User\CurrentUser::class` | `$this->clear();` | Clears authenticated identity, guest status, and permission cache. |
+| **`yiisoft/user`** | `config/di-web.php` | `Yiisoft\User\CurrentUser::class` | `$this->clear();` | Clears the authenticated identity and any identity override (user reverts to guest). RBAC permission caches are **not** cleared — `can()` delegates straight to the access checker. |
 | **`yiisoft/session`** | `config/di-web.php` | `Yiisoft\Session\SessionInterface::class` | `$this->sessionId = null; $this->close();` | Closes session and unsets session ID, preventing session hijacking. |
 | **`yiisoft/router`** | `config/di.php` | `Yiisoft\Router\CurrentRoute::class` | `$this->route = null; $this->uri = null; $this->arguments = [];` | Clears matched route instance, URI, and route arguments. |
 | **`yiisoft/router-fastroute`**| `config/di.php` | `Yiisoft\Router\UrlGeneratorInterface::class` | `$this->defaultArguments = [];` | Clears default route arguments injected during URL generation. |
-| **`yiisoft/view`** | `config/di-web.php` | `Yiisoft\View\WebView::class` | `$this->clear(); $this->setParameters($parameters);` | Clears rendered view blocks, page title, meta tags, and registered JS/CSS. |
+| **`yiisoft/view`** | `config/di-web.php` | `Yiisoft\View\WebView::class` | `$this->clear(); … $this->setParameters($parameters);` (abbreviated — between them the closure re-resolves each view parameter from `$params['yiisoft/view']['parameters']`, dereferencing `ReferenceInterface` entries via the container) | Clears rendered view blocks, page title, meta tags, and registered JS/CSS, then restores configured view parameters. |
 | **`yiisoft/request-provider`**| `config/di-web.php` | `Yiisoft\RequestProvider\RequestProviderInterface::class` | `$this->request = null;` | Wipes active PSR-7 request reference from the provider. |
-| **`yiisoft/translator`** | `config/di.php` | `Yiisoft\Translator\TranslatorInterface::class` | `$this->setLocale($params['locale']);` | Restores default locale, discarding per-request locale overrides. |
-| **`yiisoft/profiler`** | `config/di.php` | `Yiisoft\Profiler\Target\LogTarget::class` | `$this->enable((bool) $params['enabled']);` | Restores profiler target status to initial configuration. |
+| **`yiisoft/translator`** | `config/di.php` | `Yiisoft\Translator\TranslatorInterface::class` | `$this->setLocale($params['yiisoft/translator']['locale']);` | Restores default locale, discarding per-request locale overrides. |
+| **`yiisoft/profiler`** | `config/di.php` | `Yiisoft\Profiler\Target\LogTarget::class` | `$this->enable((bool) $params['yiisoft/profiler']['targets'][LogTarget::class]['enabled']);` | Restores profiler target status to initial configuration. |
 | **`yiisoft/yii-cycle`** | `config/di.php` | `Cycle\ORM\EntityManager::class` | `$this->clean();` | Clears Cycle ORM unit-of-work heap and unpersisted entity tracking. |
 | **`yiisoft/yii-debug`** | `config/di-web.php` | `Yiisoft\Yii\Debug\Debugger::class` | `$this->allowStart = true;` | Re-enables debugger collector initialization for next cycle. |
 

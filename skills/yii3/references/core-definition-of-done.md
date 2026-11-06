@@ -31,9 +31,9 @@ The same checks the verify workflow runs; most are already covered by the Chain 
 The difference between "milestone closed" and "product ready". Every item is grounded in an existing guide:
 
 - runner & entry point configured; long-running workers reset state via `Yiisoft\Di\StateResetter` (ships with `yiisoft/di`) (`references/infra-runners-and-runtimes.md`, `references/infra-state-resetter.md`);
-- ErrorCatcher + ProblemDetails renderers, no debug output in production (`references/infra-error-handling.md`);
+- ErrorCatcher + API error rendering configured, no debug output in production (HTML/JSON renderers ship with `yiisoft/error-handler`; ProblemDetails is a userland renderer recipe — `references/infra-error-handling.md`, `references/infra-error-handling-web.md`);
 - `LoggerInterface` bound in DI with explicit targets (`references/infra-logging.md`);
-- CSRF on state-changing routes + DTO validation (`references/http-state.md`);
+- CSRF on state-changing routes (`references/http-state.md`) + DTO validation (`references/http-validation-and-forms.md`);
 - auth/RBAC on protected routes (`references/infra-auth-and-rbac.md`);
 - reversible migrations, one persistence branch, transactions in use cases (`references/persistence-migrations.md`, `references/persistence-db.md`);
 - `yii-debug` / `yii-gii` / `code-style` only in `require-dev` (stack invariant via `references/package-catalog.md`);

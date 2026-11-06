@@ -26,7 +26,7 @@ When multiple background workers run concurrently, use `yiisoft/mutex` to preven
 > [!IMPORTANT]
 > **`MutexInterface::acquire()` Invariant:**
 > In Yii 3, `MutexInterface` represents an **individual, already-named lock instance**.
-> Calling `$mutex->acquire($name, 5)` is **invalid** and throws an `ArgumentCountError`! The signature is strictly `public function acquire(int $timeout = 0): bool`.
+> Calling `$mutex->acquire($name, 5)` is **invalid**: PHP silently ignores the surplus second argument, and the lock-name string binds to `int $timeout` — under `strict_types` this throws a `TypeError` (catch `\TypeError`, not `ArgumentCountError`). The signature is strictly `public function acquire(int $timeout = 0): bool`.
 > To dynamically acquire locks by name or ID, inject **`Yiisoft\Mutex\MutexFactoryInterface`** or use **`Yiisoft\Mutex\Synchronizer`**.
 
 ## 2. Approach A: Explicit Mutex with `MutexFactoryInterface`

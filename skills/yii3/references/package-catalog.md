@@ -31,7 +31,7 @@
 
 | Capability Key | Concern | Primary Packages | Driver / Adapter Choices (Choose ONE) | Key Interfaces & Classes |
 |---|---|---|---|---|
-| `router` | HTTP Routing | `yiisoft/router` | `yiisoft/router-fastroute` (FastRoute) \| `yiisoft/file-router` (convention file routing) \| `yiisoft/router-composer-attribute-collector` (attribute routes collected via Composer; **experimental** — pinned to the unreleased `yiisoft/router` `dev-add-attributes` branch, see routes guide §1.4) | `Route`, `Group`, `RouteCollectionInterface`, `UrlGeneratorInterface`, `FileRouter` |
+| `router` | HTTP Routing | `yiisoft/router` | `yiisoft/router-fastroute` (FastRoute) \| `yiisoft/file-router` (convention file routing) \| `yiisoft/router-composer-attribute-collector` (attribute routes collected via Composer; **experimental** — pinned to the unreleased `yiisoft/router` `dev-add-attributes` branch, see the [Routes Definition Guide](http-routes-definition.md) §1.4) | `Route`, `Group`, `RouteCollectionInterface`, `UrlGeneratorInterface`, `FileRouter` |
 | `file-router` | Convention File Routing | `yiisoft/file-router` | — | `FileRouter` (PSR-15 middleware mapping URL paths to controller action classes by convention) |
 | `http` | HTTP App & Dispatcher | `yiisoft/yii-http`, `yiisoft/yii-runner-http`, `yiisoft/middleware-dispatcher`, `yiisoft/http`, `yiisoft/psr-emitter` | — | `Application`, `MiddlewareDispatcher`, `Method`, `Status`, `Header`, `SapiEmitter` |
 | `emitter` | Response Emitting (SAPI) | `yiisoft/psr-emitter` | — | `SapiEmitter`, `EmitterInterface`, `EmitterMiddleware` (sends PSR-7 responses via standard SAPI headers and echo) |
@@ -219,11 +219,11 @@ Packages below are prescribed or used by topic guides but are not part of the yi
 | `olvlvl/composer-attribute-collector` | Composer plugin scanning classes for attribute routing | core-dependency-protocol, http-routes |
 | `vlucas/phpdotenv` | `.env` loading (`require-dev` convenience in `yiisoft/app`; not a production secrets mechanism) | core-di-and-config |
 | `predis/predis` | Redis client for `RedisCache` / `RedisMutexFactory` (strictly required — no PECL `\Redis`) | persistence-cache-drivers, infra-queue-mutex |
-| `symfony/mailer` | Transport layer behind the `yiisoft/mailer-symfony` bridge (`^6.0\|\|^7.0\|\|^8.0`) | infra-mailer-transports |
+| `symfony/mailer` | Transport layer behind the `yiisoft/mailer-symfony` bridge (`^6.0\|\|^7.0\|\|^8.0`) | infra-mailer (literal refs), infra-mailer-transports (bridge config) |
 | `symfony/finder` | Directory scanning behind `yiisoft/classifier` | core-utilities-niche |
-| `sentry/sentry` | Sentry SDK behind `yiisoft/yii-sentry` (version-gated options) | infra-error-handling |
+| `sentry/sentry` | Sentry SDK behind `yiisoft/yii-sentry` (version-gated options) | infra-error-handling-ops (literal refs), infra-error-handling (Sentry usage) |
 | `zircote/swagger-php` | PHP 8 attribute-based OpenAPI specification generation (v5+) | http-openapi-swagger |
-| `swagger-api/swagger-ui` | Swagger UI static assets published by `SwaggerUiAsset` | http-openapi-swagger |
+| `swagger-api/swagger-ui` | Swagger UI static assets published by `SwaggerUiAsset` | http-openapi-setup (literal refs), http-openapi-swagger (troubleshooting) |
 | `spiral/roadrunner-worker` | Base Goridge payload protocol for RoadRunner workers | infra-runtime-roadrunner |
 | `spiral/roadrunner-cli` | `./vendor/bin/rr` binary download and runner | infra-runtime-roadrunner |
 | `spiral/roadrunner-grpc` | gRPC worker support | infra-runtime-roadrunner |
@@ -233,6 +233,6 @@ Packages below are prescribed or used by topic guides but are not part of the yi
 | `infection/extension-installer` | Infection Composer extension installer | testing-infection |
 | `roave/infection-static-analysis-plugin` | Static-analysis-filtered mutation testing | testing-infection |
 | `codeception/module-asserts`, `module-cli`, `module-rest`, `module-phpbrowser`, `lib-innerbrowser` | Codeception suites (REST module requires `module-phpbrowser` + `lib-innerbrowser` and a live served application) | testing-codeception |
-| `httpsoft/http-message` | PSR-7 message and factory implementations (`ServerRequest`, `ServerRequestFactory`, `ResponseFactory`) used to build in-memory test requests and responses | testing-core, testing-http |
+| `httpsoft/http-message` | PSR-7 message and factory implementations (`ServerRequest`, `ServerRequestFactory`, `ResponseFactory`) used to build in-memory test requests and responses | testing-http, http-middlewares |
 | `phpstan/phpstan`, `vimeo/psalm` | Static analysis linters (allowed `require-dev` per Dependency Protocol §3.2) | core-dependency-protocol |
 

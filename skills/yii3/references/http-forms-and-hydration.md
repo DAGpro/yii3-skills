@@ -54,7 +54,7 @@ public function populateFromGetAndValidate(FormModelInterface $model, ServerRequ
 - **`$strict` (Mass-Assignment Protection):**
   - `null` (default): **Hydrates only properties that carry validation rules or the `#[Safe]` attribute.** Any extraneous keys sent by the client are silently discarded.
   - `false`: Hydrates all properties present in `$data`.
-  - `true`: Hydrates only properties explicitly listed in `$map`.
+  - `true`: Fills **either** only the properties explicitly listed in `$map` **or** — when `$map` is omitted — only the properties that carry validation rules; never both.
 - **`#[\Yiisoft\FormModel\Attribute\Safe]`:** Marks a property fillable without validation rules under default `$strict = null` mode.
 
 #### FormHydrator TypeCaster Chain
@@ -159,12 +159,18 @@ In Yii 3, `FormModel` strictly defines the **data structure and validation const
 
 ### 8.4. Validation Rules HTML5 Enrichment (ValidationRulesEnricher)
 
-When rendering HTML form fields via `Yiisoft\FormModel\Field::*`, `Yiisoft\FormModel\ValidationRulesEnricher` automatically inspects `yiisoft/validator` attributes on the model property and generates standard HTML5 client-side attributes:
+When enabled, `Yiisoft\FormModel\ValidationRulesEnricher` inspects `yiisoft/validator` attributes on the model property and generates standard HTML5 client-side attributes. **Enrichment is opt-in:** field widgets default to `enrichFromValidationRules = false` and hold no enricher (`validationRulesEnricher = null`), so out of the box **no** HTML5 attributes are generated. To enable it, chain `->validationRulesEnricher(...)` (or register the enricher in the `yiisoft/form` theme config — see the [Views & Widgets Guide, §8.5](http-widgets-and-assets.md)) and `->enrichFromValidationRules()` on the field:
 - `#[Required]` &rarr; `required`
 - `#[Length(min: 3, max: 20)]` &rarr; `minlength="3"` and `maxlength="20"`
 - `#[Integer(min: 1, max: 100)]` &rarr; `min="1"` and `max="100"`
 - `#[Regex(pattern: '/^[A-Z]+$/')]` &rarr; `pattern="^[A-Z]+$"`
 - Rules with active `when:` conditions are excluded from client-side enrichment to avoid conflicting states.
+
+```php
+<?= Field::text($form, 'title')
+    ->validationRulesEnricher(new \Yiisoft\FormModel\ValidationRulesEnricher())
+    ->enrichFromValidationRules() ?>
+```
 
 > [!WARNING]
 > **`ValidationRulesEnricher` Does NOT Generate `accept`:**
@@ -199,7 +205,23 @@ interface HydratorInterface
 The hydrator parses constructor arguments and promoted properties, uses reflection to resolve parameter attributes (`#[Data]`, `#[ToDateTime]`), and applies a composite chain of `TypeCasterInterface` implementations.
 
 #### Built-in Enum Support (`EnumTypeCaster`)
-`Yiisoft\Hydrator\TypeCaster\EnumTypeCaster` provides built-in hydration support for backed PHP 8.1+ Enums (`BackedEnum` and `UnitEnum`). When a DTO constructor parameter is typed with an Enum, strings or integers from the payload are automatically cast to the corresponding Enum instance without requiring a custom typecaster:
+`Yiisoft\Hydrator\TypeCaster\EnumTypeCaster` provides hydration support for backed PHP 8.1+ Enums (`BackedEnum` and `UnitEnum`): it casts scalar payload values to the corresponding Enum instance. **It is NOT part of any default type caster chain** — neither the bare `Hydrator` default (`CompositeTypeCaster(PhpNativeTypeCaster, HydratorTypeCaster)`) nor the `FormHydrator` chain from §8 — so with the defaults, a raw scalar fails to hydrate an enum-typed parameter (`PhpNativeTypeCaster` only succeeds when the value is already an instance of the enum class). You must wire it explicitly via `CompositeTypeCaster`:
+
+```php
+use Yiisoft\Hydrator\Hydrator;
+use Yiisoft\Hydrator\TypeCaster\CompositeTypeCaster;
+use Yiisoft\Hydrator\TypeCaster\EnumTypeCaster;
+use Yiisoft\Hydrator\TypeCaster\HydratorTypeCaster;
+use Yiisoft\Hydrator\TypeCaster\PhpNativeTypeCaster;
+
+$hydrator = new Hydrator(
+    typeCaster: new CompositeTypeCaster(
+        new PhpNativeTypeCaster(),
+        new EnumTypeCaster(),
+        new HydratorTypeCaster(),
+    ),
+);
+```
 
 ```php
 declare(strict_types=1);
@@ -228,7 +250,7 @@ final class UpdateStatusInput
 {
     public function __construct(
         #[Validate(new Required(), new InEnum(OrderStatus::class))]
-        public readonly OrderStatus $status, // Automatically cast from 'completed' or 'pending'
+        public readonly OrderStatus $status, // 'completed' or 'pending' cast to the case — requires the EnumTypeCaster wiring above
     ) {}
 }
 ```
@@ -282,7 +304,6 @@ use Yiisoft\Hydrator\Validator\ValidatedInputInterface;
 use Yiisoft\Hydrator\Validator\ValidatedInputTrait;
 use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Rule\Count;
-use Yiisoft\Validator\Rule\Each;
 use Yiisoft\Validator\Rule\Email;
 use Yiisoft\Validator\Rule\Integer;
 use Yiisoft\Validator\Rule\Length;

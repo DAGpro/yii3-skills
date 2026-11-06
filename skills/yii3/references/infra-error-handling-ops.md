@@ -12,7 +12,7 @@
 When `ErrorCatcher` catches an uncaught exception, it dispatches the `Yiisoft\ErrorHandler\Event\ApplicationError` event — **but only if a PSR-14 dispatcher was injected** into `ErrorCatcher`'s optional second constructor parameter (`?EventDispatcherInterface $eventDispatcher = null`; the same applies to `ErrorHandler`). `Yiisoft\ErrorHandler\Event\ApplicationError` is a final event exposing `getThrowable(): Throwable`; it is dispatched from two sites: `ErrorCatcher::process()` and `ErrorHandler::renderThrowableAndTerminate()`.
 
 > [!IMPORTANT]
-> Installing `yiisoft/error-handler` alone provides **no** PSR-14 dispatcher (`psr/event-dispatcher` is only a `require-dev` dependency of the package). The actual PSR-14 wiring ships with `yiisoft/yii-event` — the binding list is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 1. Without a dispatcher reaching `ErrorCatcher` / `ErrorHandler`, no `ApplicationError` listener ever runs.
+> Installing `yiisoft/error-handler` alone provides **no** PSR-14 dispatcher (`psr/event-dispatcher` is only a `require-dev` dependency of the package). The actual PSR-14 wiring ships with `yiisoft/yii-event` — the binding list is owned by the [Events & Listeners Guide, §1](core-events-design.md#1-psr-14-event-architecture-in-yii3). Without a dispatcher reaching `ErrorCatcher` / `ErrorHandler`, no `ApplicationError` listener ever runs.
 
 > [!TIP]
 > For logger DI wiring, targets (file/db/email/syslog/stream), categories, and placeholders, see [Logging Guide](infra-logging.md). Note that `yiisoft/log` ships its own listeners that flush the logger on `Yiisoft\Yii\Http\Event\AfterEmit` (web) and `ConsoleTerminateEvent` (console).
@@ -52,7 +52,7 @@ final readonly class LogApplicationErrorListener
 }
 ```
 
-Register the listener in `config/common/events.php`. The full listener-definition table is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4.2 — note the common mistake here: a one-element array such as `[[LogApplicationErrorListener::class]]` is **not** a valid definition and throws `Yiisoft\Yii\Event\InvalidListenerConfigurationException`:
+Register the listener in `config/common/events.php`. The full listener-definition table is owned by the [Events & Listeners Guide, §4.2](core-events-design.md#42-declarative-event-mapping--supported-listener-formats) — note the common mistake here: a one-element array such as `[[LogApplicationErrorListener::class]]` is **not** a valid definition and throws `Yiisoft\Yii\Event\InvalidListenerConfigurationException`:
 
 ```php
 <?php
@@ -72,11 +72,11 @@ return [
 ];
 ```
 
-**Where app event maps live.** `yiisoft/yii-event` reads the listener map from its params group (`'yiisoft/yii-event' => ['eventsConfigGroup' => ...]`), defaulting to the `events-web` group (web) and `events-console` group (console). Group declarations, the `$events` reference wiring, merge modifiers, and the full listener-format table are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 4 — register your `config/common/events.php` under the shared `events` group there; error-handling-specific listeners follow the exact same mechanics.
+**Where app event maps live.** `yiisoft/yii-event` reads the listener map from its params group (`'yiisoft/yii-event' => ['eventsConfigGroup' => ...]`), defaulting to the `events-web` group (web) and `events-console` group (console). Group declarations, the `$events` reference wiring, merge modifiers, and the full listener-format table are owned by the [Events & Listeners Guide, §4](core-events-design.md#4-event-configuration-yiisoftconfig--yiisoftyii-event) — register your `config/common/events.php` under the shared `events` group there; error-handling-specific listeners follow the exact same mechanics.
 
-Failure timing and validation (details and the complete six-form table: [Events & Listeners Guide](core-events-and-listeners.md), section 4.2):
+Failure timing and validation (details and the complete six-form table: [Events & Listeners Guide, §4.2](core-events-design.md#42-declarative-event-mapping--supported-listener-formats)):
 
-- Invalid listener **format** throws when the DI container first resolves `ListenerCollection::class` (i.e. when the PSR-14 dispatcher is constructed) — not at event-dispatch time.
+- Invalid listener **format** (non-string event key, non-iterable listener list) throws eagerly, when the DI container first resolves `ListenerCollection::class` (i.e. when the PSR-14 dispatcher is constructed) — not at event-dispatch time. Invalid listener **definitions** (e.g. the one-element array above, or `[X::class, 'method']` with a missing method) pass config build and fail lazily — `CallableFactory::create()` runs inside the wrapping closure, so `InvalidListenerConfigurationException` surfaces at **first dispatch**.
 - When a runner is constructed with `checkEvents: true`, it runs `Yiisoft\Yii\Event\ListenerConfigurationChecker::check()` over the events group, eagerly validating the whole map (dev/tests only — resource-greedy).
 
 > [!WARNING]
@@ -210,7 +210,7 @@ Execution flow of `Yiisoft\Yii\Runner\Console\ConsoleApplicationRunner::run()`:
 3. In the `finally` block: `$application->shutdown($exitCode)` and `exit($exitCode)`. An escaping throwable leaves the exit code at its initial value `1` (`Yiisoft\Yii\Console\ExitCode::UNSPECIFIED_ERROR`).
 4. **`ConsoleErrorEvent` logging**: handled by `Yiisoft\Yii\Console\ErrorListener::onError(ConsoleErrorEvent $event)` — one PSR-3 `error()` entry with message `'%s: %s in %s:%s while running console command "%s".'` and context `['exception' => $exception]`. The listener's constructor takes `?LoggerInterface $logger = null` and returns early without a logger.
 
-Console error logging works **out of the box**: `yiisoft/yii-console` ships its own `events-console` group subscribing `ConsoleErrorEvent` to `[ErrorListener::class, 'onError']` (the shipped group is quoted in the [Events & Listeners Guide](core-events-and-listeners.md), section 6.2), which `yiisoft/config` auto-merges. The app template ships no events file of its own. Register an app-level file under the shared `events` group in `config/configuration.php` (see section 8.1) only to customize behavior — e.g. swapping in a different listener.
+Console error logging works **out of the box**: `yiisoft/yii-console` ships its own `events-console` group subscribing `ConsoleErrorEvent` to `[ErrorListener::class, 'onError']` (the shipped group is quoted in the [Events & Listeners Guide, §6.2](core-events-reference.md#62-console-application-lifecycle-yiisoftyii-console)), which `yiisoft/config` auto-merges. The app template ships no events file of its own. Register an app-level file under the shared `events` group in `config/configuration.php` (see section 8.1) only to customize behavior — e.g. swapping in a different listener.
 
 ---
 

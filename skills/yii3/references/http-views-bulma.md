@@ -5,7 +5,7 @@
 
 > Complete reference for the `yiisoft/yii-bulma` widget driver: the 11-widget catalog, associative-array item configuration, string class-constant styling, and the Bulma asset bundles (`BulmaAsset` plus per-widget JS bundles).
 
-**Scope & Ownership.** This guide is the single source of truth for the Bulma widget driver. The framework-agnostic view stack — rendering pipeline, PHP templates, XSS escaping, layouts, custom widgets, HTML form field factories, and the general form theming mechanics — is owned by the [Views & Widgets Guide](http-views-and-widgets.md). Bulma and Bootstrap 5 are **mutually exclusive** CSS-framework widget drivers: a project picks **exactly ONE** — resolve which one is actually installed via the project's `composer.json` (`yiisoft/yii-bulma` vs `yiisoft/bootstrap5`) or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The sibling driver is the [Bootstrap 5 Guide](http-views-bootstrap5.md).
+**Scope & Ownership.** This guide is the single source of truth for the Bulma widget driver. The framework-agnostic view stack — rendering pipeline, PHP templates, XSS escaping, layouts, custom widgets, HTML form field factories, and the general form theming mechanics — is owned by the [Views, Layouts & Widgets Guide](http-views-and-widgets.md). Bulma and Bootstrap 5 are **mutually exclusive** CSS-framework widget drivers: a project picks **exactly ONE** — resolve which one is actually installed via the project's `composer.json` (`yiisoft/yii-bulma` vs `yiisoft/bootstrap5`) or the `widgets` row of the [package-catalog.md §1 Capability Quick-Lookup Matrix](package-catalog.md#1-capability-quick-lookup-matrix). The sibling driver is the [Bootstrap 5 Guide](http-views-bootstrap5.md).
 
 ---
 
@@ -50,7 +50,7 @@ use Yiisoft\Yii\Bulma\Tabs;
 | **Styling Constants** | String Class Constants: `ProgressBar::COLOR_SUCCESS`, `Tabs::STYLE_BOX` |
 | **Tabs Widget** | Dedicated widget: `Yiisoft\Yii\Bulma\Tabs` |
 | **Modal Rendering** | Buffered pair: `Modal::widget()->begin(); ... Modal::end();` |
-| **Form Theming** | Config in `config/params.php` under `'defaultTheme'` |
+| **Form Theming** | A named `'bulma'` theme entry under `$params['yiisoft/form']['themes']`, selected via `'defaultTheme' => 'bulma'` (a string selector). Note: `yii-bulma`'s own shipped `config/params.php` still uses the legacy `'configs'` key, which the current `yiisoft/form` bootstrap does not read (it reads `'themes'`) — copy the class map under `'themes'` yourself. |
 | **Asset Bundles** | `BulmaAsset` + per-widget JS bundles (`Yiisoft\Yii\Bulma\Asset\DropdownAsset`, `Yiisoft\Yii\Bulma\Asset\NavBarAsset`) |
 
 The contrasting Bootstrap 5 conventions (value-object item factories, backed-enum styling constants, composed `Nav`-based tabs, self-contained `Modal->render()`, `ThemePath::BOOTSTRAP5_*` form-theme presets) are described in the [Bootstrap 5 Guide](http-views-bootstrap5.md).
@@ -58,6 +58,6 @@ The contrasting Bootstrap 5 conventions (value-object item factories, backed-enu
 ---
 
 ## Related Topic Guides
-- [Views & Widgets Guide](http-views-and-widgets.md) — parent guide: rendering pipeline, PHP templates, XSS escaping, layouts, asset bundles, core widgets, and HTML forms.
+- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — parent guide: rendering pipeline, PHP templates, XSS escaping, layouts, asset bundles, core widgets, and HTML forms.
 - [Bootstrap 5 Guide](http-views-bootstrap5.md) — the alternative CSS-framework widget driver (mutually exclusive with this one).
 - [DataView Widgets Guide](http-dataview-widgets.md) — GridView/ListView/DetailView rendering on top of the installed CSS framework.

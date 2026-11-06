@@ -367,7 +367,7 @@ final class CommandHelper
 ```
 
 > [!IMPORTANT]
-> When assembling a real `Application` instance in a test, call `setAutoExit(false)` — otherwise a non-zero command exit code terminates the PHPUnit process.
+> `setAutoExit(false)` is only required for tests that **run the `Application` itself** (`$application->run(...)`) — with auto-exit on, `Application::run()` calls `exit()` on a non-zero command exit code, terminating the PHPUnit process (`yiisoft/yii-console`'s own `TestCase` does exactly this). The `CommandTester` helper above is unaffected: it executes the resolved command directly, bypassing `Application::run()`, which is why the canonical helper omits the call.
 
 ---
 

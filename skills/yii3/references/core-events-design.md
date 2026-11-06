@@ -293,7 +293,7 @@ The group names `events`, `events-web`, and `events-console` are official, **but
 
 After editing `config/configuration.php`, rebuild the merge plan with `composer yii-config-rebuild`. The shared file's content then reaches **both** environment groups via the `$events` reference.
 
-**Merge modifiers (official recipe for events).** Merge semantics and the modifier APIs (`ReverseMerge::groups(...)`, `RecursiveMerge::groups(...)`, `RecursiveMerge::groupsWithDepth(...)`) are owned by the [DI & Configuration Guide](core-di-and-config.md), section 2.5. For events you normally write no modifier code at all: the HTTP and console runners already apply `RecursiveMerge` + `ReverseMerge` to the `params*` and `events*` groups out of the box via `createDefaultConfig()`. Only a hand-constructed `Yiisoft\Config\Config` instance (custom entrypoint, test bootstrap) needs the explicit `RecursiveMerge::groups('params', 'events', 'events-web', 'events-console')` + `ReverseMerge::groups('events', 'events-web', 'events-console')` modifiers. Reverse merge gives module-level event configs higher priority than the base config.
+**Merge modifiers (official recipe for events).** Merge semantics and the modifier APIs (`ReverseMerge::groups(...)`, `RecursiveMerge::groups(...)`, `RecursiveMerge::groupsWithDepth(...)`) are owned by the [DI & Configuration Guide](core-di-and-config.md), section 2.5. For events you normally write no modifier code at all: the HTTP and console runners already apply `RecursiveMerge` to the `params*` and `events*` groups and `ReverseMerge` to the `events*` groups only, out of the box via `createDefaultConfig()`. Only a hand-constructed `Yiisoft\Config\Config` instance (custom entrypoint, test bootstrap) needs the explicit `RecursiveMerge::groups('params', 'events', 'events-web', 'events-console')` + `ReverseMerge::groups('events', 'events-web', 'events-console')` modifiers. Reverse merge gives module-level event configs higher priority than the base config.
 
 **Custom group.** To isolate a module's events, redefine the parameter:
 
@@ -378,7 +378,7 @@ Details:
 
 - Validation rules: every event key must be a string naming an existing class, every value must be iterable, and every listener definition must resolve to a callable (`vendor/yiisoft/yii-event/src/ListenerConfigurationChecker.php`).
 - Exceptions: `Yiisoft\Yii\Event\InvalidEventConfigurationFormatException` and `Yiisoft\Yii\Event\InvalidListenerConfigurationException` (both implement `FriendlyExceptionInterface`).
-- Container retrieval of the checker works via DI autowiring of unregistered class names (yiisoft/di's default **non-strict mode**). Under `useStrictMode(true)` the lookup would fail — register the checker explicitly if you enable strict mode.
+- Container retrieval of the checker works via DI autowiring of unregistered class names (yiisoft/di's default **non-strict mode**). Under `withStrictMode(true)` the lookup would fail — register the checker explicitly if you enable strict mode.
 - The checker is documented as resource-greedy and is intended for development environments and test runs, not production request handling.
 
 ---

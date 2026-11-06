@@ -83,7 +83,7 @@ final class User
 ```
 
 > [!NOTE]
-> The example intentionally omits domain-event recording (`recordEvent()` / `releaseEvents()` members on the aggregate). That pattern — including the mandatory post-commit dispatch rule — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 5.
+> The example intentionally omits domain-event recording (`recordEvent()` / `releaseEvents()` members on the aggregate). That pattern — including the mandatory post-commit dispatch rule — is owned by the [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule).
 
 ### 1.3. Domain Repository Contract (`src/Domain/Repository/UserRepositoryInterface.php`)
 
@@ -418,7 +418,7 @@ $pgLastId = $db->getLastInsertId($sequenceName);
 
 ### 3.1. Building Select Queries & Conditions
 
-`Yiisoft\Db\Query\Query` builds cross-database SQL queries using immutable fluent methods:
+`Yiisoft\Db\Query\Query` builds cross-database SQL queries using fluent, chainable methods. `Query` is **mutable**: condition/order/limit methods mutate the instance and return it (`$this`); only the `with*()` methods (`withQuery()`, `withQueries()`, `withTypecasting()`) return clones.
 
 ```php
 use Yiisoft\Db\Query\Query;
@@ -450,13 +450,17 @@ use Yiisoft\Db\Expression\Expression;
 use Yiisoft\Db\Query\Query;
 
 // 1. Hash conditions with auto-IN expansion
-$query->where([
-    'status' => 'active',
-    'role' => ['admin', 'manager'], // Compiles to: role IN ('admin', 'manager')
-]);
+$query = (new Query($db))
+    ->from('{{%user}}')
+    ->where([
+        'status' => 'active',
+        'role' => ['admin', 'manager'], // Compiles to: role IN ('admin', 'manager')
+    ]);
 
 // 2. Operator conditions: between, in, like, exists
-$query->where(['between', 'age', 18, 65])
+// Note: `where()` throws a LogicException if a condition was already set on the instance —
+// extend with andWhere()/orWhere(), or reset via setWhere().
+$query->andWhere(['between', 'age', 18, 65])
     ->andWhere(['in', 'department_id', [10, 20, 30]])
     ->andWhere(['like', 'email', 'example.com'])
     ->andWhere(['not like', 'name', 'bot']);
@@ -541,7 +545,7 @@ When processing large datasets (e.g. exporting 100,000 rows or running data migr
 use Yiisoft\Db\Query\Query;
 
 // 1. Query::each(): DataReaderInterface (ZERO arguments!)
-// Streams records one by one through an unbuffered cursor with flat O(1) memory consumption.
+// Streams records one by one through a forward-only stream of rows with flat O(1) memory consumption.
 $userQuery = (new Query($db))
     ->from('{{%user}}')
     ->where(['status' => 'active'])
@@ -630,7 +634,7 @@ final readonly class CreateOrderUseCase
 ```
 
 > [!IMPORTANT]
-> **Strict post-commit dispatch rule:** never send emails, trigger webhooks, or push jobs to external queues inside the transaction closure — if the transaction rolls back, external side effects cannot be recalled. Collect domain events on the aggregate (`recordEvent()`) and dispatch them strictly after `$db->transaction()` returns. The full aggregate event-recording pattern and the `transaction()` commit semantics that enforce it are owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 5.
+> **Strict post-commit dispatch rule:** never send emails, trigger webhooks, or push jobs to external queues inside the transaction closure — if the transaction rolls back, external side effects cannot be recalled. Collect domain events on the aggregate (`recordEvent()`) and dispatch them strictly after `$db->transaction()` returns. The full aggregate event-recording pattern and the `transaction()` commit semantics that enforce it are owned by the [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule).
 
 ### 4.2. Manual Transactions & Savepoints
 
@@ -663,7 +667,7 @@ try {
    - `TransactionInterface::REPEATABLE_READ`
    - `TransactionInterface::SERIALIZABLE`
 2. **Nested Transactions & Savepoints:** If a transaction is already active, nested calls to `beginTransaction()` or `$db->transaction()` automatically create database savepoints (`SAVEPOINT LEVEL<n>`) when supported by the underlying driver (`$db->isSavepointEnabled()`).
-3. **Strict Post-Commit Rule:** Never dispatch external side effects (email, SMS, webhooks, queue jobs) inside `$db->transaction()` — collect domain events on aggregates and dispatch them strictly post-commit. Full pattern: [Events & Listeners Guide](core-events-and-listeners.md), section 5.
+3. **Strict Post-Commit Rule:** Never dispatch external side effects (email, SMS, webhooks, queue jobs) inside `$db->transaction()` — collect domain events on aggregates and dispatch them strictly post-commit. Full pattern: [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule).
 
 ### 4.4. Deadlock Retries & Serialization Failures (`SerializationFailureException`)
 
@@ -671,7 +675,7 @@ Under high concurrency, operations modifying overlapping rows may encounter data
 
 #### 1. Command-Level Retry Handler (`setRetryHandler`)
 
-`CommandInterface::setRetryHandler(?Closure $handler)` allows registering an automated retry callback. The documented handler contract is `function (Yiisoft\Db\Exception\Exception $e, int $attempt): bool`: the closure receives the `Yiisoft\Db\Exception\Exception` converted from the thrown database exception (not the raw driver exception or an arbitrary `Throwable`) and the current execution attempt, starting from `1`. Returning `true` retries the statement; returning `false` re-throws the exception.
+`CommandInterface::setRetryHandler(?Closure $handler)` allows registering an automated retry callback. The documented handler contract is `function (Yiisoft\Db\Exception\Exception $e, int $attempt): bool`: the closure receives the `Yiisoft\Db\Exception\Exception` converted from the thrown database exception (not the raw driver exception or an arbitrary `Throwable`) and the current execution attempt, starting from `0`. Returning `true` retries the statement; returning `false` re-throws the exception.
 
 ```php
 use Yiisoft\Db\Exception\Exception;

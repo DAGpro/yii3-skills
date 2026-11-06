@@ -29,7 +29,8 @@ To enable `.twig` templates, register `TwigTemplateRenderer` in `config/params.p
 ```php
 declare(strict_types=1);
 
-use Twig\Loader\FilesystemLoader;
+use Yiisoft\Aliases\Aliases;
+use Yiisoft\Definitions\DynamicReference;
 use Yiisoft\Definitions\Reference;
 use Yiisoft\View\Twig\TwigTemplateRenderer;
 
@@ -43,15 +44,15 @@ return [
     ],
     'yiisoft/yii-twig' => [
         'options' => [
-            'cache' => '@runtime/twig/cache',
+            // Resolve the alias like the package params do — a plain '@...' string is passed
+            // verbatim into Twig\Environment and never alias-resolved by the DI wiring:
+            'cache' => DynamicReference::to(static fn(Aliases $aliases) => $aliases->get('@runtime/twig/cache')),
             'debug' => true,
             'auto_reload' => true,
         ],
-        'loader' => [
-            'paths' => [
-                '@views',
-            ],
-        ],
+        // No 'loader' key needed: the package DI already mounts $aliases->get('@views') as the
+        // FIRST FilesystemLoader path (with '@resources' as the root). Extra 'paths' entries are
+        // raw strings that are never alias-resolved — pass real filesystem paths only.
     ],
 ];
 ```
@@ -65,7 +66,7 @@ return [
 
 In Twig templates, the `WebView` instance is injected into the context under the variable name `this`.
 
-Because page lifecycle methods echo HTML comments and CDATA markers (`<![CDATA[YII-BLOCK-HEAD-...]]>`), you **MUST** apply the `|raw` filter; otherwise, Twig's auto-escaping converts them to `&lt;![CDATA[...`, completely breaking script and stylesheet injection!
+Because page lifecycle methods echo CDATA placeholder markers (`<![CDATA[YII-BLOCK-HEAD-...]]>`, `YII-BLOCK-BODY-BEGIN-...`, `YII-BLOCK-BODY-END-...`), you **MUST** apply the `|raw` filter; otherwise, Twig's auto-escaping converts them to `&lt;![CDATA[...`, completely breaking script and stylesheet injection!
 
 **Main Layout in Twig (`views/layout/main.twig`):**
 ```twig

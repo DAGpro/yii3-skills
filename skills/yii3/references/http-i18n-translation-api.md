@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
-> Part of the [Internationalization & Translation Guide](http-i18n-translation.md) split — the anti-pattern matrix and related guides live there.
+> Part of the [Internationalization & Translation Guide](http-i18n-translation.md) split — this file owns §1–§3 (Translation API & Formatters); [Message Storage, Extraction & Locale Handling](http-i18n-storage-and-locale.md) owns §4–§9 (§4.2 = DB message source, §5 = extraction, §6.2 = locale middleware, §7 = missing-translation events); the anti-pattern matrix and related guides live in the hub.
 
 ## 1. Package Map & Installation
 
@@ -78,7 +78,9 @@ Translation resolution order in `translate()` (from `vendor/yiisoft/translator/s
 4. Own-locale fallback: `Yiisoft\I18n\Locale::fallbackLocale()` is applied and the search recurses while the
    string keeps changing (strips exactly one structural subtag per step — variant → region → script, §6.1).
 5. The configured `fallbackLocale` is tried the same way.
-6. Finally the raw id is formatted by the **last** source's formatter with the original locale.
+6. Finally the raw id is formatted by the **last** source's formatter with the **last locale tried in the
+   fallback chain** (the recursion passes each fallback locale forward, so the final format call receives the
+   deepest locale — e.g. the configured `fallbackLocale` — not the originally requested one).
 
 Formatter precedence: a `CategorySource`'s own formatter wins over the translator's default — the source calls
 `$this->formatter ?? $defaultFormatter` (`vendor/yiisoft/translator/src/CategorySource.php:135`).
@@ -117,7 +119,8 @@ public function __construct(
 >    wrong slot and a `TypeError` follows.
 > 2. The commented example inside `vendor/yiisoft/translator/config/di.php` constructs
 >    `CategorySource($name, $messageSource, $messageSource, $messageFormatter)` — the real constructor order is
->    `(name, reader, formatter, writer)` (§2.3), so reader and formatter slots are swapped there.
+>    `(name, reader, formatter, writer)` (§2.3), so the formatter and writer slots are swapped there: the
+>    formatter slot receives the message source and the writer slot receives the formatter.
 >
 > Always use named arguments in your own wiring, and treat `vendor/yiisoft/<pkg>/src/` as ground truth.
 

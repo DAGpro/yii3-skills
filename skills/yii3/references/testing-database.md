@@ -75,16 +75,10 @@ return [
 
 ### 2.2. Isolated Test Environment Setup
 
-Ensure `test` environment inherits common configurations while disabling file cache and foreign external connections:
+Ensure `test` environment inherits common configurations while disabling file cache and foreign external connections.
 
-```php
-// config/environments/test/params.php
-return [
-    'yiisoft/db-sqlite' => [
-        'dsn' => 'sqlite::memory:',
-    ],
-];
-```
+> [!NOTE]
+> `yiisoft/db-sqlite` ships no config plugin and no params of its own — there is no `'yiisoft/db-sqlite'` params key to configure. The in-memory DSN is wired entirely by the DI definition in §2.1.
 
 ---
 
@@ -92,18 +86,19 @@ return [
 
 ### 3.1. DDL Migration Definition with `ColumnBuilder`
 
-Yii3 migrations implement `Yiisoft\Db\Migration\MigrationInterface` and build schemas using `Yiisoft\Db\Schema\Column\ColumnBuilder`:
+Yii3 migrations implement `Yiisoft\Db\Migration\MigrationInterface`; migrations that also declare `down()` implement `Yiisoft\Db\Migration\RevertibleMigrationInterface` (which extends it and owns `down()`). Schemas are built using `Yiisoft\Db\Schema\Column\ColumnBuilder`:
 
 ```php
 declare(strict_types=1);
 
 namespace App\Tests\Support\Migration;
 
+use Yiisoft\Db\Constant\IndexType;
 use Yiisoft\Db\Migration\MigrationBuilder;
-use Yiisoft\Db\Migration\MigrationInterface;
+use Yiisoft\Db\Migration\RevertibleMigrationInterface;
 use Yiisoft\Db\Schema\Column\ColumnBuilder;
 
-final class M261022120000CreateUserTable implements MigrationInterface
+final class M261022120000CreateUserTable implements RevertibleMigrationInterface
 {
     public function up(MigrationBuilder $b): void
     {
@@ -114,7 +109,7 @@ final class M261022120000CreateUserTable implements MigrationInterface
             'created_at' => ColumnBuilder::integer()->notNull(),
         ]);
 
-        $b->createIndex('idx_user_email', 'user', 'email', unique: true);
+        $b->createIndex('user', 'idx_user_email', 'email', IndexType::UNIQUE);
     }
 
     public function down(MigrationBuilder $b): void
@@ -277,13 +272,13 @@ final class SqliteUserRepository implements UserRepositoryInterface
 
     public function findById(int $id): ?UserRecord
     {
-        /** @var array{id: int, name: string, email: string, created_at: int}|false $row */
+        /** @var array{id: int, name: string, email: string, created_at: int}|null $row */
         $row = (new Query($this->db))
             ->from('user')
             ->where(['id' => $id])
             ->one();
 
-        if ($row === false) {
+        if ($row === null) {
             return null;
         }
 
@@ -371,10 +366,10 @@ final class SqliteUserRepositoryTest extends DatabaseTestCase
 | `Yiisoft\Db\Migration\MigrationBuilder::__construct` | `__construct(ConnectionInterface $db, MigrationInformerInterface $informer, ?int $maxSqlOutputLength = null)` |
 | `Yiisoft\Db\Sqlite\Driver::__construct` | `__construct(string\|Stringable $dsn, string $username = '', string $password = '', array $attributes = [])` |
 | `Yiisoft\Db\Sqlite\Connection::__construct` | `__construct(PdoDriverInterface $driver, SchemaCache $schemaCache = new SchemaCache(), ?ColumnFactoryInterface $columnFactory = null)` |
-| `Yiisoft\Db\Command::insert` | `insert(string $table, array\|QueryInterface $columns): static` |
-| `Yiisoft\Db\Command::insertBatch` | `insertBatch(string $table, iterable $rows, array $columns = []): static` |
-| `Yiisoft\Db\Query\Query::from` | `from(array\|string $tables): static` |
-| `Yiisoft\Db\Query\Query::where` | `where(array\|string\|ExpressionInterface $condition, array $params = []): static` |
+| `Yiisoft\Db\Command\CommandInterface::insert` (implemented by `AbstractCommand`) | `insert(string $table, array\|QueryInterface $columns): static` |
+| `Yiisoft\Db\Command\CommandInterface::insertBatch` (implemented by `AbstractCommand`) | `insertBatch(string $table, iterable $rows, array $columns = []): static` |
+| `Yiisoft\Db\Query\Query::from` | `from(array\|ExpressionInterface\|string $tables): static` |
+| `Yiisoft\Db\Query\Query::where` | `where(array\|string\|ExpressionInterface\|null $condition, array $params = []): static` |
 
 ---
 

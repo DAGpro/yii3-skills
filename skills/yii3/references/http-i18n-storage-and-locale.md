@@ -280,17 +280,23 @@ return [
     Extractor::class => [
         '__construct()' => [
             [
-                new ExtractorCategorySource(
-                    'app',
-                    DynamicReference::to([
-                        'class' => MessageSource::class,
-                        '__construct()' => ['path' => $params['yiisoft/translator-extractor']['messagePath']],
-                    ]),
-                    DynamicReference::to([
-                        'class' => MessageSource::class,
-                        '__construct()' => ['path' => $params['yiisoft/translator-extractor']['messagePath']],
-                    ]),
-                ),
+                // Resolve the WHOLE source via DynamicReference: the constructor demands
+                // real MessageReaderInterface/MessageWriterInterface objects, so passing
+                // DynamicReference instances directly into `new ExtractorCategorySource(...)`
+                // is a TypeError. Inside the nested definition, the reader/writer arguments
+                // are resolved by the DI container before the constructor is invoked.
+                DynamicReference::to([
+                    'class' => ExtractorCategorySource::class,
+                    '__construct()' => [
+                        'app',
+                        'messageReader' => DynamicReference::to(static fn () => new MessageSource(
+                            $params['yiisoft/translator-extractor']['messagePath'],
+                        )),
+                        'messageWriter' => DynamicReference::to(static fn () => new MessageSource(
+                            $params['yiisoft/translator-extractor']['messagePath'],
+                        )),
+                    ],
+                ]),
             ],
             '->translate',
         ],
@@ -354,8 +360,10 @@ There is **no** public accessor or wither for `extension` / `grandfathered` — 
 exposed only through `asString()`.
 
 Normalization applied while parsing: language lowercased (`EN` → `en`), region uppercased (`fr-ca` → `CA` for
-the region part), script ucfirst (`zh-hANS` → `Hans`). ICU keywords become accessor values: e.g.
-`en-US-u-ca-buddhist` exposes `calendar(): 'buddhist'`.
+the region part), script ucfirst (`zh-hANS` → `Hans`). ICU keywords become accessor values — but they are only
+read from the `@key=value` trailer (RFC 6067 `@`-keywords): `en-US@calendar=buddhist` exposes
+`calendar(): 'buddhist'`. The BCP 47 `-u-` extension form (`en-US-u-ca-buddhist`) is stored in `extension` and
+**not** parsed into keyword accessors, so `calendar()` returns `null` for it.
 
 `fallbackLocale()` mechanics (`vendor/yiisoft/i18n/src/Locale.php:527-553`):
 
@@ -409,17 +417,30 @@ parameter** `_language` (customizable via `withQueryParameterName()`) → **cook
 middleware passes through untouched. Invalid map formats throw `InvalidLocalesFormatException` at construction
 /configuration time, not during resolution.
 
-Redirects (302): for GET requests the default locale's prefix is stripped (`/en-US/blog` → `/blog`, cookie
-saved); a non-default prefix is added when missing. Non-GET requests proceed without URL rewriting.
+Redirects (302, GET only): for GET requests the default locale's prefix is stripped (`/en/blog` → `/blog`,
+cookie saved); a non-default prefix is added when the locale was resolved from query/cookie/header. Non-GET
+requests proceed without URL rewriting. **Prefixes in URLs are the map keys**: with
+`['en' => 'en-US', 'ru' => 'ru-RU']`, a `/en-US/blog` request parses to key `en`, and the strip redirect (which
+cuts a fixed `strlen(key) + 1` off the path) targets `-US/blog` (mangled) — always link with key-form URLs
+(`/en/...`, `/ru/...`).
 
 > [!IMPORTANT]
 > The middleware does **not** call `TranslatorInterface::setLocale()` and does not touch `LocaleProvider`
-> (verified: zero references to translator/i18n in the middleware sources). Instead, for every request resolved
-> to a **non-default** locale it:
-> 1. dispatches `Yiisoft\Yii\Middleware\Event\SetLocaleEvent` carrying the locale **value** from the map —
->    e.g. `'ru-RU'` for prefix key `ru` — before the request handler runs;
-> 2. calls `$this->urlGenerator->setDefaultArgument('_language', 'ru')` with the locale **key** — or
->    `setDefaultArgument('_language', null)` for the default locale, resetting the argument.
+> (verified: zero references to translator/i18n in the middleware sources). The exact control flow
+> (`src/Locale.php:79-131`):
+> - **Locale taken from the URL path** (default locale, GET) → 302 redirect to the unprefixed path (cookie
+>   saved); neither the event nor the URL generator are touched.
+> - **Locale taken from query/cookie/header** (no path prefix) and it is missing or the default →
+>   `$this->urlGenerator->setDefaultArgument('_language', null)` (resetting the argument), the default prefix is
+>   prepended to the request URI, and the handler runs — **no** `SetLocaleEvent` is dispatched.
+> - **Locale from query/cookie/header, non-default, GET** → 302 redirect to the prefixed URL before any
+>   dispatch.
+> - Everything else (non-default resolved from the path on any method, the default with a path prefix on
+>   non-GET, non-default from query/cookie/header on non-GET) falls through to the dispatch branch:
+>   `Yiisoft\Yii\Middleware\Event\SetLocaleEvent` is dispatched with the map **value** for the resolved key —
+>   e.g. `'ru-RU'` for prefix key `ru` — before the handler runs, then
+>   `$this->urlGenerator->setDefaultArgument('_language', 'ru')` is called with the locale **key**, and the
+>   response saves the locale cookie.
 >
 > The application wires a `SetLocaleEvent` listener to propagate the locale (§7).
 

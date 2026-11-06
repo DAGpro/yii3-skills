@@ -128,7 +128,7 @@ Each `Yiisoft\Validator\Error` value object exposes:
 
 ### 2.3. Exhaustive Built-In Rules Catalog
 
-`yiisoft/validator` ships 42 built-in rule classes. All concrete rule classes are PHP attributes marked `#[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]`.
+`yiisoft/validator` ships 42 built-in rule classes. Nearly all concrete rule classes are PHP attributes marked `#[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]`. Ten rules also add `Attribute::TARGET_CLASS` — `Composite`, `Nested`, `Each`, `Count`, `Callback`, `AnyRule`, `StopOnError`, `UniqueIterable`, `FilledAtLeast`, `FilledOnlyOneOf` — so they can additionally be attached to a class (e.g. to validate the object as a whole).
 
 > [!IMPORTANT]
 > **PHP 8 Named Arguments Mandate & Positional Traps:**
@@ -146,80 +146,80 @@ Each `Yiisoft\Validator\Error` value object exposes:
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
 | `StringValue` | `Yiisoft\Validator\Rule\StringValue` | `string $message = '{Property} must be a string.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StringValueHandler` |
-| `BooleanValue` | `Yiisoft\Validator\Rule\BooleanValue` | `mixed $trueValue = '1'`, `mixed $falseValue = '0'`, `bool $strict = false`, `string $message = 'The value of {property} must be either "{true}" or "{false}".'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `BooleanValueHandler` |
-| `Integer` | `Yiisoft\Validator\Rule\Integer` | `float\|int\|null $min = null`, `float\|int\|null $max = null`, `string $pattern = '/^\s*[+-]?\d+\s*$/'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `NumberHandler` |
-| `Number` | `Yiisoft\Validator\Rule\Number` | `float\|int\|null $min = null`, `float\|int\|null $max = null`, `string $pattern = '/^\s*[-+]?\d*\.?\d+([eE][-+]?\d+)?\s*$/'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `NumberHandler` |
-| `TrueValue` | `Yiisoft\Validator\Rule\TrueValue` | `mixed $trueValue = '1'`, `bool $strict = false`, `string $message = 'The value of {property} must be "{true}".'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `TrueValueHandler` |
+| `BooleanValue` | `Yiisoft\Validator\Rule\BooleanValue` | `mixed $trueValue = '1'`, `mixed $falseValue = '0'`, `bool $strict = false`, `string $incorrectInputMessage = 'The allowed types for {property} are integer, float, string, boolean. {type} given.'`, `string $message = '{Property} must be either "{true}" or "{false}".'`, `bool\|callable\|null $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `BooleanValueHandler` |
+| `Integer` | `Yiisoft\Validator\Rule\Integer` | `float\|int\|null $min = null`, `float\|int\|null $max = null`, `string $incorrectInputMessage = 'The allowed types for {property} are integer, float and string. {type} given.'`, `string $notNumberMessage = '{Property} must be an integer.'`, `string $lessThanMinMessage = '{Property} must be no less than {min}.'`, `string $greaterThanMaxMessage = '{Property} must be no greater than {max}.'`, `string $pattern = '/^\s*[+-]?\d+\s*$/'`, `bool\|callable\|null $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `NumberHandler` |
+| `Number` | `Yiisoft\Validator\Rule\Number` | `float\|int\|null $min = null`, `float\|int\|null $max = null`, `string $incorrectInputMessage = 'The allowed types for {property} are integer, float and string. {type} given.'`, `string $notNumberMessage = '{Property} must be a number.'`, `string $lessThanMinMessage = '{Property} must be no less than {min}.'`, `string $greaterThanMaxMessage = '{Property} must be no greater than {max}.'`, `string $pattern = '/^\s*[-+]?\d*\.?\d+([eE][-+]?\d+)?\s*$/'`, `bool\|callable\|null $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `NumberHandler` |
+| `TrueValue` | `Yiisoft\Validator\Rule\TrueValue` | `mixed $trueValue = '1'`, `bool $strict = false`, `string $incorrectInputMessage = 'The allowed types for {property} are integer, float, string, boolean. {type} given.'`, `string $message = '{Property} must be "{true}".'`, `bool\|callable\|null $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `TrueValueHandler` |
 
 #### 3. Strict Native Type Rules (`Rule\Type\*`, for Domain Invariants)
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
 | `StringType` | `Yiisoft\Validator\Rule\Type\StringType` | `string $message = '{Property} must be a string. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StringTypeHandler` |
-| `IntegerType` | `Yiisoft\Validator\Rule\Type\IntegerType` | `string $message = '{Property} must be an integer. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `IntegerTypeHandler` |
-| `FloatType` | `Yiisoft\Validator\Rule\Type\FloatType` | `string $message = '{Property} must be a float. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FloatTypeHandler` |
-| `BooleanType` | `Yiisoft\Validator\Rule\Type\BooleanType` | `string $message = '{Property} must be a boolean. {type} given.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `BooleanTypeHandler` |
+| `IntegerType` | `Yiisoft\Validator\Rule\Type\IntegerType` | `string $message = '{Property} must be an integer.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `IntegerTypeHandler` |
+| `FloatType` | `Yiisoft\Validator\Rule\Type\FloatType` | `string $message = '{Property} must be a float.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FloatTypeHandler` |
+| `BooleanType` | `Yiisoft\Validator\Rule\Type\BooleanType` | `string $message = '{Property} must be a boolean.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `BooleanTypeHandler` |
 
 #### 4. String & Format Rules
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
-| `Length` | `Yiisoft\Validator\Rule\Length` | `?int $exactly = null`, `?int $min = null`, `?int $max = null`, `string $encoding = 'UTF-8'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments `min:`, `max:`, `exactly:` required)* | `skipOnEmpty`, `skipOnError`, `when` | `LengthHandler` |
+| `Length` | `Yiisoft\Validator\Rule\Length` | `?int $exactly = null`, `?int $min = null`, `?int $max = null`, `string $incorrectInputMessage = '{Property} must be a string. {type} given.'`, `string $lessThanMinMessage = ...`, `string $greaterThanMaxMessage = ...`, `string $notExactlyMessage = ...`, `string $encoding = 'UTF-8'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments `min:`, `max:`, `exactly:` required)* | `skipOnEmpty`, `skipOnError`, `when` | `LengthHandler` |
 | `Email` | `Yiisoft\Validator\Rule\Email` | `string $pattern = ...`, `string $fullPattern = ...`, `string $idnEmailPattern = ...`, `bool $allowName = false`, `bool $checkDns = false`, `bool $enableIdn = false`, `string $incorrectInputMessage = ...`, `string $message = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Use named arguments)* | `skipOnEmpty`, `skipOnError`, `when` | `EmailHandler` |
-| `Regex` | `Yiisoft\Validator\Rule\Regex` | `string $pattern`, `bool $not = false`, `string $message = '{Property} is invalid.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `RegexHandler` |
+| `Regex` | `Yiisoft\Validator\Rule\Regex` | `string $pattern`, `bool $not = false`, `string $incorrectInputMessage = '{Property} must be a string. {type} given.'`, `string $message = '{Property} is invalid.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `RegexHandler` |
 | `Url` | `Yiisoft\Validator\Rule\Url` | `string $pattern = ...`, `array $validSchemes = ['http', 'https']`, `bool $enableIdn = false`, `string $incorrectInputMessage = ...`, `string $message = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Use named arguments)* | `skipOnEmpty`, `skipOnError`, `when` | `UrlHandler` |
-| `Uuid` | `Yiisoft\Validator\Rule\Uuid` | `string $message = 'The value of {property} is not a valid UUID.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `UuidHandler` |
-| `Ip` | `Yiisoft\Validator\Rule\Ip` | `array $networks = []`, `bool $allowIpv4 = true`, `bool $allowIpv6 = true`, `bool $allowSubnet = false`, `bool $requireSubnet = false`, `bool $allowNegation = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `IpHandler` |
-| `Json` | `Yiisoft\Validator\Rule\Json` | `string $message = '{Property} is not a valid JSON.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `JsonHandler` |
+| `Uuid` | `Yiisoft\Validator\Rule\Uuid` | `string $incorrectInputMessage = '{Property} must be a string. {type} given.'`, `string $message = 'The value of {property} is not a valid UUID.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `UuidHandler` |
+| `Ip` | `Yiisoft\Validator\Rule\Ip` | `array $networks = []`, `bool $allowIpv4 = true`, `bool $allowIpv6 = true`, `bool $allowSubnet = false`, `bool $requireSubnet = false`, `bool $allowNegation = false`, `string $incorrectInputMessage = '{Property} must be a string. {type} given.'`, `string $message = '{Property} must be a valid IP address.'`, `string $ipv4NotAllowedMessage = ...`, `string $ipv6NotAllowedMessage = ...`, `string $wrongCidrMessage = ...`, `string $noSubnetMessage = ...`, `string $hasSubnetMessage = ...`, `string $notInRangeMessage = ...`, `array $ranges = []`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `IpHandler` |
+| `Json` | `Yiisoft\Validator\Rule\Json` | `string $incorrectInputMessage = '{Property} must be a string. {type} given.'`, `string $message = '{Property} is not a valid JSON.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `JsonHandler` |
 
 #### 5. Comparison Rules (Extend `AbstractCompare`)
 > [!NOTE]
-> In all comparison rules, `$skipOnEmpty` defaults to `false` (unlike other rules where it defaults to `null`). Always use named arguments `targetProperty:`, `targetValue:`, `operator:`, `type:`.
+> `$skipOnEmpty` defaults to `null` in the base `Compare` rule (falling back to the validator's `defaultSkipOnEmpty`), while the shortcut rules (`Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual`) explicitly default it to `false`. Always use named arguments `targetProperty:`, `targetValue:`, `operator:`, `type:`.
 
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
 | `Compare` | `Yiisoft\Validator\Rule\Compare` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `string $operator = '=='`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `CompareHandler` |
-| `Equal` | `Yiisoft\Validator\Rule\Equal` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `bool $strict = false`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
-| `NotEqual` | `Yiisoft\Validator\Rule\NotEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `bool $strict = false`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
-| `GreaterThan` | `Yiisoft\Validator\Rule\GreaterThan` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
-| `GreaterThanOrEqual` | `Yiisoft\Validator\Rule\GreaterThanOrEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
-| `LessThan` | `Yiisoft\Validator\Rule\LessThan` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
-| `LessThanOrEqual` | `Yiisoft\Validator\Rule\LessThanOrEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `Equal` | `Yiisoft\Validator\Rule\Equal` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `bool $strict = false`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `NotEqual` | `Yiisoft\Validator\Rule\NotEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `bool $strict = false`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `GreaterThan` | `Yiisoft\Validator\Rule\GreaterThan` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `GreaterThanOrEqual` | `Yiisoft\Validator\Rule\GreaterThanOrEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `LessThan` | `Yiisoft\Validator\Rule\LessThan` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
+| `LessThanOrEqual` | `Yiisoft\Validator\Rule\LessThanOrEqual` | `mixed $targetValue = null`, `?string $targetProperty = null`, `string $incorrectInputMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `?string $message = null`, `string $type = CompareType::NUMBER`, `mixed $skipOnEmpty = false`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty: false`, `skipOnError`, `when` | `CompareHandler` |
 
 #### 6. Collections & Iteration Rules
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
 | `Count` | `Yiisoft\Validator\Rule\Count` | `?int $exactly = null`, `?int $min = null`, `?int $max = null`, `string $incorrectInputMessage = ...`, `string $lessThanMinMessage = ...`, `string $greaterThanMaxMessage = ...`, `string $notExactlyMessage = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments `min:`, `max:`, `exactly:` required)* | `skipOnEmpty`, `skipOnError`, `when` | `CountHandler` |
 | `Each` | `Yiisoft\Validator\Rule\Each` | `callable\|iterable\|object\|string $rules = []`, `string $incorrectInputMessage = ...`, `string $incorrectInputKeyMessage = ...`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null`, `bool $stopOnError = false` *(Note: `$stopOnError` is parameter #7; use named `stopOnError: true`)* | `skipOnEmpty`, `skipOnError`, `when` | `EachHandler` |
-| `In` | `Yiisoft\Validator\Rule\In` | `iterable $values`, `bool $strict = false`, `bool $not = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `InHandler` |
-| `InEnum` | `Yiisoft\Validator\Rule\InEnum` | `class-string<UnitEnum> $class`, `bool $useNames = false`, `bool $strict = false`, `bool $not = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `InEnumHandler` |
-| `Subset` | `Yiisoft\Validator\Rule\Subset` | `iterable $values`, `bool $strict = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `SubsetHandler` |
-| `UniqueIterable` | `Yiisoft\Validator\Rule\UniqueIterable` | `string $message = 'Every iterable\'s item of {property} must be unique.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `UniqueIterableHandler` |
+| `In` | `Yiisoft\Validator\Rule\In` | `iterable $values`, `bool $strict = false`, `bool $not = false`, `string $message = '{Property} is not in the list of acceptable values.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `InHandler` |
+| `InEnum` | `Yiisoft\Validator\Rule\InEnum` | `class-string<UnitEnum> $class`, `bool $useNames = false`, `bool $strict = false`, `bool $not = false`, `string $message = '{Property} is not in the list of acceptable values.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `InEnumHandler` |
+| `Subset` | `Yiisoft\Validator\Rule\Subset` | `iterable $values`, `bool $strict = false`, `string $incorrectInputMessage = '{Property} must be iterable. {type} given.'`, `string $message = '{Property} is not a subset of acceptable values.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `SubsetHandler` |
+| `UniqueIterable` | `Yiisoft\Validator\Rule\UniqueIterable` | `string $incorrectInputMessage = '{Property} must be array or iterable.'`, `string $incorrectItemValueMessage = ...`, `string $differentTypesMessage = 'All iterable items of {property} must have the same type.'`, `string $message = 'Every iterable\'s item of {property} must be unique.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `UniqueIterableHandler` |
 
 #### 7. Structural & Flow Combinator Rules
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
 | `Nested` | `Yiisoft\Validator\Rule\Nested` | `iterable\|object\|string\|null $rules = null`, `int $validatedObjectPropertyVisibility = ...`, `int $rulesSourceClassPropertyVisibility = ...`, `string $noRulesWithNoObjectMessage = ...`, `string $incorrectDataSetTypeMessage = ...`, `string $incorrectInputMessage = ...`, `bool $requirePropertyPath = false`, `string $noPropertyPathMessage = ...`, `bool $handleEachShortcut = true`, `bool $propagateOptions = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `NestedHandler` |
 | `Composite` | `Yiisoft\Validator\Rule\Composite` | `iterable $rules = []`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `CompositeHandler` |
-| `StopOnError` | `Yiisoft\Validator\Rule\StopOnError` | `iterable $rules = []`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StopOnErrorHandler` |
-| `AnyRule` | `Yiisoft\Validator\Rule\AnyRule` | `iterable $rules = []`, `string $message = 'At least one of the inner rules must pass the validation.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `AnyRuleHandler` |
+| `StopOnError` | `Yiisoft\Validator\Rule\StopOnError` | `iterable $rules` (no default — `new StopOnError()` is a fatal `ArgumentCountError`), `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `StopOnErrorHandler` |
+| `AnyRule` | `Yiisoft\Validator\Rule\AnyRule` | `iterable $rules` (no default — `new AnyRule()` is a fatal `ArgumentCountError`), `string $message = 'At least one of the inner rules must pass the validation.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `AnyRuleHandler` |
 
 #### 8. Cross-Property Cardinality Rules
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
-| `FilledAtLeast` | `Yiisoft\Validator\Rule\FilledAtLeast` | `array $properties`, `int $min = 1`, `string $message = 'At least {min, number} {min, plural, one{property} other{properties}} from this list must be filled: {properties}.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FilledAtLeastHandler` |
-| `FilledOnlyOneOf` | `Yiisoft\Validator\Rule\FilledOnlyOneOf` | `array $properties`, `string $message = 'Exactly 1 property from this list must be filled: {properties}.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FilledOnlyOneOfHandler` |
+| `FilledAtLeast` | `Yiisoft\Validator\Rule\FilledAtLeast` | `array $properties`, `int $min = 1`, `string $incorrectInputMessage = '{Property} must be an array or an object. {type} given.'`, `string $message = 'At least {min, number} {min, plural, one{property} other{properties}} from this list must be filled for {property}: {properties}.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FilledAtLeastHandler` |
+| `FilledOnlyOneOf` | `Yiisoft\Validator\Rule\FilledOnlyOneOf` | `array $properties`, `string $incorrectInputMessage = '{Property} must be an array or an object. {type} given.'`, `string $message = 'Exactly 1 property from this list must be filled for {property}: {properties}.'`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FilledOnlyOneOfHandler` |
 
 #### 9. Date Rules (`Rule\Date\*`)
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
-| `Date` | `Yiisoft\Validator\Rule\Date\Date` | `?string $format = null`, `?int $dateType = null`, `?string $timeZone = null`, `?string $locale = null`, `mixed $min = null`, `mixed $max = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `Date\DateHandler` |
-| `DateTime` | `Yiisoft\Validator\Rule\Date\DateTime` | `?string $format = null`, `?int $dateType = null`, `?int $timeType = null`, `?string $timeZone = null`, `?string $locale = null`, `mixed $min = null`, `mixed $max = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `Date\DateTimeHandler` |
-| `Time` | `Yiisoft\Validator\Rule\Date\Time` | `?string $format = null`, `?int $timeType = null`, `?string $timeZone = null`, `?string $locale = null`, `mixed $min = null`, `mixed $max = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `Date\TimeHandler` |
+| `Date` | `Yiisoft\Validator\Rule\Date\Date` | `?string $format = null`, `?int $dateType = null`, `?string $timeZone = null`, `?string $locale = null`, `int\|string\|DateTimeInterface\|null $min = null`, `int\|string\|DateTimeInterface\|null $max = null`, `?string $messageFormat = null`, `?int $messageDateType = null`, `?string $incorrectInputMessage = null`, `?string $tooEarlyMessage = null`, `?string $tooLateMessage = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Date\DateHandler` |
+| `DateTime` | `Yiisoft\Validator\Rule\Date\DateTime` | `?string $format = null`, `?int $dateType = null`, `?int $timeType = null`, `?string $timeZone = null`, `?string $locale = null`, `int\|string\|DateTimeInterface\|null $min = null`, `int\|string\|DateTimeInterface\|null $max = null`, `?string $messageFormat = null`, `?int $messageDateType = null`, `?int $messageTimeType = null`, `?string $incorrectInputMessage = null`, `?string $tooEarlyMessage = null`, `?string $tooLateMessage = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Date\DateTimeHandler` |
+| `Time` | `Yiisoft\Validator\Rule\Date\Time` | `?string $format = null`, `?int $timeType = null`, `?string $timeZone = null`, `?string $locale = null`, `int\|string\|DateTimeInterface\|null $min = null`, `int\|string\|DateTimeInterface\|null $max = null`, `?string $messageFormat = null`, `?int $messageTimeType = null`, `?string $incorrectInputMessage = null`, `?string $tooEarlyMessage = null`, `?string $tooLateMessage = null`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Date\TimeHandler` |
 
 #### 10. File & Image Rules
 | Rule Class | FQCN | Constructor Parameters & Defaults | Modifiers Supported | Handler Class |
 |---|---|---|---|---|
 | `File` | `Yiisoft\Validator\Rule\File` | `array\|string\|null $extensions = null`, `array\|string\|null $mimeTypes = null`, `?int $size = null`, `?int $minSize = null`, `?int $maxSize = null`, `bool $trustClientMediaType = false`, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` | `skipOnEmpty`, `skipOnError`, `when` | `FileHandler` |
-| `Image` | `Yiisoft\Validator\Rule\Image\Image` | `?int $width = null`, `?int $height = null`, `?int $minWidth = null`, `?int $minHeight = null`, `?int $maxWidth = null`, `?int $maxHeight = null`, `?ImageAspectRatio $aspectRatio = null`, `string $notImageMessage = ...` *(8 dimension messages follow)*, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Image\ImageHandler` |
+| `Image` | `Yiisoft\Validator\Rule\Image\Image` | `?int $width = null`, `?int $height = null`, `?int $minWidth = null`, `?int $minHeight = null`, `?int $maxWidth = null`, `?int $maxHeight = null`, `?ImageAspectRatio $aspectRatio = null`, `string $notImageMessage = ...` *(7 more message parameters follow; 8 message parameters total precede `$skipOnEmpty`)*, `mixed $skipOnEmpty = null`, `bool $skipOnError = false`, `?Closure $when = null` *(Named arguments required)* | `skipOnEmpty`, `skipOnError`, `when` | `Image\ImageHandler` |
 | `ImageAspectRatio` | `Yiisoft\Validator\Rule\Image\ImageAspectRatio` | `int $width`, `int $height`, `float $margin = 0` | Value object companion | Evaluated by `ImageHandler` |
 
 > [!TIP]
@@ -244,7 +244,7 @@ Pick rules intentionally based on the architectural layer:
 
 2. **Domain Invariants Layer (Strict Rules):**
    - Rules: `Yiisoft\Validator\Rule\Type\StringType`, `IntegerType`, `FloatType`, `BooleanType`.
-   - Behavior: Enforces native PHP types via `is_string()`, `is_int()`, `is_float()`, `is_bool()`. Passing `"42"` to `IntegerType` immediately fails with `"{Property} must be an integer. string given."`.
+   - Behavior: Enforces native PHP types via `is_string()`, `is_int()`, `is_float()`, `is_bool()`. Passing `"42"` to `IntegerType` immediately fails with `"{Property} must be an integer."`.
    - Usage: Apply to internal service DTOs, domain command handlers, or database entity invariants to guard against subtle type coercion bugs.
 
 ---
@@ -331,9 +331,9 @@ All rules (with the noted exception of `Required` regarding `skipOnEmpty`) suppo
 Controls whether empty values bypass the rule:
 - `null` (default): falls back to the validator's `defaultSkipOnEmpty`; the out-of-the-box default is `NeverEmpty`, i.e. rules run on empty values.
 - `false`: the rule runs even if the value is empty.
-- `true`: skips validation if the value is `null`, empty string `""`, or an empty array.
+- `true`: skips validation if the value is empty per `WhenEmpty` — `null`, empty string `""`, any empty iterable (including `[]`), or the property was not passed at all.
 - `callable`: a custom empty condition. Yii 3 ships four built-in condition classes in `Yiisoft\Validator\EmptyCondition\*`:
-  - `WhenEmpty`: default check (`null`, `""`, or `[]`).
+  - `WhenEmpty`: the condition behind `true` — treats `null`, `""`, any empty iterable, and a property missing from the dataset as empty.
   - `WhenNull`: skips only when the value is strictly `null`.
   - `NeverEmpty`: never skips.
   - `WhenMissing`: skips only if the key was completely omitted from the dataset.
@@ -358,15 +358,11 @@ declare(strict_types=1);
 namespace App\Application\Order\Dto;
 
 use Yiisoft\Validator\Rule\Required;
-use Yiisoft\Validator\Rule\Url;
 use Yiisoft\Validator\ValidationContext;
 
 final class DeliveryOptionsDto
 {
     public bool $isPickup = false;
-
-    // Required only when pickup is disabled
-    #[Required(when: static fn (mixed $value, ValidationContext $context): bool => self::isShippingRequired($value, $context))]
     public ?string $shippingAddress = null;
 
     public static function isShippingRequired(mixed $value, ValidationContext $context): bool
@@ -374,6 +370,24 @@ final class DeliveryOptionsDto
         return $context->getDataSet()->getPropertyValue('isPickup') === false;
     }
 }
+```
+
+> [!IMPORTANT]
+> **No closures inside attributes.** Attribute arguments must be compile-time constant expressions —
+> `#[Required(when: static fn (...) => ...)]` is a fatal compile error. Attach `when` to rule **instances**
+> (e.g. via array rules), the way the package tests and docs do:
+
+```php
+// Required only when pickup is disabled
+$rules = [
+    'shippingAddress' => [
+        new Required(
+            when: static fn (mixed $value, ValidationContext $context): bool
+                => DeliveryOptionsDto::isShippingRequired($value, $context),
+        ),
+    ],
+];
+$result = $validator->validate(new DeliveryOptionsDto(), $rules);
 ```
 
 ### 3.4. Flow Control Combinators: StopOnError, AnyRule, Composite

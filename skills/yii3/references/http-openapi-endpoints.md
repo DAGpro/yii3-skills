@@ -57,7 +57,7 @@ final class ApiDoc
 
 ### 5.2. Security Schemes (Bearer JWT, API Key, OAuth 2.0)
 
-Declare all security schemes supported by your application in `ApiDoc`:
+Declare all security schemes supported by your application in a dedicated class (`SecurityDoc` below — or reuse the central `ApiDoc` if you prefer a single metadata class):
 
 ```php
 declare(strict_types=1);
@@ -274,7 +274,7 @@ final readonly class DeleteProductAction
 ### 5.4. Route Parameters: Injecting `CurrentRoute` vs Broken PSR-7 Attributes
 
 > [!CAUTION]
-> **Fatal Routing Trap:** route match arguments (e.g. `{id}`, `{slug}`) are stored in `Yiisoft\Router\CurrentRoute`, not in PSR-7 request attributes — `$request->getAttribute('id')` always evaluates to `null`. See the [Routing Guide, Trap 1](http-routes.md).
+> **Fatal Routing Trap:** route match arguments (e.g. `{id}`, `{slug}`) are stored in `Yiisoft\Router\CurrentRoute`, not in PSR-7 request attributes — `$request->getAttribute('id')` always evaluates to `null`. See the [Routing Guide, §4.3 Trap 1](http-routes-definition.md#43-critical-traps--ingress-caveats).
 
 Always inject `Yiisoft\Router\CurrentRoute` into action methods or constructor:
 
@@ -658,7 +658,8 @@ final readonly class UploadProductImageAction
         }
 
         // Storage step — persist with `$file->moveTo($targetPath)`. Building the safe destination
-        // (random server-side name, sanitized client extension, alias resolved via `Aliases::get()`,
+        // (random server-side name, sanitized client extension, alias resolved via the injected
+        // `Aliases` service — `$aliases->get(...)`, an instance method, not a static call,
         // directory creation) is the filesystem slice owned by the File Handling Guide — see the
         // bridge below.
         $targetPath = /* destination per File Handling Guide §4/§5: alias-resolved path + random server-side name */;
@@ -748,8 +749,8 @@ final readonly class ProblemDetails
 
 > [!IMPORTANT]
 > **Canonical `invalid-params` shape:** the canonical `ValidationProblemDetailsResponder`
-> serializes `invalid-params` as a **path-indexed map** of messages —
-> `Result::getErrorMessagesIndexedByPath()`, e.g. `{"sku": "SKU must be uppercase alphanumeric with dashes."}` —
+> serializes `invalid-params` as a **path-indexed map of message lists** —
+> `Result::getErrorMessagesIndexedByPath()`, e.g. `{"sku": ["SKU must be uppercase alphanumeric with dashes."]}` —
 > not as a list of `{name, reason}` objects. The object-list items modeled above are a **custom-shape
 > variant**, not the framework default; only commit to them deliberately across the whole API.
 > For the canonical responder, see the [Actions & Controllers Guide, §3.2, item 5 — RFC 7807 Problem Details Error Responder](http-actions-core.md#5-rfc-7807-problem-details-error-responder).

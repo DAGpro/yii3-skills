@@ -59,11 +59,15 @@ Container bindings required from the application:
 
 ```php
 // config/common/di/http-client.php — a PSR-18 client + PSR-17 request factory
+// Both are required: the OAuth2 constructor takes `ClientInterface` AND `RequestFactoryInterface`.
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Symfony\Component\HttpClient\Psr18Client;
 
 return [
     ClientInterface::class => Psr18Client::class,
+    RequestFactoryInterface::class => Psr17Factory::class,
 ];
 ```
 

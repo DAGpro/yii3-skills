@@ -7,7 +7,7 @@
 
 ## 4. Custom Rules & Rule Handlers
 
-In Yii 3, custom validation rules follow a decoupled architecture separating configuration (`RuleInterface`, PHP 8 `#[Attribute]`) from execution services (`RuleHandlerInterface`), and require explicit DI configuration via `RuleHandlerContainer`.
+In Yii 3, custom validation rules follow a decoupled architecture separating configuration (`RuleInterface`, PHP 8 `#[Attribute]`) from execution services (`RuleHandlerInterface`). Handlers are resolved through a `RuleHandlerResolverInterface` implementation; the default `SimpleRuleHandlerContainer` works out of the box with no DI configuration, and the PSR-container-based `RuleHandlerContainer` is an opt-in alternative.
 
 For complete recipes, interface implementation details (`DumpedRuleInterface`, `SkipOnEmptyInterface`, `WhenInterface`), cross-property validation via `ValidationContext`, compound composite rules (`Rule\Composite`), one-off checks with `Rule\Callback`, and isolated unit and integration testing suites, see the dedicated reference guide:
 
@@ -52,7 +52,7 @@ final class UploadDocumentInput
 }
 ```
 
-**Complete constructor** (verbatim, `vendor/yiisoft/validator/src/Rule/File.php` — the §2.3 catalog row above lists the core options; the message parameters complete the signature):
+**Complete constructor** (verbatim, `vendor/yiisoft/validator/src/Rule/File.php` — the [Rules Guide §2.3 catalog](http-validation-rules.md#23-exhaustive-built-in-rules-catalog) lists the core options; the message parameters complete the signature):
 
 ```php
 public function __construct(
@@ -115,7 +115,7 @@ $result = $this->validator->validate(
 ### 5.2. Image & Aspect Ratio Rules (`Rule\Image\Image`, `ImageAspectRatio`)
 
 Image rules are housed in `Yiisoft\Validator\Rule\Image\*`:
-- `Yiisoft\Validator\Rule\Image\Image` checks dimensions (width and height limits in pixels). Requires PHP `ext-gd`.
+- `Yiisoft\Validator\Rule\Image\Image` checks dimensions (width and height limits in pixels). The package suggests PHP `ext-fileinfo` for the image rule (MIME sniffing via `mime_content_type()`).
 - `Yiisoft\Validator\Rule\Image\ImageAspectRatio` is a companion value object validating aspect ratios with an allowed tolerance margin.
 
 ```php
@@ -292,7 +292,7 @@ $accountType = $dataset->getPropertyValue('accountType');
 
 All built-in error messages in `yiisoft/validator` are translated using `Yiisoft\Translator\TranslatorInterface` under the default category **`'yii-validator'`** (`Yiisoft\Validator\Validator::DEFAULT_TRANSLATION_CATEGORY`).
 
-The package ships official translations in `vendor/yiisoft/validator/messages/<locale>/yii-validator.php` (e.g. Russian, German, French, Spanish, Ukrainian).
+The package ships official translations in `vendor/yiisoft/validator/messages/<locale>/yii-validator.php` (e.g. Russian, German, Polish, Brazilian Portuguese, Uzbek).
 
 > [!IMPORTANT]
 > **Mandatory Dependency: `yiisoft/translator-message-php`**
@@ -327,8 +327,8 @@ return [
 ### 7.2. Placeholder Substitution: {Property}, {value}, and Parameter Tokens
 
 Placeholders use curly braces and match parameter arrays passed to `$result->addError()`:
-- `{Property}` — capitalized translated property name (e.g. `"Publication Title"`).
-- `{property}` — lowercase translated property name (e.g. `"publication title"`).
+- `{Property}` — translated property name with the first character uppercased (e.g. `"Publication title"` from a label; `"PublicationTitle"` from a camelCase property).
+- `{property}` — translated property name as-is (no case change: a camelCase property stays `"publicationTitle"`; a label keeps its original casing).
 - `{value}` — scalar value that failed validation.
 - Numerical limits: `{min}`, `{max}`, `{exactly}`, `{limit}`.
 

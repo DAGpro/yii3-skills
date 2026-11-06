@@ -11,7 +11,7 @@
 - [1. Caching Architecture: PSR-16 vs Yii CacheInterface](#1-caching-architecture-psr-16-vs-yii-cacheinterface)
   - [1.1. Cache Contracts & Responsibilities](#11-cache-contracts--responsibilities)
   - [1.2. Cache Key Rules (CacheKeyNormalizer)](#12-cache-key-rules-cachekeynormalizer)
-  - [1.3. Value Object Ttl (Yii 3.2+)](#13-value-object-ttl-yii-32)
+  - [1.3. Value Object Ttl (cache 3.2.0+)](#13-value-object-ttl-cache-320)
 - [2. Cache Drivers & DI Configuration](#2-cache-drivers--di-configuration)
   - [2.1. File Cache (yiisoft/cache-file)](#21-file-cache-yiisoftcache-file)
   - [2.2. External Cache Driver Adapters (Redis / DB / APCu / Memcached / WinCache)](#22-external-cache-driver-adapters-redis--db--apcu--memcached--wincache) — full reference in the [Cache Driver Adapters Guide](persistence-cache-drivers.md)
@@ -45,7 +45,7 @@ Yii3 clearly separates the low-level PSR-16 key-value store from the high-level 
 | Contract / Class | FQCN | Role & Distinct Capabilities |
 |---|---|---|
 | **`PsrCacheInterface`** | `Psr\SimpleCache\CacheInterface` | Standard PSR-16 contract (`get`, `set`, `delete`, `clear`, `has`, `getMultiple`, `setMultiple`, `deleteMultiple`). Implemented by storage drivers: `ArrayCache`, `FileCache`, `RedisCache`, `DbCache`, `ApcuCache`, `Memcached`, and `WinCache`. |
-| **`YiisoftCacheInterface`** | `Yiisoft\Cache\CacheInterface` | Yii3 decorator contract declaring only three methods: `psr(): \Psr\SimpleCache\CacheInterface`, `getOrSet(...)`, and `remove(mixed $key): void`. Provides atomic read-through caching, stampede prevention via "Probably Early Expiration" (XFetch), and invalidation dependencies. **It does not declare `get()` or `set()` methods** — access raw operations via `$cache->psr()`. |
+| **`YiisoftCacheInterface`** | `Yiisoft\Cache\CacheInterface` | Yii3 decorator contract declaring only three methods: `psr(): \Psr\SimpleCache\CacheInterface`, `getOrSet(...)`, and `remove(mixed $key): void`. Provides single-call read-through caching, probabilistic warm-path stampede prevention via "Probably Early Expiration" (XFetch), and invalidation dependencies. **It does not declare `get()` or `set()` methods** — access raw operations via `$cache->psr()`. |
 | **`Cache`** | `Yiisoft\Cache\Cache` | Default implementation of `Yiisoft\Cache\CacheInterface`. Constructor: `__construct(Psr\SimpleCache\CacheInterface $handler, Ttl|DateInterval|int|null $defaultTtl = null)`. |
 | **`TagDependency`** | `Yiisoft\Cache\Dependency\TagDependency` | Groups cached entries under logical tags (e.g. `user-42`, `catalog.products`) and invalidates them all at once via `TagDependency::invalidate()`. |
 | **`Ttl`** | `Yiisoft\Cache\Ttl` | Immutable value object representing a time-to-live duration in seconds or infinity. |
@@ -59,11 +59,11 @@ Yii3 clearly separates the low-level PSR-16 key-value store from the high-level 
 
 - A **string or int** key is used as-is if it is 1–64 characters long and contains none of the PSR-16 reserved characters `{ } ( ) / \ @ :` (integers are cast to strings).
 - Any **string** key exceeding 64 characters or containing reserved characters is deterministically normalized to `md5($key)` — a plain MD5 hash of the key string itself.
-- Only non-string keys (e.g. an **array** such as `['catalog.featured', $limit]`) are serialized and normalized to `md5(json_encode($key))`.
+- Only keys that are **neither string nor int** (e.g. an **array** such as `['catalog.featured', $limit]`) are serialized and normalized to `md5(json_encode($key))`.
 - **Consequence:** Array keys are collision-safe across diverse data types but stored as 32-character hexadecimal MD5 hashes. They are **not human-readable** in Redis keyspaces or filesystem listings. Use flat string keys (e.g. `catalog.featured.10`) if manual cache inspection is required.
 - Direct driver calls (`$cache->psr()->get()`, `$cache->psr()->set()`) do **not** run `CacheKeyNormalizer`. Passing empty strings or keys with reserved characters `{ } ( ) / \ @ :` directly to PSR-16 drivers throws an `InvalidArgumentException`.
 
-### 1.3. Value Object Ttl (Yii 3.2+)
+### 1.3. Value Object Ttl (cache 3.2.0+)
 
 `Yiisoft\Cache\Ttl` is an immutable value object representing duration in seconds:
 
@@ -265,7 +265,7 @@ When a heavily queried item expires under high concurrent traffic, hundreds of p
 
 $$\text{expired} = \text{now} - \Delta \times \beta \times \ln\left(\frac{\text{random}(1, \text{PHP\_INT\_MAX})}{\text{PHP\_INT\_MAX}}\right)$$
 
-where $\Delta$ is the execution time required to compute the cached item.
+where $\Delta$ is the time elapsed since the item was stored — the item's age at the moment of the check (`$now - $this->updated` in `CacheItem::expired()`, where `$updated` is the `microtime(true)` recorded at construction). It is **not** the execution time of the generator closure.
 
 - **$\beta = 1.0$ (Default):** The probability of recalculating early increases smoothly as expiration nears, ensuring a single worker updates the value before expiration while others continue receiving the cached entry.
 - **$\beta > 1.0$ (e.g. $2.0$):** Widens the recalculation window for very expensive operations (e.g. multi-second aggregation queries).
@@ -286,6 +286,7 @@ namespace App\Reporting\Application;
 use App\Reporting\Domain\ReportData;
 use App\Reporting\Domain\ReportGenerator;
 use Yiisoft\Cache\CacheInterface;
+use Yiisoft\Cache\CacheKeyNormalizer;
 use Yiisoft\Cache\Ttl;
 use Yiisoft\Mutex\Synchronizer;
 
@@ -300,27 +301,30 @@ final readonly class MonthlySalesReportService
     public function getReport(string $month): ReportData
     {
         $key = ['reports.sales.monthly', $month];
+        // Array keys must be normalized before the raw PSR-16 API: psr() returns a cache
+        // typed `string $key`, so passing the array directly is a fatal TypeError.
+        $psrKey = CacheKeyNormalizer::normalize($key);
 
         // 1. Fast un-locked check
         /** @var ReportData|null $cached */
-        $cached = $this->cache->psr()->get($key);
+        $cached = $this->cache->psr()->get($psrKey);
         if ($cached !== null) {
             return $cached;
         }
 
         // 2. Synchronize across concurrent processes with a 15-second acquisition timeout
         /** @var ReportData */
-        return $this->synchronizer->execute("lock:$month", function () use ($key, $month): ReportData {
+        return $this->synchronizer->execute("lock:$month", function () use ($psrKey, $month): ReportData {
             // 3. Double-Check inside critical section: Did another worker calculate it while we waited?
             /** @var ReportData|null $innerCached */
-            $innerCached = $this->cache->psr()->get($key);
+            $innerCached = $this->cache->psr()->get($psrKey);
             if ($innerCached !== null) {
                 return $innerCached;
             }
 
             // 4. Exactly one process generates the heavy report
             $report = $this->reportGenerator->generateForMonth($month);
-            $this->cache->psr()->set($key, $report, Ttl::days(30)->toSeconds());
+            $this->cache->psr()->set($psrKey, $report, Ttl::days(30)->toSeconds());
 
             return $report;
         }, timeout: 15);

@@ -249,7 +249,7 @@ public function __construct(
 
 1. **Ingress Path Slicing:** `Subfolder` detects or extracts the base URL (e.g. `/my-subfolder`). It slices this prefix from the request URI path so that downstream middlewares (`Router`) see clean relative paths (`/users`).
 2. **Outbound URL Generator Synchronization:** It immediately calls `$this->uriGenerator->setUriPrefix($baseUrl)`. All subsequent calls to `$urlGenerator->generate()` throughout the request cycle automatically prepend `/my-subfolder`.
-3. **Alias Registration:** It registers the detected base path with `Yiisoft\Aliases\Aliases` under `@baseUrl` (`$aliases->set('@baseUrl', $baseUrl)`), making it available to asset publishers and template helpers.
+3. **Alias Registration (auto-detection mode only):** When `$prefix` is `null`, it registers the detected base path with `Yiisoft\Aliases\Aliases` under the alias named by `$baseUrlAlias` (default `@baseUrl`) via `$aliases->set($this->baseUrlAlias, $baseUrl)`, making it available to asset publishers and template helpers. An explicit `$prefix` registers no alias.
 4. **Auto-Detection Mode:** If `$prefix` is omitted (`null`), `Subfolder` automatically derives the web path from `$_SERVER` environment variables (`SCRIPT_FILENAME`, `PHP_SELF`, `ORIG_SCRIPT_NAME`, `DOCUMENT_ROOT`).
 
 Register `Subfolder` in the global HTTP middleware pipeline **before** `Router`. There is **no** `"middlewares"` params key — no package consumes it; the stack is wired through the `Application::class` DI definition via the `MiddlewareDispatcher` constructor argument `middlewareDefinitions` (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0).

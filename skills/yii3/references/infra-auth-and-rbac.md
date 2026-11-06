@@ -649,7 +649,7 @@ Login endpoints are the primary target of credential-stuffing and brute-force di
 
 ### 4.7. PSR-14 User Authentication Events
 
-`yiisoft/user` dispatches four PSR-14 events during the login and logout cycles: `BeforeLogin`, `AfterLogin`, `BeforeLogout`, `AfterLogout`. The full event table — payload accessors, the `invalidate()` veto semantics, and the `Yiisoft\Auth\IdentityInterface` import note — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 6.3. Auth-specific use cases: `BeforeLogin`/`BeforeLogout` are cancellable via `$event->invalidate()` (account suspension checks, maintenance lockouts, IP blacklists, mandatory workflow completion); `AfterLogin`/`AfterLogout` are observational (audit logging, `last_login_at` updates, brute-force counter resets, refresh-token revocation, cache purging).
+`yiisoft/user` dispatches four PSR-14 events during the login and logout cycles: `BeforeLogin`, `AfterLogin`, `BeforeLogout`, `AfterLogout`. The full event table — payload accessors, the `invalidate()` veto semantics, and the `Yiisoft\Auth\IdentityInterface` import note — is owned by the [Events & Listeners Guide, §6.3](core-events-reference.md#63-user-authentication-lifecycle-yiisoftuser). Auth-specific use cases: `BeforeLogin`/`BeforeLogout` are cancellable via `$event->invalidate()` (account suspension checks, maintenance lockouts, IP blacklists, mandatory workflow completion); `AfterLogin`/`AfterLogout` are observational (audit logging, `last_login_at` updates, brute-force counter resets, refresh-token revocation, cache purging).
 
 #### Registering Event Listeners (`config/common/events.php`)
 
@@ -738,24 +738,25 @@ use App\Presentation\Action\Order\CreateOrderAction;
 use App\Presentation\Action\Profile\ViewProfileAction;
 use Yiisoft\Auth\Middleware\Authentication;
 use Yiisoft\Router\Group;
-use Yiisoft\Router\Route;
+use Yiisoft\Router\Route\Get;
+use Yiisoft\Router\Route\Post;
 use Yiisoft\User\Login\LoginMiddleware;
 
 return [
     // Public routes
-    Route::post('/auth/login')
+    (new Post('/auth/login'))
         ->action(LoginAction::class)
         ->name('auth.login'),
 
     // Protected API group
-    Group::create('/api')
+    (new Group('/api'))
         ->middleware(Authentication::class) // Authenticates credentials
         ->middleware(LoginMiddleware::class) // Bridges identity to CurrentUser session
         ->routes(
-            Route::get('/profile')
+            (new Get('/profile'))
                 ->action(ViewProfileAction::class)
                 ->name('api.profile'),
-            Route::post('/orders')
+            (new Post('/orders'))
                 ->action(CreateOrderAction::class)
                 ->name('api.orders.create'),
         ),
@@ -805,7 +806,7 @@ public function __construct(
 
 - `$enableDirectPermissions` defaults to **`false`**: Assigning permissions directly to users throws an `InvalidArgumentException`. You must assign roles to users and add permissions to roles.
 - `$includeRolesInAccessChecks` defaults to **`false`**: Passing a role name to `userHasPermission()` or `$currentUser->can()` returns `false`. Always check permissions rather than roles.
-- `setDefaultRoleNames(array|Closure $roleNames)`: Registers roles automatically assigned to all authenticated users without requiring database rows.
+- `setDefaultRoleNames(array|Closure $roleNames)`: Registers roles automatically assigned to **every user regardless of authentication state** (per the `Manager` docblock), without requiring database rows; guest users are instead governed by `setGuestRoleName()`.
 - `setGuestRoleName(?string $name)`: Evaluated when user ID is `null`.
 - `revoke(string $itemName, int|Stringable|string $userId)`: Revokes a specific assignment.
 - `revokeAll(int|Stringable|string $userId)`: Revokes all assignments for the given user.

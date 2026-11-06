@@ -10,7 +10,7 @@
 Official packages emit standard PSR-14 events. Listeners can be attached in the event configuration groups described in [Section 4.1](core-events-design.md#41-configuration-architecture--scopes).
 
 > [!IMPORTANT]
-> **Optional dispatcher pitfall:** every official emitter accepts `?EventDispatcherInterface $eventDispatcher = null` and dispatches null-safe — when no dispatcher is wired, events are **silently skipped** (no error, no log). Verify the dispatcher is actually injected (via the `yiisoft/yii-event` wiring from [Section 1](core-events-design.md#1-psr-14-event-architecture-in-yii3)) before debugging "missing" events.
+> **Optional dispatcher pitfall:** several official emitters accept `?EventDispatcherInterface $eventDispatcher = null` and dispatch null-safe — when no dispatcher is wired, their events are **silently skipped** (no error, no log). Examples: `yiisoft/yii-http`'s `Application` lifecycle events and `yiisoft/mailer`'s `BaseMailer`. Not all emitters are optional, though: `yiisoft/user`'s `CurrentUser` requires the dispatcher (constructor-promoted, no default), Active Record's `EventsTrait` resolves its dispatcher via `EventDispatcherProvider::get()` (never null), and `yiisoft/yii-console`'s `Application` receives its dispatcher through `setDispatcher()`. Verify the dispatcher is actually injected (via the `yiisoft/yii-event` wiring from [Section 1](core-events-design.md#1-psr-14-event-architecture-in-yii3)) before debugging "missing" events.
 
 ### 6.1. HTTP Application Lifecycle (`yiisoft/yii-http`)
 | Event Class | Namespace | When Triggered | Public Properties & Accessors |
@@ -79,7 +79,7 @@ Notes:
 - Events fire only from `BaseMailer::send()` (`vendor/yiisoft/mailer/src/BaseMailer.php`) — only `BaseMailer` descendants emit them. `NullMailer` and `StubMailer` bypass events entirely.
 - Events fire only when a dispatcher was injected into the mailer's constructor (optional `?EventDispatcherInterface` parameter) — otherwise they are silently skipped.
 - **Veto pattern:** set the public mutable flag `$event->preventSendingMessage = true` in a `BeforeSend` listener; the mailer checks it after dispatch and skips sending.
-- **Mutation trap:** mutating the `$message` object inside `BeforeSend` has **no effect** on what is sent — `send()` transmits its local `$message` variable, not the event payload.
+- **Mutation trap:** the `BeforeSend` payload and the message `send()` transmits are the **same instance** — there is no local-copy shadowing. The "no effect" comes from message immutability instead: `with*()` methods on `MessageInterface` return new detached copies, so calling `$event->message->with...()` inside a listener leaves the original (sent) message unchanged (and `$event->message` itself is `readonly`). To change what goes out, send a new message yourself; to suppress sending, use the veto flag above.
 
 ### 6.6. Active Record Lifecycle (`yiisoft/active-record`)
 

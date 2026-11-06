@@ -126,6 +126,11 @@ final class UniqueUserEmail implements RuleInterface, SkipOnEmptyInterface, Skip
     use SkipOnErrorTrait;
     use WhenTrait;
 
+    // Backing properties are NOT declared by the traits (only SkipOnEmptyTrait ships `$skipOnEmpty` itself).
+    // Without these declarations the assignments below create dynamic properties (deprecated in PHP 8.2).
+    private bool $skipOnError = false;
+    private ?Closure $when = null;
+
     public function __construct(
         public readonly string $message = 'User with email "{value}" is already registered.',
         mixed $skipOnEmpty = null,
@@ -256,7 +261,7 @@ final readonly class TaxIdNumberHandler implements RuleHandlerInterface
 ### 3.2. Accumulating Errors via Result & Placeholder Substitution
 
 `Yiisoft\Validator\Result` is a mutable error accumulator:
-- Call `$result->addError(string $message, array $parameters = []): void` to record a violation.
+- Call `$result->addError(string|\Stringable $message, array $parameters = [], array $valuePath = []): self` to record a violation (fluent — returns the same `Result` instance).
 - Standard placeholders supported by Yii 3 message formatters:
   - `{property}` — localized property name (e.g. `email address`).
   - `{Property}` — capitalized localized property name (e.g. `Email address`).
@@ -306,8 +311,8 @@ final readonly class DateAfterPropertyHandler implements RuleHandlerInterface
             return $result;
         }
 
-        $dataSet = $context->getDataSet();
-        if ($dataSet === null) {
+        $dataSet = $context->getDataSet(); // Non-nullable: throws RuntimeException when no data set was set.
+        if (!$dataSet->hasProperty($rule->targetProperty)) {
             return $result;
         }
 
@@ -497,7 +502,7 @@ final class StrongPassword extends Composite
 
 ### 6.1. Strategy A: Isolated Unit Testing of Handlers (Zero Framework Overhead)
 
-Because `RuleHandlerInterface` is an ordinary PHP class, test it in complete isolation without bootstrapping a DI container, database, or HTTP runner. Mock injected dependencies and construct a standalone `ValidationContext`:
+Because rule handlers (`RuleHandlerInterface` implementations) are ordinary PHP classes, test them in complete isolation without bootstrapping a DI container, database, or HTTP runner. Mock injected dependencies and construct a standalone `ValidationContext` (note: `ValidationContext::setDataSet()` and `setProperty()` are marked `@internal` in `yiisoft/validator` — the validator wires them itself; using them to build a test context is acceptable but treats them as unstable API):
 
 ```php
 declare(strict_types=1);
@@ -531,8 +536,11 @@ final class UniqueUserEmailHandlerTest extends TestCase
         $result = $handler->validate('taken@example.com', $rule, $context);
 
         $this->assertFalse($result->isValid());
+        // A directly-called handler skips the validator pipeline (translator + formatter), so the raw
+        // message template with placeholders is returned. Substituted text appears only in full-pipeline
+        // tests (see §6.2).
         $this->assertSame(
-            ['User with email "taken@example.com" is already registered.'],
+            ['User with email "{value}" is already registered.'],
             $result->getErrorMessages(),
         );
     }
@@ -620,7 +628,7 @@ final class UniqueUserEmailIntegrationTest extends TestCase
 
 ### 6.3. Testing Cross-Property Validation via ArrayDataSet
 
-When verifying rules that interact with multiple fields via `$context->getDataSet()`, feed test fixture arrays using `ArrayDataSet`:
+When verifying rules that interact with multiple fields via `$context->getDataSet()`, feed test fixture arrays using `ArrayDataSet` (same `@internal` caveat for the context setters as in §6.1):
 
 ```php
 declare(strict_types=1);
@@ -705,10 +713,10 @@ public function validate(
 ### `Result::addError`
 ```php
 public function addError(
-    string $message,
+    string|\Stringable $message,
     array $parameters = [],
     array $valuePath = [],
-): void;
+): self;
 ```
 
 ### `ValidationContext` Key Methods
@@ -716,11 +724,11 @@ public function addError(
 |---|---|---|
 | `$context->getProperty()` | `?string` | Raw name of property being validated (or `null` if validating raw value). |
 | `$context->getPropertyLabel()` | `?string` | Custom explicit label assigned to property. |
-| `$context->getTranslatedProperty()` | `?string` | Localized property name via translator or `#[Label]`. |
-| `$context->getCapitalizedTranslatedProperty()` | `?string` | Capitalized localized property name. |
-| `$context->getDataSet()` | `?DataSetInterface` | Current scope's dataset (allows inspecting sibling fields via `getPropertyValue()`). |
-| `$context->getGlobalDataSet()` | `?DataSetInterface` | Root dataset across all nested structures. |
-| `$context->getParameter(string $key, mixed $default = null)` | `mixed` | Retrieves arbitrary context parameters passed during validation. |
+| `$context->getTranslatedProperty()` | `string` | Localized property name via translator or `#[Label]` (falls back to `'value'`; never null). |
+| `$context->getCapitalizedTranslatedProperty()` | `string` | Capitalized localized property name. |
+| `$context->getDataSet()` | `DataSetInterface` | Current scope's dataset (allows inspecting sibling fields via `getPropertyValue()`); throws `RuntimeException` when no data set was set. |
+| `$context->getGlobalDataSet()` | `DataSetInterface` | Root dataset across all nested structures; throws `RuntimeException` when the validator is not set. |
+| `$context->getParameter(string $name, mixed $default = null)` | `mixed` | Retrieves arbitrary context parameters passed during validation. |
 
 ---
 

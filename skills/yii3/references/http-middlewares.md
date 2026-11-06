@@ -696,7 +696,7 @@ return [
 
 ### 4.4. Rate Limiting Recipes (`yiisoft/rate-limiter`)
 
-`Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware` enforces rate limits using sliding windows, protecting APIs and login endpoints from abusive traffic.
+`Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware` enforces rate limits using the Generic Cell Rate Algorithm (GCRA, a leaky-bucket variant — see `Counter`), protecting APIs and login endpoints from abusive traffic.
 
 #### 1. DI Configuration (`config/web/di/rate-limiter.php`)
 
@@ -717,7 +717,7 @@ return [
     // Storage backend: SimpleCacheStorage (PSR-16) or ApcuStorage (high-speed APCu)
     StorageInterface::class => static fn (CacheInterface $cache): StorageInterface => new SimpleCacheStorage($cache),
 
-    // Counter sliding window: 100 requests per 60 seconds
+    // Counter (GCRA): 100 requests per 60 seconds
     CounterInterface::class => [
         'class' => Counter::class,
         '__construct()' => [
@@ -777,6 +777,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Route;
 
+use App\Presentation\Action\HealthCheckAction;
 use App\Presentation\Action\User\IndexAction;
 use App\Presentation\Middleware\ApiKeyAuthMiddleware;
 use App\Presentation\Middleware\SecurityHeadersMiddleware;
@@ -802,8 +803,10 @@ $route3 = (new Get('/api/v1/custom'))->middleware([
 // 4. Controller action pair [ControllerClass, 'methodName']
 $route4 = (new Get('/api/v1/users'))->action([IndexAction::class, 'handle']);
 
-// 5. Invokable class (class with __invoke method)
-$route5 = (new Get('/api/v1/invoke'))->middleware(IndexAction::class);
+// 5. Invokable class (class with __invoke method — and NO MiddlewareInterface/RequestHandlerInterface,
+//    which the factory checks first: MiddlewareFactory::create() tests RequestHandlerInterface before
+//    invokability, so a handler class is always treated as format 2)
+$route5 = (new Get('/api/v1/invoke'))->middleware(HealthCheckAction::class);
 
 // 6. Anonymous closure / callable with automatic DI parameter injection
 $route6 = (new Get('/api/v1/inline'))->middleware(
@@ -843,7 +846,7 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
    In short-circuiting guards (e.g. auth failures, rate limits), **never** call `$handler->handle($request)`. Return the error `ResponseInterface` directly. Calling `$handler->handle($request)` and then returning your own response causes downstream actions and database mutations to execute anyway.
 
 6. **Never Use `exit()` or `die()`:**
-   Terminating the script with `die()` or `exit()` crashes the PHP process immediately, bypassing response post-processing, session commit (`SessionMiddleware::commitSession()`), logging, and PSR-7 SAPI response emitters. Always return a PSR-7 `ResponseInterface`.
+   Terminating the script with `die()` or `exit()` crashes the PHP process immediately, bypassing response post-processing, session commit (performed internally by `SessionMiddleware`), logging, and PSR-7 SAPI response emitters. Always return a PSR-7 `ResponseInterface`.
 
 7. **`withMiddlewares()` Deprecation in MiddlewareDispatcher:**
    In `yiisoft/middleware-dispatcher >= 5.5.0`, `withMiddlewares()` is deprecated. Do not configure dispatcher instances with `withMiddlewares()` in application DI definitions; pass definitions directly to `__construct(['middlewareDefinitions' => [...]])`.
@@ -856,7 +859,7 @@ $route6 = (new Get('/api/v1/inline'))->middleware(
 |---|---|---|
 | **Ignoring PSR-7 immutability (`$request->withAttribute(...)`)** | Method returns a clone. The return value is discarded, and downstream handlers receive unmodified `$request`. | Reassign explicitly: `$request = $request->withAttribute('key', $value);`. |
 | **Using deprecated `Yiisoft\Csrf\CsrfMiddleware`** | `CsrfMiddleware` is deprecated and slated for removal. | Use `Yiisoft\Csrf\CsrfTokenMiddleware` for validation and `Yiisoft\Csrf\CsrfTokenCookieMiddleware` for cookie emission. |
-| **Hallucinating `Yiisoft\Yii\Http\Middleware\CorsMiddleware`** | Class does not exist; triggers fatal `ClassNotFoundError`. `yiisoft/yii-http` only provides application runners and events. | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware` from `yiisoft/http-middleware` or `Group::withCors()`. |
+| **Hallucinating `Yiisoft\Yii\Http\Middleware\CorsMiddleware`** | Class does not exist; triggers fatal `ClassNotFoundError`. `yiisoft/yii-http` ships the `Application` lifecycle — the PSR-15 `Application` itself, its events, and fallback handlers (`NotFoundHandler`, `ThrowableHandler`); the runners that bootstrap it live in `yiisoft/yii-runner-http` and friends. | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware` from `yiisoft/http-middleware` or `Group::withCors()`. |
 | **Using deprecated `Yiisoft\Yii\Middleware\CorsAllowAll`** | Class is deprecated in favor of `yiisoft/http-middleware`. | Use `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware`. |
 | **Using deprecated `Yiisoft\Yii\Middleware\ForceSecureConnection`, `HttpCache`, or `TagRequest`** | Classes are deprecated in `yiisoft/yii-middleware` in favor of `yiisoft/http-middleware`. | Use `ForceSecureConnectionMiddleware`, `HttpCacheMiddleware`, and `TagRequestMiddleware` from `yiisoft/http-middleware`. |
 | **Hallucinating `Yiisoft\Yii\RateLimiter\RateLimiterMiddleware`** | Class does not exist in `yiisoft/rate-limiter`. | Use `Yiisoft\Yii\RateLimiter\LimitRequestsMiddleware`. |

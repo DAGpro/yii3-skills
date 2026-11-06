@@ -100,8 +100,9 @@ final class ThirdPartyCdnAsset extends AssetBundle
     public array $jsOptions = [
         'integrity' => 'sha384-<base64 SRI hash published for the pinned js artifact>',
         'crossorigin' => 'anonymous',
-        'position' => WebView::POSITION_END,
     ];
+    // Script placement is the dedicated $jsPosition property (not a 'position' key in $jsOptions):
+    public ?int $jsPosition = WebView::POSITION_END;
 }
 ```
 
@@ -196,10 +197,18 @@ return [
         'assetManager' => [
             // CRITICAL: The config key is 'customizedBundles', NOT 'bundles'!
             'customizedBundles' => [
-                // 1. Substitute local vendor bundle with an external CDN bundle:
-                \Vendor\Package\SomeLibraryAsset::class => [
-                    'class' => ThirdPartyCdnAsset::class,
-                ],
+                // 1. Substitute local vendor bundle with an external CDN bundle —
+                //    an AssetBundle instance value is used as-is:
+                \Vendor\Package\SomeLibraryAsset::class => new ThirdPartyCdnAsset(),
+                // 1b. Or override properties on the ORIGINAL bundle class: the array is applied as
+                //     property assignments to a new SomeLibraryAsset(). There is NO 'class'-key class
+                //     substitution — a 'class' key would only create a deprecated dynamic property
+                //     and the CDN swap would never happen:
+                // \Vendor\Package\SomeLibraryAsset::class => [
+                //     'cdn' => true,
+                //     'css' => ['some-library.min.css'],
+                //     'js' => ['some-library.bundle.min.js'],
+                // ],
                 // 2. Completely disable an unwanted bundle by mapping to false:
                 \Vendor\Package\UnwantedAsset::class => false,
             ],
@@ -372,7 +381,7 @@ Renders navigation breadcrumbs with Schema.org JSON-LD support:
         ['label' => 'Catalog', 'url' => '/catalog'],
         'Laptops', // String item renders as active terminal item
     ])
-    ->container(true) // Wraps <ul> inside <nav aria-label="breadcrumb">
+    ->container(true) // Wraps <ul> inside <nav>; the aria-label only appears with ->containerAttributes(['aria-label' => 'breadcrumb'])
     ->jsonLd(true) // Generates <script type="application/ld+json"> Schema.org metadata
 ?>
 ```
@@ -581,24 +590,27 @@ Every static factory in `Yiisoft\FormModel\Field` binds to `$formModel` and `$pr
 > **`ValidationRulesEnricher` Runtime Dependency Requirement:**
 > In `yiisoft/form`, `$this->validationRulesEnricher` is `null` by default on all field instances. Simply calling `->enrichFromValidationRules()` without configuring an enricher produces **no HTML5 attributes**.
 >
-> To enable validation rules enrichment globally, register `ValidationRulesEnricher` in `config/params.php` within `ThemeContainer`:
+> To enable validation rules enrichment globally, register the enricher **instance** in `config/params.php` within a theme config under `ThemeContainer`:
 > ```php
 > declare(strict_types=1);
 >
-> use Yiisoft\Definitions\Reference;
 > use Yiisoft\FormModel\ValidationRulesEnricher;
 >
 > return [
 >     'yiisoft/form' => [
 >         'themes' => [
 >             'default' => [
->                 'validationRulesEnricher' => Reference::to(ValidationRulesEnricher::class),
+>                 'validationRulesEnricher' => new ValidationRulesEnricher(),
 >             ],
 >         ],
 >         'defaultTheme' => 'default',
 >     ],
 > ];
 > ```
+>
+> Theme config arrays bypass DI: `ThemeContainer::getTheme()` builds the theme via `new Theme(...$config)` with a
+> `?ValidationRulesEnricherInterface` typed constructor parameter — a `Reference::to(...)` object would throw a
+> `TypeError` on the first theme use.
 >
 > Alternatively, supply the enricher instance directly to the field:
 > ```php

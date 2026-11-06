@@ -281,7 +281,7 @@ final class SimpleEventDispatcherTest extends TestCase
 > [!NOTE]
 > Even if an event implements `StoppableEventInterface` and returns `isPropagationStopped() === true`, `SimpleEventDispatcher` **still records the event** in `$eventDispatcher->getEvents()`. Stoppability only suppresses listener invocation.
 
-Events-specific testing strategy — PSR-14 architecture context, Active Record event testing via `EventDispatcherProvider::set()`, and asserting that domain events were released strictly after a transaction commit — is owned by the [Events & Listeners Guide](core-events-and-listeners.md), section 8.
+Events-specific testing strategy — PSR-14 architecture context, Active Record event testing via `EventDispatcherProvider::set()`, and asserting that domain events were released strictly after a transaction commit — is owned by the [Events Reference Guide](core-events-reference.md), [section 8](core-events-reference.md#8-testing-events--listeners).
 
 ---
 
@@ -1179,14 +1179,14 @@ Below is a master reference of exact parameter names and signatures for key test
 | `SimpleCacheActionLogger` | `getActions` | `public function getActions(): array` |
 | `SimpleCacheActionLogger` | `getActionKeyList` | `public function getActionKeyList(): array` |
 | `Yiisoft\Test\Support\SimpleCache\Action` | `getAction` | `public function getAction(): string` |
-| `Action` | `getKey` | `public function getKey(): mixed` |
-| `Action` | `getValue` | `public function getValue(): mixed` |
-| `Action` | `getTtl` | `public function getTtl(): mixed` |
+| `Action` | `getKey` | `public function getKey()` — no native return type (docblock `@return TKey`, i.e. mixed) |
+| `Action` | `getValue` | `public function getValue()` — no native return type (docblock `@return TValue`, i.e. mixed) |
+| `Action` | `getTtl` | `public function getTtl()` — no native return type (docblock `@return TTtl`, i.e. mixed) |
 | `Yiisoft\Test\Support\Clock\StaticClock` | `__construct` | `public function __construct(private \DateTimeImmutable $now)` |
 | `StaticClock` | `now` | `public function now(): \DateTimeImmutable` |
 | `Yiisoft\Test\Support\Container\SimpleContainer` | `__construct` | `public function __construct(array $definitions = [], ?\Closure $factory = null, ?\Closure $hasCallback = null)` |
-| `SimpleContainer` | `get` | `public function get(string $id): mixed` |
-| `SimpleContainer` | `has` | `public function has(string $id): bool` |
+| `SimpleContainer` | `get` | `public function get($id)` — untyped per PSR-11 widening; no native return type (docblock: mixed) |
+| `SimpleContainer` | `has` | `public function has($id): bool` — `$id` untyped per PSR-11 widening |
 | `Yiisoft\Test\Support\HttpMessage\StringStream` | `__construct` | `public function __construct(string $content = '', int $position = 0, bool $readable = true, bool $writable = true, bool $seekable = true, \Closure\|array\|null $metadata = null)` |
 | `StringStream` | `isClosed` | `public function isClosed(): bool` |
 | `StringStream` | `isDetached` | `public function isDetached(): bool` |

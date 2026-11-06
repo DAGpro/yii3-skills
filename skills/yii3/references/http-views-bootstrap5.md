@@ -5,7 +5,7 @@
 
 > Complete reference for the `yiisoft/bootstrap5` package: the 16-widget driver catalog with its value-object item factories and backed-enum styling constants, Bootstrap-flavored flash messages, the `BootstrapAsset` / `BootstrapCdnAsset` bundles with SRI, the `customizedBundles` override recipe, and the `ThemePath::BOOTSTRAP5_*` form-theme presets.
 
-**Scope & Ownership.** This guide is the single source of truth for the Bootstrap 5 widget driver and its Bootstrap-specific integrations (asset bundles, form theming presets, flash-message alerts). The framework-agnostic view stack — rendering pipeline, PHP templates, XSS escaping, layouts, custom widgets, HTML form field factories, and the general `ThemeContainer` mechanics — is owned by the [Views & Widgets Guide](http-views-and-widgets.md). Bootstrap 5 and Bulma are **mutually exclusive** CSS-framework widget drivers: a project picks **exactly ONE** — resolve which one is actually installed via the project's `composer.json` (`yiisoft/bootstrap5` vs `yiisoft/yii-bulma`) or the [package-catalog.md, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The sibling driver is the [Bulma Guide](http-views-bulma.md).
+**Scope & Ownership.** This guide is the single source of truth for the Bootstrap 5 widget driver and its Bootstrap-specific integrations (asset bundles, form theming presets, flash-message alerts). The framework-agnostic view stack — rendering pipeline, PHP templates, XSS escaping, layouts, custom widgets, HTML form field factories, and the general `ThemeContainer` mechanics — is owned by the [Views, Layouts & Widgets Guide](http-views-and-widgets.md). Bootstrap 5 and Bulma are **mutually exclusive** CSS-framework widget drivers: a project picks **exactly ONE** — resolve which one is actually installed via the project's `composer.json` (`yiisoft/bootstrap5` vs `yiisoft/yii-bulma`) or the `widgets` row of the [package-catalog.md §1 Capability Quick-Lookup Matrix](package-catalog.md#1-capability-quick-lookup-matrix). The sibling driver is the [Bulma Guide](http-views-bulma.md).
 
 ---
 
@@ -45,8 +45,8 @@ use Yiisoft\Bootstrap5\NavStyle;
     ->styles(NavStyle::TABS) // Notice: styles() is plural
     ->fade(true) // Invariant: fade(true) MUST be called strictly AFTER styles(NavStyle::TABS)
     ->items(
-        NavLink::tab('Overview', '<p>Overview Content</p>', active: true),
-        NavLink::tab('Specifications', '<p>Specs Content</p>'),
+        NavLink::tab('Overview', '<p>Overview Content</p>', active: true, encodeContent: false),
+        NavLink::tab('Specifications', '<p>Specs Content</p>', encodeContent: false), // encodeContent defaults to true — raw HTML in $content must opt out
     ) ?>
 ```
 
@@ -71,7 +71,7 @@ The contrasting Bulma conventions (associative-array items, string class constan
 
 ## 3. Flash Messages with Bootstrap Alerts
 
-The layout lifecycle sequence itself (registering bundles, `beginPage()`/`head()`/`beginBody()`/`endBody()`/`endPage()`) is owned by the [Views & Widgets Guide, §5.1](http-views.md#51-main-layout-structure--lifecycle-sequence). The Bootstrap-flavored flash-message block uses the typed `Yiisoft\Bootstrap5\Alert` widget with the `AlertVariant` enum:
+The layout lifecycle sequence itself (registering bundles, `beginPage()`/`head()`/`beginBody()`/`endBody()`/`endPage()`) is owned by the [Views Guide, §5.1](http-views.md#51-main-layout-structure--lifecycle-sequence). The Bootstrap-flavored flash-message block uses the typed `Yiisoft\Bootstrap5\Alert` widget with the `AlertVariant` enum:
 
 Layout file imports:
 
@@ -96,7 +96,7 @@ Flash notifications block:
             default => AlertVariant::INFO,
         };
         ?>
-        <?php foreach ($messages as $message): ?>
+        <?php foreach ((array) $messages as $message): // cast: set() stores scalars, add() stores arrays ?>
             <?= Alert::widget()
                 ->variant($variant)
                 ->body(is_array($message) ? ($message['body'] ?? '') : (string) $message)
@@ -109,7 +109,7 @@ Flash notifications block:
 
 ## 4. Asset Bundles: BootstrapAsset & CDN with SRI
 
-The package ships two asset bundles under `Yiisoft\Bootstrap5\Assets\`: `BootstrapAsset` (locally published files) and `BootstrapCdnAsset` (CDN URLs with integrity attributes pre-configured). The general `AssetBundle` property reference and publishing pipeline are owned by the [Views & Widgets Guide, §6.1](http-widgets-and-assets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
+The package ships two asset bundles under `Yiisoft\Bootstrap5\Assets\`: `BootstrapAsset` (locally published files) and `BootstrapCdnAsset` (CDN URLs with integrity attributes pre-configured). The general `AssetBundle` property reference and publishing pipeline are owned by the [Widgets & Assets Guide, §6.1](http-widgets-and-assets.md#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri).
 
 **Dependency on the Bootstrap bundle.** Application bundles typically declare `BootstrapAsset` as a dependency:
 
@@ -145,30 +145,39 @@ final class BootstrapCdnAsset extends AssetBundle
     public array $jsOptions = [
         'integrity' => 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz',
         'crossorigin' => 'anonymous',
-        'position' => WebView::POSITION_END,
     ];
+    // Script placement is a dedicated bundle property, NOT a 'position' key in $jsOptions
+    // ('position' would render as a bogus <script position="..."> attribute):
+    public ?int $jsPosition = WebView::POSITION_END;
 }
 ```
 
 ## 5. Overriding the Bootstrap Bundle (customizedBundles)
 
-To substitute the local `BootstrapAsset` with an external CDN bundle — or to disable any unwanted third-party bundle — configure `customizedBundles` in `config/params.php` (the full override mechanics and the `customizedBundles` vs `'bundles'` trap are owned by the [Views & Widgets Guide, §6.7](http-widgets-and-assets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp)):
+To substitute the local `BootstrapAsset` with an external CDN bundle — or to disable any unwanted third-party bundle — configure `customizedBundles` in `config/params.php` (the full override mechanics and the `customizedBundles` vs `'bundles'` trap are owned by the [Widgets & Assets Guide, §6.7](http-widgets-and-assets.md#67-overriding--disabling-bundles-customizedbundles-in-paramsphp)):
 
 ```php
 declare(strict_types=1);
 
-use App\Presentation\Asset\BootstrapCdnAsset;
 use Yiisoft\Bootstrap5\Assets\BootstrapAsset;
+use Yiisoft\Bootstrap5\Assets\BootstrapCdnAsset;
 
 return [
     'yiisoft/assets' => [
         'assetManager' => [
             // CRITICAL: The config key is 'customizedBundles', NOT 'bundles'!
             'customizedBundles' => [
-                // 1. Substitute local vendor bundle with an external CDN bundle:
-                BootstrapAsset::class => [
-                    'class' => BootstrapCdnAsset::class,
-                ],
+                // 1. Substitute the local vendor bundle with the package's pre-configured CDN bundle:
+                //    an AssetBundle instance value is used as-is.
+                BootstrapAsset::class => new BootstrapCdnAsset(),
+                // 1b. Or override properties on the ORIGINAL bundle class (the array is applied as
+                //     property assignments to a new BootstrapAsset() — there is NO 'class'-key class
+                //     substitution; a 'class' key would create a deprecated dynamic property):
+                // BootstrapAsset::class => [
+                //     'cdn' => true,
+                //     'css' => ['https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css'],
+                //     'js' => ['https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js'],
+                // ],
                 // 2. Completely disable an unwanted bundle by mapping to false:
                 \Vendor\Package\UnwantedAsset::class => false,
             ],
@@ -201,7 +210,7 @@ return [
 > [!WARNING]
 > Do NOT use `$params['yiisoft/form']['defaultConfig']`. The bootstrap loader checks `$params['yiisoft/form']['defaultTheme']`. Using `defaultConfig` causes an `Undefined array key "defaultTheme"` error.
 
-The general theming mechanics — registering custom themes as `Theme` constructor argument arrays and the `ThemeContainer` lifecycle — are owned by the [Views & Widgets Guide, §8.7](http-widgets-and-assets.md#87-centralized-form-theming-themecontainer-themepath-paramsphp).
+The general theming mechanics — registering custom themes as `Theme` constructor argument arrays and the `ThemeContainer` lifecycle — are owned by the [Widgets & Assets Guide, §8.7](http-widgets-and-assets.md#87-centralized-form-theming-themecontainer-themepath-paramsphp).
 
 ## 7. Bootstrap-Specific Anti-Patterns
 
@@ -213,7 +222,7 @@ The general theming mechanics — registering custom themes as `Theme` construct
 ---
 
 ## Related Topic Guides
-- [Views & Widgets Guide](http-views-and-widgets.md) — parent guide: rendering pipeline, PHP templates, XSS escaping, layouts, asset bundle properties (§6.1), bundle overrides (§6.7), form field factories, and ThemeContainer mechanics (§8.7).
+- [Views, Layouts & Widgets Guide](http-views-and-widgets.md) — parent guide: rendering pipeline, PHP templates, XSS escaping, layouts, asset bundle properties (§6.1), bundle overrides (§6.7), form field factories, and ThemeContainer mechanics (§8.7).
 - [Bulma Guide](http-views-bulma.md) — the alternative CSS-framework widget driver (mutually exclusive with this one).
 - [DataView Widgets Guide](http-dataview-widgets.md) — GridView/ListView/DetailView rendering on top of the installed CSS framework.
 - [Validation & Forms Guide](http-validation-and-forms.md) — form models, validation rules, and `FormHydrator`.

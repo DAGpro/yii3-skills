@@ -77,14 +77,38 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outRoot = join(evalsRoot, 'results', stamp);
 const rows = [];
 
+// Agents resolve their own project root (.git discovery, recent-projects state); an
+// unanchored temp dir lets them land somewhere else entirely (observed: opencode ran
+// inside the harness repo and edited its scenario fixtures). So every work dir is
+// prepared as an isolated git repo with a sandbox note.
+const SANDBOX_NOTE = [
+  '# Sandbox note',
+  '',
+  'This directory is an isolated copy of a project used for an evaluation run.',
+  'Perform all work inside this directory; do not read, write, or search outside it.',
+  '',
+].join('\n');
+const prepareWorkDir = (scenarioDir, work) => {
+  copyDir(join(scenarioDir, 'fixture'), work);
+  writeFileSync(join(work, 'AGENTS.md'), SANDBOX_NOTE);
+  try {
+    spawnSync('git', ['init', '-q'], { cwd: work });
+    spawnSync('git', ['add', '-A'], { cwd: work });
+    spawnSync('git', ['-c', 'user.name=eval', '-c', 'user.email=eval@localhost', 'commit', '-q', '-m', 'fixture'], { cwd: work });
+  } catch {
+    // git missing: the sandbox note still anchors most agents
+  }
+};
+
 for (const id of selected) {
   const sDir = join(evalsRoot, 'scenarios', id);
   const sc = loadScenario(sDir);
   const prompt = readFileSync(join(sDir, 'prompt.md'), 'utf8');
   for (const mode of modes) {
     for (let n = 1; n <= runs; n++) {
-      const work = mkdtempSync(join(tmpdir(), `eval-${id}-`));
-      copyDir(join(sDir, 'fixture'), work);
+      // No scenario id in the dir name: it tells the agent it is inside an eval harness.
+      const work = mkdtempSync(join(tmpdir(), 'yii3-eval-'));
+      prepareWorkDir(sDir, work);
       if (mode === 'with-skill') copyDir(join(repoRoot, 'skills', 'yii3'), join(work, skillDest));
       const started = Date.now();
       const p = spawnSync(agentCmd, { shell: true, cwd: work, input: prompt, encoding: 'utf8', timeout: (sc.timeoutSec ?? 900) * 1000, maxBuffer: 64 * 1024 * 1024 });

@@ -61,6 +61,12 @@ added or modified relative to the fixture (`{path, abs, added}`). Dot-entries ar
 
 Both persist identical `result.json` artifacts and share `runner/core.mjs` for check execution.
 
+**Work-dir sandbox.** The runner prepares every work dir as an isolated git repo and drops a
+sandbox note (`AGENTS.md`: "work only inside this directory"). Agents resolve their own project
+root (.git discovery, recent-projects state); without the anchor one agent (opencode) landed in
+the harness repo and edited its scenario fixtures. Temp dir names carry no scenario id for the
+same reason.
+
 ## Guide binding and layered runs
 
 Every `scenario.json` declares two extra fields:

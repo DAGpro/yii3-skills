@@ -1,0 +1,20 @@
+{
+  "id": "16-middleware-registration",
+  "title": "Full mode: custom PSR-15 middleware - request id header, global stack registration gate",
+  "mode": "full",
+  "tags": [
+    "full",
+    "http",
+    "middleware",
+    "psr-15",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "middleware-registered"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-middlewares.md"
+  ]
+}

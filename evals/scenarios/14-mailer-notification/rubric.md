@@ -1,0 +1,7 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. Composition uses the `yiisoft/mailer` stack: a `Yiisoft\Mailer\Message` value object built with its immutable `with*()` setters (or the named-argument constructor). No `Symfony\Component\Mime\Email`, no hand-built `EsmtpTransport`/`Dsn`, no raw `mail()` anywhere in `src/`.
+2. `Yiisoft\Mailer\MailerInterface` is injected through the constructor of an application service (`PostPublisher` or a dedicated notifier next to it); the mailer is resolved by DI, never instantiated inline (`new Mailer(...)`, `new FileMailer(...)` are forbidden in `src/`).
+3. Sender identity comes from application mailer defaults - a `'yiisoft/mailer-symfony'` `messageSettings` params block (per the Mailer Transports guide) or an explicit `MailerInterface` DI binding - not from a hardcoded `withFrom()`/`from:` address inside the domain service.
+4. The HTTP action stays thin: `PublishPostAction` keeps delegating to `PostPublisher`; the mailer is not injected into the Action and no message is composed there.
+5. The publication flow still works: `PostPublisher::publish()` triggers the notification as part of publishing; nothing was dropped from the existing use case.
+6. The message composition follows the guide's anti-pattern matrix: the return value of every `with*()` call is captured (Message is immutable), and there is no phantom API (`$results->getErrors()`, `compose()` static facades).

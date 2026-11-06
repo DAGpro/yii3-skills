@@ -1,0 +1,1 @@
+Added IndexAction and StatsAction single-action classes for the / and /stats endpoints, in the style of ShowPostAction. Migration complete.

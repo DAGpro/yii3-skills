@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*), persistence path: Active Record (yiisoft/active-record) - continued
+stages executed: 1 (migration), 2 (Tag entity + repository interface), 3 (AR repository), 5 (Action), 6 (DI binding + route), 7 (unit test)
+wiring gates: TagRepositoryInterface bound in config/common/di/blog.php; TagListAction route registered via new Route\Get
+cross-milestone consistency: no new persistence packages added; raw db Command/Query and Cycle ORM not introduced
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": ActiveRecord::tableName(), ActiveQuery::all(), MigrationBuilder::createTable()/dropTable()
+tests: written (tests/TagTest.php), not executed (no vendor/)
+packages added: none
+config files changed: config/common/di/blog.php, config/web/routes.php
+production readiness gate: pass

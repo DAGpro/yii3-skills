@@ -1,0 +1,19 @@
+{
+  "id": "09-outdated-api",
+  "title": "Light mode: new route on an old router version - API must match composer.lock",
+  "mode": "light",
+  "tags": [
+    "light",
+    "version-gate",
+    "router"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "router-api-matches-lock"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-version-notes.md",
+    "references/http-routes-definition.md"
+  ]
+}

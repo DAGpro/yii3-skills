@@ -1,0 +1,21 @@
+{
+  "id": "03-forgotten-di-binding",
+  "title": "Light mode: view counter - a new interface must be bound in DI",
+  "mode": "light",
+  "tags": [
+    "light",
+    "di",
+    "wiring-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "interface-bound",
+    "di-injected-not-newed"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-di-and-config.md",
+    "references/persistence-db-connection-and-queries.md",
+    "references/http-actions-core.md"
+  ]
+}

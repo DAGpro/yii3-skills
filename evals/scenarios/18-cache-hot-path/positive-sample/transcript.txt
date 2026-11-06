@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*); caching added in the application layer (LatestPostsService), driver wiring in config/common/di/cache.php
+stages executed: read-through cache in LatestPostsService (getOrSet + TTL 900), DI wiring for the persistent PSR-16 store
+validation: getOrSet(mixed $key, callable $callable, DateInterval|int|null $ttl = null, ?Dependency $dependency = null, float $beta = 1.0) verified against composer.lock (yiisoft/cache 3.2.0) src/CacheInterface.php; Yiisoft\Cache\Cache constructor (Psr handler + default TTL) verified in src/Cache.php; FileCache binding and 'yiisoft/cache-file' => ['fileCache' => [...]] params verified in yiisoft/cache-file config/di.php + config/params.php
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none beyond signatures quoted from the package sources
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/cache + yiisoft/cache-file already required)
+config files changed: config/common/di/cache.php
+production readiness gate: pass

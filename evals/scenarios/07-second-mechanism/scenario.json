@@ -1,0 +1,22 @@
+{
+  "id": "07-second-mechanism",
+  "title": "Full mode: tags feature on an Active Record project - no second persistence mechanism",
+  "mode": "full",
+  "tags": [
+    "full",
+    "consistency",
+    "active-record",
+    "cross-milestone"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "no-second-mechanism"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/persistence-active-record.md",
+    "references/core-di-and-config.md",
+    "references/http-routes-definition.md",
+    "references/persistence-migrations-schema.md"
+  ]
+}

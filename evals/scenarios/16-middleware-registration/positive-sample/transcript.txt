@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Web\*), middleware placed in App\Web\Middleware; global pipeline wiring per http-middlewares.md §4.1 (config/web/di/application.php)
+stages executed: 2 (RequestIdMiddleware), 6 (inserted into the Application dispatcher middlewareDefinitions before Router)
+validation: MiddlewareInterface::process signature per guide §1 (psr/http-server-middleware 1.0.2, pinned in composer.lock); 'middlewareDefinitions' constructor key per yiisoft/middleware-dispatcher 5.5.0 - withMiddlewares() is deprecated since 5.5.0, not used; PSR-7 immutability: $request = $request->withAttribute(...) reassigned, header attached on the returned response
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": Application::class DI wiring shape
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: config/web/di/application.php
+production readiness gate: pass

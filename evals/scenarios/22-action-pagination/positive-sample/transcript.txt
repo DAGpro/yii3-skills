@@ -1,0 +1,11 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*), similar pattern: ShowPostAction; listing logic in the Action over the repository data reader
+stages executed: 2 (ListPostsAction: OffsetPaginator over PostRepositoryInterface::findAll()), 6 (route GET /posts)
+guide: skills/yii3/references/http-actions-concerns.md §3.7 - OffsetPaginator + withPageSize()/withCurrentPage(), read() consumed via iterator_to_array() inside try/catch (PageNotFoundException is thrown lazily on iteration)
+validation: OffsetPaginator::withPageSize(int): static, withCurrentPage(int): self, read(): iterable, getCurrentPage()/getPageSize()/getTotalItems()/getTotalPages() verified against composer.lock (yiisoft/data 2.0.0) src/Paginator/OffsetPaginator.php; QueryDataReader accepted by the paginator (DataReaderInterface extends Limitable/Offsetable/Countable); page/pageSize clamped to >= 1 and pageSize capped at 100 before withCurrentPage()/withPageSize() (both throw InvalidArgumentException below 1)
+vendor/: absent (stub composer.lock) - runtime behavior not executed
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/data + yiisoft/data-db already required)
+config files changed: config/web/routes.php
+production readiness gate: pass

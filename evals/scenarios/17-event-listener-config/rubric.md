@@ -1,0 +1,7 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The event is an immutable, self-contained DTO (`final readonly class` with promoted public scalar/id properties per core-events-design.md §2.1) - no DI container, DB connections, or mutable entities inside the event.
+2. The listener is a single-purpose invokable class (`__invoke(PostPublishedEvent $event): void`) with constructor injection; no static state, no Yii2-style `Component::trigger()`/`on` handlers, no `Yii::$app`.
+3. The listener is registered in the events configuration file (`config/common/events.php`) mapping `PostPublishedEvent::class => [Listener::class]` - the explicit config-key format consumed by `yiisoft/yii-event`'s `ListenerCollectionFactory` (no inference from listener signatures in the config pipeline).
+4. The merge plan in `config/configuration.php` actually loads the file: `'events' => 'common/events.php'` (shared group reaching both `events-web` and `events-console` via `$events`), so the wiring is live, not a dangling file nobody requires.
+5. The dispatch happens in the service via the injected PSR-14 `EventDispatcherInterface` (`->dispatch(new PostPublishedEvent(...))`), not via a manually constructed dispatcher or a container lookup at call time.
+6. Listener ordering/format is valid for `ListenerCollectionFactory`: string event keys, iterable listener list; the agent did not invent a priority/weight mechanism (listeners run in registration order only).

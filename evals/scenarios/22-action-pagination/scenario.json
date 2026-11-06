@@ -1,0 +1,23 @@
+{
+  "id": "22-action-pagination",
+  "title": "Listing endpoint bounded: OffsetPaginator with explicit page size or an explicit limit - never an unbounded ->all()",
+  "mode": "full",
+  "tags": [
+    "full",
+    "pagination",
+    "data",
+    "listing",
+    "db"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "listing-bounded",
+    "no-unbounded-all"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-actions-concerns.md",
+    "references/persistence-db-readers-and-drivers.md",
+    "references/http-routes-definition.md"
+  ]
+}

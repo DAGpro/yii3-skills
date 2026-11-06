@@ -1,0 +1,20 @@
+{
+  "id": "17-event-listener-config",
+  "title": "Full mode: PSR-14 domain event - listener wiring via the events config group gate",
+  "mode": "full",
+  "tags": [
+    "full",
+    "events",
+    "psr-14",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "events-group-wired"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-events-design.md",
+    "references/core-events-reference.md"
+  ]
+}

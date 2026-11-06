@@ -1,0 +1,23 @@
+{
+  "id": "19-error-mapping",
+  "title": "Map a domain exception to an API error response via the ExceptionResponder exceptionMap, wired inside ErrorCatcher",
+  "mode": "full",
+  "tags": [
+    "full",
+    "error-handling",
+    "exception-responder",
+    "api"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "exception-map-registered",
+    "map-target-409",
+    "exception-responder-in-pipeline",
+    "middleware-order-error-catcher-first",
+    "problem-details-json-body"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-error-handling-web.md"
+  ]
+}

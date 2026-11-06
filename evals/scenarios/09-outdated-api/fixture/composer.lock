@@ -1,0 +1,6 @@
+{ "_comment": "STUB for evals: router pinned to 4.0.2 - constructor route classes ship only in 4.0.3",
+  "packages": [
+    { "name": "yiisoft/di", "version": "1.2.0" },
+    { "name": "yiisoft/data-response", "version": "1.0.0" },
+    { "name": "yiisoft/router", "version": "4.0.2" }
+  ] }

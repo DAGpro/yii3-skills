@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\* domain/application/infrastructure, App\Web\* presentation), pattern anchor: ShowPostAction + fixture views/ (Style B, central views dir per http-views.md §1.3); no .ai-factory/ARCHITECTURE.md in the fixture - the dominant src/ style is the convention source
+stages executed: 2 (EditPostForm form model, CoverImageStorage), 5 (EditPostAction: GET render + POST PRG flow), 6 (routes, middleware stack wiring)
+validation: FormModel property attributes + FormHydrator::populateFromPostAndValidate(FormModelInterface, ServerRequestInterface, ...): bool per references/form-model/src/FormHydrator.php; WebViewRenderer::render(string $view, array $parameters = []): ResponseInterface per references/yii-view-renderer/src/WebViewRenderer.php ($csrf hidden input via CsrfViewInjection, param key 'csrf'); FlashInterface::add(string $key, $value = true, bool $removeAfterAccess = true): void per references/session/src/Flash/FlashInterface.php; FileHelper::ensureDirectory()/normalizePath() + UploadedFileInterface::moveTo() per references/files/src/FileHelper.php and PSR-7 (aliases resolved via Aliases::get() first - FileHelper never resolves aliases); Status::NOT_FOUND/SEE_OTHER + Header::LOCATION per references/http/src; routes via new Route\Get/Post with the named action: argument - on router 4.0.3 (composer.lock) the constructor is (pattern, ?string $name = null, action, ...) so a positional second argument would silently become the route name; middleware order ErrorCatcher -> SessionMiddleware -> CsrfTokenMiddleware -> Router per http-state.md §1 (synchronizer CSRF token lives in the session)
+vendor/: absent (stub composer.lock) - no APIs flagged "not verified against sources": every call above was checked against the grounded package sources
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (all required packages already in composer.json)
+config files changed: config/web/routes.php, config/web/di/application.php
+production readiness gate: pass

@@ -1,0 +1,27 @@
+{
+  "id": "20-action-shape",
+  "title": "Full mode: JSON endpoint action - final readonly invokable class, CurrentRoute route args, data-response factory",
+  "mode": "full",
+  "tags": [
+    "full",
+    "http",
+    "actions",
+    "psr-7",
+    "data-response",
+    "router",
+    "hygiene"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "action-class-shape",
+    "response-interface-return",
+    "route-args-via-currentroute",
+    "no-echo-output",
+    "response-via-factory"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-actions-core.md",
+    "references/http-actions-and-controllers.md"
+  ]
+}

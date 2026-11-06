@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*); job message + handler under App\Blog\Application\Queue, push side in the existing action
+stages executed: 2 (SendDigestMessage DTO), 3 (SendDigestHandler), 5 (RequestDigestAction push), 6 (params + DI wiring)
+validation: message extends Yiisoft\Queue\Message\Message with fromPayload()/getType()/getPayload() - contract verified against the queue package sources (MessageInterface: fromPayload(string $type, bool|int|float|string|array|null $payload): static); handler implements HandlerInterface::handle(MessageInterface $message): void; producer push via QueueProducerInterface::push(MessageInterface): MessageInterface
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": AsyncQueueProducer/QueueConsumer role maps, QueueFactoryProvider definitions arg, DbQueueAdapter db/channel named args
+fixes applied: none
+tests: SendDigestMessageTest (fromPayload round-trip) - not run (no vendor/)
+packages added: none
+config files changed: config/common/params.php, config/common/di/queue.php
+production readiness gate: pass

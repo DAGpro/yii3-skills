@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*), similar pattern: ShowPostAction; DTO placement per App\Blog\Application
+stages executed: 2 (SaveSettingsInput DTO), 5 (SaveSettingsAction), 6 (route wiring)
+validation: rule attributes on the DTO (Length, Integer) - names verified against composer.lock (yiisoft/validator 2.0.0); input-http #[FromBody] + AbstractInput per package README
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": AbstractInput, #[FromBody], #[Validate], DataResponseFactoryInterface::createResponse()
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: config/web/routes.php
+production readiness gate: pass

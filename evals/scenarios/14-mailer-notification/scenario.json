@@ -1,0 +1,25 @@
+{
+  "id": "14-mailer-notification",
+  "title": "Full mode: email notification - MailerInterface injection, Message composition, mailer defaults wiring",
+  "mode": "full",
+  "tags": [
+    "full",
+    "mailer",
+    "notification",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "mailer-injected",
+    "message-composed",
+    "sent-via-mailer-interface",
+    "no-direct-mail-sending",
+    "mailing-not-in-action",
+    "mailer-defaults-wired"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-mailer.md",
+    "references/infra-mailer-transports.md"
+  ]
+}

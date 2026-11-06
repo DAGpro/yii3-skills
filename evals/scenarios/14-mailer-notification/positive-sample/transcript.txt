@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*); notification extracted to PostPublishedNotifier next to PostPublisher, Action untouched
+stages executed: 2 (PostPublishedNotifier service), 5 (PostPublisher wiring), 6 (mailer params)
+validation: Message composition via withTo/withSubject/withTextBody - signatures verified against the mailer package sources (all nullable, fluent, immutable); MailerInterface::send(MessageInterface $message): void verified; Message is final, not abstract
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": 'yiisoft/mailer-symfony' messageSettings.from params key (mailer-symfony), DataResponseFactoryInterface::createResponse()
+fixes applied: none
+tests: PostPublishedNotifierTest with StubMailer (yiisoft/mailer core, no constructor) - not run (no vendor/)
+packages added: none
+config files changed: config/common/params.php
+production readiness gate: pass

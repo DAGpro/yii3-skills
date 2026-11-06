@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\*); mapping registered in config/web/di/exception-responder.php, middleware inserted into the global pipeline in config/web/di/application.php
+stages executed: ExceptionResponder exceptionMap (EmailAlreadySubscribedException => 409 ProblemDetails callable), pipeline ordering (ErrorCatcher -> ExceptionResponder -> Router)
+validation: ExceptionResponder::__construct(array $exceptionMap, ResponseFactoryInterface $responseFactory, Injector $injector, bool $checkResponseBody = false) verified against composer.lock (yiisoft/error-handler 5.0.0) src/Middleware/ExceptionResponder.php - int map entries call createResponse($status), callables must return ResponseInterface, unmapped exceptions are re-thrown; callable parameters matched by name ($exception / $request), everything else resolved by type; Status::CONFLICT = 409, Status::TEXTS and Header::CONTENT_TYPE verified in yiisoft/http src; ErrorCatcher::__construct(ThrowableResponseFactoryInterface, ?EventDispatcherInterface) verified; first-listed middleware = outermost (dispatcher reversal), ErrorCatcher wraps ExceptionResponder
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none beyond signatures quoted from the package sources
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: config/web/di/application.php, config/web/di/exception-responder.php
+production readiness gate: pass

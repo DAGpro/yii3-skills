@@ -1,0 +1,18 @@
+{
+  "name": "acme/blog",
+  "require": {
+    "php": "^8.2",
+    "psr/http-factory": "^1.1",
+    "psr/http-message": "^2.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
+    "yiisoft/definitions": "^3.4",
+    "yiisoft/di": "^1.4",
+    "yiisoft/error-handler": "^4.3",
+    "yiisoft/middleware-dispatcher": "^5.5",
+    "yiisoft/request-provider": "^1.3",
+    "yiisoft/router": "^4.0",
+    "yiisoft/yii-http": "^1.1"
+  },
+  "require-dev": { "phpunit/phpunit": "^11.0" }
+}

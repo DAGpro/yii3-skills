@@ -1,0 +1,9 @@
+Mode: Light
+Architecture: existing src/ layout, console archetype: thin command (configure + execute) delegating to RecountViews
+version check: composer.lock pins symfony/console 7.0.0, yiisoft/yii-console 2.0.0 - AsCommand attribute and ExitCode::OK used
+wiring gates: command registered in config/console/commands.php, exposed via params.php commands key (per yiisoft/app-console template)
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": AsCommand, ExitCode::OK
+fixes applied: none
+tests: not run (light task)
+packages added: none
+config files changed: config/console/params.php, config/console/commands.php

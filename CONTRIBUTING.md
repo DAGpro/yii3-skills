@@ -12,6 +12,7 @@ Thanks for your interest in contributing! This repository is an [AI Factory](htt
 | `PACKAGES.md` | Navigation index over the offline reference library |
 | `references/` | 130 offline clones of `yiisoft/*` packages — authoring-only, **strictly read-only**; clones are git-ignored, populate locally per [`references/README.md`](references/README.md) |
 | `scripts/validate.mjs` | Extension quality gate — run before every PR |
+| `evals/` | Behavior tests for the skill: fixture scenarios + agent runner, see [`evals/README.md`](evals/README.md); `evals/results/` is git-ignored |
 | `AGENTS.md` | Project constitution — read it first; it is binding and wins on any conflict with this file |
 
 ## Ground rules (short version of [AGENTS.md](AGENTS.md))

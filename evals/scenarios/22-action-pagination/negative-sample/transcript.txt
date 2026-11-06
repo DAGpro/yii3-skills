@@ -1,0 +1,1 @@
+Done! Added GET /posts returning all published posts as a JSON list.

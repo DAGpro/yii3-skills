@@ -1,0 +1,29 @@
+{
+  "id": "23-composite-html-action",
+  "title": "Full mode: composite HTML action - edit page combining view render, form hydration, file upload, flash, 404 and session/CSRF middleware ordering",
+  "mode": "full",
+  "tags": [
+    "full",
+    "html",
+    "views",
+    "form-model",
+    "file-upload",
+    "flash",
+    "csrf",
+    "middleware-ordering"
+  ],
+  "timeoutSec": 1500,
+  "negativeMustFail": [
+    "flash-via-interface",
+    "no-session-flash-methods"
+  ],
+  "layer": "composite",
+  "guides": [
+    "references/http-actions-concerns.md",
+    "references/http-views.md",
+    "references/http-state.md",
+    "references/http-forms-and-hydration.md",
+    "references/http-file-handling.md",
+    "references/http-middlewares.md"
+  ]
+}

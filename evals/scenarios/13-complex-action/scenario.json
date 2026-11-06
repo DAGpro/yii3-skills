@@ -1,0 +1,24 @@
+{
+  "id": "13-complex-action",
+  "title": "Full mode: complex action - typed input DTO via input-http, validator attributes",
+  "mode": "full",
+  "tags": [
+    "full",
+    "validation",
+    "input-http",
+    "dto"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "input-dto-validated",
+    "action-typed-input",
+    "no-raw-parsed-body"
+  ],
+  "layer": "composite",
+  "guides": [
+    "references/http-forms-and-hydration.md",
+    "references/http-validation-rules.md",
+    "references/http-actions-core.md",
+    "references/http-routes-definition.md"
+  ]
+}

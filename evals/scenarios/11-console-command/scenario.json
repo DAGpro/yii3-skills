@@ -1,0 +1,20 @@
+{
+  "id": "11-console-command",
+  "title": "Light mode: console command - registration wiring gates",
+  "mode": "light",
+  "tags": [
+    "light",
+    "console",
+    "wiring-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "command-registered",
+    "commands-key-wired"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-commands.md",
+    "references/core-di-and-config.md"
+  ]
+}

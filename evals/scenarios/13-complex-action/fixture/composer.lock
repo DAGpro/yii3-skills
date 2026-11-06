@@ -1,0 +1,9 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "yiisoft/data-response", "version": "2.0.0" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/hydrator-validator", "version": "1.0.0" },
+    { "name": "yiisoft/input-http", "version": "1.0.0" },
+    { "name": "yiisoft/router", "version": "4.0.3" },
+    { "name": "yiisoft/validator", "version": "2.0.0" }
+  ] }

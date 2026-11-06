@@ -1,0 +1,3 @@
+The / and /stats endpoints of this app are implemented the legacy way: one controller class (SiteController) with actionIndex() and actionStats() methods, wired into the routes as [SiteController::class, 'actionIndex'] / [SiteController::class, 'actionStats'] callables.
+
+Migrate both endpoints to idiomatic Yii3 single-action classes: one invokable class per endpoint, named IndexAction (serves /) and StatsAction (serves /stats), placed in App\Web\Site in the style of the existing ShowPostAction (final readonly, __invoke). Re-point the routes at the new classes and keep the responses identical: / returns the app info array, /stats returns the stats summary.

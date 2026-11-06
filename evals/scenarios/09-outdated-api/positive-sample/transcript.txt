@@ -1,0 +1,8 @@
+Mode: Light
+Architecture: existing src/ layout (App\Blog\*), similar pattern: existing static Route::get registration
+version check: composer.lock pins yiisoft/router 4.0.2 - constructor route classes (new Route\Get) do not exist on that line (added in 4.0.3); static Route::get() used
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": Route::get(), DataResponseFactoryInterface::createResponse()
+fixes applied: none
+tests: not run (light task)
+packages added: none
+config files changed: config/web/routes.php

@@ -1,0 +1,26 @@
+{
+  "id": "15-queue-job",
+  "title": "Full mode: queued digest job - typed message DTO, QueueProducerInterface push, yiisoft/queue params + broker wiring",
+  "mode": "full",
+  "tags": [
+    "full",
+    "queue",
+    "async",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "queue-producer-injected",
+    "message-pushed",
+    "queue-message-typed",
+    "queue-handler-implemented",
+    "queue-params-wired",
+    "queue-roles-wired",
+    "no-legacy-queue-api"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-queue-jobs.md",
+    "references/infra-queue-brokers.md"
+  ]
+}

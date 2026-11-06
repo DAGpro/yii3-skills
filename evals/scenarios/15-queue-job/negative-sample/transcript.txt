@@ -1,0 +1,1 @@
+Done! Digest generation is now queued via the queue push in the action.

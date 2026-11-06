@@ -1,0 +1,21 @@
+{
+  "id": "21-controller-to-action",
+  "title": "Full mode: migrate legacy controller actionX() endpoints to single-action invokable classes",
+  "mode": "full",
+  "tags": [
+    "full",
+    "actions",
+    "router",
+    "migration",
+    "refactor"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "routes-repointed"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-actions-and-controllers.md",
+    "references/http-routes-definition.md"
+  ]
+}

@@ -1,0 +1,11 @@
+Mode: Full
+Architecture: existing src/ layout; endpoints live under App\Web\Site; style reference: ShowPostAction (final readonly + __invoke)
+stages executed: 1 (IndexAction), 2 (StatsAction), 3 (routes re-pointed to single-action classes)
+legacy wiring found: new Get(pattern: '/', action: [SiteController::class, 'actionIndex']) and [SiteController::class, 'actionStats'] - controller method pair format, supported by MiddlewareFactory (yiisoft/middleware-dispatcher: controller handler action [TestController::class, 'index']); behavior kept, wiring replaced
+route handlers: IndexAction::class / StatsAction::class passed as action: named argument (router 4.0.3 Get constructor: 2nd positional parameter is $name, not the handler)
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": DataResponseFactoryInterface::createResponse()
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: config/web/routes.php
+production readiness gate: pass

@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*), event DTO in App\Blog\Domain, listener in App\Blog\Application\Listener (invokable class, per core-events-design.md §3.1)
+stages executed: 2 (PostPublishedEvent DTO, AuditPostPublishedListener), 5 (dispatch from PublishPost via injected PSR-14 EventDispatcherInterface), 6 (events wiring)
+validation: config format `Event::class => [Listener::class]` per yii-event README + ListenerCollectionFactory (string keys, iterable listeners); events group wiring per core-events-design.md §4.1: 'events' => 'common/events.php' in config/configuration.php, shared with events-web/events-console via $events; yii-event 2.2.0 + event-dispatcher 1.1.0 pinned in composer.lock
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": ListenerCollectionFactory::create() runtime behavior
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: config/common/events.php (new), config/configuration.php ('events' group now loads it; merge plan rebuild noted)
+production readiness gate: pass

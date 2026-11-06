@@ -1,0 +1,1 @@
+Done! The publish endpoint now emails the author directly over SMTP (host wired inline in the action).

@@ -1,0 +1,21 @@
+{
+  "id": "18-cache-hot-path",
+  "title": "Cache a hot path: read-through via injected Yiisoft\\Cache\\CacheInterface, getOrSet + TTL, persistent driver wired in DI",
+  "mode": "full",
+  "tags": [
+    "full",
+    "cache",
+    "psr-16",
+    "di"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "cache-interface-injected",
+    "getorset-pattern"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/persistence-caching.md",
+    "references/persistence-cache-drivers.md"
+  ]
+}

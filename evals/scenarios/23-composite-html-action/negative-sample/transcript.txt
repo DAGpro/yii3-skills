@@ -1,0 +1,1 @@
+Done! Added the post edit page: HTML form with validation, cover image upload into runtime, 404 branch, success flash after save and a redirect back. Routes registered for GET and POST, session and CSRF middleware wired in the right order.

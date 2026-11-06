@@ -1,0 +1,12 @@
+{
+  "name": "acme/blog",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/di": "^1.4",
+    "yiisoft/mailer": "^6.0",
+    "yiisoft/mailer-symfony": "^6.0",
+    "yiisoft/router": "^4.0",
+    "yiisoft/data-response": "^2.0"
+  },
+  "require-dev": { "phpunit/phpunit": "^11.0" }
+}

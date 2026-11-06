@@ -1,0 +1,1 @@
+Add an email notification to the blog: when a post is published through PostPublisher, the post author must receive a confirmation email (post title in the subject). Compose and send the message through the mailer stack; the sender identity comes from the application mailer defaults, not from the domain service. The HTTP action stays thin.

@@ -1,0 +1,6 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The listing result is bounded before it reaches the response: an OffsetPaginator (or KeysetPaginator for very large tables) wraps the data reader, or the query/reader carries an explicit limit (+ offset). No unbounded data access remains on the listing path (no ->all() without a limit, no full-reader iteration without a paginator).
+2. If a paginator is used, the page size is set explicitly with withPageSize() and derived from the (capped) pageSize query parameter - not silently relying on the library default (PaginatorInterface::DEFAULT_PAGE_SIZE = 10).
+3. Page/pageSize inputs are cast and clamped before use: page >= 1 and 1 <= pageSize <= 100. OffsetPaginator::withCurrentPage()/withPageSize() throw InvalidArgumentException on values < 1, so raw query strings flowing in unclamped are a bug.
+4. The response exposes pagination metadata (current page, page size, total items/pages) via the paginator getters, or the transcript explains why it does not; PageNotFoundException from read() is consumed inside the try block (it is thrown lazily on iteration, not at the read() call).
+5. The Action stays a thin invokable returning ResponseInterface; data access goes through the repository/data reader (no Yii 2 constructs, no static locator access).

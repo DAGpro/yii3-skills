@@ -1,0 +1,11 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "yiisoft/data-response", "version": "2.0.0" },
+    { "name": "yiisoft/db", "version": "2.0.0" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/mutex", "version": "1.1.0" },
+    { "name": "yiisoft/mutex-file", "version": "1.0.0" },
+    { "name": "yiisoft/queue", "version": "3.0.0" },
+    { "name": "yiisoft/queue-db", "version": "3.0.0" },
+    { "name": "yiisoft/router", "version": "4.0.3" }
+  ] }

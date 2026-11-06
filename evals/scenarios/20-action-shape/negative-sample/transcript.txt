@@ -1,0 +1,1 @@
+Done! Added the related-posts endpoint: App\Web\Blog\RelatedPostsController::actionRelated() reads the post id from the query string, loads the related posts through RelatedPostsService and prints the JSON list. The route GET /posts/{id:\d+}/related is wired to the controller in config/web/routes.php.

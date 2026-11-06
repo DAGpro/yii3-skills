@@ -1,0 +1,8 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\*), 2 similar features checked
+fixes applied: none
+tests: pass
+static analysis (Psalm/PHPStan, Rector): pass
+packages added: none
+config files changed: config/common/di/blog.php, config/web/routes.php
+production readiness gate: pass

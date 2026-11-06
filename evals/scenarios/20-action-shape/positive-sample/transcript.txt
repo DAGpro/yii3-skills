@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Web\Blog actions) - same pattern as ShowPostAction; guide http-actions-core.md §3.4 (REST API responses via DataResponseFactoryInterface)
+stages executed: 5 (RelatedPostsAction), 6 (route wiring in config/web/routes.php)
+validation: CurrentRoute::getArgument(string $name, ?string $default = null): ?string verified in yiisoft/router 4.0.3 sources - returns ?string, so null-checked and cast (int) before RelatedPostsService::findRelated(int $postId); DataResponseFactoryInterface::createResponse(mixed $data = null, int $code = Status::OK, string $reasonPhrase = '') verified in yiisoft/data-response 2.0.0, ResponseFactory namespace (the root-namespace factory interface is @deprecated - not injected)
+vendor/: absent (stub composer.lock) - the APIs above verified against the offline reference sources shipped with the skill
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: config/web/routes.php
+production readiness gate: pass

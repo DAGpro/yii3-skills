@@ -1,0 +1,6 @@
+Mode: Light
+Architecture: existing src/ layout (App\Blog\*), similar pattern: PostRepositoryInterface binding in config/common/di/blog.php
+fixes applied: none
+tests: not run (light task)
+packages added: none
+config files changed: config/common/di/blog.php

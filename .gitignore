@@ -2,6 +2,9 @@
 node_modules/
 vendor/
 
+# Eval runner output (results/<timestamp>/ per run)
+evals/results/
+
 # Local helper files
 package.json
 

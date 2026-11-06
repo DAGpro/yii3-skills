@@ -1,0 +1,1 @@
+Handled the duplicate-email error directly in SubscribeAction with a try/catch: it now returns a 500 response carrying the exception message instead of crashing. No config changes were needed.

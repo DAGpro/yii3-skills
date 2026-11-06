@@ -1,0 +1,11 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "psr/event-dispatcher", "version": "1.0.0" },
+    { "name": "psr/log", "version": "3.0.0" },
+    { "name": "yiisoft/config", "version": "1.6.2" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/event-dispatcher", "version": "1.1.0" },
+    { "name": "yiisoft/injector", "version": "1.2.1" },
+    { "name": "yiisoft/log", "version": "2.2.0" },
+    { "name": "yiisoft/yii-event", "version": "2.2.0" }
+  ] }

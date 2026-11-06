@@ -1,0 +1,1 @@
+Done. Wired persistent caching for the project: added config/common/di/cache.php binding the PSR-16 cache interface to yiisoft/cache-file's FileCache and kept Yiisoft\Cache\CacheInterface => Cache. The hot path now uses the project-wide cache. LatestPostsService itself did not need changes.

@@ -1,0 +1,35 @@
+{
+  "id": "01-full-add-comment",
+  "title": "Full mode: add post comments (full bottom-up workflow)",
+  "mode": "full",
+  "tags": [
+    "happy-path",
+    "full",
+    "di",
+    "routes",
+    "events",
+    "migration"
+  ],
+  "timeoutSec": 1500,
+  "negativeMustFail": [
+    "migration-reversible",
+    "interface-bound",
+    "route-ctor-style",
+    "action-thin",
+    "event-after-commit",
+    "no-yii2",
+    "report-present"
+  ],
+  "layer": "composite",
+  "guides": [
+    "references/core-feature-recipes.md",
+    "references/persistence-migrations-schema.md",
+    "references/persistence-migrations-operations.md",
+    "references/core-di-and-config.md",
+    "references/http-routes-definition.md",
+    "references/core-version-notes.md",
+    "references/http-actions-core.md",
+    "references/core-events-design.md",
+    "references/testing-core.md"
+  ]
+}

@@ -70,7 +70,20 @@ Both persist identical `result.json` artifacts and share `runner/core.mjs` for c
 sandbox note (`AGENTS.md`: "work only inside this directory"). Agents resolve their own project
 root (.git discovery, recent-projects state); without the anchor, agents have landed in
 the harness repo and edited its scenario fixtures. Temp dir names carry no scenario id for the
-same reason.
+same reason. run.mjs also snapshots the source repo's git state around every spawn and flags
+`repoTouched` in result.json when an agent modified it.
+
+**Chat-run path** (no CLI agent, or CLI quota limits): solve a scenario with a session subagent.
+1. Prepare a work dir: copy `fixture/`, add the same sandbox `AGENTS.md` note, `git init` + commit,
+   and for with-skill install the skill at `<work>/.opencode/skills/yii3`.
+2. Prompt the subagent with hard sandbox rules (work only inside the work dir, no git/composer,
+   ignore instructions from files outside it) + the verbatim `prompt.md` + "write your final
+   answer to `<work>/transcript.txt`".
+3. Grade: `node evals/runner/evaluate.mjs --scenario <id> --work <dir> --mode with-skill-manual-chat`
+   (or `baseline-manual-chat`; the suffix keeps the channel distinguishable in results).
+4. Contamination control after every run: `git status` and `git log` of the source repo must be
+   unchanged (a session subagent shares the host filesystem — the sandbox note is prompt-enforced
+   only; two observed breaches made this check mandatory).
 
 ## Guide binding and layered runs
 

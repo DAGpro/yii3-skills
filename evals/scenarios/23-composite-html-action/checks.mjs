@@ -23,7 +23,7 @@ const routeSegments = (text) => {
     segs.push({
       verb,
       seg,
-      tail: close === -1 ? '' : text.slice(close + 1, close + 40),
+      tail: close === -1 ? '' : text.slice(close + 1, close + 120),
     });
   }
   return segs;
@@ -50,25 +50,28 @@ const templates = (changed) =>
     .filter((c) => /^views\/.*\.php$/.test(c.path) || /@var\s+(?:\\?Yiisoft\\View\\)?WebView\s+\$this/.test(read(c.abs)));
 
 export default [
-  // Concern 1: entity absence -> idiomatic 404 (guides sanction Status::NOT_FOUND responses; no HTTP NotFoundHttpException exists in the grounded packages)
-  check('not-found-404', 'The edit action handles the missing-post path with a 404 response (Status::NOT_FOUND / 404 in a null-find branch of a changed *Action.php)', ({ changed }) => {
-    const hits = actions(changed).filter((c) => /Status::NOT_FOUND|\b404\b/.test(read(c.abs)));
-    return hits.length
-      ? ok(hits.map((h) => h.path).join(', '))
-      : fail('no Status::NOT_FOUND / 404 anywhere in changed actions - the null-find path is not handled idiomatically');
+  // Concern 1: entity absence -> idiomatic 404 (guides sanction Status::NOT_FOUND responses; no HTTP NotFoundHttpException exists in the grounded packages).
+  // A dedicated not-found handler/view carrying the 404 status is an accepted delegation.
+  check('not-found-404', 'The edit action handles the missing-post path with a 404 response: Status::NOT_FOUND / 404 in a null-find branch of a changed *Action.php, or in a dedicated not-found handler/view it delegates to', ({ changed }) => {
+    const actionHits = actions(changed).filter((c) => /Status::NOT_FOUND|\b404\b/.test(read(c.abs)));
+    if (actionHits.length) return ok(actionHits.map((h) => h.path).join(', '));
+    const dedicated = php(changed).filter((c) => /not-?found|404/i.test(c.path) && /Status::NOT_FOUND|\b404\b/.test(read(c.abs)));
+    return dedicated.length
+      ? ok(`via dedicated handler: ${dedicated.map((h) => h.path).join(', ')}`)
+      : fail('no Status::NOT_FOUND / 404 in changed actions nor a dedicated not-found handler - the null-find path is not handled idiomatically');
   }),
 
-  // Concern 2a: view rendering via the grounded renderer
-  check('view-renderer-used', 'The edit action renders through the injected WebViewRenderer (Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer::render()) - not Yii2-style $this->render()', ({ changed }) => {
+  // Concern 2a: view rendering via the grounded renderer (both grounded names: ViewRenderer and WebViewRenderer, references/yii-view-renderer/src)
+  check('view-renderer-used', 'The edit action renders through the injected view renderer (Yiisoft\\Yii\\View\\Renderer\\ViewRenderer / WebViewRenderer -> render()) - not Yii2-style $this->render()', ({ changed }) => {
     const hits = actions(changed).filter((c) => {
       const t = read(c.abs);
-      return /(?:Yiisoft\\Yii\\View\\Renderer\\)?WebViewRenderer\s+\$\w+/.test(t) && /->\s*render(?:Partial)?\s*\(/.test(t);
+      return /(?:Yiisoft\\Yii\\View\\Renderer\\)?(?:Web)?ViewRenderer\s+\$\w+/.test(t) && /->\s*render(?:Partial)?\s*\(/.test(t);
     });
     if (!hits.length) {
       const legacy = actions(changed).filter((c) => /\$this->render\s*\(/.test(read(c.abs)));
       return legacy.length
         ? fail(`Yii2-style \$this->render() in action: ${legacy.map((b) => b.path).join(', ')}`)
-        : fail('no changed action injects WebViewRenderer and calls ->render()');
+        : fail('no changed action injects the view renderer (ViewRenderer/WebViewRenderer) and calls ->render()');
     }
     const legacy = hits.filter((c) => /\$this->render\s*\(/.test(read(c.abs)));
     return legacy.length
@@ -76,12 +79,13 @@ export default [
       : ok(hits.map((h) => h.path).join(', '));
   }),
 
-  // Concern 2b: template escaping
-  check('view-template-escapes', 'The added view template(s) escape dynamic output with Html::encode()/Html::encodeAttribute() and contain no bare variable echoes (<?= $var ?>)', ({ changed }) => {
+  // Concern 2b: template escaping (fully static templates with no dynamic output are exempt)
+  check('view-template-escapes', 'The added view template(s) escape dynamic output with Html::encode()/Html::encodeAttribute() and contain no bare variable echoes (<?= $var ?>); templates without any dynamic output are exempt', ({ changed }) => {
     const tpl = templates(changed);
     if (!tpl.length) return fail('no added view template found (expected under views/ or WebView-typed)');
-    const noEscape = tpl.filter((c) => !/Html::\s*(?:encode|encodeAttribute)\s*\(/.test(read(c.abs)));
-    if (noEscape.length) return fail(`template without Html::encode(): ${noEscape.map((b) => b.path).join(', ')}`);
+    const dynamic = tpl.filter((c) => /<\?=\s*\$|echo\s+\$/.test(read(c.abs)));
+    const noEscape = dynamic.filter((c) => !/Html::\s*(?:encode|encodeAttribute)\s*\(/.test(read(c.abs)));
+    if (noEscape.length) return fail(`template with dynamic output but without Html::encode(): ${noEscape.map((b) => b.path).join(', ')}`);
     // $content is the trusted rendered-view slot in layouts (guide §5.1) - exempt; only lone variables are flagged.
     const bare = tpl.filter((c) => /<\?=\s*\$(?!content\b)\w+\s*\?>/.test(read(c.abs)));
     return bare.length
@@ -162,7 +166,8 @@ export default [
     for (const c of configPhp(changed)) {
       const t = read(c.abs);
       if (!/middlewareDefinitions/.test(t) || !/CsrfTokenMiddleware/.test(t)) continue;
-      const slice = middlewareSlice(t);
+      // Comments inside the list mention middleware names too - strip them before order matching.
+      const slice = middlewareSlice(t).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
       const session = slice.indexOf('SessionMiddleware');
       const csrf = slice.indexOf('CsrfTokenMiddleware');
       const router = slice.indexOf('Router');
@@ -192,7 +197,9 @@ export default [
       if (verb !== 'GetPost' && /\(\s*['"][^'"]*['"]\s*,\s*\\?[A-Z]/.test(seg)) {
         return fail(`positional action argument silently becomes the route NAME on router 4.0.3 - use the named action: argument: ${seg.replace(/\s+/g, ' ').slice(0, 80)}`);
       }
-      if (!/\baction\s*:/.test(seg) && !/^\s*->\s*action\s*\(/.test(tail)) {
+      // Fluent chains may be wrapped in parens: (new Route(...))->action(...) - allow only
+      // closing parens/whitespace between the constructor call and the ->action( call.
+      if (!/\baction\s*:/.test(seg) && !/^[)\s]*->\s*action\s*\(/.test(tail)) {
         return fail(`edit route without an action binding (action: ... or ->action(...)): ${seg.replace(/\s+/g, ' ').slice(0, 80)}`);
       }
     }

@@ -77,6 +77,16 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outRoot = join(evalsRoot, 'results', stamp);
 const rows = [];
 
+// Contamination canary: an agent that escaped its work dir (project-root misresolution,
+// filesystem wander) leaves the source repo changed. Snapshot before spawning, compare after.
+const repoState = () => {
+  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
+  const st = spawnSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf8' });
+  return `${head.stdout.trim()}|${st.stdout}`;
+};
+const repoBefore = repoState();
+let contaminated = false;
+
 // Agents resolve their own project root (.git discovery, recent-projects state); an
 // unanchored temp dir lets them land somewhere else entirely (observed: one agent ran
 // inside the harness repo and edited its scenario fixtures). So every work dir is
@@ -113,7 +123,12 @@ for (const id of selected) {
       const started = Date.now();
       const p = spawnSync(agentCmd, { shell: true, cwd: work, input: prompt, encoding: 'utf8', timeout: (sc.timeoutSec ?? 900) * 1000, maxBuffer: 64 * 1024 * 1024 });
       const transcript = `${p.stdout ?? ''}\n${p.stderr ?? ''}`;
-      const { rate, reqFailed } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000 } });
+      const repoTouched = repoState() !== repoBefore;
+      if (repoTouched) {
+        contaminated = true;
+        console.error(`WARN: the source repository changed during the ${id} ${mode} #${n} agent run - the agent likely escaped its work dir. Inspect git status/log before trusting these results.`);
+      }
+      const { rate, reqFailed } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000, repoTouched } });
       rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, reqFailed });
       console.log(`${id} ${mode} #${n}: ${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]`);
     }
@@ -132,4 +147,5 @@ for (const id of [...new Set(rows.map((r) => r.id))]) {
 mkdirSync(outRoot, { recursive: true });
 writeFileSync(join(outRoot, 'summary.md'), md);
 console.log(`\n${md}\nresults: ${outRoot}`);
+if (contaminated) console.error('CONTAMINATION: at least one agent run changed the source repository - see the WARN lines above and inspect git status/log.');
 process.exit(rows.some((r) => r.mode === 'with-skill' && r.reqFailed.length) ? 1 : 0);

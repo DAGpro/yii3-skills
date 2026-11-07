@@ -1,0 +1,22 @@
+{
+  "id": "02-light-single-route",
+  "title": "Single-route feature: Light mode, no full decomposition",
+  "mode": "light",
+  "tags": [
+    "light",
+    "mode-selection",
+    "decomposition"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "mode-light",
+    "no-full-decomposition",
+    "report-block"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md",
+    "references/http-actions-core.md",
+    "references/http-routes-definition.md"
+  ]
+}

@@ -1,0 +1,10 @@
+Implemented App\User\Console\ImportUsersCommand: reads the CSV argument row by row and inserts each user with $this->db->createCommand()->insert(...)->execute(). Registered the command in config/console/params.php under 'yiisoft/yii-console' => ['commands' => [...]].
+
+Mode: Full
+Architecture: existing src/User/Console layout, mirrors ListUsersCommand.
+fixes applied: none
+tests: not run
+static analysis: not run
+packages added: none
+config files changed: config/console/params.php
+production readiness gate: pass

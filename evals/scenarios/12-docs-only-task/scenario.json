@@ -1,0 +1,19 @@
+{
+  "id": "12-docs-only-task",
+  "title": "Docs-only request in a Yii3 app: Light mode, no framework machinery",
+  "mode": "light",
+  "tags": [
+    "negative-trigger",
+    "light",
+    "mode-selection"
+  ],
+  "timeoutSec": 600,
+  "negativeMustFail": [
+    "docs-only-changes",
+    "mode-light"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md"
+  ]
+}

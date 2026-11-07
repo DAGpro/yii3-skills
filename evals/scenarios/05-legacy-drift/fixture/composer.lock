@@ -1,0 +1,7 @@
+{ "_comment": "STUB для evals: версии, достаточные для version-gated проверок скилла",
+  "packages": [
+    { "name": "yiisoft/router", "version": "4.0.3" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/form-model", "version": "1.0.0" },
+    { "name": "yiisoft/validator", "version": "2.0.0" }
+  ] }

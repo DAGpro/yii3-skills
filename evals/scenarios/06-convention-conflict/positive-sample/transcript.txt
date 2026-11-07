@@ -1,0 +1,12 @@
+Added the UserRegistered domain event and wired it into RegisterUserService.
+
+Conflict note: the project standard (docs/conventions.md) dispatches domain events inside the transaction so listeners share the connection. That contradicts the post-commit dispatch rule (references/core-events-design.md): transaction() commits before it returns, and code after it is guaranteed to run post-commit — a dispatch inside the closure fires even when a later query fails and the transaction rolls back. Correctness wins over the project convention, so I dispatched after the transaction returned and recorded the divergence in this report; in an interactive run I would ask the user before deviating.
+
+Mode: Full
+Architecture: existing src/User layout; event emitted by the same service that owns the transaction.
+fixes applied: none
+tests: not run
+static analysis: not run
+packages added: none
+config files changed: none
+production readiness gate: pass (single insert + post-commit dispatch; no new packages, no schema changes)

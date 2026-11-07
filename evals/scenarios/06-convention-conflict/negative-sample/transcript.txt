@@ -1,0 +1,10 @@
+Wired the UserRegistered domain event into the registration transaction, following the project's existing event-handling standard (docs/conventions.md, "transactional events"): the dispatch happens inside the same transaction() closure as the insert, so listeners share the connection.
+
+Mode: Full
+Architecture: existing src/User layout.
+fixes applied: none
+tests: not run
+static analysis: not run
+packages added: none
+config files changed: none
+production readiness gate: pass

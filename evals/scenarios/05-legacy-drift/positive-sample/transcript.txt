@@ -1,0 +1,12 @@
+Added POST /subscribe backed by a typed SubscribeForm (FormModel with #[Required] #[Email]) hydrated through FormHydrator::populateFromPostAndValidate().
+
+Note: the existing contact form parses the request body manually (isset/trim on getParsedBody(), hand-rolled guards) — that is legacy drift relative to the guides (typed form models + validator rules, references/http-forms-and-hydration.md). Per the conflict rule I did not copy the pattern into the new endpoint and flag the divergence here: consider migrating ContactAction to FormHydrator separately.
+
+Mode: Full
+Architecture: existing src/Web/<Feature> layout, mirrors ContactAction placement.
+fixes applied: none
+tests: not run (fixture)
+static analysis: not run
+packages added: none (yiisoft/form-model already required)
+config files changed: config/web/routes.php
+production readiness gate: pass (input validation + wiring verified; no new packages, no schema changes)

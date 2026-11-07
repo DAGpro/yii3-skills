@@ -1,0 +1,10 @@
+{
+  "name": "acme/crm",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/db": "^2.0",
+    "yiisoft/db-migration": "^2.0",
+    "yiisoft/di": "^1.4",
+    "yiisoft/yii-console": "^2.0"
+  }
+}

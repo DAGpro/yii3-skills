@@ -1,0 +1,20 @@
+{
+  "id": "06-convention-conflict",
+  "title": "Project dispatches events inside the transaction: correctness rule wins, conflict escalated",
+  "mode": "full",
+  "tags": [
+    "convention-conflict",
+    "events",
+    "core-rules"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "dispatch-after-commit",
+    "conflict-escalated"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md",
+    "references/core-events-design.md"
+  ]
+}

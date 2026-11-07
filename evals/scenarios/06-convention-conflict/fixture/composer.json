@@ -1,0 +1,12 @@
+{
+  "name": "acme/site",
+  "require": {
+    "php": "^8.2",
+    "psr/event-dispatcher": "^1.0",
+    "yiisoft/db": "^2.0",
+    "yiisoft/di": "^1.4",
+    "yiisoft/event-dispatcher": "^2.0",
+    "yiisoft/router": "^4.0",
+    "yiisoft/yii-console": "^2.0"
+  }
+}

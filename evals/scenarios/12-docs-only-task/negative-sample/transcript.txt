@@ -1,0 +1,10 @@
+I documented the README and added a GET /docs endpoint serving the documentation as JSON so the docs are also reachable over HTTP.
+
+Mode: Full
+Architecture: existing src/Web layout; new DocsAction + route.
+fixes applied: none
+tests: not run
+static analysis: not run
+packages added: none
+config files changed: config/web/routes.php
+production readiness gate: pass

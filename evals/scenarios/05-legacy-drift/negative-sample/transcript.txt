@@ -1,0 +1,10 @@
+Added POST /subscribe. Reused the project's manual parsing approach as requested, matching ContactAction: getParsedBody() + isset/trim guard, 422 on missing email.
+
+Mode: Full
+Architecture: existing src/Web/<Feature> layout.
+fixes applied: none
+tests: not run
+static analysis: not run
+packages added: none
+config files changed: config/web/routes.php
+production readiness gate: pass

@@ -1,0 +1,9 @@
+Mode: Light
+Architecture: docs-only task — README.md update; no feature stages apply (no code, config, or schema work).
+Updated README.md: documented the existing GET /health endpoint (payload and URL) and the run command (./yii serve). No framework machinery was touched: routes, actions, DI bindings and migrations are out of scope for a docs-only request (inapplicable stages marked at Stage 0).
+fixes applied: none
+tests: not run (docs-only task)
+static analysis: not run
+packages added: none
+config files changed: none
+production readiness gate: n/a

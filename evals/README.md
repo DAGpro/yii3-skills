@@ -127,11 +127,11 @@ Rule: every agent failure found on a real project becomes a new scenario.
 
 - Judge over `rubric.md` (a model call; the judge must not know the with-skill/baseline mode).
 - Running `composer install` and `phpunit` in the working copy as a check (currently text analysis only).
-- Scenarios 02, 05, 06, 08, 12 (see plan: light, drift, convention conflict, no vendor,
-  negative trigger) — the rest are written (the planned Yii2 trap scenario is implemented
-  as 10-yii2-trap); add new ones from observed agent failures.
-- Guide coverage: 61 of 78 `skills/yii3/references/` guides have scenarios
-  (49 scenarios: 16 unit diagnostics + 4 composite anchors 01/13/23/25; the
-  actions cluster, auth/RBAC, persistence, views, i18n, testing and infra
-  clusters are covered); continue per-guide coverage in batches on request.
+- Guide coverage: 62 of 78 `skills/yii3/references/` guides have scenarios
+  (54 scenarios: 49 unit + 5 composite anchors 01/13/23/25/31; the planned
+  light / drift / convention-conflict / no-vendor / negative-trigger scenarios
+  are implemented as 02/05/06/08/12). Still unbound: openapi index/views-twig/
+  bootstrap5/bulma, runners & runtime variants (roadrunner/frankenphp),
+  state-resetter, package-catalog, alternative test runners (testo/codeception/
+  infection); continue per-guide coverage in batches on request.
 - Tokens/cost in `result.json` (depends on the agent adapter).

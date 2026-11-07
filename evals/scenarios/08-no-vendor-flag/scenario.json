@@ -1,0 +1,19 @@
+{
+  "id": "08-no-vendor-flag",
+  "title": "vendor/ absent: signature lookup impossible — used APIs must be flagged 'not verified against sources'",
+  "mode": "full",
+  "tags": [
+    "no-vendor",
+    "signature-protocol"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "unverified-flagged"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md",
+    "references/infra-commands.md",
+    "references/core-dependency-protocol.md"
+  ]
+}

@@ -1,0 +1,12 @@
+Note on environment: vendor/ is absent in this checkout. I requested a composer install before writing vendor-backed code; the run is non-interactive, so installation could not happen. Per the signature lookup protocol, the following APIs are therefore not verified against sources and are used from documented knowledge only: ConnectionInterface::transaction(), ConnectionInterface::command(), Command::insert(), ExitCode::OK, SymfonyStyle::success(). Signatures must be re-checked after composer install.
+
+Implemented App\User\Console\ImportUsersCommand (#[AsCommand(name: 'user:import')], thin CLI I/O: CSV reading + insert loop inside a transaction, reporting via SymfonyStyle) and registered it in config/console/params.php under 'yiisoft/yii-console' => ['commands' => [...]] so ./yii lists it.
+
+Mode: Full
+Architecture: existing src/User/Console layout, mirrors ListUsersCommand.
+fixes applied: none
+tests: not run (vendor/ absent)
+static analysis: not run (vendor/ absent)
+packages added: none
+config files changed: config/console/params.php
+production readiness gate: pass (wiring verified; API verification pending composer install — see the unverified-API note above)

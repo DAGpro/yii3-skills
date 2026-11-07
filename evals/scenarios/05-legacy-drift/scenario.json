@@ -1,0 +1,22 @@
+{
+  "id": "05-legacy-drift",
+  "title": "Legacy input handling in the project must be flagged, never copied",
+  "mode": "full",
+  "tags": [
+    "drift",
+    "validation",
+    "core-rules"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "validated-input",
+    "drift-flagged"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md",
+    "references/http-forms-and-hydration.md",
+    "references/http-validation-rules.md",
+    "references/http-actions-core.md"
+  ]
+}

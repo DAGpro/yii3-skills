@@ -1,0 +1,13 @@
+{
+  "name": "acme/site",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/di": "^1.4",
+    "yiisoft/router": "^4.0",
+    "yiisoft/data-response": "^2.0",
+    "yiisoft/input-http": "^1.0",
+    "yiisoft/validator": "^2.0",
+    "yiisoft/yii-console": "^2.0"
+  },
+  "require-dev": { "phpunit/phpunit": "^11.0" }
+}

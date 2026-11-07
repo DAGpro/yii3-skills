@@ -1,0 +1,9 @@
+Mode: Light
+Architecture: existing src/Web layout — single static route, no domain layers involved.
+Added a thin AboutAction (DataResponseFactoryInterface -> JSON payload) and registered GET /about in config/web/routes.php. Wiring landed with the step (new Action -> route). No migrations, repositories, DTOs or use cases: a static single-route payload collapses to one action.
+fixes applied: none
+tests: not run (light task, static payload)
+static analysis: not run
+packages added: none
+config files changed: config/web/routes.php
+production readiness gate: n/a

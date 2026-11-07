@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Reporting\*); JSON mechanics swapped inside the three touched classes, no route/endpoint changes
+stages executed: ExportAction + repository decode site, ReportAction script-tag embedding
+validation: Json::encode($value, int $options = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR, int $depth = 512): string and Json::decode(string $json, bool $asArray = true, ...): mixed verified against yiisoft/json src/Json.php (lines 55-59, 106-111); Json::htmlEncode($value): string applies JSON_HEX_QUOT|JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS and deliberately drops JSON_UNESCAPED_SLASHES (src/Json.php line 84-90) so "</script>" cannot break out of the tag (core-utilities.md §4.2); empty-string decode returns null by contract (src/Json.php line 112-114)
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none; yiisoft/json ^1.1 already required in composer.json
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+files changed: src/Reporting/Web/Api/ExportAction.php (Json::encode), src/Reporting/Infrastructure/UserPreferencesRepository.php (Json::decode), src/Reporting/Web/Page/ReportAction.php (Json::htmlEncode for the script-tag payload)
+production readiness gate: pass

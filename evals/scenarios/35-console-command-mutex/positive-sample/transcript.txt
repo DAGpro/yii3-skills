@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/Console command; the lock guard lives directly in FeedImportCommand, driver wiring added in config/console/di/mutex.php
+stages executed: 2 (named lock around the import, MutexFactoryInterface DI binding)
+validation: MutexInterface::acquire(int $timeout = 0): bool / release(): void verified against yiisoft/mutex 1.1.2 - the lock NAME is created via $this->mutexFactory->create('app.feed_import') (MutexFactoryInterface::create), never passed to acquire(); acquire(false) result is inspected: a busy run writes a clear error message and returns ExitCode::UNAVAILABLE (non-zero); release() runs in a finally block so a failed import cannot hold the lock; mutex-file 1.1.3 FileMutexFactory wired with 'mutexPath' per the mutex guide DI recipe - no concrete driver instantiated in app code, no raw flock()
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/mutex + yiisoft/mutex-file already required)
+config files changed: config/console/di/mutex.php
+production readiness gate: pass

@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\User\* use cases, App\Web\* presentation), pattern anchor: SignupForm rules array + SignupAction hydration; no .ai-factory/ARCHITECTURE.md in the fixture - the dominant src/ style is the convention source
+stages executed: 2 (ReservedUsername rule + ReservedUsernameHandler), 5 (wired into SignupForm::getRules())
+validation: custom rule implemented as an immutable options-only value object implementing Yiisoft\Validator\RuleInterface with getHandler(): string returning ReservedUsernameHandler::class (both the ::class string and a handler instance are legal - Validator resolves a string handler name through RuleHandlerResolverInterface); handler implements Yiisoft\Validator\RuleHandlerInterface::validate(mixed $value, RuleInterface $rule, ValidationContext $context): Result with the mandatory UnexpectedRuleException instanceof guard as its first statement; violations accumulated via Result::addError($rule->message, ['property' => $context->getTranslatedProperty(), 'Property' => $context->getCapitalizedTranslatedProperty()]); the rule was added to the 'username' entry of SignupForm::getRules() (the form model implements RulesProviderInterface, so its getRules() array is the rule source used when no rules are passed to validate()); the reserved names live as rule constructor options consumed by the handler - no validation logic in SignupAction, which still only calls populateFromPostAndValidate() and delegates to SignupService; handler resolution: the handler has no constructor dependencies, so the default SimpleRuleHandlerContainer can instantiate it; if a dependency (e.g. a repository) were injected, RuleHandlerResolverInterface would need rebinding to RuleHandlerContainer in config/common/di
+vendor/: absent (stub composer.lock) - no APIs flagged "not verified against sources": every call above was checked against the grounded package sources
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/validator already required)
+config files changed: none (DI rebinding not needed for a dependency-free handler)
+production readiness gate: pass

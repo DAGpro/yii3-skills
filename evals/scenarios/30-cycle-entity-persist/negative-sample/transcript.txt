@@ -1,0 +1,1 @@
+Found it! The repository staged the entity but never committed it. Cycle's EntityManager works like Doctrine's: persist() stages the entity and flush() writes the pending changes to the database. I added $this->entityManager->flush() right after the persist() call in TagRepository::create(), so created tags are committed to the tags table now.

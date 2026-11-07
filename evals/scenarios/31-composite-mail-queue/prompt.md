@@ -1,0 +1,3 @@
+Registration on POST /register is slow: the welcome email is composed and sent right inside the request, and the SMTP roundtrip blocks every signup until the transport answers.
+
+Move the email out of the request path into the queue: after successful registration the action should enqueue a dedicated typed queue message, and a queue job handler should compose and send the welcome email through the mailer when the worker picks the job up. Register the message and the handler under the queue params so the worker reconstructs the typed message and finds its handler. The queue broker itself (mutex, adapter, producer/consumer roles) is already wired.

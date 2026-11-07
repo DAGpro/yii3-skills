@@ -1,0 +1,22 @@
+{
+  "id": "47-error-log-listener",
+  "title": "Log unhandled errors: ApplicationError PSR-14 listener registered in the events group, with a dispatcher actually reaching ErrorCatcher",
+  "mode": "full",
+  "tags": [
+    "full",
+    "error-handling",
+    "psr-14",
+    "logging"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "listener-implements-shape",
+    "listener-registered",
+    "logger-injected",
+    "dispatcher-reaches-errorcatcher"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-error-handling-ops.md"
+  ]
+}

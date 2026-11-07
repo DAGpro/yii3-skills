@@ -1,0 +1,4 @@
+Done! Created the asset bundle:
+
+- Added App\Asset\SiteAsset extending Yiisoft\Assets\AssetBundle with basePath '@public', baseUrl '' and the site css/js entries ('css/site.css', 'js/app.js').
+- The hardcoded <link> and <script> tags in the layout keep working exactly as before, so the page keeps loading its styles and scripts while the bundle is in place for future use.

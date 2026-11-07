@@ -1,0 +1,21 @@
+{
+  "id": "51-domain-event-listener",
+  "title": "Unit: decouple the confirmation email from OrderService - dispatch an OrderCompleted domain event and react with a config-registered listener",
+  "mode": "full",
+  "tags": [
+    "full",
+    "events",
+    "psr-14",
+    "domain-event",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "no-direct-mail-in-service",
+    "listener-registered"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-events-and-listeners.md"
+  ]
+}

@@ -1,0 +1,5 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The test follows the guide's CommandTester pattern (testing-console.md §3-§4): instantiate the command with its dependency (here the cache dir path), wrap it in `new CommandTester($command)`, execute via `$tester->execute([...])` whose return value IS the exit code - never through `Application::run()` + `setAutoExit(false)` (that is only for whole-application runs, guide §7 note).
+2. Success path: `assertSame(ExitCode::OK, $exitCode)` (or `assertCommandIsSuccessful()`) AND `assertStringContainsString('Cache purged.', $tester->getDisplay(true))` with the normalization argument; the temp cache dir created for the test is cleaned up.
+3. Failure path: a second execute against the missing-storage condition asserting `ExitCode::UNAVAILABLE` (grounded in yiisoft/yii-console ExitCode, or another non-OK constant the guide teaches: DATAERR/Command::FAILURE) and the error line `Cache storage directory is missing.`.
+4. No shell-outs (exec/shell_exec/system), no `php yii` subprocess, no Yii::$app; strict_types everywhere; the transcript names CommandTester and the exit-code semantics.

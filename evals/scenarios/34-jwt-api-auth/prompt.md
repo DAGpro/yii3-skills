@@ -1,0 +1,1 @@
+Our /api endpoints must accept only authenticated requests with a Bearer JWT. Wire up token authentication with yiisoft/auth-jwt (HS256, key from config/params) so the orders API rejects unauthenticated calls with 401.

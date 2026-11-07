@@ -1,0 +1,10 @@
+Root cause of the slowness: RegisterAction composed the welcome email and called the mailer synchronously inside the request - the SMTP handshake and roundtrip blocked every signup (async-mailer guide §1 performance rule: never send email inside an HTTP action).
+
+What moved where:
+- RegisterAction now injects QueueProducerInterface and pushes a typed SendWelcomeEmailMessage after registration; the mailer is gone from the action and the request returns immediately.
+- SendWelcomeEmailMessage (src/Application/Queue) extends Yiisoft\Queue\Message\Message and implements fromPayload()/getType()/getPayload() - the abstract base only provides meta, omitting any of the three is a fatal error. Payload carries scalar identifiers only (email/name strings); fromPayload() uses the canonical union signature and throws InvalidArgumentException on a bad type/payload.
+- SendWelcomeEmailHandler implements Yiisoft\Queue\Message\Handler\HandlerInterface::handle(MessageInterface $message): void, receives MailerInterface via constructor DI, composes the Yiisoft\Mailer\Message (to/subject/textBody named args) and calls send().
+
+Wiring: the broker roles (mutex, queue-db adapter, producer/consumer) were already present and were left untouched - exactly one driver. The 'yiisoft/queue' params block now maps SendWelcomeEmailMessage::TYPE in both 'messages' and 'handlers' (both maps are keyed by the message type string; registering only handlers would reconstruct a GenericMessage instead of the typed DTO).
+
+Note: QueueProducerInterface::push() returns the possibly enriched MessageInterface (not void). vendor/ is absent, so signature verification was done against the guides/package contracts.

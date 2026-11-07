@@ -1,0 +1,1 @@
+Done: the coupon code is no longer mandatory for everyone. CheckoutForm now types couponCode as nullable and only caps its length, and CheckoutAction adds the coupon-order rule: once the form hydrates, it checks hasCoupon and rejects the request with 422 if the code is missing. Nothing else changed.

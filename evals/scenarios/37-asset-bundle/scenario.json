@@ -1,0 +1,22 @@
+{
+  "id": "37-asset-bundle",
+  "title": "Unit: hardcoded layout link/script tags moved into an AssetBundle delivered through the asset system (AssetManager register + WebView css/js flow) - no double-loading, no register-and-forget",
+  "mode": "full",
+  "tags": [
+    "full",
+    "views",
+    "assets",
+    "asset-bundle",
+    "layout"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "no-hardcoded-asset-tags",
+    "bundle-wired-into-page",
+    "assets-flow-to-webview"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-widgets-and-assets.md"
+  ]
+}

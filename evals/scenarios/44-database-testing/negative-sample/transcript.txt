@@ -1,0 +1,5 @@
+Done! Added an integration test for ProductRepository.
+
+- tests/Integration/ProductRepositoryTest.php connects to the dev MySQL database (same DSN as config/common/di/db.php), saves a product and reads it back through the repository.
+- Running against the shared dev database verifies real end-to-end behavior.
+- No new packages required.

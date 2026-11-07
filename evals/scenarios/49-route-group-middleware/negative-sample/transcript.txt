@@ -1,0 +1,1 @@
+Grouped the admin section: wrapped the admin routes in Group::create('/admin', [...routes...]) and put the auth middleware on the delete route. API routes untouched. Done.

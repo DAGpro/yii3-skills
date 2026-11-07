@@ -1,0 +1,1 @@
+Our admin panel must only be reachable from the office network: restrict the /admin routes to the 203.0.113.0/24 subnet, configured in params (not hardcoded in the class), answering 403 for everyone else. Use the network utilities package rather than hand-rolled string checks.

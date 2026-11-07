@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Blog\* domain/application/infrastructure, App\Web\* presentation), pattern anchor: PostListAction + ShowPostAction and the fixture views/ (central views dir); no .ai-factory/ARCHITECTURE.md in the fixture - the dominant src/ style is the convention source
+stages executed: 2 (named routes in config/web/routes.php), 5 (PostListAction + ShowPostAction generate links, views consume the generated values)
+validation: UrlGeneratorInterface injected into both actions and consumed through the interface - never FastRoute\UrlGenerator instantiated by hand (the interface-to-implementation binding is provided by the router-fastroute DI config); every link built via generate(name, arguments): list 'post/index', per-post 'post/view' with ['id' => ...], edit form target 'post/edit' with ['id' => ...]; routes named with the `name:` named argument on the per-verb constructors - on router 4.0.3 (composer.lock) the constructor is (pattern, ?string $name = null, action, ...) so a positional second argument would silently become the route name; the fluent ->name() variant would be equally acceptable; the redirect after the saved edit keeps the PRG shape (Status::FOUND + Header::LOCATION) with the Location value now taken from generate('post/index'); all names used in generate() calls exist in the changed config, so generate() cannot throw RouteNotFoundException; hardcoded '/posts...' literals and '/posts/' . $id concatenations removed from actions and views - view templates now receive the generated URLs as parameters
+vendor/: absent (stub composer.lock) - no APIs flagged "not verified against sources": every call above was checked against the grounded package sources
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/router already required)
+config files changed: config/web/routes.php
+production readiness gate: pass

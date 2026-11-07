@@ -1,0 +1,11 @@
+Mode: Full
+Architecture: existing src/ layout (App\Catalog\* domain/infrastructure, App\Web\Product\* presentation); listing logic in the Action over the repository data reader, widget rendering in the view per the dataview guide usage examples
+stages executed: 2 (ProductListAction: OffsetPaginator over ProductRepositoryInterface::findAll()), 6 (view replaced with GridView)
+guide: http-dataview-widgets.md §1 - GridView::widget()->dataReader($paginator)->columns(new DataColumn(property:, header:, content:)); the manual foreach table was removed from views/product/list.php (the widget renders the table, summary and pager itself)
+validation: GridView::widget() static factory per Yiisoft\Widget\Widget::widget() (vendor/yiisoft/widget/src/Widget.php); BaseListView::dataReader(ReadableDataInterface): static (vendor/yiisoft/yii-dataview/src/BaseListView.php:243); DataColumn(property:, header:, content:) ctor (vendor/yiisoft/yii-dataview/src/GridView/Column/DataColumn.php:137); OffsetPaginator::__construct(ReadableDataInterface) + withPageSize(int): static + withCurrentPage(int): self (vendor/yiisoft/data/src/Paginator/OffsetPaginator.php:68,109,132); page clamped to >= 1 before withCurrentPage(); page size explicit (20) instead of the silent library default (PaginatorInterface::DEFAULT_PAGE_SIZE = 10)
+vendor/: absent (stub composer.lock) - runtime behavior not executed
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/yii-dataview already required)
+config files changed: none (route GET /products unchanged)
+production readiness gate: pass

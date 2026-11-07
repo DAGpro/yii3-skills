@@ -1,0 +1,1 @@
+The feed import command may overlap with itself when a run takes longer than a minute and that corrupts the data. Make it safe: only one instance may run at a time — if another run holds the lock, exit with an error status and a clear message.

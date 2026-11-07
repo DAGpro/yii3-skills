@@ -1,0 +1,23 @@
+{
+  "id": "48-architecture-layering",
+  "title": "Light mode: domain layering - invert the domain-to-infrastructure dependency behind a domain-owned interface bound in DI",
+  "mode": "light",
+  "tags": [
+    "light",
+    "architecture",
+    "layering",
+    "di",
+    "wiring-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "domain-interface-created",
+    "infrastructure-implements-domain-interface",
+    "no-infrastructure-imports-in-domain",
+    "di-binding-added"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-architecture-alignment.md"
+  ]
+}

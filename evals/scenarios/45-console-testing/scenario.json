@@ -1,0 +1,23 @@
+{
+  "id": "45-console-testing",
+  "title": "Unit: CommandTester tests for the cache:purge console command - success path (ExitCode::OK + output) and failure path (ExitCode::UNAVAILABLE + error line), in-process, never shell-outs",
+  "mode": "full",
+  "tags": [
+    "full",
+    "testing",
+    "console",
+    "command-tester",
+    "exit-codes"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "command-tester-used",
+    "success-path-asserted",
+    "failure-path-asserted",
+    "no-shell-out"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/testing-console.md"
+  ]
+}

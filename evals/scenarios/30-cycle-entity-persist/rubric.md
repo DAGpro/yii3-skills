@@ -1,0 +1,5 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The root cause is diagnosed as the Unit-of-Work staging/execution split: persist() only stages in memory and nothing is written until ->run() is called, which explains the silence (no SQL, no exception, nothing in logs). The report must not blame the DBAL config, the entity attributes, the schema, or migrations.
+2. The fix executes the Unit of Work for the staged entity: ->run() right after the existing ->persist() in the repository create path (guide §3.2 save() idiom), or the documented EntityWriter::write() batch equivalent (§5.2). The staging call was not dropped, the POST /tags flow and the Tag attribute mapping still work.
+3. No wrong-technology escape hatches: no Doctrine-style flush() claimed or added, no raw SQL INSERT, no new packages, storage stays Cycle ORM through the yiisoft/yii-cycle bridge.
+4. The report explains why the failure was silent (no SQL executed, no exception thrown) so the team can recognize the pattern elsewhere; verification honesty is respected (vendor/ absent, claims grounded in the guide or package sources).

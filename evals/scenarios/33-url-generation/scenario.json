@@ -1,0 +1,23 @@
+{
+  "id": "33-url-generation",
+  "title": "Unit: named routes + UrlGeneratorInterface - replace hardcoded URL strings in actions and views with generated links",
+  "mode": "full",
+  "tags": [
+    "full",
+    "routing",
+    "url-generation",
+    "views",
+    "redirect"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "url-generator-injected",
+    "generate-called-with-route-name",
+    "no-hardcoded-urls",
+    "redirect-uses-generated"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-routes-url-and-middleware.md"
+  ]
+}

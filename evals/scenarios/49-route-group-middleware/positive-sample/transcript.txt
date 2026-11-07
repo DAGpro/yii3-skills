@@ -1,0 +1,5 @@
+Regrouped the admin section in config/web/routes.php:
+
+- Created `new Group('/admin')` and moved all four admin routes into it; their patterns are now prefix-relative (`/users`, `/users/{id:\d+}`, `/users/{id:\d+}/delete`, `/settings`), so the effective URLs are unchanged.
+- Attached `AdminAuthMiddleware` at the group level with `->middleware(AdminAuthMiddleware::class)`, so it runs for every admin route, and added `admin.*` route names.
+- The public API route (`/api/users`) stays registered outside the group, untouched.

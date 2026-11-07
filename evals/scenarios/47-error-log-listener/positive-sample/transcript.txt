@@ -1,0 +1,11 @@
+Mode: Full
+Architecture: existing src/ layout (App\*); listener added in App\Infrastructure\Error\Listener, registered via the events config group
+stages executed: LogApplicationErrorListener (typed __invoke(ApplicationError $event), injected Psr\Log\LoggerInterface), events wiring, dispatcher installation
+validation: Yiisoft\ErrorHandler\Event\ApplicationError is a final event with getThrowable(): Throwable (error-handler src/Event/ApplicationError.php lines 12-22); ErrorCatcher::__construct(ThrowableResponseFactoryInterface, ?EventDispatcherInterface $eventDispatcher = null) dispatches ApplicationError only when a dispatcher is injected (src/Middleware/ErrorCatcher.php lines 23-34); installing yiisoft/error-handler alone provides no PSR-14 dispatcher (infra-error-handling-ops.md §8.1 IMPORTANT) - yiisoft/yii-event added to composer.json; its shipped config binds EventDispatcherInterface to Yiisoft\EventDispatcher\Dispatcher and builds ListenerCollection from the eventsConfigGroup (events-web), so the dispatcher now reaches ErrorCatcher via auto-wiring; listener registered in config/common/events.php as ApplicationError::class => [LogApplicationErrorListener::class] and wired into the merge plan ('events' => 'common/events.php'); the 'exception' context member carries class + stack trace
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none
+fixes applied: none
+tests: not run (no vendor/)
+packages added: yiisoft/yii-event ^2.2, yiisoft/event-dispatcher ^1.1
+config files changed: config/common/events.php (new), config/configuration.php (events group loads it)
+files changed: src/Infrastructure/Error/Listener/LogApplicationErrorListener.php (new), composer.json
+production readiness gate: pass

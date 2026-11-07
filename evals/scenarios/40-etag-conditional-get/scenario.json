@@ -1,0 +1,23 @@
+{
+  "id": "40-etag-conditional-get",
+  "title": "Catalog endpoint implements conditional GET: ETag from the catalog version, 304 with empty body on If-None-Match match, ETag header on full responses",
+  "mode": "full",
+  "tags": [
+    "full",
+    "http",
+    "caching",
+    "etag",
+    "conditional-get",
+    "api"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "if-none-match-compared",
+    "not-modified-returned",
+    "version-used-as-tag-source"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-cache-etag.md"
+  ]
+}

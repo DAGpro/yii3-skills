@@ -1,0 +1,23 @@
+{
+  "id": "50-oauth2-github-login",
+  "title": "Unit: Sign in with GitHub - Collection client params, AuthAction entry/callback wiring, callback login through the existing session flow",
+  "mode": "full",
+  "tags": [
+    "full",
+    "oauth2",
+    "auth-client",
+    "login",
+    "external-identity"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "oauth-clients-params",
+    "collection-used",
+    "oauth-route-added",
+    "no-hand-rolled-oauth"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-auth-oauth2.md"
+  ]
+}

@@ -1,0 +1,7 @@
+Done! Converted the post page to Twig:
+
+- views/post/show.twig now renders the page with Twig syntax ({% do this.setTitle(...) %}, {{ post.title }}, {% for latest in latestPosts %}); the WebView instance arrives as `this`.
+- ShowPostAction renders 'post/show.twig' through the injected WebViewRenderer.
+- config/common/params.php registers the twig renderer: 'yiisoft/view' -> renderers['twig'] = TwigTemplateRenderer, 'fallbackExtension' => 'twig', plus the 'yiisoft/yii-twig' cache/debug options with the alias resolved via DynamicReference.
+- All htmlspecialchars() calls are gone: Twig autoescaping handles the output. No |raw filter is needed on the page content - |raw is reserved for the layout lifecycle markers (content slot), which stay in the PHP layout untouched.
+- The old views/post/show.php is no longer referenced by the action (safe to delete).

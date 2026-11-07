@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\User identity, App\Web\Api actions); JWT wiring added in config/web - no changes to the actions themselves
+stages executed: 3 (di/auth.php bindings, params group, /api group middleware)
+validation: JwtMethod (yiisoft/auth-jwt 2.1.1) implements AuthenticatorWithChallengeInterface and takes (IdentityRepositoryInterface, TokenRepositoryInterface, ?array $claimCheckers) - bound to AuthenticatorInterface/AuthenticatorWithChallengeInterface per the JWT guide §1; key material from params 'yiisoft/auth-jwt'['key']['secret'] into KeyFactory\FromSecret (HS256 algorithms group, CompactSerializer serializer); unauthenticated requests are rejected by Yiisoft\Auth\Middleware\Authentication with a 401 challenge (default AuthenticationFailureHandler responds Status::UNAUTHORIZED) - attached to the /api route group so both /api/orders and /api/orders/{id} are protected; no token parsing in actions - the authenticator reads the Authorization: Bearer header itself
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none (all wiring classes verified in pinned versions)
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/auth-jwt already required)
+config files changed: config/web/routes.php, config/web/di/auth.php, config/web/params.php
+production readiness gate: pass

@@ -1,0 +1,5 @@
+Made the coupon code conditionally required on the form model.
+
+Changed: src/Web/Checkout/CheckoutForm.php only - CheckoutAction and CheckoutService are untouched, the hydration path stays FormHydrator::populateFromPostAndValidate().
+
+The coupon requirement is now a conditional rule on couponCode: new Required(when: static fn (mixed $value, ValidationContext $context): bool => (bool) $context->getDataSet()->getPropertyValue('hasCoupon')). The when-closure is the validator's conditional-rule mechanism (WhenInterface contract, Closure(mixed, ValidationContext): bool); the ValidationContext dataset gives access to the sibling hasCoupon field, mirroring the guide's country example. couponCode became ?string (nullable) so it is fully optional without a coupon; hasCoupon keeps its BooleanValue rule. No if-branches were added anywhere.

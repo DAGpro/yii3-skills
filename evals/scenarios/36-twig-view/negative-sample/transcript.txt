@@ -1,0 +1,6 @@
+Done! Converted the post page view to Twig:
+
+- Renamed the template to views/post/show.twig. The posts loop is now written with Twig syntax.
+- Added the |raw filter to the loop output so the HTML keeps rendering exactly like before (Twig autoescaping would have escaped the links).
+- Kept the htmlspecialchars calls on the title and article body for extra safety - they never hurt.
+- The action still points at the same view name, so the renderer picks the template up automatically; no config changes were needed.

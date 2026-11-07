@@ -1,0 +1,4 @@
+Done! Reworked the products page:
+
+- The table markup now lives in a shared partial (views/product/_table.php) rendered with WebViewRenderer::renderPartialAsString(), so list.php stays slim.
+- Added manual pagination: the action slices the full row list per page (?page=N query parameter) and list.php renders page links below the table.

@@ -1,0 +1,6 @@
+Done! API docs are served at /docs:
+
+- Wrote docs/openapi.json by hand: an OpenAPI 3.0 document with the info block (title "Acme Orders API", version 1.0.0) and the two orders endpoints (/api/orders list + /api/orders/{id} view) matching what the actions return.
+- Added App\Web\Docs\DocsAction that loads docs/openapi.json with file_get_contents() and serves it as application/json, so the spec always matches what is committed.
+- Registered `new Get('/docs', action: DocsAction::class)` in config/web/routes.php.
+- Swagger UI can now be pointed at http://localhost:8080/docs to browse the spec.

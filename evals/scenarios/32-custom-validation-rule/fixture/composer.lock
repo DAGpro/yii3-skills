@@ -1,0 +1,10 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "psr/http-factory", "version": "1.1.0" },
+    { "name": "psr/http-message", "version": "2.0.0" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/form-model", "version": "1.1.0" },
+    { "name": "yiisoft/http", "version": "2.0.0" },
+    { "name": "yiisoft/router", "version": "4.0.3" },
+    { "name": "yiisoft/validator", "version": "2.0.0" }
+  ] }

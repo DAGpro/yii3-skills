@@ -1,0 +1,8 @@
+Decoupled the confirmation email from OrderService with a domain event:
+
+- New App\Shop\Domain\OrderCompletedEvent: an immutable final readonly DTO carrying orderId and customerEmail - pure data, no services inside.
+- OrderService no longer knows anything about mail: it injects the PSR-14 EventDispatcherInterface via the constructor and dispatches new OrderCompletedEvent($orderId, $customerEmail) after the order is completed. The direct MailerInterface::send() call is gone from the service.
+- New App\Shop\Application\Listener\SendOrderConfirmationListener: an invokable class that injects MailerInterface and sends the confirmation message built from the event data when the event fires.
+- Registered the listener in config/common/events.php as OrderCompletedEvent::class => [SendOrderConfirmationListener::class] and mapped the file under the 'events' group in config/configuration.php ('events' => 'common/events.php'), so it reaches events-web and events-console via the $events reference. Merge plan rebuild with composer yii-config-rebuild noted.
+
+The email will now go out exactly once, from the listener.

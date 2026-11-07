@@ -1,0 +1,39 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Acme Orders API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/orders": {
+      "get": {
+        "summary": "List orders",
+        "responses": {
+          "200": {
+            "description": "Orders list"
+          }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "summary": "View an order",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details"
+          }
+        }
+      }
+    }
+  }
+}

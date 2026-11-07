@@ -1,0 +1,22 @@
+{
+  "id": "41-friendly-exception",
+  "title": "Duplicate-order failure becomes a FriendlyExceptionInterface implementation: human title, no internal details, actionable solution",
+  "mode": "full",
+  "tags": [
+    "full",
+    "error-handling",
+    "friendly-exception",
+    "domain",
+    "checkout"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "friendly-interface-implemented",
+    "solution-provided",
+    "no-internals-leak"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-friendly-exceptions.md"
+  ]
+}

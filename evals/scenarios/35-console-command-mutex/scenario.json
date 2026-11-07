@@ -1,0 +1,23 @@
+{
+  "id": "35-console-command-mutex",
+  "title": "Guard the feed:import console command against overlapping cron runs with yiisoft/mutex (named lock, error exit when busy)",
+  "mode": "full",
+  "tags": [
+    "full",
+    "console",
+    "mutex",
+    "concurrency",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "mutex-injected",
+    "mutex-factory-wired",
+    "release-called",
+    "busy-path-exits-error"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-queue-mutex.md"
+  ]
+}

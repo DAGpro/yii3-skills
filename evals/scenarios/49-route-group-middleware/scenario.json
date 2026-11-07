@@ -1,0 +1,23 @@
+{
+  "id": "49-route-group-middleware",
+  "title": "Full mode: route groups - admin routes under a /admin Group with group-level middleware, deprecated Group::create() banned",
+  "mode": "full",
+  "tags": [
+    "full",
+    "http",
+    "routing",
+    "middleware",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "group-created",
+    "group-middleware-attached",
+    "all-admin-routes-grouped",
+    "no-deprecated-group-create"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-routes.md"
+  ]
+}

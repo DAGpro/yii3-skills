@@ -1,0 +1,11 @@
+Mode: Full
+Architecture: existing src/ layout (App\Web\Locale\LocaleMiddleware placeholder filled; App\Web\Site\AboutAction consumes the provider); middleware structure per http-middlewares.md §1 (RequestIdMiddleware pattern), locale mechanics per http-i18n-storage-and-locale.md §6.1
+stages executed: 2 (LocaleMiddleware: resolve {_language} path prefix -> LocaleProvider::set(new Locale(...))), 5 (AboutAction reads LocaleProvider::get() and passes the resolved locale per translate() call), 6 (DI: LocaleProvider definition; global middleware stack before route matching)
+guide: http-i18n-storage-and-locale.md §6.1 - LocaleProvider is the stateful per-request locale holder (ctor (private Locale $defaultLocale), get(), set()); the package ships no DI config, so the definition is application-level (config/common/di/i18n.php). The translator is kept out of the resolution: no TranslatorInterface::setLocale() anywhere - the resolved locale is passed per translate(..., locale: ...) call (guide §6.2 documents that the resolution path does not write the locale into the translator)
+validation: LocaleProvider::__construct(private Locale $defaultLocale)/get(): Locale/set(Locale): void/isDefaultLocale() per vendor/yiisoft/i18n/src/LocaleProvider.php:11-33; Locale('en-US') BCP 47 ctor per vendor/yiisoft/i18n/src/Locale.php:115; TranslatorInterface::translate(..., ?string $locale = null) per vendor/yiisoft/translator/src/TranslatorInterface.php:44-50; PSR-15 process(ServerRequestInterface, RequestHandlerInterface): ResponseInterface per http-middlewares.md §1; middleware registered in middlewareDefinitions ahead of route matching (guide §6.4 pipeline invariant: locale resolution precedes route matching)
+vendor/: absent (stub composer.lock) - runtime behavior not executed
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (yiisoft/i18n already required)
+config files changed: config/common/di/i18n.php (new), config/web/di/application.php
+production readiness gate: pass

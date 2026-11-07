@@ -1,0 +1,1 @@
+Our blog pages build their links by hand. Replace all hardcoded URLs in the actions and views with the URL generator: give the routes names in the routes config and generate every link from its route name - the list link, the per-post links (with the post id), the edit form target, and the redirect back to the list after an edit is saved.

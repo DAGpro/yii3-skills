@@ -1,0 +1,1 @@
+Done! Made feed:import safe against overlapping runs: the command now creates a FileMutex named app.feed_import and acquires the lock before the import starts, so a second cron instance cannot run the import at the same time. The import itself is unchanged.

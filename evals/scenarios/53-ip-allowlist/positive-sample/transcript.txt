@@ -1,0 +1,5 @@
+Done! The /admin section is now locked to the office network:
+
+- Required yiisoft/network-utilities and added App\Web\Middleware\AdminIpAllowlistMiddleware (PSR-15): it reads the client IP from the PSR-7 server params and delegates the subnet containment to IpHelper::inRange($ip, $range) (verified in vendor/yiisoft/network-utilities/src/IpHelper.php:130 - full CIDR math, IPv4+IPv6), so a /24 office subnet matches exactly, not by string prefix.
+- The allowlist comes from config: 'app'['adminIpRanges'] = ['203.0.113.0/24'] in config/common/params.php, injected through the middleware constructor via a DI definition in config/web/di/admin.php ('__construct()' => ['allowedRanges' => $params[...]]). No subnet literal in the class; an empty allowlist denies everyone instead of allowing all (the IpRanges empty-ranges allow-all gotcha in the guide).
+- Attached the middleware at the Group('/admin') scope in config/web/routes.php, so dashboard, settings and users are all guarded; clients outside the subnet get a JSON 403 (Status::FORBIDDEN, vendor/yiisoft/http/src/Status.php:213) and never reach the actions.

@@ -1,0 +1,4 @@
+Done! Added a test for the cache:purge command.
+
+- tests/Console/PurgeCacheCommandTest.php runs `php yii cache:purge` through the console entrypoint and asserts the output contains "Cache purged".
+- No extra dependencies needed.

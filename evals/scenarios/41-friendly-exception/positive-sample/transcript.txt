@@ -1,0 +1,10 @@
+Made the duplicate-order failure a friendly exception (yiisoft/friendly-exception package):
+- New DuplicateOrderException extends RuntimeException and implements FriendlyExceptionInterface
+  (the contract requires getName(): string and getSolution(): ?string).
+- getName() returns the human title 'Duplicate Order'; getSolution() returns a short actionable
+  remediation in plain markdown - no HTML tags, no internal details.
+- CheckoutService::placeOrder() now throws DuplicateOrderException::forSku($sku); the raw storage
+  error (constraint name + user id in the message) is gone from the customer path entirely.
+- No try/catch rendering was added anywhere: the web error handler renders the friendly name and
+  the markdown solution automatically, so the action and the service stay clean.
+Routes and DI config are unchanged.

@@ -1,0 +1,11 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "cycle/annotated", "version": "4.2.0" },
+    { "name": "cycle/database", "version": "2.11.0" },
+    { "name": "cycle/orm", "version": "2.10.0" },
+    { "name": "psr/http-message", "version": "2.0.0" },
+    { "name": "yiisoft/data-response", "version": "2.0.0" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/router", "version": "4.0.3" },
+    { "name": "yiisoft/yii-cycle", "version": "2.3.0" }
+  ] }

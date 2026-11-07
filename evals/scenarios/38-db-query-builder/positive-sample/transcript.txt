@@ -1,0 +1,5 @@
+Reworked the order search to use the query builder instead of string-built SQL.
+
+Changed: src/Shop/Infrastructure/SearchOrdersRepository.php only - the action and the repository interface are untouched, search(string $term): array keeps its contract.
+
+The user term is now passed as a bound condition value: (new Query($this->db))->from('{{%order}} o')->andWhere(['like', 'o.number', $term])->all(). The builder compiles the like condition into a parameter placeholder, so whatever the customer types stays a parameter and can never terminate the LIKE literal. This is the parameter-binding fix for the injection bug, not escaping - addslashes() would not be safe here.

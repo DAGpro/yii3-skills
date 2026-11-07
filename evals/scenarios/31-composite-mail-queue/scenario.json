@@ -1,0 +1,27 @@
+{
+  "id": "31-composite-mail-queue",
+  "title": "Composite: move the blocking welcome-email send out of RegisterAction into a typed queue message DTO + handler (mailer in handler, push in action, yiisoft/queue messages/handlers registration)",
+  "mode": "full",
+  "tags": [
+    "full",
+    "composite",
+    "queue",
+    "mailer",
+    "async",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1500,
+  "negativeMustFail": [
+    "mail-via-queue-handler",
+    "handler-implements-interface",
+    "enqueue-from-action",
+    "no-direct-send-in-action",
+    "dto-shape",
+    "message-referenced-by-action"
+  ],
+  "layer": "composite",
+  "guides": [
+    "references/infra-mailer-async-queue.md",
+    "references/infra-queue-jobs.md"
+  ]
+}

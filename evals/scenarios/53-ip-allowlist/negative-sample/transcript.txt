@@ -1,0 +1,4 @@
+Done! The admin panel is restricted to the office network:
+
+- AdminDashboardAction now checks the caller before rendering: it reads the client IP from $_SERVER['REMOTE_ADDR'] and rejects everyone whose address does not start with '203.0.113.' with a 403 (Status::FORBIDDEN) JSON response.
+- Office clients (203.0.113.x) still get the dashboard as before; no other files needed changing since the check lives directly in the dashboard action.

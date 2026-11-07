@@ -1,0 +1,9 @@
+Done! The API is now documented with generated OpenAPI spec and served at /docs:
+
+- Required yiisoft/yii-swagger (pulls zircote/swagger-php ^5.0 for the attribute engine and swagger-api/swagger-ui dist).
+- config/common/params.php: 'yiisoft/yii-swagger' group with 'source-paths' => ['@src/Web/Api'] (our actions + the ApiDoc metadata class) and basic 'ui-params'; added the '@assets'/'@assetsUrl' aliases the SwaggerUiAsset publisher needs (guide §3.4 - without them publishing throws "Invalid path alias"). No 'cacheTTL' - dev environment must not enable infinite caching (guide §3.2).
+- DI: nothing hand-wired - the package's own config/di-web.php builds SwaggerService/SwaggerUi/SwaggerJson from those params (guide §3.1 zero-boilerplate).
+- Added App\Web\Api\ApiDoc: #[OA\Info(version, title)] + #[OA\Server(url: '/')] per the endpoints guide §5.1.
+- Annotated OrdersAction and OrderViewAction with #[OA\Get(path: '/api/orders') / path: '/api/orders/{id}'] + responses.
+- config/web/routes.php: Group('/docs') - UI at /docs via SwaggerUi->withJsonUrl('/docs/json'), raw spec at /docs/json via SwaggerJson with JsonDataResponseMiddleware attached (guide §4.3: without it emission throws "LogicException: Formatter is not set").
+- Verified against vendor/yiisoft/yii-swagger/src: SwaggerService::fetch(array $paths) (throws InvalidArgumentException on empty paths), SwaggerJson::withPaths(), SwaggerUi::withJsonUrl(), SwaggerUiAsset (sourcePath @vendor/swagger-api/swagger-ui/dist, basePath @assets, baseUrl @assetsUrl).

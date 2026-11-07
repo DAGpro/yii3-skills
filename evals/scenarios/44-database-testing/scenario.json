@@ -1,0 +1,23 @@
+{
+  "id": "44-database-testing",
+  "title": "Unit: ephemeral in-memory SQLite test setup - transactional DatabaseTestCase base running migrations via NullMigrationInformer, repository round-trip test, never the dev MySQL DSN in tests",
+  "mode": "full",
+  "tags": [
+    "full",
+    "testing",
+    "database",
+    "sqlite",
+    "transactions",
+    "repository"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "sqlite-test-db-wired",
+    "transactional-base-class",
+    "migrations-run-in-setup"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/testing-database.md"
+  ]
+}

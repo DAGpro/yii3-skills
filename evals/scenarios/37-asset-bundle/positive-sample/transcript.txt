@@ -1,0 +1,7 @@
+Done! Static assets now flow through the asset system:
+
+- Added App\Asset\SiteAsset extending Yiisoft\Assets\AssetBundle: basePath '@public' (files are already web-accessible, so no sourcePath/publishing), baseUrl '' so relative entries resolve to /css/site.css and /js/app.js; css = ['css/site.css'], js = ['js/app.js'].
+- Removed the hardcoded <link rel="stylesheet" href="/css/site.css"> and <script src="/js/app.js"> tags from views/layout/main.php.
+- The layout now registers the bundle through the AssetManager (guide: global assets belong in the layout) and feeds the result into the WebView: $assetManager->register(SiteAsset::class), then $this->addCssFiles($assetManager->getCssFiles()) / $this->addJsFiles($assetManager->getJsFiles()). head()/endBody() print them in the right slots.
+- AssetManager reaches the layout via an App\Web\AssetInjection implementing CommonParametersInjectionInterface (same pattern as CsrfViewInjection), registered under 'yiisoft/yii-view-renderer' -> 'injections' in config/common/params.php.
+- Verified against vendor/yiisoft/assets/src: AssetBundle public properties ($basePath line 31, $baseUrl line 41, $css line 78, $js line 175) and AssetManager::register(string $name, ...): void at line 256, getCssFiles()/getJsFiles() at lines 145/165.

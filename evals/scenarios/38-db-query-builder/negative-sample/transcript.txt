@@ -1,0 +1,1 @@
+Fixed the order search injection: the term is now escaped with addslashes() before being placed into the LIKE literal, so a quote typed by a customer can no longer terminate the SQL string. Repository method and its return shape are unchanged, no other files touched.

@@ -1,0 +1,22 @@
+{
+  "id": "30-cycle-entity-persist",
+  "title": "Debugging: Cycle ORM Unit-of-Work trap - TagRepository::create() stages persist() but never executes it, silent data loss; the fix is ->run() after ->persist()",
+  "mode": "full",
+  "tags": [
+    "full",
+    "cycle-orm",
+    "unit-of-work",
+    "debugging",
+    "persistence"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "run-called-after-persist",
+    "no-doctrine-flush",
+    "transcript-mentions-run"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/persistence-cycle-orm.md"
+  ]
+}

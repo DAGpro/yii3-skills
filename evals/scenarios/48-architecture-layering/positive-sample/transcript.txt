@@ -1,0 +1,8 @@
+Fixed the layering with a dependency inversion:
+
+- Added `App\Domain\Billing\PaymentGatewayInterface` (src/Domain/Billing) — the domain now owns the port and declares charge(int $amountCents, string $currency, string $reference): string.
+- `InvoiceService` no longer knows anything about the infrastructure: it receives `PaymentGatewayInterface` via constructor injection, and the HTTP leak is closed too — the `draftFromRequest(ServerRequestInterface)` method is gone, the action now reads the request body (presentation concern) and passes plain values to `draft()`.
+- `StripeGateway` in src/Infrastructure/Payment now implements the domain interface; the file itself stays in the infrastructure layer.
+- Composition happens in the container: `config/common/di/billing.php` binds `PaymentGatewayInterface::class => StripeGateway::class`, following the existing `InvoiceRepositoryInterface::class => DbInvoiceRepository::class` idiom.
+
+No `App\Infrastructure\` references and no PSR-7 types remain under src/Domain — the dependency now points inward only.

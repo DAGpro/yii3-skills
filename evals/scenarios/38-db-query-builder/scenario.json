@@ -1,0 +1,22 @@
+{
+  "id": "38-db-query-builder",
+  "title": "Unit: order search - raw concatenated SQL replaced by the Query Builder with the user term as a bound parameter",
+  "mode": "full",
+  "tags": [
+    "full",
+    "db",
+    "query-builder",
+    "sql-injection",
+    "parameter-binding"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "query-builder-used",
+    "no-sql-concat",
+    "param-bound"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/persistence-db.md"
+  ]
+}

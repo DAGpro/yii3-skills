@@ -1,0 +1,1 @@
+Layering cleaned up! I moved StripeGateway into src/Domain/Billing, right next to InvoiceService, so the dependency now lives inside the domain — clean and simple. No extra interface indirection needed for a single adapter; the infrastructure copy is gone. The domain is self-contained now.

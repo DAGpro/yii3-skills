@@ -1,0 +1,8 @@
+Decoupled the email from OrderService with a domain event:
+
+- New App\Shop\Domain\OrderCompletedEvent: an immutable final readonly DTO carrying orderId and customerEmail.
+- OrderService now injects the PSR-14 EventDispatcherInterface and dispatches new OrderCompletedEvent($orderId, $customerEmail) after the order is completed, so any future listener can react to the completion.
+- The confirmation email is still sent directly in the service to guarantee the customer is notified even before any listener is registered - belt and suspenders, zero risk of a missed email.
+- No listener wiring added yet: the events config can be extended later when a real listener exists.
+
+The service now emits the OrderCompleted event, so the notification concern is decoupled.

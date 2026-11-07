@@ -1,0 +1,6 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The abstraction is owned by the domain: the interface lives under src/Domain/ in the App\Domain namespace and references no vendor/HTTP types (guide §2.1: domain port interfaces are pure; §5: zero `yiisoft/*`/vendor imports in Domain).
+2. Dependency direction is inverted: InvoiceService receives the abstraction via constructor injection; no `new ...Gateway(` instantiation and no App\Infrastructure\ import remains anywhere under src/Domain/ — including any file the agent moved rather than edited.
+3. The adapter side is correct: the Stripe gateway stays in src/Infrastructure/ and implements the domain interface; composition happens in the container (config/common/di/*.php binds Interface::class => Adapter::class), not inside domain code (guide §3.3).
+4. The presentation leak is closed: no PSR-7 request type or superglobal read remains in domain code; the action extracts the input (allowed by the §3.1 Presentation Exception) and passes primitives into the domain.
+5. The existing project idiom is continued (the InvoiceRepositoryInterface => DbInvoiceRepository binding in config/common/di/billing.php) rather than inventing a parallel wiring style or scattering bindings across src/.

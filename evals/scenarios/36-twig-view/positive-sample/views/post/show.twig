@@ -1,0 +1,15 @@
+{% do this.setTitle(pageTitle) %}
+
+<h1>{{ pageTitle }}</h1>
+
+<article class="post">
+    <h2>{{ post.title }}</h2>
+    <p>{{ post.body }}</p>
+</article>
+
+<h3>Latest posts</h3>
+<ul class="post-list">
+    {% for latest in latestPosts %}
+        <li><a href="/posts/{{ latest.id }}">{{ latest.title }}</a></li>
+    {% endfor %}
+</ul>

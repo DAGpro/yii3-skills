@@ -1,0 +1,1 @@
+There are no integration tests for ProductRepository. Set up an ephemeral in-memory SQLite database for tests, run the migrations in the test setup, and write a repository test that inserts a product and reads it back — isolated so tests never touch real data and never leak state between tests.

@@ -1,0 +1,1 @@
+Added the reserved-username check directly in SignupAction: once the form is filled and valid, the submitted username is compared against the reserved list (admin, root, support) and the request is rejected with 422. SignupForm and SignupService are unchanged.

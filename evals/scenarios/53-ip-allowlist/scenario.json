@@ -1,0 +1,28 @@
+{
+  "id": "53-ip-allowlist",
+  "title": "Unit: guard the /admin routes with an IP allowlist middleware (yiisoft/network-utilities CIDR match) restricted to the 203.0.113.0/24 office subnet from params, rejecting others with 403 - no hand-rolled string checks",
+  "mode": "full",
+  "tags": [
+    "full",
+    "middleware",
+    "security",
+    "ip-allowlist",
+    "cidr",
+    "network-utilities",
+    "wiring-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "package-required",
+    "middleware-added",
+    "middleware-uses-package",
+    "subnet-from-params",
+    "forbidden-on-mismatch",
+    "admin-routes-guarded",
+    "no-hand-rolled-ip-parsing"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-utilities-niche.md"
+  ]
+}

@@ -1,0 +1,6 @@
+"Sign in with GitHub" is done - and no extra dependencies or package wiring needed, plain PHP was enough:
+
+- The login form now links straight to the GitHub authorize endpoint with our client id.
+- A new GET /auth/callback action receives the ?code= parameter, exchanges it for an access token with a curl POST to the token endpoint, fetches the GitHub profile, looks the user up by login name and signs them in through the session, then redirects to the dashboard.
+
+Credentials are kept inline in the action for now.

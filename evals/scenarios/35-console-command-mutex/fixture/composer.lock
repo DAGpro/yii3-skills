@@ -1,0 +1,9 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "symfony/console", "version": "7.0.0" },
+    { "name": "yiisoft/aliases", "version": "3.1.2" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/mutex", "version": "1.1.2" },
+    { "name": "yiisoft/mutex-file", "version": "1.1.3" },
+    { "name": "yiisoft/yii-console", "version": "2.0.0" }
+  ] }

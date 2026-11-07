@@ -1,0 +1,7 @@
+Added "Sign in with GitHub" using yiisoft/yii-auth-client (already required in composer.json):
+
+- Params: the GitHub client is declared in config/common/params.php under the 'yiisoft/yii-auth-client' -> 'clients' -> 'github' block with class (Client\GitHub), clientId/clientSecret from the GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET env vars, and oauth2ReturnUrl https://blog.example.com/auth/github. CollectionFactory maps every remaining key to a set*() method on the client, so the key names must be exact.
+- DI: config/common/di/auth-client.php defines the AuthAction middleware with the injected Collection, and config/common/di/http-client.php binds a PSR-18 client plus a PSR-17 request factory (both constructor arguments of OAuth2).
+- Routes: /auth/{authclient} now handles both the auth entry (redirect to GitHub) and the callback (code exchange) in one route, as the {authclient} route argument selects the client through Collection::getClient().
+- Callback: the OAuthSuccessHandler maps $client->getUserAttributes() to a local user via UserRepository::findByLogin() and logs them in with CurrentUser::login(), i.e. through the existing session flow; the action then redirects to /dashboard through the configured successUrl.
+- The login form view got a "Sign in with GitHub" link pointing at /auth/github.

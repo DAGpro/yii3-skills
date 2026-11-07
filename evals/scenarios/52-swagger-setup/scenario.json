@@ -1,0 +1,26 @@
+{
+  "id": "52-swagger-setup",
+  "title": "Unit: OpenAPI spec generation from action attributes (yiisoft/yii-swagger + zircote/swagger-php) with Swagger UI and raw JSON spec served at /docs - no hand-written spec file",
+  "mode": "full",
+  "tags": [
+    "full",
+    "openapi",
+    "swagger",
+    "api-docs",
+    "attributes",
+    "wiring-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "swagger-package-required",
+    "source-paths-configured",
+    "docs-routes-added",
+    "actions-annotated",
+    "no-static-spec-file"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-openapi-setup.md",
+    "references/http-openapi-endpoints.md"
+  ]
+}

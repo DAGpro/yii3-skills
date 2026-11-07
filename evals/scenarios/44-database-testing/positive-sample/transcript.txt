@@ -1,0 +1,8 @@
+Mode: Full
+Architecture: existing src/ layout (App\Shop\Infrastructure\ProductRepository over ConnectionInterface); test database set up per the testing-database guide
+guide: skills/yii3/references/testing-database.md §2.1 + §4.1 - ephemeral in-memory SQLite (Yiisoft\Db\Sqlite\Connection + new Driver('sqlite::memory:')) and the canonical DatabaseTestCase base: connection + migrations + beginTransaction() in setUp(), rollback-if-active + close() in tearDown()
+migrations: the existing App\Migration\M260101010101CreateProductTable runs in setUp() via MigrationBuilder(db:, informer: new NullMigrationInformer()) - no console stdout in tests, schema exists for every test
+test: tests/Integration/ProductRepositoryTest.php extends DatabaseTestCase, saves a Product through the repository and reads it back by id with value assertions; second test asserts find() returns null for a missing id
+isolation: every test runs inside a transaction rolled back in tearDown() - tests never touch real data and never leak state between tests; the dev MySQL DSN stays out of tests entirely
+packages added (require-dev): yiisoft/db-sqlite ^2.0
+validation: NullMigrationInformer (final, implements MigrationInformerInterface), ConnectionInterface::beginTransaction/getTransaction/close, TransactionInterface::rollBack, CommandInterface::insert, sqlite Driver DSN verified in vendor/yiisoft/* sources

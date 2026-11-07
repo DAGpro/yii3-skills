@@ -1,0 +1,1 @@
+The admin section grew messy: every admin route is registered flat at the top level of `config/web/routes.php`. Group the admin routes under the `/admin` prefix with `AdminAuthMiddleware` applied to the whole group, and keep the public API routes outside the group.

@@ -1,0 +1,1 @@
+Move our static asset handling to asset bundles: create an asset bundle for the site css/js (`public/css/site.css`, `public/js/app.js`) and make the page use it through the asset system instead of the hardcoded `<link rel="stylesheet">` / `<script src>` tags currently written directly in the layout. The css and js files themselves should stay where they are.

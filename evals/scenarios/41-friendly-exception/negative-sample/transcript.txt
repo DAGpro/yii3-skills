@@ -1,0 +1,5 @@
+Fixed the duplicate-order failure: CheckoutService now catches the raw storage error and re-throws
+a RuntimeException with the customer-safe message 'Something went wrong', so customers no longer
+see the internal constraint details on the error page.
+The original exception is preserved as $previous for the logs.
+No new classes were needed; the error page keeps its standard rendering.

@@ -1,0 +1,9 @@
+Root cause: TagRepository::create() only STAGED the new Tag entity. In Cycle ORM the Unit of Work is explicit: EntityManagerInterface::persist() (and delete()) stage operations in memory, and nothing is written or deleted until $entityManager->run() is called - forgetting run() means no SQL executes and no exception is thrown (Cycle ORM guide §3.1, the silent data loss rule).
+
+Fix: src/Blog/Infrastructure/Cycle/TagRepository.php now calls $this->entityManager->run() immediately after $this->entityManager->persist($tag), mirroring the guide's repository idiom (§3.2 save()/delete()).
+
+Nothing else was touched: the staging call stays, the #[Entity]/#[Column] attributes on Tag, the DBAL block in params and the repository DI binding are unchanged, no new packages added.
+
+Why it failed silently: no SQL query ever ran, so there was nothing to log and nothing to throw - the data was simply discarded when the staged state went out of scope.
+
+Doctrine habit warning: Cycle's EntityManagerInterface has no flush(); execution is run(). Verified against the bound guide (vendor/ absent in this project).

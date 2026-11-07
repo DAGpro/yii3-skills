@@ -1,0 +1,23 @@
+{
+  "id": "32-custom-validation-rule",
+  "title": "Unit: reserved-username check as a reusable custom validation rule (RuleInterface value object + RuleHandlerInterface service) wired into the form model - not inline logic in the action",
+  "mode": "full",
+  "tags": [
+    "full",
+    "validation",
+    "custom-rule",
+    "form-model",
+    "di"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "rule-implements-interface",
+    "handler-implements-interface",
+    "rule-wired-in-form-model",
+    "no-inline-validation-in-action"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-validation-custom-rules.md"
+  ]
+}

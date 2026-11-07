@@ -1,0 +1,13 @@
+Added conditional GET to CatalogAction following the action-level conditional-GET recipe (caching guide §3):
+- ETag computed from the catalog version: CatalogRepositoryInterface::version() changes only when the
+  catalog data changes; wrapped in double quotes (strong validator per RFC 7232 entity-tag syntax).
+- The client's If-None-Match is read with $request->getHeaderLine(Header::IF_NONE_MATCH) and compared
+  strictly against the computed tag.
+- On match: 304 via the plain PSR-17 response factory (Status::NOT_MODIFIED = 304) - empty body, with
+  the ETag header echoed back.
+- Full responses: 200 with the catalog payload via DataResponseFactoryInterface, ETag header attached.
+Header names come from the Yiisoft\Http\Header constants (Header::ETAG, Header::IF_NONE_MATCH), status
+from Status::NOT_MODIFIED.
+Known limitation (documented in the guide §1/§3 note): the strict comparison handles a single plain ETag
+only - multi-value If-None-Match lists and W/ weak validators would need parsing or the declarative
+HttpCacheMiddleware. Routes and DI config are unchanged.

@@ -126,8 +126,8 @@ Rule: every agent failure found on a real project becomes a new scenario.
 - Running `composer install` and `phpunit` in the working copy as a check (currently text analysis only).
 - Scenarios 02, 05, 06, 08, 10, 12 (see plan: light, drift, convention conflict, no vendor,
   Yii2 trap, negative trigger) — the rest are written; add new ones from observed agent failures.
-- Guide coverage: 36 of 78 `skills/yii3/references/` guides have scenarios
-  (01, 03, 04, 07, 09, 11, 13-29 — actions, auth/RBAC incl. the login composite,
-  logging, migrations, i18n, functional testing); continue per-guide coverage
-  in batches on request.
+- Guide coverage: 61 of 78 `skills/yii3/references/` guides have scenarios
+  (47 scenarios: 14 unit diagnostics + 4 composite anchors 01/13/23/25; the
+  actions cluster, auth/RBAC, persistence, views, i18n, testing and infra
+  clusters are covered); continue per-guide coverage in batches on request.
 - Tokens/cost in `result.json` (depends on the agent adapter).

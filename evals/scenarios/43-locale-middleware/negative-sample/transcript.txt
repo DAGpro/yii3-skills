@@ -1,0 +1,1 @@
+Done! Locale resolution now works: I filled in LocaleMiddleware - it reads the {_language} prefix from the URL and applies the locale to the shared translator with setLocale(), so every translate() call picks up the requested language. Nothing else needed to change.

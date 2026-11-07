@@ -1,0 +1,24 @@
+{
+  "id": "34-jwt-api-auth",
+  "title": "Wire Bearer JWT authentication (yiisoft/auth-jwt) on the /api orders routes so unauthenticated calls get 401",
+  "mode": "full",
+  "tags": [
+    "full",
+    "auth",
+    "jwt",
+    "bearer",
+    "middleware",
+    "wiring-gate"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "jwt-method-wired",
+    "authenticator-wired",
+    "auth-on-api-routes",
+    "no-manual-token-parsing"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-auth-jwt.md"
+  ]
+}

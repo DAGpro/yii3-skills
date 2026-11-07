@@ -1,0 +1,16 @@
+{# Converted from post/show.php - now a Twig template #}
+<?php $this->setTitle(htmlspecialchars($pageTitle, ENT_QUOTES)); ?>
+
+<h1><?= htmlspecialchars($pageTitle, ENT_QUOTES) ?></h1>
+
+<article class="post">
+    <h2><?= htmlspecialchars($post['title'], ENT_QUOTES) ?></h2>
+    <p><?= htmlspecialchars($post['body'], ENT_QUOTES) ?></p>
+</article>
+
+<h3>Latest posts</h3>
+<ul class="post-list">
+    {% for latest in latestPosts %}
+        <li><a href="/posts/{{ latest.id }}">{{ latest.title|raw }}</a></li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,5 @@
+Added ETag support to the catalog endpoint: CatalogAction now computes a strong ETag from the
+catalog payload (md5 of the JSON representation) and attaches it to every response with
+withHeader(Header::ETAG, $etag). Clients receive the ETag on each response and can cache the
+catalog payload, so caching works now because the ETag is sent.
+The repository is untouched; no other changes were needed.

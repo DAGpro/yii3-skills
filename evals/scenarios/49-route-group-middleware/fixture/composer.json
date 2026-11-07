@@ -1,0 +1,15 @@
+{
+  "name": "acme/admin-panel",
+  "require": {
+    "php": "^8.2",
+    "psr/http-message": "^2.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
+    "yiisoft/data-response": "^2.0",
+    "yiisoft/di": "^1.4",
+    "yiisoft/http": "^2.0",
+    "yiisoft/middleware-dispatcher": "^5.5",
+    "yiisoft/router": "^4.0"
+  },
+  "require-dev": { "phpunit/phpunit": "^11.0" }
+}

@@ -1,0 +1,1 @@
+Done. Added a try/catch around the charge call in ChargeAction: on failure it writes the message and stack trace to the server error log with error_log() and re-throws, so the client still gets the 500. Logging now happens where it matters, right at the failure point - no config changes needed.

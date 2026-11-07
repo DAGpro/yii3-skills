@@ -1,0 +1,1 @@
+Add tests for the `cache:purge` console command: one for the success path (exit code OK, `Cache purged` output) and one for the failure path (non-zero exit code, error message), following our console-testing conventions.

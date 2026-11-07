@@ -1,0 +1,22 @@
+{
+  "id": "39-conditional-validation",
+  "title": "Unit: coupon code required only when hasCoupon is true - validator conditional rule (when) on the form model, not if-branches in the action",
+  "mode": "full",
+  "tags": [
+    "full",
+    "validation",
+    "form-model",
+    "conditional-rule",
+    "when"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "conditional-rule-used",
+    "coupon-requirement-conditional",
+    "no-inline-validation-in-action"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-validation-advanced.md"
+  ]
+}

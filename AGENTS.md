@@ -192,3 +192,16 @@ All distributable deliverables (skill entry points, topic guides, workflow hooks
 
 - Internal cross-references inside skill files must use relative paths (e.g., `references/<topic>.md`) for universal cross-platform compatibility.
 
+### 4.6. Injection Guard & Structure Contract
+
+All workflow injections (`injections/*.md`) must expose one canonical activation contract so their runtime behavior is uniform across AI Factory workflows:
+
+1. **Activation guard (first line of the body, identical text in every injection).** The guard decides whether the skill is loaded at all, so it must be self-contained — it cannot live in a file inside the skill. Canonical wording: activate only for a Yii 3 project — `yiisoft/*` packages in `composer.json` AND no `yiisoft/yii2` in `composer.json` or `composer.lock`; a Yii 2 or non-Yii project ignores the block and no Yii 3 rule is applied; an ambiguous project state (missing `composer.lock`, contradictory evidence) must not auto-activate — ask the user or report the task blocked.
+2. **Single source of rules.** After the guard, every injection defers to the skill ("the skill is the single source of rules") and references concrete SKILL.md / `references/` sections instead of duplicating Yii 3 rules.
+3. **Structure.** Guard → load the skill → per-workflow duties (each anchored to a skill section) → handoff/output requirements.
+4. **Sync check.** `scripts/validate.mjs` fails when an injection guard drifts from this contract (missing Yii 2 exclusion, missing `composer.lock` check, or the legacy weak form "no `yiisoft/*` in `composer.json`", which also matches Yii 2 projects).
+
+> [!IMPORTANT]
+
+> Any edit to an activation guard MUST be applied to all injections and to SKILL.md (Stage 0 applicability guard) in the same change.
+

@@ -1,6 +1,6 @@
 ## Yii3 support (from yii3-skills)
 
-Guard: if the project does not use Yii3 (no `yiisoft/*` in `composer.json`), ignore this block. Otherwise load the `yii3` skill (`SKILL.md`) and execute per it — the skill is the single source of rules:
+Guard: activate this block only for a Yii 3 project — `yiisoft/*` packages in `composer.json` AND no `yiisoft/yii2` in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present) or non-Yii project (no `yiisoft/*`): ignore this block and do not apply Yii 3 rules. Ambiguous project state (missing `composer.lock`, contradictory evidence): do not auto-activate — ask the user or report the task blocked. Otherwise load the `yii3` skill (`SKILL.md`) and execute per it — the skill is the single source of rules:
 
 - Apply "Mission Workflow (Stages 1–7)" strictly bottom-up, including the Mandatory Signature Lookup Protocol and the per-step wiring gates. Follow the skill's Core rule 2 source-of-truth split: API calls → `vendor/yiisoft/<pkg>/src`; implementation patterns → the skill's guides (project divergence = flag, not copy); project conventions (layout, naming, chosen drivers) → the project's architecture artifact or dominant `src/` style — new code continues the project's style.
 - Print `Architecture: <source>` per Stage 0 item 5; place every file per that source and the targeted topic guide.

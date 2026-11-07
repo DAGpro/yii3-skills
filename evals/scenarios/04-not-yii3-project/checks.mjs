@@ -2,7 +2,7 @@ import { check, ok, fail, read } from '../../lib/checks.mjs';
 
 export default [
   check('no-yii3-code', 'No Yii3 constructs (Yiisoft\, config/*) in changed files', ({ changed }) => {
-    const hits = changed.filter((c) => /^config\//.test(c.path) || (/\.php$/.test(c.path) && /Yiisoft\|yiisoft\//.test(read(c.abs))));
+    const hits = changed.filter((c) => /^config\//.test(c.path) || (/\.php$/.test(c.path) && /Yiisoft\\|yiisoft\//.test(read(c.abs))));
     return hits.length ? fail(hits.map((h) => h.path).join(', ')) : ok();
   }),
 

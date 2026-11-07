@@ -1,0 +1,1 @@
+Stage 0 — Architecture: guide placement rules. Mission Workflow: created final readonly class HealthAction with __invoke(): ResponseInterface. Stage 6 config wiring: route registered in config/common/routes.php. Chain Integrity checklist: ok. The static facade in the existing controller must be migrated away per the ban list.

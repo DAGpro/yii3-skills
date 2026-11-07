@@ -30,7 +30,7 @@ Integration specifics live here; the rest of the skill is mode-neutral. "Externa
 
 ## Stage 0 — Mission Bootstrap
 
-Run first, in every mode. If the target project's `composer.json` contains no `yiisoft/*` packages, this skill does not apply — stop and report inapplicability.
+Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 projects only — `yiisoft/*` packages in `composer.json` AND no `yiisoft/yii2` in `composer.json` or `composer.lock`. A Yii 2 project (`yiisoft/yii2` present) or a non-Yii project (no `yiisoft/*` packages): stop and report inapplicability — never apply Yii 3 rules to Yii 2 code. Ambiguous project state (missing `composer.lock`, contradictory evidence): report and ask before applying; autonomous runs report the task blocked.
 
 1. **Bootstrap checklist** (skip items the running workflow already resolved — never redo):
    - Architecture source: the project's architecture artifact if present (`references/core-architecture-alignment.md`); otherwise guide placement rules — check 2–3 similar existing features as integration context (Core rule 3).
@@ -46,7 +46,7 @@ Run first, in every mode. If the target project's `composer.json` contains no `y
 
 ## Mission Workflow (Stages 1–7)
 
-For business features execute the stages strictly bottom-up. Plan tasks decompose into the 6 phases below — the single authoritative phase → stage mapping (plans say "phases", execution says "stages"):
+For business features execute the stages strictly bottom-up, wiring each artifact the moment it is created — a stage is complete only when its per-step wiring gate (below) has landed. Plan tasks decompose into the 6 phases below — the single authoritative phase → stage mapping (plans say "phases", execution says "stages"):
 
 | Plan phase | Execution stages |
 |---|---|
@@ -57,7 +57,9 @@ For business features execute the stages strictly bottom-up. Plan tasks decompos
 | 5 Input DTO & Single-Action Handler | Stage 5 |
 | 6 Wiring & Tests | Stages 6–7 |
 
-Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
+Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist — unless the decomposition-intensity rule below collapses the layers for a thin pass-through feature. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
+
+**Decomposition intensity.** The full phase graph is the default for state-changing business processes (Archetype A) and full-lifecycle REST resources (Archetype F). A thin pass-through over one table with no domain invariants (simple admin dictionary CRUD, lookup tables, settings toggles) may collapse the domain layers: the Use Case folds into the Action, and one concrete repository class may replace the interface + implementation pair — only when the project's architecture artifact does not mandate the layered shape (Core rule 3). Never collapse: Input DTOs + validation, transactions around multi-step persistence, per-step wiring gates, tests. Print any collapse in the Stage 0 mission plan (`Decomposition: collapsed — <reason>`).
 
 **Mandatory Signature Lookup Protocol:** before calling any `yiisoft/*` method or constructor with more than 1 argument, look up the installed signature in `vendor/yiisoft/<pkg>/src` (Core rule 2, API row); never invent method names or copy Yii2 APIs. If `vendor/` is absent, request `composer install` first; when that is impossible, flag every API used as "not verified against sources" in the final report.
 
@@ -66,7 +68,7 @@ Never implement an Action or Controller before its Input DTO, Repository Interfa
 - **Stage 3 — Repository Implementation (Phase 3).** Strictly the project's one persistence path (`yiisoft/db` / Active Record / Cycle); wrap multi-step persistence in transactions. Guides: the matching persistence row in the matrix.
 - **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler; domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
 - **Stage 5 — Input DTO & Single-Action Handler (or Console Command) (Phase 5).** Typed input DTO with `yiisoft/validator` rule attributes (rule names must exist in the installed validator); separate Create/Update DTOs. Thin Action = HTTP orchestration only, returning `ResponseInterface` via `DataResponseFactoryInterface`; thin console command = CLI I/O only (`SymfonyStyle`, `ExitCode`) delegating to use cases. Guides: the matrix row for the archetype.
-- **Stage 6 — Config Wiring (Phase 6).** DI bindings in `config/**/di/*.php`; routes in `config/**/routes.php`; console commands in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`; custom RBAC rules in `config/common/params.php` under `'yiisoft/rbac-rules-container'`; events in `config/**/events.php`. Guide: `references/core-di-and-config.md`.
+- **Stage 6 — Config Audit & Consolidation (Phase 6).** Final configuration pass: wiring already landed per step (wiring gates above) — verify every gate and add only cross-artifact config that no single step owns. Where things live: DI bindings in `config/**/di/*.php`; routes in `config/**/routes.php`; console commands in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`; custom RBAC rules in `config/common/params.php` under `'yiisoft/rbac-rules-container'`; events in `config/**/events.php`. Guide: `references/core-di-and-config.md`.
 - **Stage 7 — Tests (Phase 6).** Unit tests (use case / domain) + functional/HTTP tests on the project's single test runner. Guides: `references/testing-core.md` + the Testing row of the matrix.
 
 **Per-step wiring gates** — never batched: new `*Interface` → DI binding; new Action → route; new console command → `config/console/params.php`; new RBAC rule → `'yiisoft/rbac-rules-container'`; side-effects → `config/**/events.php`. Every listing/query enforces an `OffsetPaginator` or an explicit SQL `limit`; mutating HTML-form routes carry `CsrfTokenMiddleware` after `SessionMiddleware` and before `Router`.
@@ -118,7 +120,7 @@ Full grounded matrices: each guide's Anti-Pattern Matrix:
 | 12 | `$session->getFlash(...)` / `$session->setFlash(...)` | Inject `FlashInterface` separately |
 | 13 | `if ($currentUser->getIdentity() === null)` | `$currentUser->isGuest()` — `getIdentity()` never returns null (`references/core-version-notes.md#r7-currentusergetidentity-never-returns-null-user`) |
 | 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` |
-| 15 | `#[Override]` attribute on methods | Omit it — forbidden by Yii 3 conventions, stripped by Rector (`RemoveOverrideAttributeRector` — grounded: shipped by `yiisoft/code-style` in the `YII_CORE` set, see `references/core-version-notes.md#r10-override-attribute-ban-code-style-yii_core-set`) |
+| 15 | `#[Override]` attribute on methods | Omit it in new code — Yii 3 convention: `yiisoft/code-style` ships `RemoveOverrideAttributeRector` in the `YII_CORE` set (`references/core-version-notes.md#r10-override-attribute-ban-code-style-yii_core-set`). Tooling-dependent enforcement: report a convention suggestion, never a blocking error, unless the project's Rector preset enables the rule (R10 verify step) |
 
 ## Task & Intent Routing Matrix
 

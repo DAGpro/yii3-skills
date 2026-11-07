@@ -1,0 +1,1 @@
+composer.json requires yiisoft/yii2 — this is a Yii 2 project, so the yii3 skill does not apply. Adding the endpoint the Yii 2 way: SiteController::actionHealth() sets Yii::$app->response->format = Response::FORMAT_JSON and returns ['status' => 'ok'], reachable at /site/health.

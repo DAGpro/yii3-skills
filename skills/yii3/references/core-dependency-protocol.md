@@ -101,8 +101,12 @@ When executing unattended — an external workflow or autonomous runner (AI Fact
 
 1. **Never Prompt:** Do not emit interactive clarification prompts.
 2. **Follow Existing Stack:** Adopt whatever architecture is already present in `composer.json` and `config/`.
-3. **Empty Project Default:** If the target project is completely uninitialized and has no established persistence paradigm, default to **`yiisoft/db` + `yiisoft/active-record` with SQLite or MySQL** (matching `.env`), and log the choice in the execution report.
-4. **Halt on Ambiguity:** If an unresolvable conflict occurs or a mandatory third-party selection cannot be deduced, immediately mark the task status as `blocked` with an explicit reason.
+3. **Tier the decision before acting** (interactive runs use the same tiers; §2 governs interactive confirmation):
+   - **Safe defaults** — pure library packages with no architectural footprint (see "Autonomous Installation" above): install without confirmation.
+   - **Architectural defaults** — persistence paradigm, DB engine, template engine, queue broker, cache/mutex/RBAC/message-storage drivers: they shape the project long-term. Interactive mode → mandatory user confirmation. Autonomous mode → apply the Empty Project Default (item 4), and mark the choice `provisional (architectural default — confirm with the user)` in the execution report and in the final verification report.
+   - **High-impact** — hard to reverse or security-sensitive: data-format commitments (e.g. switching RBAC storage), Composer plugins (`config.allow-plugins`), new `repositories` entries, dev-branch constraints. With no user available, do not silently choose — take the conservative option or mark the task `blocked` (item 5).
+4. **Empty Project Default:** If the target project is completely uninitialized and has no established persistence paradigm, default to **`yiisoft/db` + `yiisoft/active-record` with SQLite or MySQL** (matching `.env`). This is a provisional architectural default, not a validated decision: log it as `persistence paradigm chosen autonomously — provisional; confirm before further domain modeling` in the execution report.
+5. **Halt on Ambiguity:** If an unresolvable conflict occurs or a mandatory third-party selection cannot be deduced, immediately mark the task status as `blocked` with an explicit reason.
 
 ---
 

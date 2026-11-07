@@ -1,6 +1,6 @@
 ## Yii3 support (from yii3-skills)
 
-Guard: if the project does not use Yii3 (no `yiisoft/*` in `composer.json`), ignore this block. Otherwise load the `yii3` skill and re-check the plan against its sections — the skill is the single source of rules; report findings in the workflow's usual groups:
+Guard: activate this block only for a Yii 3 project — `yiisoft/*` packages in `composer.json` AND no `yiisoft/yii2` in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present) or non-Yii project (no `yiisoft/*`): ignore this block and do not apply Yii 3 rules. Ambiguous project state (missing `composer.lock`, contradictory evidence): do not auto-activate — ask the user or report the task blocked. Otherwise load the `yii3` skill and re-check the plan against its sections — the skill is the single source of rules; report findings in the workflow's usual groups:
 
 - "Mission Workflow (Stages 1–7)": stage coverage and ordering; packages installed/wired before the code that uses them (`references/core-dependency-protocol.md`); per-step wiring gates planned the moment the artifact appears.
 - The phase → stage mapping table in the same section: plans must not merge or reorder phases.

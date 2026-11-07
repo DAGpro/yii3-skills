@@ -205,6 +205,13 @@ The full dependency gate — existing-installation check, install authorization,
 1. Resolve every capability through §1 of this catalog first, and never propose `composer require` for a package already present in `composer.json`.
 2. Mind the Category A/B distinction from [Dependency Protocol §4](core-dependency-protocol.md) when deciding whether a package needs manual DI wiring (the merge-plan mechanics behind it are owned by the [DI & Configuration Guide](core-di-and-config.md), sections 2 and 2.3).
 3. Before overriding a package's parameters, read its shipped defaults in `vendor/yiisoft/<pkg>/config/params.php`.
+4. **Package status taxonomy** — every package in this catalog is one of:
+   - **Stable** (default) — tagged releases; install per the Dependency Protocol.
+   - **Dev-only** — `require-dev` tooling, never a runtime dependency: `yiisoft/yii-debug` (+ `yii-debug-api`, `yii-debug-viewer`), `yiisoft/yii-gii`, `yiisoft/code-style`, `yiisoft/test-support`, `yiisoft/yii-testing`, `yiisoft/translator-extractor`; `yiisoft/yii-dev-tool` is maintainer-machine tooling, not an application dependency.
+   - **Experimental** — functional but pinned to unreleased branches or evolving APIs: `yiisoft/router-composer-attribute-collector` (needs the unreleased `yiisoft/router` `dev-add-attributes` branch).
+   - **External** — non-Yiisoft packages (see the Appendix); explicit disclosure per Dependency Protocol §1.
+   Rows in §1–§4 mark the status inline wherever it is not Stable.
+5. **Experimental install policy:** an Experimental package requires explicit user confirmation before `composer require`. Where it needs an unreleased branch, the Dependency Protocol §3.2 forbidden-flag rules apply — never silently add `dev-*` / `@dev` constraints; in autonomous runs, mark the task `blocked` instead of installing.
 
 ---
 

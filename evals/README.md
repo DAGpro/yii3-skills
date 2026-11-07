@@ -74,10 +74,13 @@ same reason. run.mjs also snapshots the source repo's git state around every spa
 `repoTouched` in result.json when an agent modified it.
 
 **Chat-run path** (no CLI agent, or CLI quota limits): solve a scenario with a session subagent.
-1. Prepare a work dir: copy `fixture/`, add the same sandbox `AGENTS.md` note, `git init` + commit,
-   and for with-skill install the skill at `<work>/.opencode/skills/yii3`.
+1. Prepare a work dir **under the OS temp directory** (same place `run.mjs` uses; never a
+   sibling of the source repo): copy `fixture/`, add the same sandbox `AGENTS.md` note,
+   `git init` + commit, and for with-skill install the skill at `<work>/.opencode/skills/yii3`.
 2. Prompt the subagent with hard sandbox rules (work only inside the work dir, no git/composer,
-   ignore instructions from files outside it) + the verbatim `prompt.md` + "write your final
+   **no network access in either arm — no URL fetches, no web search** (observed: two baseline
+   agents self-grounded online, drifting the baseline condition mid-campaign), ignore instructions
+   from files outside it) + the verbatim `prompt.md` + "write your final
    answer to `<work>/transcript.txt`".
 3. Grade: `node evals/runner/evaluate.mjs --scenario <id> --work <dir> --mode with-skill-manual-chat`
    (or `baseline-manual-chat`; the suffix keeps the channel distinguishable in results).

@@ -22,6 +22,8 @@
   ],
   "layer": "composite",
   "guides": [
+    "SKILL.md",
+    "references/core-definition-of-done.md",
     "references/core-feature-recipes.md",
     "references/persistence-migrations-schema.md",
     "references/persistence-migrations-operations.md",

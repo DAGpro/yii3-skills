@@ -1,8 +1,10 @@
 import { check, ok, fail, read } from '../../lib/checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
+/** Guide-convention paths: testing-console.md:115 uses namespace App\Tests\Integration\Console,
+ *  flat tests/Console|Command layouts are accepted too. */
 const commandTestFiles = (changed) =>
-  changed.filter((c) => c.added && /^tests\/(?:Console|Command)\/.*Test\.php$/.test(c.path));
+  changed.filter((c) => c.added && /^tests\/(?:Integration\/)?(?:Console|Command)\/.*Test\.php$/.test(c.path));
 
 /** Guide-contract (testing-console.md §3-§4): Symfony's official CommandTester,
  *  executed in-process via ->execute([...]) which returns the exit code. */
@@ -28,9 +30,9 @@ const displayNormalized = (t) => /getDisplay\s*\(\s*(?:true|normalize:\s*true)\s
 const SHELL_OUT = /\bexec\s*\(|shell_exec\s*\(|proc_open\s*\(|popen\s*\(|\bsystem\s*\(/;
 
 export default [
-  check('command-test-file', 'A test file was added under tests/Console/ or tests/Command/ (*Test.php)', ({ changed }) => {
+  check('command-test-file', 'A test file was added under tests/Console/, tests/Command/ or tests/Integration/Console/ (guide convention, testing-console.md:115) (*Test.php)', ({ changed }) => {
     const files = commandTestFiles(changed);
-    return files.length ? ok(files.map((f) => f.path).join(', ')) : fail('no tests/Console/*Test.php or tests/Command/*Test.php file added');
+    return files.length ? ok(files.map((f) => f.path).join(', ')) : fail('no command test file added under tests/ (Console|Command|Integration/Console)');
   }),
 
   check('command-tester-used', 'The test runs the command in-process with Symfony\\Component\\Console\\Tester\\CommandTester and ->execute(...) (testing-console.md §3-§4)', ({ changed }) => {

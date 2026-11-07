@@ -81,7 +81,7 @@ The dependency packages and their wiring:
 package must be installed (`yiisoft/db-mysql`, `-pgsql`, `-sqlite`, `-mssql`, `-oracle`).
 
 > [!NOTE]
-> The canonical connection recipe — the `config/common/params.php` block with the driver's `Dsn` value object and the `config/common/di/db-mysql.php` definition binding `ConnectionInterface::class` — is owned by the [DI & Configuration Guide](core-di-and-config.md), section 4.9, with per-driver `Dsn` variants in the [Databases Guide](persistence-db.md), section 6.2. Do not duplicate it here: once a single `ConnectionInterface` binding exists, the `MessageSource` below autowires it — no i18n-specific DB wiring is required.
+> The canonical connection recipe — the `config/common/params.php` block with the driver's `Dsn` value object and the `config/common/di/db-mysql.php` definition binding `ConnectionInterface::class` — is owned by the [DI & Configuration Guide](core-di-definitions.md), section 4.9, with per-driver `Dsn` variants in the [Databases Guide](persistence-db.md), section 6.2. Do not duplicate it here: once a single `ConnectionInterface` binding exists, the `MessageSource` below autowires it — no i18n-specific DB wiring is required.
 
 #### Cache wiring (`yiisoft/cache`)
 

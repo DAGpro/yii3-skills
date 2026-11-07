@@ -207,7 +207,7 @@ Once installed, a dependency must be correctly integrated into the application's
 
 ### 4.2. `yiisoft/config` Composer Commands
 
-The plugin commands — `composer yii-config-rebuild` (regenerate the merge plan), `composer yii-config-info [package]` (inspect groups/files), `composer yii-config-copy <package> [target] [files...]` — are documented with full semantics in the [DI & Config Guide, §2.3](core-di-and-config.md). The verification loop in this protocol mostly needs:
+The plugin commands — `composer yii-config-rebuild` (regenerate the merge plan), `composer yii-config-info [package]` (inspect groups/files), `composer yii-config-copy <package> [target] [files...]` — are documented with full semantics in the [DI & Config Guide, §2.3](core-config-tree.md). The verification loop in this protocol mostly needs:
 
 ```bash
 # Crawl configuration files and regenerate config/.merge-plan.php
@@ -215,16 +215,16 @@ composer yii-config-rebuild
 ```
 
 > [!NOTE]
-> `config/.merge-plan.php` is an entirely generated file — **never edit it manually** ([DI & Config Guide, §2.2](core-di-and-config.md)).
+> `config/.merge-plan.php` is an entirely generated file — **never edit it manually** ([DI & Config Guide, §2.2](core-config-tree.md)).
 
 ### 4.3. Configuration Layering & Key Collisions
 
 `yiisoft/config` merges layers in strict order — vendor defaults → vendor overrides → application (`config/common/`, `config/web/`, `config/console/`) → environment overlays. Overriding is permitted **between** layers (application keys win over vendor keys, environment keys win over application keys).
 
 > [!CAUTION]
-> **FATAL ERROR: Intra-Layer Duplicate String Keys.** Inside the **same** layer, duplicate string keys in associative arrays throw a fatal `ErrorException: Duplicate key "<key>" in the following configs while building "<group>" group` — e.g. two application-level parameter files defining the same key. Full layer semantics, group syntax, and prefix rules (`$`, `*`, `?`) are specified in the [DI & Config Guide, §2](core-di-and-config.md).
+> **FATAL ERROR: Intra-Layer Duplicate String Keys.** Inside the **same** layer, duplicate string keys in associative arrays throw a fatal `ErrorException: Duplicate key "<key>" in the following configs while building "<group>" group` — e.g. two application-level parameter files defining the same key. Full layer semantics, group syntax, and prefix rules (`$`, `*`, `?`) are specified in the [DI & Config Guide, §2](core-config-tree.md).
 >
-> **Scope Restriction:** The variable-scope rules for configuration files are owned by the [DI & Config Guide, §3.1 rule 4](core-di-and-config.md#31-rules-for-parameters): in short, params files see **neither** `$params` nor `$config`, while DI, events, routes, and bootstrap files receive both.
+> **Scope Restriction:** The variable-scope rules for configuration files are owned by the [DI & Config Guide, §3.1 rule 4](core-config-tree.md#31-rules-for-parameters): in short, params files see **neither** `$params` nor `$config`, while DI, events, routes, and bootstrap files receive both.
 
 ### 4.4. Canonical Wiring Recipes
 
@@ -232,14 +232,14 @@ All definitions must be written in strict PHP without missing dependencies or pl
 
 | Wiring Topic | Canonical Recipe Location |
 | :--- | :--- |
-| Database connection (`config/common/di/db-<driver>.php`) + DSN params | [DI & Config Guide, §4.9](core-di-and-config.md) |
+| Database connection (`config/common/di/db-<driver>.php`) + DSN params | [DI & Config Guide, §4.9](core-di-definitions.md) |
 | Cache storage binding (`CacheInterface` → driver) | [DI & Config Guide](core-di-and-config.md) |
 | Logger & multiple targets | [Logging Guide, §2](infra-logging.md) |
 | RBAC storages (`config/common/di/rbac.php`) | [Auth & RBAC Guide, §8](infra-auth-and-rbac.md) |
 | Console command registration (`config/console/params.php`) | [Console Commands Guide, §4](infra-commands.md) |
 | Vendor migration `sourcePaths` (`yiisoft/db-migration`) | [Migrations Guide](persistence-migrations.md) |
 | Bootstrap callbacks (`config/common/bootstrap.php`) | [DI & Config Guide](core-di-and-config.md), [Runners & Runtimes Guide](infra-runners-and-runtimes.md) |
-| Definition syntax (`'class'`, `'__construct()'`, `'$property'`, `'method()'`, tags, `reset`) and container invariants | [DI & Config Guide, §4](core-di-and-config.md) |
+| Definition syntax (`'class'`, `'__construct()'`, `'$property'`, `'method()'`, tags, `reset`) and container invariants | [DI & Config Guide, §4](core-di-definitions.md) |
 
 > [!IMPORTANT]
 > **Logger Parameter Hallucination Warning:**

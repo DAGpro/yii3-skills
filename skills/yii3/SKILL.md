@@ -154,7 +154,10 @@ Load only the archetype's guides:
 - `references/core-utilities.md` — ArrayHelper, StringHelper, Inflector, Json
 - `references/core-utilities-niche.md` — VarDumper, Classifier, network utilities
 - `references/core-friendly-exceptions.md` — FriendlyException contract, web & console rendering
-- `references/core-di-and-config.md` — PSR-11 container, config tree, definition syntax, parameter inheritance
+- `references/core-di-and-config.md` — split index: DI & config anti-pattern matrix, related guides
+- `references/core-di-definitions.md` — definition syntax recipes: bindings, array definitions, references, aliases, closures, db wiring
+- `references/core-di-container.md` — container lifecycle, tagging, StateResetter, providers, delegates, Injector/Factory, pitfalls
+- `references/core-config-tree.md` — config layers & merge plan, configuration.php, params rules, `$params`/`$config` scope
 - `references/core-events-and-listeners.md` — split index: anti-pattern matrix
 - `references/core-events-design.md` — PSR-14 architecture, event/listener design, config, post-commit rule
 - `references/core-events-reference.md` — framework events catalog, signatures reference, testing

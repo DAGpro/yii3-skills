@@ -214,7 +214,7 @@ All five driver packages declare `"provide": {"yiisoft/db-implementation": "1.0.
 
 ### 6.2. Canonical Connection Configuration
 
-Each driver ships typed DSN value objects (`Yiisoft\Db\<Dialect>\Dsn`) that render the PDO DSN string. Canonical configuration in `config/common/params.php` (this is the official shape from the `yiisoft/db` docs; the companion `ConnectionInterface` DI definition is shown in [core-di-and-config.md](core-di-and-config.md), section 4.9):
+Each driver ships typed DSN value objects (`Yiisoft\Db\<Dialect>\Dsn`) that render the PDO DSN string. Canonical configuration in `config/common/params.php` (this is the official shape from the `yiisoft/db` docs; the companion `ConnectionInterface` DI definition is shown in [core-di-definitions.md](core-di-definitions.md), section 4.9):
 
 > [!NOTE]
 > `username` / `password` below are schema placeholders. In real applications read them from the environment — `(string) ($_ENV['DB_USERNAME'] ?? '')` / `(string) ($_ENV['DB_PASSWORD'] ?? '')` — never hardcode credentials in params (see the DI & Configuration Guide's anti-pattern matrix).
@@ -279,7 +279,7 @@ use Yiisoft\Db\Oracle\Dsn as OracleDsn;
 ],
 ```
 
-The driver packages ship **no** DI config-plugin of their own. The DI definition mapping `ConnectionInterface::class` to the driver's `Connection` lives in the application (`config/common/di/db-<driver>.php` consuming `$params['yiisoft/db-<driver>']`) — the canonical definition is shown in [core-di-and-config.md](core-di-and-config.md), section 4.9.
+The driver packages ship **no** DI config-plugin of their own. The DI definition mapping `ConnectionInterface::class` to the driver's `Connection` lives in the application (`config/common/di/db-<driver>.php` consuming `$params['yiisoft/db-<driver>']`) — the canonical definition is shown in [core-di-definitions.md](core-di-definitions.md), section 4.9.
 
 ### 6.3. Driver-Specific Nuances & Version Support
 

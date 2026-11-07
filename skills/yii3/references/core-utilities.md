@@ -52,7 +52,7 @@ Yii3 decomposes monolithic framework helpers into focused, independent packages.
 
 Two closely related packages are documented in dedicated guides:
 - `yiisoft/files` (`FileHelper`) in [File Handling Guide](http-file-handling.md).
-- `yiisoft/aliases` (`Aliases`) in [DI & Configuration Guide](core-di-and-config.md).
+- `yiisoft/aliases` (`Aliases`) in [DI & Configuration Guide](core-di-definitions.md).
 
 ---
 
@@ -602,7 +602,7 @@ Anti-pattern rows for the niche packages (`yiisoft/var-dumper`, `yiisoft/classif
 - [Friendly Exceptions Guide](core-friendly-exceptions.md) — Actionable error solution contract (`FriendlyExceptionInterface`) with automatic web and console rendering.
 - [Architecture Alignment Guide](core-architecture-alignment.md) — Architectural placement of utility packages, static helper boundaries, and domain adapter encapsulation.
 - [File Handling Guide](http-file-handling.md) — Filesystem operations via `yiisoft/files` (`FileHelper`), stream responses, and secure file uploads.
-- [DI & Configuration Guide](core-di-and-config.md) — Path aliases via `yiisoft/aliases` (`Aliases`) and configuration parameter compilation.
+- [DI & Configuration Guide](core-di-definitions.md) — Path aliases via `yiisoft/aliases` (`Aliases`) and configuration parameter compilation.
 - [Authentication & RBAC Guide](infra-auth-and-rbac.md) — Role-based access control; PHP file storage of permission rules is owned by the [RBAC Storage Drivers Guide](infra-rbac-storage.md).
 - [Views & Widgets Guide](http-views-and-widgets.md) — Secure template rendering, HTML escaping, and embedding `Json::htmlEncode()` payloads into JavaScript widgets.
 - [PSR-15 Middlewares Guide](http-middlewares.md) — Enforcing network security guards, trusted proxy subnets, and IP allowlist rules.

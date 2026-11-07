@@ -107,14 +107,14 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 - **Behavior/API:** `Yiisoft\Di\Reference\TagReference::id()` — `public static function id(string $tag): string` returns the tag alias `'tag@' . $tag`, the literal container ID under which tagged definitions are registered and by which they are resolved.
 - **Changed in:** `yiisoft/di` **1.4.0** (New #380).
 - **Verify:** `composer.lock` → `yiisoft/di` `version`; vendor discriminator: `public static function id(string $tag): string` in `vendor/yiisoft/di/src/Reference/TagReference.php`.
-- **Grounding:** cloned sources — `src/Reference/TagReference.php`; `CHANGELOG.md` §1.4.0. See [DI & Config Guide, §5.1](core-di-and-config.md#51-service-tagging-tagreference).
+- **Grounding:** cloned sources — `src/Reference/TagReference.php`; `CHANGELOG.md` §1.4.0. See [DI & Config Guide, §5.1](core-di-container.md#51-service-tagging-tagreference).
 
 ### R13 `StrictFactory` (factory 1.3.0)
 
 - **Behavior/API:** `Yiisoft\Factory\StrictFactory` — creates objects only from pre-registered definitions; constructor signature `__construct(array $definitions, ?ContainerInterface $container = null, bool $validate = true)` (definitions come first), plus `create(string $id): mixed` and `has(string $id): bool`.
 - **Changed in:** `yiisoft/factory` **1.3.0** (New #214).
 - **Verify:** `composer.lock` → `yiisoft/factory` `version`; vendor discriminator: `vendor/yiisoft/factory/src/StrictFactory.php` exists.
-- **Grounding:** cloned sources — `src/StrictFactory.php`; `CHANGELOG.md` §1.3.0. See [DI & Config Guide, §6.2](core-di-and-config.md#62-yiisoftfactoryfactory--strictfactory).
+- **Grounding:** cloned sources — `src/StrictFactory.php`; `CHANGELOG.md` §1.3.0. See [DI & Config Guide, §6.2](core-di-container.md#62-yiisoftfactoryfactory--strictfactory).
 
 ### R14 `CsrfMiddleware` deprecated in favor of `CsrfTokenMiddleware` (csrf 2.2.0)
 

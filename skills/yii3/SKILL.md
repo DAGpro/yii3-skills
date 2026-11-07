@@ -81,6 +81,7 @@ Run after the last stage, in every mode.
 2. **Chain Integrity Checklist** (blocking): every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
 3. **Runtime smoke** (optional, Full mode, `vendor/` present): `./yii list` must exit 0 and list the new commands — catches wiring failures the checklist review cannot see (`references/infra-runners-and-runtimes.md`).
 4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
+5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §3, one line each: `Mode: <Light|Full>`, `Architecture: <source>`, fixes applied, tests, static analysis, packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
 
 ## Core rules
 

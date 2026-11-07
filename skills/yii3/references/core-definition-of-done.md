@@ -47,6 +47,8 @@ Execute the gate in Standalone mode; in AI Factory mode verify the checklist and
 Bind the verification report to the Finale and extend it with added packages, changed config files, and the Production Readiness Gate status:
 
 ```
+Mode: <Light | Full>
+Architecture: <source>
 fixes applied: persistence moved from CreateCommentAction to CommentRepository
 tests: pass | fail
 static analysis (Psalm/PHPStan, Rector): pass | fail

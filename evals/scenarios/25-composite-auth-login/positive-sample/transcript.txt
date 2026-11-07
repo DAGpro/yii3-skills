@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\User storage implementing IdentityRepositoryInterface, App\Web\Auth presentation); POST handling in a dedicated LoginSubmitAction with the LoginForm FormModel next to it; the GET /login form view and dashboard route were already present
+stages executed: 2 (LoginForm form model), 5 (LoginSubmitAction: validate -> verify -> login -> flash -> redirect), 6 (POST /login route wiring)
+validation: FormHydrator::populateFromPostAndValidate(FormModelInterface, ServerRequestInterface, ...): bool verified against composer.lock (yiisoft/form-model 1.0.0) src/FormHydrator.php - the bool branch drives the re-render path; the rendered ResponseInterface gets ->withStatus(Status::UNPROCESSABLE_ENTITY) (422) for validation errors and wrong credentials; CurrentUser::login(IdentityInterface $identity): bool verified in yiisoft/user src/CurrentUser.php - it regenerates the session ID and stores the auth state, so the identity is never written into the session manually; the identity comes from UserRepository::findByLogin() and the App\User\User model implements Yiisoft\Auth\IdentityInterface (getId(): ?string, verified in yiisoft/auth src/IdentityInterface.php); FlashInterface::add(string $key, $value = true, bool $removeAfterAccess = true): void per yiisoft/session src/Flash/FlashInterface.php - error flash on wrong credentials, success flash before the redirect; success redirects with Status::FOUND (302) + Header::LOCATION /dashboard (PRG - never a 200 HTML body); ordering: form validation strictly before password_verify() so unvalidated input never reaches the credential check
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none (form-model, session, user, yii-view-renderer already required in composer.json)
+config files changed: config/web/routes.php
+production readiness gate: pass

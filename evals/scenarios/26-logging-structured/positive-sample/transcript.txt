@@ -1,0 +1,11 @@
+Mode: Light
+Architecture: existing src/ layout (App\Billing\*); structured logging added inside InvoiceExporter (the failure path), target wiring in config/common
+wiring gates: Psr\Log\LoggerInterface injected into the exporter constructor; warning logged inside the catch block with structured context ('operation' => 'invoice.export', 'invoiceId', error + exception)
+validation: Logger::log(mixed $level, string|Stringable $message, array $context = []) and the PSR-3 convenience methods (warning()) verified against the yiisoft/log sources (src/Logger.php); FileTarget constructor (logFile, rotator, dirMode, fileMode, levels) verified against yiisoft/log-target-file src/FileTarget.php; the shipped package config/di.php registers FileTarget from the 'yiisoft/log-target-file' => ['fileTarget' => ['file' => ...]] params and resolves the '@runtime/logs/app.log' alias through the Aliases service
+DI binding: yiisoft/log ships no DI config, so config/common/di/logger.php binds LoggerInterface::class to Logger::class with the FileTarget target (ReferencesArray::from), and config/common/params.php sets the file to '@runtime/logs/app.log'
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none
+fixes applied: none
+tests: not run (light task)
+packages added: none (yiisoft/log + yiisoft/log-target-file already required)
+config files changed: config/common/di/logger.php, config/common/params.php
+production readiness gate: pass

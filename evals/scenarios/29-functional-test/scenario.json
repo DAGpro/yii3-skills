@@ -1,0 +1,23 @@
+{
+  "id": "29-functional-test",
+  "title": "Full mode: functional test suite set up on yiisoft/yii-testing - in-memory FunctionalTestCase test for GET /api/status, never raw HTTP against a live server",
+  "mode": "full",
+  "tags": [
+    "full",
+    "testing",
+    "functional-tests",
+    "api",
+    "codeception"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "codeception-config",
+    "test-extends-functional-case",
+    "test-exercises-api-status",
+    "no-raw-http"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/testing-http.md"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "27-migration-add-column",
+  "title": "Unit: append a reversible add-column migration (nullable last_login_at TIMESTAMP on users) without touching deployed history",
+  "mode": "light",
+  "tags": [
+    "light",
+    "migration",
+    "db",
+    "history-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "migration-added",
+    "revertible-contract",
+    "up-addcolumn",
+    "down-drops-column",
+    "existing-migration-untouched"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/persistence-migrations.md"
+  ]
+}

@@ -1,0 +1,10 @@
+Mode: Light
+Architecture: migrations live in migrations/ under App\Migration (sourceNamespaces in config/common/params.php); new history appended, deployed migrations untouched
+wiring gates: appended migrations/M260115100000AddLastLoginAtToUsers.php (timestamp > existing history); CreateUsersTable byte-identical to before
+validation: MigrationBuilder::addColumn(string $table, string $column, ColumnInterface|string $type): void and dropColumn(string $table, string $column): void verified against the yiisoft/db-migration sources (src/MigrationBuilder.php); reversible contract = RevertibleMigrationInterface (up() + down(MigrationBuilder $b): void) per src/RevertibleMigrationInterface.php - a bare MigrationInterface is rejected by the rollback flow; nullable timestamp via $b->columnBuilder() + ColumnBuilder::timestamp()->null()
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none
+fixes applied: none
+tests: not run (light task)
+packages added: none
+config files changed: none
+production readiness gate: pass

@@ -1,0 +1,6 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The guard is an authorization check - `CurrentUser::can('userAdmin')` (or `AccessCheckerInterface::userHasPermission($currentUser->getId(), 'userAdmin')`) - not an authentication check. `$user->isGuest()` / null-identity tests do not grant or deny the `userAdmin` permission: authentication only proves WHO the user is, authorization decides WHAT they may do.
+2. The check executes before the destructive `UserRepository::delete()` call; no code path reaches the deletion without passing the check.
+3. The denied path returns a 403 (Status::FORBIDDEN) response - not a redirect, not a 404, not a thrown exception.
+4. The permission name is exactly the granted `userAdmin` permission, not a role name: by default `$includeRolesInAccessChecks = false`, so `can('admin')` always returns false (roles are permission containers, not checkable permissions).
+5. Signatures are real: `CurrentUser::can(string|BackedEnum $permissionName, array $params = []): bool` (no access checker attached => always false; the fixture attaches the RBAC Manager via withAccessChecker), `Status::FORBIDDEN = 403` - no hallucinated APIs, no Yii 1/2 constructs (Yii::$app->user->can, AccessControl filter behaviors).

@@ -1,0 +1,4 @@
+Done! Added a functional test for the API:
+
+- New tests/Functional/StatusTest.php hits GET /api/status on the dev server (start it with `composer serve`) and asserts the JSON body contains {"status": "ok"}.
+- No extra packages needed since PHPUnit was already installed.

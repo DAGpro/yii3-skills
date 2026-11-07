@@ -1,0 +1,11 @@
+Mode: Full
+Architecture: existing src/ layout (App\Web\Contact\ContactAction); TranslatorInterface injected into the action and passed into the view as a render parameter
+stages executed: 1 (strings extracted to translate() ids, category 'app'), 2 (messages/ru/app.php dictionary), 3 (category source wired in config/common/di/translation.php)
+guide: skills/yii3/references/http-i18n-translation.md §2.2 - tagged definition 'translation.categorySource'; PHP backend layout {path}/{locale}/{category}.php
+validation: TranslatorInterface::translate(string|Stringable $id, array $parameters = [], ?string $category = null, ?string $locale = null): string verified in vendor/yiisoft/translator/src/TranslatorInterface.php; CategorySource(name, reader, formatter, writer) verified in vendor/yiisoft/translator/src/CategorySource.php; MessageSource(string $path) with {locale}/{category}.php file shape ('id' => 'translation') verified in vendor/yiisoft/translator-message-php/src/MessageSource.php
+locale: target language comes from the translator locale (config 'yiisoft/translator' locale, fallback en-US) - no hardcoded locale in the translate calls, no locale branching
+vendor/: absent (stub composer.lock) - runtime behavior not executed
+fixes applied: none
+packages added: none (yiisoft/translator + yiisoft/translator-message-php already required)
+config files changed: config/common/di/translation.php (new), config/common/params.php
+production readiness gate: pass

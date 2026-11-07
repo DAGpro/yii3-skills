@@ -78,7 +78,7 @@ const outRoot = join(evalsRoot, 'results', stamp);
 const rows = [];
 
 // Agents resolve their own project root (.git discovery, recent-projects state); an
-// unanchored temp dir lets them land somewhere else entirely (observed: opencode ran
+// unanchored temp dir lets them land somewhere else entirely (observed: one agent ran
 // inside the harness repo and edited its scenario fixtures). So every work dir is
 // prepared as an isolated git repo with a sandbox note.
 const SANDBOX_NOTE = [

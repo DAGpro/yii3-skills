@@ -1,0 +1,1 @@
+Done! InvoiceExporter now reports failures to the system log via error_log(), so exports no longer disappear completely. No config changes were needed - the logger field is already in place for future use.

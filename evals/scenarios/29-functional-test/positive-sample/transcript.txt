@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\Web\Api\StatusAction over StatusService); functional suite set up per the testing guide
+stages executed: 1 (Codeception 5 root config codeception.yml + tests/Functional.suite.yml with FunctionalTester actor), 2 (functional test for GET /api/status)
+guide: skills/yii3/references/testing-http.md §1.1 - FunctionalTestCase: parent::setUp(), bootstrapApplication(), $this->tester->doRequest(method:, url:), assertSame(Status::OK, $response->getStatusCode()), $response->getContentAsJson()
+validation: FunctionalTestCase (abstract, extends PHPUnit TestCase; doRequest(string $method, string $url): ResponseAccessor) verified in vendor/yiisoft/yii-testing/src/FunctionalTestCase.php; FunctionalTester::doRequest(method, url, ...) and ResponseAccessor::getStatusCode()/getContentAsJson() verified in vendor/yiisoft/yii-testing/src/; Status::OK = 200 verified in vendor/yiisoft/http/src/Status.php
+dispatch: fully in-memory via TestApplicationRunner - no web server, no raw HTTP calls, no composer serve
+vendor/: absent (stub composer.lock) - runtime behavior not executed
+fixes applied: none
+packages added (require-dev): codeception/codeception ^5.3, codeception/module-asserts ^3.0, yiisoft/yii-testing ^1.0
+tests: existing tests/Unit/StatusServiceTest.php kept as-is; new tests/Functional/StatusTest.php added

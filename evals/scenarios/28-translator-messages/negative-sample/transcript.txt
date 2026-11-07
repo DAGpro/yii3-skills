@@ -1,0 +1,5 @@
+Done! Made the contact page translatable:
+
+- The action now wraps all user-facing strings in Yii::t('app', ...) calls (title, success and error flash messages).
+- The view template was switched to Russian text directly so the page renders in Russian out of the box.
+- No dictionary file was needed since the translations live in the code.

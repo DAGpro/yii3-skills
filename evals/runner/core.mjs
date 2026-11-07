@@ -38,7 +38,8 @@ export const requiredFailed = (results) => results.filter((r) => r.required && !
  */
 export async function evaluateWork(scenarioDir, { dir, transcript, mode, run = 1, outRoot, extra = {} }) {
   const base = join(scenarioDir, 'fixture');
-  const changed = changedFiles(dir, base).filter((c) => c.path !== 'transcript.txt');
+  // transcript.txt is the agent's answer slot; AGENTS.md is the runner-owned sandbox note (run.mjs) - neither is task work.
+  const changed = changedFiles(dir, base).filter((c) => c.path !== 'transcript.txt' && c.path !== 'AGENTS.md');
   const ctx = { dir, base, transcript, changed, mode };
   const results = await runChecks(scenarioDir, ctx);
   const runDir = join(outRoot, basename(scenarioDir), `${mode}-${run}`);

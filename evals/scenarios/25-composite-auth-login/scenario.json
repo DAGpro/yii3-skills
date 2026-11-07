@@ -1,0 +1,29 @@
+{
+  "id": "25-composite-auth-login",
+  "title": "Full mode: composite login flow - form hydration and validation, credential verification via the repository, CurrentUser login, flash messages and PRG redirect",
+  "mode": "full",
+  "tags": [
+    "full",
+    "auth",
+    "login",
+    "form-model",
+    "flash",
+    "redirect",
+    "session"
+  ],
+  "timeoutSec": 1500,
+  "negativeMustFail": [
+    "flash-via-interface",
+    "no-session-flash-methods",
+    "di-injected-not-newed",
+    "login-via-service",
+    "validation-before-verify",
+    "redirect-on-success"
+  ],
+  "layer": "composite",
+  "guides": [
+    "references/infra-auth-and-rbac.md",
+    "references/http-forms-and-hydration.md",
+    "references/http-state.md"
+  ]
+}

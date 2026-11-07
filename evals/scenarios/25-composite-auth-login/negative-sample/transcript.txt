@@ -1,0 +1,1 @@
+Implemented the POST /login handler: it reads the login and password fields from the request body, looks the user up and verifies the password. On success the authenticated user is stored directly in the session and a welcome page is returned. On wrong credentials an error flash is set on the session and the form is shown again.

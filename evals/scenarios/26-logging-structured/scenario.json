@@ -1,0 +1,26 @@
+{
+  "id": "26-logging-structured",
+  "title": "Unit: structured failure logging - inject Psr\\Log\\LoggerInterface, log a warning with context in the failure path, wire FileTarget -> runtime/logs/app.log in config",
+  "mode": "light",
+  "tags": [
+    "light",
+    "logging",
+    "psr-3",
+    "di",
+    "wiring-gate"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "logger-interface-injected",
+    "no-concrete-logger-hint",
+    "failure-path-logs",
+    "warning-with-context",
+    "filetarget-config",
+    "no-error-log-echo",
+    "transcript-structured-context"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-logging.md"
+  ]
+}

@@ -1,0 +1,10 @@
+Mode: Full
+Architecture: existing src/ layout (App\User storage, App\Web\Admin presentation); the guard lives directly in AdminUserDeleteAction - the action-level permission-check pattern
+stages executed: 5 (AdminUserDeleteAction guard); no config changes needed - RBAC manager, rbac-php storages and the access checker are already wired in config/common/di/
+validation: CurrentUser::can(string|BackedEnum $permissionName, array $params = []): bool verified against composer.lock (yiisoft/user 2.0.0) src/CurrentUser.php - it delegates to AccessCheckerInterface::userHasPermission($userId, $name, $params); a missing access checker makes can() always return false, the fixture attaches the RBAC Manager via withAccessChecker in config/common/di/user.php; the denied branch returns Status::FORBIDDEN (403) through DataResponseFactoryInterface::createResponse(mixed $data, int $code); the guard is placed BEFORE UserRepository::delete() so the destructive call never executes for unauthorized users; `userAdmin` is checked as a permission (not the `admin` role - role checks via can() return false by default: $includeRolesInAccessChecks = false); the permission and its `admin` parent role already exist in resources/rbac/items.php
+vendor/: absent (stub composer.lock) - APIs flagged "not verified against sources": none
+fixes applied: none
+tests: not run (no vendor/)
+packages added: none
+config files changed: none (only src/Web/Admin/AdminUserDeleteAction.php)
+production readiness gate: pass

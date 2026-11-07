@@ -1,0 +1,6 @@
+Judge (pass/fail + evidence from the diff/transcript):
+1. The suite setup follows the guide's layout: root `codeception.yml` (namespace App\Tests, tests/output/data/support paths) and `tests/Functional.suite.yml` with `actor: FunctionalTester` and the Asserts module; composer.json gains yiisoft/yii-testing (and codeception) as dev requirements, not runtime ones.
+2. The functional test boots the application in-memory: `parent::setUp()` is called in an overridden `setUp()`, `$this->bootstrapApplication()` runs before any request, and requests go through `doRequest()` (FunctionalTestCase 2-arg form or FunctionalTester named-argument form) - never through a real socket, `composer serve`, or superglobals.
+3. Assertions use the grounded ResponseAccessor API: `getStatusCode()` compared against `Status::OK`/200 and `getContentAsJson()` (or getContent + json_decode) for the body - no phantom helper methods (assertResponseStatusCode(), getResponseJson()).
+4. The existing unit test keeps running (not converted into a Cest or deleted); the new functional test is additive and targets GET /api/status only.
+5. No raw HTTP anywhere in the test code (no file_get_contents/curl/GuzzleHttp against localhost); the transcript explains the in-memory dispatch if at all.

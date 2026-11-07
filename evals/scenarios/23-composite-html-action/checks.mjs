@@ -6,17 +6,23 @@ const actions = (changed) => php(changed).filter((c) => /Action\.php$/.test(c.pa
 const configPhp = (changed) => php(changed).filter((c) => /^config\//.test(c.path));
 const joinedSrc = (changed) => srcPhp(changed).map((c) => read(c.abs)).join('\n');
 
-/** Route constructor segments (paren-matched) in a routes config text, with the HTTP verb. */
+/** Route constructor segments (paren-matched) in a routes config text, with the HTTP verb(s).
+ * Recognizes both grounded forms: per-verb `new Get/Post` classes and the multi-method
+ * `new Route($pattern, [Method::GET, Method::POST])` (guide: http-routes-definition.md). */
 const routeSegments = (text) => {
   const segs = [];
-  const re = /new\s+\\?(?:Yiisoft\\Router\\Route\\)?(Get|Post)\s*\(/g;
+  const re = /new\s+\\?(?:Yiisoft\\Router\\(?:Route\\)?)?(Route|Get|Post)\s*\(/g;
   let m;
   while ((m = re.exec(text)) !== null) {
     const open = m.index + m[0].length - 1;
     const close = matchParen(text, open);
+    const seg = text.slice(m.index, close === -1 ? open + 120 : close + 1);
+    const hasGet = /\bMethod::GET\b|['"]GET['"]/.test(seg);
+    const hasPost = /\bMethod::POST\b|['"]POST['"]/.test(seg);
+    const verb = m[1] === 'Route' ? (hasGet && hasPost ? 'GetPost' : `Route:${hasGet ? 'GET' : hasPost ? 'POST' : '?'}`) : m[1];
     segs.push({
-      verb: m[1],
-      seg: text.slice(m.index, close === -1 ? open + 120 : close + 1),
+      verb,
+      seg,
       tail: close === -1 ? '' : text.slice(close + 1, close + 40),
     });
   }
@@ -171,24 +177,29 @@ export default [
   }),
 
   // Shared: route wiring (GET+POST pair, named action: argument, no legacy API)
-  check('route-added', 'GET and POST routes for the edit path declared via new Route\\Get/new Route\\Post with the action bound through the named action: argument (on router 4.0.3 the constructor is (pattern, ?string $name = null, action, ...) - a positional second argument silently becomes the route NAME)', ({ changed }) => {
+  check('route-added', 'GET and POST routes for the edit path declared via the grounded router 4.0.3 forms - per-verb new Route\\Get + new Route\\Post, or the multi-method new Route(pattern, [Method::GET, Method::POST]) - with the action bound (named action: argument or ->action(...); on Get/Post the constructor is (pattern, ?string $name = null, action, ...) so a positional second argument silently becomes the route NAME)', ({ changed }) => {
     const routes = changed.filter((c) => /^config\/.*routes.*\.php$/.test(c.path)).map((c) => read(c.abs)).join('\n');
     if (!routes) return fail('no changed routes config file');
     if (/Route::(get|post|put|delete|patch|options)\s*\(|Group::create\s*\(/.test(routes)) return fail('legacy static router API used (deprecated since router 4.0.3)');
     const editSegs = routeSegments(routes).filter(({ seg }) => /['"][^'"]*edit[^'"]*['"]/.test(seg));
-    const gets = editSegs.filter(({ verb }) => verb === 'Get');
-    const posts = editSegs.filter(({ verb }) => verb === 'Post');
+    const gets = editSegs.filter(({ verb }) => verb === 'Get' || verb === 'GetPost');
+    const posts = editSegs.filter(({ verb }) => verb === 'Post' || verb === 'GetPost');
     if (!gets.length) return fail('no new Get(...) route for the edit path');
     if (!posts.length) return fail('no new Post(...) route for the edit path');
-    for (const { seg, tail } of editSegs) {
-      if (/\(\s*['"][^'"]*['"]\s*,\s*\\?[A-Z]/.test(seg)) {
+    for (const { seg, tail, verb } of editSegs) {
+      // The silent-name trap is specific to Get/Post: on their constructor the second
+      // positional argument is ?string $name. On the base Route it is the methods array.
+      if (verb !== 'GetPost' && /\(\s*['"][^'"]*['"]\s*,\s*\\?[A-Z]/.test(seg)) {
         return fail(`positional action argument silently becomes the route NAME on router 4.0.3 - use the named action: argument: ${seg.replace(/\s+/g, ' ').slice(0, 80)}`);
       }
       if (!/\baction\s*:/.test(seg) && !/^\s*->\s*action\s*\(/.test(tail)) {
         return fail(`edit route without an action binding (action: ... or ->action(...)): ${seg.replace(/\s+/g, ' ').slice(0, 80)}`);
       }
     }
-    return ok(`${gets.length} GET + ${posts.length} POST edit route(s) with action bound`);
+    const pair = editSegs.find(({ verb }) => verb === 'GetPost');
+    return ok(pair
+      ? `multi-method edit route with action bound (${pair.seg.replace(/\s+/g, ' ').slice(0, 60)}...)`
+      : `${gets.length} GET + ${posts.length} POST edit route(s) with action bound`);
   }),
 
   // Shared: PRG redirect after successful POST

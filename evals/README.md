@@ -2,7 +2,12 @@
 
 Draft eval system. A scenario = fixture project + prompt + result checks.
 The harness is agent-independent: it grades a work dir; how the work dir got
-solved is outside its concern (CLI agent, chat agent, human — all equal).
+solved is outside its concern (any AI agent, chat agent, human — all equal).
+
+**Primary audience: an agent developing the skill.** After changing guides under
+`skills/yii3/`, run the scenarios bound to the changed guides to verify the change
+(see "Guide binding and layered runs" below). Nothing in this document prescribes
+which agent or tool produces the work dir.
 
 ## Quick start
 
@@ -13,18 +18,18 @@ node evals/runner/selftest.mjs
 # 2. Evaluate without spawning any agent (manual / chat-agent / external run)
 #    a) copy the fixture to a work dir and solve the task there by any means
 cp -r evals/scenarios/03-forgotten-di-binding/fixture /tmp/work-03
-#       (with-skill: also copy the skill package into your agent's project-skill
-#        location inside the work dir before solving, e.g. .claude/skills/yii3)
+#       (with-skill: also copy the skill package into the project-skill location
+#        the solving agent uses, inside the work dir, before solving)
 #    b) save the agent's final answer into /tmp/work-03/transcript.txt
 #    c) grade it with the harness checks:
 node evals/runner/evaluate.mjs --scenario 03-forgotten-di-binding --work /tmp/work-03
 
-# 3. Or spawn a CLI agent end-to-end (with-skill vs baseline, 3 runs each)
+# 3. Or spawn an agent end-to-end (with-skill vs baseline, 3 runs each)
 #    Any agent works if it reads the prompt from stdin and edits files in cwd.
-#    EVAL_SKILL_DEST is where your agent looks for project skills; the runner
+#    EVAL_SKILL_DEST is where that agent looks for project skills; the runner
 #    installs the skill package there for with-skill mode.
-EVAL_AGENT_CMD="claude -p --permission-mode acceptEdits" \
-EVAL_SKILL_DEST=".claude/skills/yii3" \
+EVAL_AGENT_CMD="<agent command: prompt on stdin, cwd = fixture copy>" \
+EVAL_SKILL_DEST="<agent's project-skill dir>/yii3" \
   node evals/runner/run.mjs --scenario 04-not-yii3-project --runs 3
 ```
 
@@ -63,7 +68,7 @@ Both persist identical `result.json` artifacts and share `runner/core.mjs` for c
 
 **Work-dir sandbox.** The runner prepares every work dir as an isolated git repo and drops a
 sandbox note (`AGENTS.md`: "work only inside this directory"). Agents resolve their own project
-root (.git discovery, recent-projects state); without the anchor one agent (opencode) landed in
+root (.git discovery, recent-projects state); without the anchor, agents have landed in
 the harness repo and edited its scenario fixtures. Temp dir names carry no scenario id for the
 same reason.
 
@@ -108,7 +113,8 @@ Rule: every agent failure found on a real project becomes a new scenario.
 - Running `composer install` and `phpunit` in the working copy as a check (currently text analysis only).
 - Scenarios 02, 05, 06, 08, 10, 12 (see plan: light, drift, convention conflict, no vendor,
   Yii2 trap, negative trigger) — the rest are written; add new ones from observed agent failures.
-- Guide coverage: ~26 of ~70 `skills/yii3/references/` guides have scenarios
-  (01, 03, 04, 07, 09, 11, 13-23 — the actions cluster and the composite HTML
-  action anchor are covered); continue per-guide coverage in batches on request.
+- Guide coverage: 36 of 78 `skills/yii3/references/` guides have scenarios
+  (01, 03, 04, 07, 09, 11, 13-29 — actions, auth/RBAC incl. the login composite,
+  logging, migrations, i18n, functional testing); continue per-guide coverage
+  in batches on request.
 - Tokens/cost in `result.json` (depends on the agent adapter).

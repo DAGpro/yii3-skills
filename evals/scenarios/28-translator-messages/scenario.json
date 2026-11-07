@@ -1,0 +1,25 @@
+{
+  "id": "28-translator-messages",
+  "title": "Full mode: hardcoded contact-page strings moved to yiisoft/translator (category 'app') with a Russian PHP-message dictionary - no Yii2 Yii::t() facade, no hardcoded locale branching",
+  "mode": "full",
+  "tags": [
+    "full",
+    "i18n",
+    "translation",
+    "translator",
+    "messages",
+    "views"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "translator-injected",
+    "translate-calls",
+    "no-hardcoded-literals",
+    "dictionary-ru",
+    "config-message-source"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-i18n-translation.md"
+  ]
+}

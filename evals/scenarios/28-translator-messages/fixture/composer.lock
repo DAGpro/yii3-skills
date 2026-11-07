@@ -1,0 +1,14 @@
+{
+  "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "psr/http-message", "version": "2.0.0" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/html", "version": "3.0.0" },
+    { "name": "yiisoft/router", "version": "4.0.3" },
+    { "name": "yiisoft/session", "version": "3.0.0" },
+    { "name": "yiisoft/translator", "version": "3.2.1" },
+    { "name": "yiisoft/translator-message-php", "version": "1.1.2" },
+    { "name": "yiisoft/view", "version": "12.0.0" },
+    { "name": "yiisoft/yii-view-renderer", "version": "8.0.0" }
+  ]
+}

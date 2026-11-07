@@ -1,0 +1,23 @@
+{
+  "id": "24-rbac-permission-check",
+  "title": "Guard an admin delete action with the RBAC userAdmin permission (CurrentUser::can) returning 403 for users without it",
+  "mode": "full",
+  "tags": [
+    "full",
+    "rbac",
+    "authorization",
+    "permissions",
+    "actions"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "can-called",
+    "guard-before-delete",
+    "denied-403"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-auth-and-rbac.md",
+    "references/infra-rbac-storage.md"
+  ]
+}

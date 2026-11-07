@@ -1,0 +1,1 @@
+Added a guest check to AdminUserDeleteAction: unauthenticated visitors now get a 404 response instead of deleting accounts. No other changes were needed - the action already had the current user injected, and RBAC storage is configured.

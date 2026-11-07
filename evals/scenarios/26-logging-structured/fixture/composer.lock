@@ -1,0 +1,11 @@
+{ "_comment": "STUB for evals: versions sufficient for version-gated skill checks",
+  "packages": [
+    { "name": "yiisoft/aliases", "version": "3.1.0" },
+    { "name": "yiisoft/data-response", "version": "2.0.0" },
+    { "name": "yiisoft/definitions", "version": "3.0.0" },
+    { "name": "yiisoft/di", "version": "1.4.0" },
+    { "name": "yiisoft/log", "version": "2.1.0" },
+    { "name": "yiisoft/log-target-file", "version": "2.0.0" },
+    { "name": "yiisoft/router", "version": "4.0.3" }
+  ]
+}

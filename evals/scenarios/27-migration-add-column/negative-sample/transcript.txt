@@ -1,0 +1,1 @@
+Done! Added the nullable last_login_at TIMESTAMP column by updating the CreateUsersTable migration directly - that is the only place the users table is defined, so the schema stays in one file. The migration now applies the full table shape in one go; no separate down() step is needed since this covers the initial creation.

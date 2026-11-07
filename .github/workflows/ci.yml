@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Extension validator (extension.json, SKILL.md frontmatter, guard sync, purity)
+        run: node scripts/validate.mjs
+
+      - name: Eval selftest (positive/negative samples, guide bindings)
+        run: node evals/runner/selftest.mjs
+
+      # scripts/check-symbols.mjs is intentionally NOT run here: it validates
+      # guide symbols against the offline reference clones under references/
+      # (68 MB, gitignored — local-only authoring material, see .gitignore).
+      # Run it locally before pushing guide changes: node scripts/check-symbols.mjs

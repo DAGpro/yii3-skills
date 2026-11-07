@@ -1,0 +1,4 @@
+{
+  "name": "acme/text-utils",
+  "require": { "php": "^8.2", "yiisoft/di": "^2.0", "yiisoft/strings": "^2.0" }
+}

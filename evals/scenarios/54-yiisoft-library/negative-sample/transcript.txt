@@ -1,0 +1,1 @@
+Stage 0 — Architecture: guide placement rules. Mission Workflow: created final readonly class SlugifyAction with __invoke(): ResponseInterface. Stage 6 config wiring: route registered in config/common/routes.php, DI binding in config/common/di/web.php. Chain Integrity checklist: ok.

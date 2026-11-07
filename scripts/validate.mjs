@@ -158,15 +158,16 @@ function checkCatalogConsistency(skillDir) {
 }
 
 // AGENTS.md §4.6: every injection must open with the canonical activation
-// guard. A bare "yiisoft/* in composer.json" check also matches Yii 2 projects
-// (yiisoft/yii2 is itself a yiisoft/* package), so the guard must carry the
-// Yii 2 exclusion, the composer.lock cross-check, and the ambiguous-state rule.
+// guard, byte-for-byte. The guard decides whether the skill loads at all, so
+// it cannot live in a file inside the skill — the canonical prefix is held
+// here, in the authoring tooling. A bare "yiisoft/* in composer.json" check
+// also matches Yii 2 projects and plain Yiisoft-ecosystem libraries (e.g.
+// yiisoft/di + yiisoft/strings), hence the yiisoft/yii-* discriminator.
+const CANONICAL_GUARD =
+  'Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (app/runtime stack, e.g. `yiisoft/yii-runner-http` or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, no `yiisoft/yii-*`), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (missing `composer.lock`, contradictory evidence): do not auto-activate — ask the user or report the task blocked. Otherwise';
+
 function checkInjectionGuards(manifest) {
   if (!Array.isArray(manifest?.injections)) return;
-  const requiredMarkers = [
-    /no `yiisoft\/yii2` in `composer\.json` or `composer\.lock`/,
-    /Ambiguous project state/,
-  ];
   const legacyWeakForm = /no `yiisoft\/\*` in `composer\.json`/;
   for (const injection of manifest.injections) {
     if (injection === null || typeof injection !== 'object') continue;
@@ -174,20 +175,26 @@ function checkInjectionGuards(manifest) {
     const absPath = join(root, injection.file);
     if (!existsSync(absPath)) continue; // already reported by the manifest check
     const text = readText(absPath);
-    const guardLineIdx = text.split('\n').findIndex((line) => /^Guard:/.test(line));
+    const lines = text.split('\n');
+    const guardLineIdx = lines.findIndex((line) => /^Guard:/.test(line));
     if (guardLineIdx === -1) {
       err(displayPath(absPath), 0, 'injection-guard', 'no "Guard:" line — every injection must open with the canonical activation guard (AGENTS.md §4.6)');
       continue;
     }
-    const guard = text.split('\n')[guardLineIdx];
     const at = guardLineIdx + 1;
-    for (const marker of requiredMarkers) {
-      if (!marker.test(guard)) {
-        err(displayPath(absPath), at, 'injection-guard', `activation guard drift — missing "${marker.source}" (canonical contract: AGENTS.md §4.6)`);
-      }
+    // Position contract: the guard is the first content line of the body —
+    // only the section heading and blank lines may precede it.
+    const preceding = lines.slice(0, guardLineIdx).filter((line) => line.trim() !== '');
+    if (preceding.some((line) => !/^##\s/.test(line))) {
+      err(displayPath(absPath), at, 'injection-guard', 'activation guard position — only a section heading and blank lines may precede the "Guard:" line (AGENTS.md §4.6)');
     }
-    if (legacyWeakForm.test(guard)) {
-      err(displayPath(absPath), at, 'injection-guard', 'legacy weak guard "no `yiisoft/*` in `composer.json`" — also matches Yii 2 projects; use the canonical guard');
+    // Byte-identity: the canonical prefix must match exactly; per-injection
+    // duties continue after the shared "Otherwise".
+    if (!lines[guardLineIdx].startsWith(CANONICAL_GUARD)) {
+      err(displayPath(absPath), at, 'injection-guard', 'activation guard drift — the guard line must start with the CANONICAL_GUARD prefix byte-for-byte (AGENTS.md §4.6)');
+    }
+    if (legacyWeakForm.test(lines[guardLineIdx])) {
+      err(displayPath(absPath), at, 'injection-guard', 'legacy weak guard "no `yiisoft/*` in `composer.json`" — also matches Yii 2 projects and Yiisoft-ecosystem libraries');
     }
   }
 }
@@ -332,8 +339,9 @@ function checkSkill(skillEntry) {
 
   // AGENTS.md §4.6: the skill entry point must carry the applicability guard.
   const applicabilityIdx = text.indexOf('Applicability guard:');
-  if (applicabilityIdx === -1 || !/no `yiisoft\/yii2` in `composer\.json` or `composer\.lock`/.test(text.slice(applicabilityIdx, applicabilityIdx + 600))) {
-    err(displayPath(skillMdPath), 1, 'activation-guard', 'Stage 0 lacks the applicability guard (Yii 2 exclusion + composer.lock check — AGENTS.md §4.6)');
+  const applicability = applicabilityIdx === -1 ? '' : text.slice(applicabilityIdx, applicabilityIdx + 900);
+  if (!/`yiisoft\/yii-\*` package/.test(applicability) || !/`yiisoft\/yii2` excluded/.test(applicability) || !/Unknown project state/.test(applicability)) {
+    err(displayPath(skillMdPath), 1, 'activation-guard', 'Stage 0 lacks the applicability guard (yiisoft/yii-* discriminator, yii2 exclusion, unknown-state escalation — AGENTS.md §4.6)');
   }
 
   const mentioned = new Set();

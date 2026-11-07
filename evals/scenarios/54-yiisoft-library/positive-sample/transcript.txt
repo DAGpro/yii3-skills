@@ -1,0 +1,1 @@
+composer.json has only yiisoft/di and yiisoft/strings — no yiisoft/yii-* app package, so this is a Yiisoft-ecosystem library, not a Yii 3 application; the yii3 skill does not apply. Added Acme\TextUtils\StringService::slugify(): mb_strtolower, then preg_replace to [-a-z0-9] segments, trim dashes — plain PHP, matching the existing class style.

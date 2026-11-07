@@ -196,12 +196,21 @@ All distributable deliverables (skill entry points, topic guides, workflow hooks
 
 All workflow injections (`injections/*.md`) must expose one canonical activation contract so their runtime behavior is uniform across AI Factory workflows:
 
-1. **Activation guard (first line of the body, identical text in every injection).** The guard decides whether the skill is loaded at all, so it must be self-contained — it cannot live in a file inside the skill. Canonical wording: activate only for a Yii 3 project — `yiisoft/*` packages in `composer.json` AND no `yiisoft/yii2` in `composer.json` or `composer.lock`; a Yii 2 or non-Yii project ignores the block and no Yii 3 rule is applied; an ambiguous project state (missing `composer.lock`, contradictory evidence) must not auto-activate — ask the user or report the task blocked.
+1. **Activation guard (first content line of the body, byte-identical text in every injection).** The guard decides whether the skill is loaded at all, so it must be self-contained — it cannot live in a file inside the skill. Canonical wording: activate only for a Yii 3 application — at least one `yiisoft/yii-*` package (app/runtime stack; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`; a Yii 2 project, a Yii-ecosystem library (base `yiisoft/*` packages only, no `yiisoft/yii-*`), or a non-Yii project ignores the block and no Yii 3 rule is applied; an unknown project state (missing `composer.lock`, contradictory evidence) must not auto-activate — ask the user or report the task blocked. The `yiisoft/yii-*` discriminator is mandatory: base `yiisoft/*` libraries alone do not make a project a Yii 3 application.
 2. **Single source of rules.** After the guard, every injection defers to the skill ("the skill is the single source of rules") and references concrete SKILL.md / `references/` sections instead of duplicating Yii 3 rules.
 3. **Structure.** Guard → load the skill → per-workflow duties (each anchored to a skill section) → handoff/output requirements.
-4. **Sync check.** `scripts/validate.mjs` fails when an injection guard drifts from this contract (missing Yii 2 exclusion, missing `composer.lock` check, or the legacy weak form "no `yiisoft/*` in `composer.json`", which also matches Yii 2 projects).
+4. **Sync check.** `scripts/validate.mjs` holds the canonical guard prefix as a constant (`CANONICAL_GUARD`) and fails when any injection's guard line does not start with it byte-for-byte, when the guard is not the first content line of the injection body (section heading and blank lines excepted), or when the legacy weak form "no `yiisoft/*` in `composer.json`" is present (it also matches Yii 2 projects and plain Yiisoft-ecosystem libraries).
 
 > [!IMPORTANT]
 
 > Any edit to an activation guard MUST be applied to all injections and to SKILL.md (Stage 0 applicability guard) in the same change.
+
+### 4.7. Workflow Handoff & Artifact Contract
+
+The Yii3 skill and the AI Factory workflows exchange results through explicit artifacts; this contract fixes the boundary between the two systems. Neither side may invent new channels or field names silently.
+
+1. **Finale → `/aif-verify`.** In AI Factory mode the skill's Finale hands control to `/aif-verify`; findings merge into `aif-gate-result` with exactly two fields: `blockers` (blocking gate failures: Chain Integrity violations, failing project checks, packages used in code but not declared in `composer.json`) and `affected_files` (changed file paths). Convention-only mismatches are reported as drift warnings, never as blockers.
+2. **Unverified API flag.** Any `yiisoft/*` API used without a verified installed signature (no `vendor/`, offline environment) is listed in the final report as "not verified against sources" and enters `aif-gate-result` as a warning, not a blocker — unless static analysis also fails on it.
+3. **Blocked tasks.** When the skill cannot proceed safely (unknown activation state, high-impact dependency decision without a user, mandatory offline install), it reports the task `blocked` with an explicit reason instead of silently choosing; the workflow surfaces the `blocked` status as-is.
+4. **Plan artifacts.** The workflow owns the plan location (`paths.plans` from the target `.ai-factory/config.yaml`); the skill never invents one in AI Factory mode. Plans follow the 6-phase contract, and the SKILL.md phase → stage table is the only mapping.
 

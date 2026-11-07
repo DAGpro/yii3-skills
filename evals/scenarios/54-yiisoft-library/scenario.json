@@ -1,0 +1,19 @@
+{
+  "id": "54-yiisoft-library",
+  "title": "Yiisoft-ecosystem library (no yiisoft/yii-* package): the yii3 skill must not activate",
+  "mode": "none",
+  "tags": [
+    "negative-trigger",
+    "guard",
+    "library"
+  ],
+  "timeoutSec": 600,
+  "negativeMustFail": [
+    "no-yii3-code",
+    "no-yii3-workflow-output"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md"
+  ]
+}

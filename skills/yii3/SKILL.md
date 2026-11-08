@@ -28,21 +28,20 @@ The 3 architectural decomposition tiers govern domain code depth, and directly d
 - **Execution Scope Summary:**
   - `Mode: Light` answers *how much workflow ceremony to run* for Lightweight tasks (touched stages only, no extended DoD).
   - `Mode: Full` runs complete 7-stage workflow discipline and extended DoD for both Standard and Full decomposition tiers.
-- **Architectural Patterns** (detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):
-  - **Strict (Explicit / Hexagonal):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers.
-  - **Balanced (Structured Modules):** feature modules, Active Record permitted, interfaces at module boundaries or for swappable components.
-  - **Pragmatic (Layered / Active Record):** layered services directly consuming concrete repositories or Active Record models.
+- **Architectural Patterns** (maps 1:1 to `/aif-architecture` types, detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):
+  - **Explicit Architecture (`explicit*`, Strict Tier):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers.
+  - **Structured Modules (`structured*`, Balanced Tier):** feature modules, rich models with Active Record / Cycle permitted, interfaces at module boundaries.
+  - **Layered Architecture (`layers`, Pragmatic Tier):** horizontal technical layers, downward dependency flow, services directly consuming concrete repositories or Active Record models.
   *Universal Invariant:* In all three patterns, Actions remain thin HTTP transport adapters; zero SQL, persistence, or transaction management in presentation.
 
 ## AI Factory Adapter (Workflow Integration)
 
-When executing inside an automated AI Factory workflow (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`), this adapter governs inter-agent coordination:
+This skill is designed primarily as an AI Factory extension, with standalone chat execution as an adaptive fallback:
 
-- **Path Resolution:** Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present: `paths.plans`, `paths.architecture`, `paths.rules_file`; never redo).
-- **Autonomous Mode (`HANDOFF_MODE=1`):** Never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record decisions or report `Status: BLOCKED`. This is the non-interactive contract.
-- **Durable Plan State (`### Execution State`):** The active plan artifact (`.ai-factory/plans/*.md` or `PLAN.md`) is the durable state carrier across workflow sessions. Update task checkboxes `- [x]` as phases complete and maintain the `### Execution State` record (Stage, Status, Artifacts, Wiring Gates, Verification, Next Stage).
-- **Verification Boundary (Code-Read-Only):** `aif-verify` is strictly **code-read-only** — it runs gates, generates `aif-gate-result` (`blockers`, `affected_files`), and updates plan `### Execution State`, but never modifies application code (`src/`, `config/`). Defect fixes belong exclusively to `aif-fix`.
-- **Full Lifecycle Specification:** See [`references/aif-adapter.md`](references/aif-adapter.md) for the complete state-machine contract (`plan → implement → verify → fix → verify`), state schema, and handoff rules. The Finale hands control to `/aif-verify`; a direct standalone invocation closes the Finale itself.
+- **Path Resolution:** Detect and respect what the workflow already resolved via target `.ai-factory/config.yaml` (`paths.plans`, `paths.architecture`, `paths.rules_file`). Standalone fallback: `PLAN.md` or `docs/plans/`.
+- **Autonomous Mode (`HANDOFF_MODE=1`):** In automated runs, interactive prompts are forbidden — adopt project conventions or `yiisoft/*` defaults; report `Status: BLOCKED` if ambiguous.
+- **Durable State & Zero-Ambiguity Handoff:** Maintain task checkboxes `- [x]` and the `### Execution State` record in the active plan artifact. Every workflow transition must leave a fully self-contained artifact state without missing context.
+- **Full Lifecycle Specification:** See [`references/aif-adapter.md`](references/aif-adapter.md) for the complete inter-agent coordination contract (`plan → implement → verify → fix → verify`), boundary matrix, and handoff rules. In AI Factory mode, the Finale hands control to `/aif-verify`; direct standalone invocation concludes at the Finale itself.
 
 ## Stage 0 — Mission Bootstrap
 
@@ -147,35 +146,6 @@ Run after the last stage, in every mode.
    **Conflict rule:** A project convention wins strictly for question type 3 (**Project conventions** — directory layout, namespaces, naming conventions, chosen cache/queue/DB driver) unless correctness or security is violated (e.g. event dispatch inside a transaction) — then follow the guide and, in interactive runs, ask the user first (inside an external workflow, record the decision and continue; see AI Factory Adapter). Divergence in question type 2 (**Implementation patterns** — transactions, event timing, thin actions, DTO validation) is strictly `legacy drift`: **flag in the report, never copy into new code**.
 3. **Placement:** per `references/core-architecture-alignment.md`; a resolved architecture artifact overrides guide defaults. Existing `src/` + `config/` are drift checks for rows 1–2 and the convention source for row 3.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
-
-### Cross-Cutting Yii 2 Bans (Quick Guard List)
-
-Full grounded matrices: each guide's Anti-Pattern Matrix:
-
-#### 1. Hard Architectural Bans (Strict Quality Gate Blockers)
-
-| # | Forbidden Legacy / Anti-Pattern | Mandatory Idiomatic Yii 3 Replacement | Severity |
-|---|---|---|---|
-| 1 | `Yii::$app->...` or any static facade | Inject PSR / Yiisoft interfaces via constructor DI | BLOCKER |
-| 2 | `class SiteController extends Controller` with `actionIndex()` | `final readonly class IndexAction` with `__invoke()` | BLOCKER |
-| 3 | `$this->render('index', $data)` inside controllers | Inject `WebViewRenderer` and return `$this->viewRenderer->render(...)` | BLOCKER |
-| 4 | `$request->post('name')` / `$request->get('id')` | PSR-7 `getParsedBody()` or typed DTOs (`yiisoft/input-http`); route args via `CurrentRoute` | BLOCKER |
-| 5 | `rules()` and `behaviors()` on ActiveRecord models | Validation attributes on DTOs; PSR-14 events replace behaviors | BLOCKER |
-| 6 | `ActiveForm::begin()` in templates | `Html::form()->post()->csrf($csrf)->open()` and `Field::text(...)` | BLOCKER |
-| 7 | `Route::get('/path')` / `Group::create()` (deprecated since router 4.0.3 — `references/core-version-notes.md#r1-router-static-route--group-factories-deprecated-router-403`) | `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Group()` | BLOCKER |
-| 8 | `./yii migrate/up` (slash separator) | `./yii migrate:up` (colon separator — `references/core-version-notes.md#r8-console-migration-commands-use-colon-names-db-migration`) | BLOCKER |
-| 9 | Editing `vendor/` or `config/.merge-plan.php` | Edit `config/**/params.php` / `di/*.php`, then `composer yii-config-rebuild` | BLOCKER |
-| 10 | `echo`, `print`, `die()`, `exit()` in actions | Return a PSR-7 `ResponseInterface` instance | BLOCKER |
-| 11 | Mixing Active Record and Cycle ORM | Choose strictly one persistence stack | BLOCKER |
-| 12 | `$session->getFlash(...)` / `$session->setFlash(...)` | Inject `FlashInterface` separately | BLOCKER |
-| 13 | `if ($currentUser->getIdentity() === null)` | `$currentUser->isGuest()` — `getIdentity()` never returns null (`references/core-version-notes.md#r7-currentusergetidentity-never-returns-null-user`) | BLOCKER |
-
-#### 2. Tooling & Code-Style Conventions (Non-Blocking Suggestions unless project config enforces)
-
-| # | Tooling / Convention Pattern | Idiomatic Yii 3 Practice | Severity & Handling |
-|---|---|---|---|
-| 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` | Suggestion: recommend standard Yii 3 fixer toolchain |
-| 15 | `#[Override]` attribute on methods | Omit it in new code — Yii 3 convention: `yiisoft/code-style` ships `RemoveOverrideAttributeRector` in the `YII_CORE` set (`references/core-version-notes.md#r10-override-attribute-ban-code-style-yii_core-set`) | Suggestion: report convention drift, never a blocker, unless project Rector preset enables the rule (R10 verify step) |
 
 ## Task & Intent Routing Matrix
 

@@ -99,3 +99,34 @@ In automated or headless execution environments (`HANDOFF_MODE=1`), interactive 
 - **Missing Decision:** Always prefer what the target project already uses (dominant convention in `src/`); if ambiguous, default to the official `yiisoft/*` recommendation.
 - **Blocking Impediment:** If a mandatory dependency cannot be resolved or an ambiguous architecture choice violates core rules, record the exact technical reason and return `Status: BLOCKED` in `aif-gate-result` instead of guessing or stalling.
 
+---
+
+## 6. Zero-Ambiguity Handoff Contract (Self-Contained Transition Guarantee)
+
+Across AI Factory workflows, independent agents run in separate conversational contexts without shared memory. Any ambiguity, missing file path, or implicit assumption left by one agent creates errors or hallucinations in the next. Every handoff must be **100% self-contained**:
+
+### 6.1. Handoff: `aif-plan` → `aif-implement` (Unambiguous Plan Specification)
+- **Concrete Target Paths:** Every task must specify the exact target file path (in ultra plans: in the phase's `Files to Change`) and architectural layer/role. Generic tasks without paths (e.g. "create controller and service") are strictly prohibited.
+- **Prior Dependency Installation:** Every missing capability from `references/package-catalog.md` must be planned as an explicit `composer require` task scheduled *before* any implementation tasks that import its namespace.
+- **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task in `config/**/di/*.php`, and every Action an explicit route task in `config/**/routes.php`.
+- **Initialized Execution State:** The plan must conclude with an initialized `### Execution State` block template setting `Stage 1` as pending and all wiring gates as `PENDING`.
+
+### 6.2. Handoff: `aif-implement` → `aif-verify` (Self-Contained Implementation Handoff)
+- **Complete Artifact Inventory:** Every newly created or modified file must be listed in `### Execution State` under `Artifacts:` with its architectural role (e.g. `- src/Blog/PostAction.php (Presentation / Action)`). Never leave files unrecorded.
+- **Verified Wiring Gates:** Every per-step wiring gate must be explicitly verified and recorded (`DI binding: PASS`, `Routes / CLI: PASS`, `Events / Migrations: PASS`). Batching or deferring wiring is forbidden.
+- **Task Checkboxes:** All completed phase tasks must be marked `- [x]`.
+- **Handoff Status:** Set `Status: COMPLETE` (or ready for verification) and `Next Stage: /aif-verify`.
+
+### 6.3. Handoff: `aif-verify` → `aif-fix` (Zero-Ambiguity Defect Reporting)
+- **Actionable Blocker Reports:** Every failure in `aif-gate-result` (`blockers`) and `### Execution State` (`Open Issues`) must specify:
+  1. The exact file path and line number.
+  2. The violated rule, broken invariant (e.g. "SQL inside Action"), or failing test name.
+  3. The exact error output or exception trace.
+- **Strict Modification Perimeter:** `aif-gate-result` must populate `affected_files` with the exact list of files requiring remediation so `aif-fix` knows its exact boundary.
+- **Handoff Status:** Set `Status: BLOCKED` and `Next Stage: /aif-fix`.
+
+### 6.4. Handoff: `aif-fix` → `aif-verify` (Clean Defect Resolution Loop)
+- **Scope Compliance:** Corrective edits must remain strictly within `affected_files` without introducing new architectural mechanisms.
+- **State Reconciliation:** Clear resolved defects from `Open Issues`, confirm wiring gates remain `PASS`, set `Status: PENDING_VERIFICATION`, and hand off cleanly to `/aif-verify`.
+
+

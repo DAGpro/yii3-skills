@@ -21,6 +21,8 @@ This guide is the authority for **project conventions** (layout, layer placement
   - [3.2. Presentation Isolation from Persistence](#32-presentation-isolation-from-persistence)
   - [3.3. Composition Root in `config/`](#33-composition-root-in-config)
   - [3.4. One Mechanism per Concern](#34-one-mechanism-per-concern)
+  - [3.5. Application Layer: Use Case Handlers vs Application Services](#35-application-layer-use-case-handlers-vs-application-services)
+  - [3.6. Pre-existing Code & Starter Scaffolding Policy](#36-pre-existing-code--starter-scaffolding-policy)
 - [4. Package Placement Matrix by Pattern](#4-package-placement-matrix-by-pattern)
 - [5. Quality Gate Checklist](#5-quality-gate-checklist)
 
@@ -30,7 +32,13 @@ This guide is the authority for **project conventions** (layout, layer placement
 
 Architecture patterns vary in the degree of formal decoupling they require between application code and framework libraries. Imposing strict hexagonal isolation on a simple CRUD application causes over-engineering, while allowing ActiveRecord to leak into a DDD domain breaks aggregate purity.
 
-Yii 3 applications enforce vendor boundaries according to three strictness tiers:
+The architecture types defined by the `/aif-architecture` workflow map directly to three vendor isolation tiers in modern Yii 3:
+
+| `/aif-architecture` Pattern Type | CLI Arguments / Aliases | Yii 3 Isolation Tier | Core Invariants |
+|---|---|---|---|
+| **Explicit Architecture** | `explicit`, `explicit-layers`, `explicit-vertical`, `explicit-flat` (aliases: `clean`, `ddd`, `vertical`) | **Strict Tier** | Pure POPO Domain; mandatory port interfaces; vendor packages strictly in Infrastructure. |
+| **Structured Modules** | `structured`, `structured-layers`, `structured-vertical` (alias: `monolith`) | **Balanced Tier** | Feature modules (`src/<Module>/`); rich models (ActiveRecord permitted); services orchestrate without direct SQL; interfaces at boundaries. |
+| **Layered Architecture** | `layers` | **Pragmatic Tier** | Horizontal layers (`src/Controllers/`, `src/Services/`, `src/Models/`, `src/Repositories/`); downward flow; concrete injection. |
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -56,7 +64,7 @@ Yii 3 applications enforce vendor boundaries according to three strictness tiers
 ## 2. Vendor Policy per Architecture Pattern
 
 ### 2.1. Strict Tier: Explicit Architecture (Clean / Ports & Adapters)
-Used when domain logic is complex and business rules must remain completely independent of frameworks, databases, and UI delivery mechanisms.
+Corresponds to `/aif-architecture explicit` (`explicit-layers`, `explicit-vertical`, `explicit-flat`). Used when domain logic is complex and business rules must remain completely independent of frameworks, databases, and UI delivery mechanisms.
 
 - **Domain Layer:** Pure PHP objects (POPOs), domain events, and port interfaces (`UserRepositoryInterface`). Must **never** import `yiisoft/db`, `yiisoft/active-record`, `yiisoft/yii-cycle`, `yiisoft/view`, or PSR HTTP classes.
 - **Application Layer:** Use-case handlers (`RegisterUserHandler`) inject abstract port interfaces. Must **never** import concrete database adapters or vendor drivers.
@@ -64,7 +72,7 @@ Used when domain logic is complex and business rules must remain completely inde
 - **Presentation Layer:** Inbound transport adapter directly consuming vendor routing and HTTP (see [Presentation Exception](#31-the-presentation-exception)).
 
 ### 2.2. Balanced Tier: Structured Modules
-Used for growing monoliths organized into feature modules (e.g., `Catalog`, `Billing`, `Identity`).
+Corresponds to `/aif-architecture structured` (`structured-layers`, `structured-vertical`). Used for growing monoliths organized into feature modules (e.g., `Catalog`, `Billing`, `Identity`).
 
 - **Models (`[Module]/Models/`):** Rich domain models encapsulating business rules and state transitions. May inherit from `Yiisoft\ActiveRecord\ActiveRecord` or use Cycle ORM entity attributes (`#[Entity]`) directly without needing a separate port interface.
 - **Services (`[Module]/Services/`):** Application services that orchestrate use cases (fetching entities, calling model methods, persisting). Services do not construct raw SQL queries; they delegate data access to models or repositories.
@@ -72,7 +80,7 @@ Used for growing monoliths organized into feature modules (e.g., `Catalog`, `Bil
 - **Module Boundary:** Modules communicate via public services or events, never accessing another module's internal tables directly.
 
 ### 2.3. Pragmatic Tier: Layered Architecture
-Used for straightforward CRUD applications, administrative utilities, or prototypes where velocity is prioritized over strict formal decoupling.
+Corresponds to `/aif-architecture layers`. Used for straightforward CRUD applications, administrative utilities, or prototypes where velocity is prioritized over strict formal decoupling.
 
 - **Models (`src/Models/`):** Data structures, DTOs, and Active Record models (`Yiisoft\ActiveRecord\ActiveRecord`). Vendor persistence annotations and methods live directly on the models.
 - **Services (`src/Services/`):** Business logic and transactional orchestration. Services interact directly with Active Record models or repositories. Port interfaces are not required.
@@ -122,6 +130,42 @@ In Yii 3 architectures, **Application Service** and **Use Case Handler** are two
 - **Explicit Architecture (Strict):** Prefers single-responsibility **Use Case Handlers** (`CreateUserHandler`, `CheckoutHandler`) where each business action or command is isolated into its own class. This guarantees strict CQRS compliance and decoupled domain port dependencies.
 - **Structured Modules (Balanced) & Layered (Pragmatic):** Cohesive **Application Services** (`UserService`, `CatalogService` grouping related entity workflows) or Use Case Handlers are equally valid. In the Standard decomposition tier, application services may directly consume concrete repositories when domain aggregate abstractions collapse.
 - **Presentation Layer Boundary Invariant:** Regardless of architectural pattern or tier, HTTP Actions (`*Action`) and Console Commands (`*Command`) belong strictly to the **Presentation Layer**. They orchestrate transport concerns (request parsing, typed DTO validation, status code mapping, response wrapping, or CLI formatting) and delegate to the Application Layer. **Presentation never acts as an Application Service and must never absorb database persistence, raw SQL, or transaction boundaries.**
+
+### 3.6. Pre-existing Code & Starter Scaffolding Policy
+
+When generating or evaluating `.ai-factory/ARCHITECTURE.md`, the document establishes the authoritative **target architecture** for all business features. Existing files (whether from starter templates such as `yiisoft/app*` or pre-existing project code) must not distort this target architecture.
+
+Starter templates (`yiisoft/app`, `yiisoft/app-api`, `yiisoft/app-console`) provide baseline scaffolding typically arranged by transport (`src/Web/`, `src/Api/`, `src/Console/`) with basic entry points (e.g., `Index.php`, `SiteController.php`, view layouts, error handlers). When applying `aif-architecture`, the model MUST NOT confuse these transport directories with Bounded Contexts or business modules, and MUST present clear architectural strategies for handling them.
+
+In `ARCHITECTURE.md`, pre-existing code that differs from the target pattern is explicitly qualified under one of four strategies:
+
+#### Strategy 1: Isolated Quarantine (Default path under `## Legacy vs New Code Policy`)
+- Pre-existing files that do not follow the target pattern are explicitly acknowledged as legacy or pre-architectural code.
+- **New features** MUST strictly follow the target architecture (e.g., feature modules in Structured Modules, bounded contexts in Explicit Architecture, or horizontal layers in Layered Architecture).
+- **Existing code** is preserved without forced automatic rewrites; new code interacts with it via adapters, interfaces, or public services.
+
+#### Strategy 2: Dedicated Root Context (`src/Main/` or `src/Home/`) & The Anti-Dumping Invariant
+- **Intent:** Encapsulate general website presentation and landing scaffolding into a dedicated, cohesive context.
+- **Permitted Contents:**
+  - Root landing action (e.g., `IndexAction` serving the public homepage).
+  - General public static pages (e.g., About, Contact, Terms of Service) without complex domain operations.
+  - Root presentation layout (e.g., `layout/main.php`) and site-wide UI widgets.
+  - Global web exception/error handler action.
+- **CRITICAL: The Anti-Dumping Invariant ("Anti-Junk-Drawer Rule"):**
+  - The `Main` (or `Home`) context is strictly a top-level presentation and site-framing root context.
+  - **It must NEVER become a "junk drawer" (dumping ground, God-module, or misc context) for code that does not have an obvious home.**
+  - ❌ **Forbidden in `Main`:** Domain entities, database persistence, domain event handlers, repositories, application services, or business workflows (such as user authentication, profile management, product catalog, cart, payments, orders).
+  - ❌ **Boundary Discipline:** If an action, service, or model manages business state or domain data, it MUST be isolated into its own dedicated feature module or bounded context (`src/User/`, `src/Catalog/`, `src/Order/`).
+  - **Disambiguation Rule:** If an agent or developer is unsure where a new business requirement belongs, they MUST create a new focused Bounded Context / Feature Module rather than adding it to `Main`.
+
+#### Strategy 3: Global Web-Shell (Presentation Layer Envelope)
+- **Intent:** Treat template scaffolding not as domain modules or technical infrastructure, but as the **Global Web-Shell** (presentation layer envelope) of the application.
+- **Rule:** Common view layouts (`layout/main.php`), system error renderers (404/500 handlers), site navigation (header/footer menus), asset bundles, and top-level HTTP middlewares reside in `src/Shared/Web/` (or `src/Web/` designated as the global presentation shell).
+- **Presentation Layer Identity:** The web-shell belongs strictly to the **Presentation Layer** — it is NOT an infrastructure component. It provides the visual and transport container that wraps responses produced by business modules.
+- **Domain Decoupling:** Business feature modules (`src/<Module>/`) provide their own internal views or response payloads, while the Global Web-Shell provides the overarching application shell and layout scaffolding.
+
+#### Strategy 4: Strangler Fig Migration (On-demand refactoring)
+- Legacy endpoints remain in their initial paths until a planned feature modifies or expands their domain area. At that point, the legacy action is extracted and rebuilt inside the target architecture module.
 
 ---
 

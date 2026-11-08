@@ -257,13 +257,18 @@ function checkAnchors(absPath, text, anchorsCache) {
 
 // The `## References` section is the skill's inventory of its topic guides:
 // every guide file must be listed exactly once, and every listing must be a
-// single-file bullet (`- `references/<name>.md` — description`). This is what
-// catches merged/glued entries like `...network utilities- `references/x.md``.
+// single-file bullet (`- `references/<name>.md` — description`).
+// May live in SKILL.md or in references/INDEX.md when progressive disclosure is enabled.
 function checkReferencesInventory(skillDir, skillMdPath, text) {
-  const lines = text.split('\n');
+  const indexMdPath = join(skillDir, 'references', 'INDEX.md');
+  const hasIndexMd = existsSync(indexMdPath);
+  const targetPath = hasIndexMd ? indexMdPath : skillMdPath;
+  const targetText = hasIndexMd ? readText(indexMdPath) : text;
+
+  const lines = targetText.split('\n');
   const start = lines.findIndex((line) => /^##\s+References\b/.test(line));
   if (start === -1) {
-    err(displayPath(skillMdPath), 0, 'references-inventory', 'no "## References" section found');
+    err(displayPath(targetPath), 0, 'references-inventory', 'no "## References" section found');
     return;
   }
   let end = lines.length;
@@ -278,10 +283,10 @@ function checkReferencesInventory(skillDir, skillMdPath, text) {
 
   const guidesDir = join(skillDir, 'references');
   if (!existsSync(guidesDir)) {
-    err(displayPath(skillMdPath), lineOf(text, 0), 'references-inventory', 'references/ directory not found');
+    err(displayPath(targetPath), lineOf(targetText, 0), 'references-inventory', 'references/ directory not found');
     return;
   }
-  const bulletPattern = /^- `references\/([A-Za-z0-9][A-Za-z0-9._-]*\.md)` — /;
+  const bulletPattern = /^- `(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)` — /;
   const tokenPattern = /`(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)`/g;
   const mentioned = new Set();
   for (let i = 0; i < sectionLines.length; i++) {
@@ -289,11 +294,11 @@ function checkReferencesInventory(skillDir, skillMdPath, text) {
     if (!/\.md/.test(line)) continue;
     if (/^#{1,6}\s+/.test(line) || /^\s*$/.test(line)) continue;
     if (!bulletPattern.test(line)) {
-      err(displayPath(skillMdPath), start + i + 1, 'references-bullet-format', `listing lines in "## References" must match "- \`references/<name>.md\` — description" (got: ${line.slice(0, 90)})`);
+      err(displayPath(targetPath), start + i + 1, 'references-bullet-format', `listing lines in "## References" must match "- \`references/<name>.md\` — description" (got: ${line.slice(0, 90)})`);
     }
     const tokens = [...line.matchAll(tokenPattern)];
     if (tokens.length !== 1) {
-      err(displayPath(skillMdPath), start + i + 1, 'references-bullet-format', `listing lines in "## References" must name exactly one guide file (found ${tokens.length})`);
+      err(displayPath(targetPath), start + i + 1, 'references-bullet-format', `listing lines in "## References" must name exactly one guide file (found ${tokens.length})`);
     }
     for (const token of tokens) {
       const name = token[1].replace(/^references\//, '');
@@ -302,18 +307,19 @@ function checkReferencesInventory(skillDir, skillMdPath, text) {
   }
   for (const absPath of walkMarkdownFiles(guidesDir)) {
     const name = displayPath(absPath).split('/').pop();
+    if (name === 'INDEX.md') continue;
     if (mentioned.has(name)) {
       const occurrences = [...sectionText.matchAll(new RegExp(`(?<![A-Za-z0-9._-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9._-])`, 'g'))].length;
       if (occurrences !== 1) {
-        err(displayPath(skillMdPath), start + 1, 'references-inventory', `references/${name} is mentioned ${occurrences} times in the References section (must be exactly once)`);
+        err(displayPath(targetPath), start + 1, 'references-inventory', `references/${name} is mentioned ${occurrences} times in the References section (must be exactly once)`);
       }
       mentioned.delete(name);
     } else {
-      err(displayPath(skillMdPath), start + 1, 'references-inventory', `references/${name} is not listed in the References section`);
+      err(displayPath(targetPath), start + 1, 'references-inventory', `references/${name} is not listed in the References section`);
     }
   }
   for (const name of mentioned) {
-    err(displayPath(skillMdPath), start + 1, 'references-inventory', `References section lists "${name}" but references/${name} does not exist`);
+    err(displayPath(targetPath), start + 1, 'references-inventory', `References section lists "${name}" but references/${name} does not exist`);
   }
 }
 

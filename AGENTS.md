@@ -140,7 +140,7 @@ Any addition or modification to topic reference guides MANDATES synchronizing de
 
 1. **Skill Entry Points (`SKILL.md`):**
 
-   - Register the topic in the References section of the relevant skill with a concise summary.
+   - Register the topic in the References inventory of the relevant skill (`references/INDEX.md` or `SKILL.md`) with a concise summary.
 
    - Add discovery keywords and trigger phrases to the YAML frontmatter `description`.
 

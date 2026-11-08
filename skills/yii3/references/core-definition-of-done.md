@@ -34,7 +34,7 @@ In addition to technical compilation and DI wiring, every delivered feature is e
 | Dimension | Scope & Verification Invariants | Grounding / Source |
 |---|---|---|
 | **1. Functional Correctness** | All requested business invariants and user flows are implemented. Proper HTTP status codes (`200`, `201`, `400`, `404`, `422`) or console `ExitCode` (`OK`, `UNSPECIFIED_ERROR`) returned. Validation errors surfaced cleanly in response bodies. | Feature specification, `references/http-actions-core.md`, `references/infra-commands.md` |
-| **2. Architectural Correctness** | Domain layer is isolated from HTTP/Persistence details. Single-Action controllers implement `__invoke()` returning `ResponseInterface`. Decomposition tier adheres to task scope (`Lightweight` / `Standard` / `Full`). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
+| **2. Architectural Correctness** | Single-Action controllers implement `__invoke()` returning `ResponseInterface`; actions strictly remain thin (zero SQL or direct persistence in actions). Domain isolation aligns with the project's architecture tier: Strict (Clean/Hexagonal) mandates pure domain aggregates isolated from persistence; Pragmatic (Active Record) allows entities coupled to database persistence, but presentation remains decoupled from storage. Decomposition tier adheres to task scope (`Lightweight` / `Standard` / `Full`). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
 | **3. API & Signature Correctness** | Every invoked method, constructor, and parameter type verified against installed package sources in `vendor/yiisoft/*/src/`. Zero deprecated Yii2 facades or static helpers (`Yii::$app`, `ActiveRecord::find()`). Version-gated syntax respected. | `references/core-version-notes.md`, Mandatory Signature Lookup Protocol |
 | **4. Integration & Wiring Correctness** | Every new interface is DI-bound in `config/**/di/*.php`. Actions mapped in `config/**/routes.php`. Commands registered in `config/console/params.php`. Domain events subscribed in `config/**/events.php`. All packages declared in `composer.json`. | SKILL.md per-step wiring gates, `references/core-di-and-config.md` |
 | **5. Security & Safety** | Typed input DTOs validate all untrusted user data. Mutating HTML routes protected by `CsrfTokenMiddleware` preceded by `SessionMiddleware`. Route-level authentication and RBAC permissions (`CurrentUser::can()`) verified before execution. Views escape dynamic data via `Html::encode()`. | `references/http-validation-rules.md`, `references/http-state.md`, `references/infra-auth-and-rbac.md`, `references/http-views.md` |
@@ -65,9 +65,9 @@ Mode: <Light | Full>
 Decomposition: <Lightweight | Standard | Full>
 Architecture: <source>
 fixes applied: <list | none>
-tests: pass | fail
-static analysis (Psalm/PHPStan, Rector): pass | fail
+tests: pass | fail | not run (no vendor / runner) | blocked (<reason>) | n/a
+static analysis (Psalm/PHPStan, Rector): pass | fail | not run | blocked | n/a
 packages added: <list | none>
 config files changed: <list | none>
-production readiness gate: pass | fail (<items>)
+production readiness gate: pass | fail (<items>) | n/a
 ```

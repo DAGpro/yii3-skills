@@ -15,46 +15,30 @@ End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to
 
 ## Mode & Decomposition Selection
 
-Pick and print the mode and decomposition tier at Stage 0 before writing code.
+Pick and print the mode, decomposition tier, and architecture pattern at Stage 0 before writing code:
 
-### Mode (Execution Scope)
-- **Light** — a single route, config/DI change, small fix, or guide lookup. Flow: Stage 0 → touched stages → touched Chain Integrity lines; the extended Finale (`references/core-definition-of-done.md`) is skipped.
-- **Full** — everything else, default: new business features and runtime/auth/queue/infrastructure tasks run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
-
-### Decomposition Intensity (Architectural Tiers)
-- **Lightweight** — targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips domain layers and extended definition-of-done.
-- **Standard** — regular business feature or CRUD without complex domain invariants (simple admin dictionary, lookup tables, settings toggles). Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when the project's architecture artifact does not mandate the layered shape (Core rule 3). Application Services and Use Case Handlers are two structural forms of the same Application Layer (Strict prefers single-purpose Use Case Handlers; Balanced and Pragmatic permit cohesive Application Services grouping related operations or Use Case Handlers). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
-- **Full** — complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
+- **Mode (Execution Scope):**
+  - **Light** — single route, config/DI change, small bugfix, or guide lookup. Flow: Stage 0 → touched stages → touched Chain Integrity lines; extended Definition of Done (`references/core-definition-of-done.md`) is skipped.
+  - **Full** — regular features, CRUD, runtime/auth/queue/infrastructure tasks. Default: runs full Mission Workflow and Finale with `references/core-definition-of-done.md`.
+- **Decomposition Intensity (Architectural Tiers):**
+  - **Lightweight** (maps to `Mode: Light`): targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips domain layers and extended Definition of Done.
+  - **Standard** (maps to `Mode: Full`): regular business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when project architecture permits (Core rule 3). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
+  - **Full** (maps to `Mode: Full`): complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
+- **Architectural Patterns** (detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):
+  - **Strict (Explicit / Hexagonal):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers.
+  - **Balanced (Structured Modules):** feature modules, Active Record permitted, interfaces at module boundaries or for swappable components.
+  - **Pragmatic (Layered / Active Record):** layered services directly consuming concrete repositories or Active Record models.
+  *Universal Invariant:* In all three patterns, Actions remain thin HTTP transport adapters; zero SQL, persistence, or transaction management in presentation.
 
 ## AI Factory Adapter (Workflow Integration)
 
 When executing inside an automated AI Factory workflow (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`), this adapter governs inter-agent coordination:
 
-- The skill was loaded by the `yii3` injection inside an `aif-*` workflow: Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present — including the configured plans directory — architecture artifact, rules file; never redo).
-- `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked. This is the non-interactive contract; the same behavior applies to any external workflow that cannot ask questions.
-- **Workflow Lifecycle Contract (`plan → implement → verify → fix → verify`):**
-  - **`aif-plan`:** Reads prompt/requirements + architecture source; outputs 6 canonical plan phases with target file paths, package requirements, and initializes the durable `### Execution State` block in the plan artifact.
-  - **`aif-implement`:** Consumes active plan; executes stages sequentially bottom-up; enforces per-step wiring gates; marks task checkboxes `- [x]`; updates `### Execution State` (Artifacts, Wiring, Verification, Next Stage).
-  - **`aif-verify`:** Read-only gate; runs project checks + Chain Integrity + DoD; writes findings to `aif-gate-result` (`blockers`, `affected_files`); updates plan `### Execution State` (`Status: COMPLETE` or `BLOCKED`).
-  - **`aif-fix`:** Consumes `aif-gate-result` blockers; targets root causes per Stage 0 item 3(c); updates affected code and plan `### Execution State`; hands off to `/aif-verify`.
-- **Durable Plan State (`### Execution State`):** The active plan artifact (`.ai-factory/plans/*.md` or `PLAN.md`) is the durable state carrier across workflow sessions. Update checkboxes `- [x]` and append or update the execution record:
-  ```markdown
-  ### Execution State
-  - **Stage:** <Current Stage number and name>
-  - **Status:** <IN PROGRESS | COMPLETE | BLOCKED>
-  - **Artifacts:**
-    - `<path/to/file.php>` (<Role / Layer>)
-  - **Wiring Gates:**
-    - DI bindings: <PASS | PENDING | N/A>
-    - Routes / CLI: <PASS | PENDING | N/A>
-    - Events / Migrations: <PASS | PENDING | N/A>
-  - **Verification:**
-    - Syntax / Project Checks: <PASS | FAIL | NOT RUN>
-    - Unit / HTTP Tests: <PASS | FAIL | NOT RUN | BLOCKED>
-  - **Open Issues:** <None | description>
-  - **Next Stage:** <Next Stage number and name | Finale>
-  ```
-- The Finale hands control to `/aif-verify` (findings merge into `aif-gate-result`); a direct standalone invocation closes the Finale itself.
+- **Path Resolution:** Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present: `paths.plans`, `paths.architecture`, `paths.rules_file`; never redo).
+- **Autonomous Mode (`HANDOFF_MODE=1`):** Never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record decisions or report `Status: BLOCKED`. This is the non-interactive contract.
+- **Durable Plan State (`### Execution State`):** The active plan artifact (`.ai-factory/plans/*.md` or `PLAN.md`) is the durable state carrier across workflow sessions. Update task checkboxes `- [x]` as phases complete and maintain the `### Execution State` record (Stage, Status, Artifacts, Wiring Gates, Verification, Next Stage).
+- **Verification Boundary (Code-Read-Only):** `aif-verify` is strictly **code-read-only** — it runs gates, generates `aif-gate-result` (`blockers`, `affected_files`), and updates plan `### Execution State`, but never modifies application code (`src/`, `config/`). Defect fixes belong exclusively to `aif-fix`.
+- **Full Lifecycle Specification:** See [`references/aif-adapter.md`](references/aif-adapter.md) for the complete state-machine contract (`plan → implement → verify → fix → verify`), state schema, and handoff rules. The Finale hands control to `/aif-verify`; a direct standalone invocation closes the Finale itself.
 
 ## Stage 0 — Mission Bootstrap
 

@@ -38,7 +38,7 @@ npx skills add DAGpro/yii3-skills --skill '*'
 
 Ask the agent (in a Yii 3 project): *"Add a comment to a post"* — expected behavior:
 
-1. **Stage 0** — guard (`yiisoft/*` present), bootstrap checklist, `Light`/`Full` decision, mission plan printed.
+1. **Stage 0** — applicability guard (`yiisoft/yii-*` present, Yii 2 excluded), bootstrap checklist, `Light`/`Full` mode and decomposition selection, mission plan printed.
 2. **Mission Workflow** — bottom-up stages: migration → `Comment` aggregate + `CommentRepositoryInterface` (bound in DI immediately) → repository adapter → `AddCommentHandler` (domain checks → `ConnectionInterface::transaction()` → events dispatched post-commit) → input DTO + thin `CreateCommentAction` → routes/events wiring → unit + HTTP tests.
 3. **Finale** — project checks, Chain Integrity checklist, then (Full mode) the definition-of-done guide:
 

@@ -522,4 +522,35 @@ assert(
   'Resolves frankenphp smoke target'
 );
 
+// ---------------------------------------------------------------------------
+// 10. Verification Code-Read-Only & Progressive Disclosure Contract
+// ---------------------------------------------------------------------------
+console.log('\n10. Validating Verification Code-Read-Only & Progressive Disclosure...');
+
+const verifyInjectionText = readFileSync(join(root, 'injections', 'verify.md'), 'utf8');
+assert(
+  /Code-Read-Only/i.test(verifyInjectionText),
+  'injections/verify.md explicitly enforces Code-Read-Only boundary'
+);
+assert(
+  /aif-fix/i.test(verifyInjectionText),
+  'injections/verify.md delegates defect resolution to aif-fix'
+);
+
+const skillMdText = readFileSync(join(root, 'skills', 'yii3', 'SKILL.md'), 'utf8');
+assert(
+  skillMdText.includes('references/aif-adapter.md'),
+  'SKILL.md links to references/aif-adapter.md for progressive disclosure'
+);
+
+const aifAdapterText = readFileSync(join(root, 'skills', 'yii3', 'references', 'aif-adapter.md'), 'utf8');
+assert(
+  /### Execution State/i.test(aifAdapterText),
+  'references/aif-adapter.md documents the durable ### Execution State format'
+);
+assert(
+  /Code-Read-Only/i.test(aifAdapterText),
+  'references/aif-adapter.md details the aif-verify Code-Read-Only invariant'
+);
+
 console.log(`\nAll AI Factory Workflow contract tests passed! (${testsPassed} passed, ${testsFailed} failed)\n`);

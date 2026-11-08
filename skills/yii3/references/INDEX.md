@@ -21,6 +21,7 @@
 - `references/core-events-design.md` — PSR-14 architecture, event/listener design, config, post-commit rule
 - `references/core-events-reference.md` — framework events catalog, signatures reference, testing
 - `references/core-version-notes.md` — version-gated behavior catalog with `composer.lock` verification
+- `references/aif-adapter.md` — AI Factory workflow lifecycle, durable execution state, cross-session coordination
 
 ### HTTP & Presentation
 - `references/http-routes.md` — split index: worker-environment caveats, anti-pattern matrix, related guides

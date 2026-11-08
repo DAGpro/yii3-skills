@@ -279,25 +279,33 @@ function checkSkillTextReferences(skillDir, manifest) {
   const validKeys = new Set();
   for (const h of headings) {
     validKeys.add(normalizeSectionKey(h));
-    const stem = h.split(/\s*[\(—–-]\s*/)[0].trim();
+    const parts = h.split(/\s*[\(—–-]\s*/);
+    const stem = parts[0]?.trim();
     if (stem) validKeys.add(normalizeSectionKey(stem));
+    if (parts[1]?.trim()) {
+      validKeys.add(normalizeSectionKey(parts[1].trim()));
+    }
   }
-  validKeys.add('stage 0');
-  validKeys.add('mission workflow');
+
+  // Dynamically derive numbered rules from "## Core rules" in SKILL.md
+  const coreRulesSection = skillText.match(/##\s+Core rules\s*\n([\s\S]*?)(?:\n##|\s*$)/)?.[1] ?? '';
   validKeys.add('core rules');
   validKeys.add('core rule');
-  validKeys.add('core rule 1');
-  validKeys.add('core rule 2');
-  validKeys.add('core rule 3');
-  validKeys.add('core rule 4');
-  validKeys.add('finale');
-  validKeys.add('definition of done');
-  validKeys.add('chain integrity');
-  validKeys.add('chain integrity checklist');
-  validKeys.add('cross-cutting yii 2 bans');
-  validKeys.add('task and intent routing matrix');
-  validKeys.add('task routing matrix');
-  validKeys.add('ai factory adapter');
+  for (const match of coreRulesSection.matchAll(/^(\d+)\.\s+/gm)) {
+    validKeys.add(`core rule ${match[1]}`);
+  }
+
+  // Dynamically derive checklists from "## Finale" in SKILL.md
+  const finaleSection = skillText.match(/##\s+Finale[^\n]*\n([\s\S]*?)(?:\n##|\s*$)/)?.[1] ?? '';
+  if (/Chain Integrity/i.test(finaleSection)) {
+    validKeys.add('chain integrity');
+    validKeys.add('chain integrity checklist');
+  }
+
+  // Canonical shorthand aliases mapped to existing headings
+  if ([...validKeys].some((k) => k.startsWith('task and intent routing matrix'))) {
+    validKeys.add('task routing matrix');
+  }
 
   const filesToScan = [join(root, 'README.md')];
   if (Array.isArray(manifest?.injections)) {
@@ -336,10 +344,10 @@ function checkSkillTextReferences(skillDir, manifest) {
       }
     }
 
-    // Pattern 4: SKILL.md <SectionName> (before punctuation or item/row qualifiers, exact match)
-    for (const match of text.matchAll(/SKILL\.md\s+([A-Za-z0-9][A-Za-z0-9\s—–-]*?)(?=(?:\s+(?:item|row|clause|step|check)\b|\s*[\),;.]|\s*$))/g)) {
+    // Pattern 4: SKILL.md <SectionName> (before punctuation, newline, or item/row qualifiers, exact match)
+    for (const match of text.matchAll(/SKILL\.md\s+([A-Za-z0-9][A-Za-z0-9\t —–-]*?)(?=(?:\s+(?:item|row|clause|step|check)\b|[\),;.]|$))/gm)) {
       const raw = match[1].trim();
-      if (['and', 'or', 'itself'].includes(raw.toLowerCase())) continue;
+      if (/^(?:is|are|was|were|has|have|does|do|will|would|can|could|should|and|or|itself)\b/i.test(raw)) continue;
       const normalized = normalizeSectionKey(raw);
       if (!validKeys.has(normalized)) {
         err(displayPath(filePath), lineOf(text, match.index), 'skill-section-ref', `referenced section "${raw}" does not exist in SKILL.md`);

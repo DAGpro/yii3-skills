@@ -16,41 +16,29 @@ export function detectPhpToolchain() {
   const dockerImage = process.env.EVAL_DOCKER_IMAGE || null;
   const composerDockerImage = process.env.EVAL_COMPOSER_DOCKER_IMAGE || dockerImage;
 
-  let hasPhp = false;
-  let phpVersion = null;
-  let isPhpVersionCompatible = false;
-  let phpVersionWarning = null;
-
+  // 1. Detect local PHP
+  let hasLocalPhp = false;
+  let localPhpVersion = null;
+  let isLocalPhpCompatible = false;
+  let isLocalPhpVersionUnknown = false;
   try {
     const res = spawnSync(phpBin, ['-v'], { encoding: 'utf8', timeout: 5000 });
     if (res.status === 0 && res.stdout) {
-      hasPhp = true;
+      hasLocalPhp = true;
       const match = res.stdout.match(/PHP\s+([0-9]+)\.([0-9]+)\.([0-9]+)/i);
       if (match) {
-        phpVersion = `${match[1]}.${match[2]}.${match[3]}`;
+        localPhpVersion = `${match[1]}.${match[2]}.${match[3]}`;
         const major = Number(match[1]);
         const minor = Number(match[2]);
-        isPhpVersionCompatible = major > 8 || (major === 8 && minor >= 2);
-        if (!isPhpVersionCompatible) {
-          phpVersionWarning = `Detected PHP ${phpVersion} is below required PHP >= 8.2 for Yii 3`;
-        }
+        isLocalPhpCompatible = major > 8 || (major === 8 && minor >= 2);
       } else {
-        phpVersion = res.stdout.split('\n')[0].trim();
+        localPhpVersion = res.stdout.split('\n')[0].trim();
+        isLocalPhpVersionUnknown = true;
       }
     }
   } catch {}
 
-  let hasComposer = false;
-  let composerVersion = null;
-  try {
-    const res = spawnSync(composerBin, ['--version'], { encoding: 'utf8', timeout: 5000 });
-    if (res.status === 0 && res.stdout) {
-      hasComposer = true;
-      const match = res.stdout.match(/Composer\s+version\s+([^\s]+)/i);
-      composerVersion = match ? match[1] : res.stdout.split('\n')[0].trim();
-    }
-  } catch {}
-
+  // 2. Detect Docker support
   let hasDocker = false;
   if (dockerImage) {
     try {
@@ -59,7 +47,87 @@ export function detectPhpToolchain() {
     } catch {}
   }
 
+  // 3. Detect Docker PHP when Docker is configured
+  let hasDockerPhp = false;
+  let dockerPhpVersion = null;
+  let isDockerPhpCompatible = false;
+  let isDockerPhpVersionUnknown = false;
+  if (hasDocker && dockerImage) {
+    try {
+      const res = spawnSync('docker', ['run', '--rm', dockerImage, 'php', '-v'], {
+        encoding: 'utf8',
+        timeout: 10000,
+      });
+      if (res.status === 0 && res.stdout) {
+        hasDockerPhp = true;
+        const match = res.stdout.match(/PHP\s+([0-9]+)\.([0-9]+)\.([0-9]+)/i);
+        if (match) {
+          dockerPhpVersion = `${match[1]}.${match[2]}.${match[3]}`;
+          const major = Number(match[1]);
+          const minor = Number(match[2]);
+          isDockerPhpCompatible = major > 8 || (major === 8 && minor >= 2);
+        } else {
+          dockerPhpVersion = res.stdout.split('\n')[0].trim();
+          isDockerPhpVersionUnknown = true;
+        }
+      }
+    } catch {}
+  }
+
+  // 4. Select preferred PHP runner: prioritize compatible PHP (>= 8.2)
+  let preferredPhpRuntime = null;
+  let activePhpVersion = null;
+  let isPhpVersionCompatible = false;
+  let isPhpVersionUnknown = false;
+  let phpVersionWarning = null;
+
+  if (hasLocalPhp && isLocalPhpCompatible) {
+    preferredPhpRuntime = 'local';
+    activePhpVersion = localPhpVersion;
+    isPhpVersionCompatible = true;
+  } else if (hasDockerPhp && isDockerPhpCompatible) {
+    preferredPhpRuntime = 'docker';
+    activePhpVersion = dockerPhpVersion;
+    isPhpVersionCompatible = true;
+  } else if (hasLocalPhp && !isLocalPhpVersionUnknown) {
+    preferredPhpRuntime = 'local';
+    activePhpVersion = localPhpVersion;
+    isPhpVersionCompatible = false;
+    phpVersionWarning = `Local PHP ${localPhpVersion} is below required PHP >= 8.2 for Yii 3`;
+  } else if (hasDockerPhp && !isDockerPhpVersionUnknown) {
+    preferredPhpRuntime = 'docker';
+    activePhpVersion = dockerPhpVersion;
+    isPhpVersionCompatible = false;
+    phpVersionWarning = `Docker PHP ${dockerPhpVersion} is below required PHP >= 8.2 for Yii 3`;
+  } else if (hasLocalPhp) {
+    preferredPhpRuntime = 'local';
+    activePhpVersion = localPhpVersion;
+    isPhpVersionCompatible = false;
+    isPhpVersionUnknown = true;
+    phpVersionWarning = `Unable to determine local PHP version from: "${localPhpVersion}"`;
+  } else if (hasDockerPhp) {
+    preferredPhpRuntime = 'docker';
+    activePhpVersion = dockerPhpVersion;
+    isPhpVersionCompatible = false;
+    isPhpVersionUnknown = true;
+    phpVersionWarning = `Unable to determine Docker PHP version from: "${dockerPhpVersion}"`;
+  }
+
+  // 5. Detect local Composer
+  let hasLocalComposer = false;
+  let localComposerVersion = null;
+  try {
+    const res = spawnSync(composerBin, ['--version'], { encoding: 'utf8', timeout: 5000 });
+    if (res.status === 0 && res.stdout) {
+      hasLocalComposer = true;
+      const match = res.stdout.match(/Composer\s+version\s+([^\s]+)/i);
+      localComposerVersion = match ? match[1] : res.stdout.split('\n')[0].trim();
+    }
+  } catch {}
+
+  // 6. Detect Docker Composer
   let hasDockerComposer = false;
+  let dockerComposerVersion = null;
   if (hasDocker && composerDockerImage) {
     try {
       const res = spawnSync(
@@ -69,30 +137,39 @@ export function detectPhpToolchain() {
       );
       if (res.status === 0 && res.stdout && /Composer/i.test(res.stdout)) {
         hasDockerComposer = true;
-        if (!composerVersion) {
-          const match = res.stdout.match(/Composer\s+version\s+([^\s]+)/i);
-          composerVersion = match ? match[1] : 'docker';
-        }
+        const match = res.stdout.match(/Composer\s+version\s+([^\s]+)/i);
+        dockerComposerVersion = match ? match[1] : 'docker';
       }
     } catch {}
   }
 
-  const composerAvailable = hasComposer || hasDockerComposer;
+  // 7. Select preferred Composer runner: local has priority, Docker is fallback
+  let preferredComposerRuntime = null;
+  let activeComposerVersion = null;
+  if (hasLocalComposer) {
+    preferredComposerRuntime = 'local';
+    activeComposerVersion = localComposerVersion;
+  } else if (hasDockerComposer) {
+    preferredComposerRuntime = 'docker';
+    activeComposerVersion = dockerComposerVersion;
+  }
 
   cachedToolchain = {
-    hasPhp,
+    hasPhp: Boolean(preferredPhpRuntime),
+    preferredPhpRuntime,
     phpBin,
-    phpVersion,
+    phpVersion: activePhpVersion,
     isPhpVersionCompatible,
+    isPhpVersionUnknown,
     phpVersionWarning,
-    hasComposer: composerAvailable,
+    hasComposer: Boolean(preferredComposerRuntime),
+    preferredComposerRuntime,
     composerBin,
-    composerVersion,
+    composerVersion: activeComposerVersion,
     hasDocker,
     dockerImage,
-    hasDockerComposer,
     composerDockerImage,
-    isAvailable: hasPhp || (hasDocker && Boolean(dockerImage)),
+    isAvailable: Boolean(preferredPhpRuntime),
   };
 
   return cachedToolchain;
@@ -103,10 +180,10 @@ export function resetToolchainCache() {
 }
 
 function execPhp(args, cwd, toolchain = detectPhpToolchain()) {
-  if (toolchain.hasPhp) {
+  if (toolchain.preferredPhpRuntime === 'local') {
     return spawnSync(toolchain.phpBin, args, { cwd, encoding: 'utf8', timeout: 30000 });
   }
-  if (toolchain.hasDocker && toolchain.dockerImage) {
+  if (toolchain.preferredPhpRuntime === 'docker' && toolchain.dockerImage) {
     const dockerArgs = ['run', '--rm', '-v', `${cwd}:/app`, '-w', '/app', toolchain.dockerImage, 'php', ...args];
     return spawnSync('docker', dockerArgs, { encoding: 'utf8', timeout: 60000 });
   }
@@ -114,10 +191,10 @@ function execPhp(args, cwd, toolchain = detectPhpToolchain()) {
 }
 
 function execComposer(args, cwd, toolchain = detectPhpToolchain()) {
-  if (toolchain.hasComposer && !toolchain.hasDockerComposer) {
+  if (toolchain.preferredComposerRuntime === 'local') {
     return spawnSync(toolchain.composerBin, args, { cwd, encoding: 'utf8', timeout: 30000 });
   }
-  if (toolchain.hasDockerComposer) {
+  if (toolchain.preferredComposerRuntime === 'docker') {
     const image = toolchain.composerDockerImage || toolchain.dockerImage;
     const dockerArgs = ['run', '--rm', '-v', `${cwd}:/app`, '-w', '/app', image, 'composer', ...args];
     return spawnSync('docker', dockerArgs, { encoding: 'utf8', timeout: 60000 });
@@ -235,7 +312,8 @@ export function runPhpUnit(workDir, options = {}, toolchain = detectPhpToolchain
     existsSync(join(workDir, 'phpunit.xml')) ||
     existsSync(join(workDir, 'phpunit.dist.xml'));
   const hasTestsDir = existsSync(join(workDir, 'tests'));
-  const phpunitBin = join(workDir, 'vendor', 'bin', 'phpunit');
+  const customPhpunitBin = process.env.EVAL_PHPUNIT_BIN || null;
+  const phpunitBin = customPhpunitBin || join(workDir, 'vendor', 'bin', 'phpunit');
   const hasPhpunitBin = existsSync(phpunitBin);
 
   if (!hasConfig && !hasTestsDir) {
@@ -266,9 +344,44 @@ export function runPhpUnit(workDir, options = {}, toolchain = detectPhpToolchain
 export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = detectPhpToolchain()) {
   const results = [];
 
+  // L4: PHP runtime availability check
+  results.push({
+    id: 'runtime-php-availability',
+    description: 'PHP CLI or container runtime availability check',
+    required: false,
+    pass: toolchain.isAvailable,
+    evidence: toolchain.isAvailable
+      ? `PHP runtime available via ${toolchain.preferredPhpRuntime} (${toolchain.phpVersion || 'version unverified'})`
+      : 'PHP runtime not detected in environment or Docker (skipped)',
+  });
+
+  // L4: PHP version compatibility check
+  if (toolchain.isAvailable) {
+    const isUnknown = toolchain.isPhpVersionUnknown;
+    results.push({
+      id: 'runtime-php-version',
+      description: 'PHP version compatibility check (PHP >= 8.2)',
+      required: true,
+      pass: toolchain.isPhpVersionCompatible && !isUnknown,
+      evidence: isUnknown
+        ? `BLOCKED: Unable to determine PHP version: ${toolchain.phpVersion}`
+        : toolchain.isPhpVersionCompatible
+          ? `Compatible PHP runtime detected: ${toolchain.phpVersion} (${toolchain.preferredPhpRuntime})`
+          : (toolchain.phpVersionWarning || `PHP ${toolchain.phpVersion} is incompatible with PHP >= 8.2 requirement`),
+    });
+  } else {
+    results.push({
+      id: 'runtime-php-version',
+      description: 'PHP version compatibility check (PHP >= 8.2)',
+      required: false,
+      pass: true,
+      evidence: 'PHP runtime not detected in environment or Docker (skipped)',
+    });
+  }
+
   // L4: Syntax check on changed files
   const lint = lintPhpFiles(workDir, changedFiles, toolchain);
-  const lintRequired = !lint.skipped && toolchain.isPhpVersionCompatible;
+  const lintRequired = !lint.skipped;
   results.push({
     id: 'runtime-php-lint',
     description: 'PHP syntax check (php -l) on generated/modified files',

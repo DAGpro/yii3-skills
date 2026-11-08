@@ -50,3 +50,12 @@ export function matchParen(text, openIdx) {
 export const check = (id, description, run, { required = true } = {}) => ({ id, description, required, run });
 export const ok = (evidence = '') => ({ pass: true, evidence });
 export const fail = (evidence = '') => ({ pass: false, evidence });
+
+export {
+  detectPhpToolchain,
+  lintPhpFile,
+  lintPhpFiles,
+  validateComposerJson,
+  runPhpUnit,
+  runRuntimeEvaluation,
+} from './runtime.mjs';

@@ -7,8 +7,10 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed } from './core.mjs';
 import { changedFiles } from '../lib/checks.mjs';
+import { runRuntimeEvaluation } from '../lib/runtime.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const runtimeFlag = process.argv.includes('--runtime');
 let bad = 0;
 
 async function evalSample(id, sDir, kind) {
@@ -18,8 +20,14 @@ async function evalSample(id, sDir, kind) {
   if (existsSync(sample)) copyDir(sample, work);
   const tPath = join(work, 'transcript.txt');
   const transcript = existsSync(tPath) ? readFileSync(tPath, 'utf8') : '';
-  const ctx = { dir: work, base: join(sDir, 'fixture'), transcript, changed: changedFiles(work, join(sDir, 'fixture')).filter((c) => c.path !== 'transcript.txt'), mode: 'selftest' };
-  return runChecks(sDir, ctx);
+  const changed = changedFiles(work, join(sDir, 'fixture')).filter((c) => c.path !== 'transcript.txt');
+  const ctx = { dir: work, base: join(sDir, 'fixture'), transcript, changed, mode: 'selftest' };
+  const checks = await runChecks(sDir, ctx);
+  if (runtimeFlag && kind === 'positive') {
+    const runtimeChecks = runRuntimeEvaluation(work, changed);
+    checks.push(...runtimeChecks);
+  }
+  return checks;
 }
 
 for (const id of listScenarios(root)) {

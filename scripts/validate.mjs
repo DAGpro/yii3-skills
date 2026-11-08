@@ -164,7 +164,7 @@ function checkCatalogConsistency(skillDir) {
 // also matches Yii 2 projects and plain Yiisoft-ecosystem libraries (e.g.
 // yiisoft/di + yiisoft/strings), hence the yiisoft/yii-* discriminator.
 const CANONICAL_GUARD =
-  'Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (app/runtime stack, e.g. `yiisoft/yii-runner-http` or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, no `yiisoft/yii-*`), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (missing `composer.lock`, contradictory evidence): do not auto-activate — ask the user or report the task blocked. Otherwise';
+  'Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (application/runtime stack, e.g. `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, without application runtime stack), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): do not auto-activate — ask the user or report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions). Otherwise';
 
 function checkInjectionGuards(manifest) {
   if (!Array.isArray(manifest?.injections)) return;
@@ -259,6 +259,79 @@ function checkAnchors(absPath, text, anchorsCache) {
 // every guide file must be listed exactly once, and every listing must be a
 // single-file bullet (`- `references/<name>.md` — description`).
 // May live in SKILL.md or in references/INDEX.md when progressive disclosure is enabled.
+function checkSkillTextReferences(skillDir, manifest) {
+  const skillMdPath = join(skillDir, 'SKILL.md');
+  const skillText = readText(skillMdPath);
+  const headings = [...skillText.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)].map((m) => m[1].trim());
+
+  const validSections = new Set();
+  for (const h of headings) {
+    validSections.add(h.toLowerCase());
+    const stem = h.replace(/\s*[\(—–].*$/, '').trim().toLowerCase();
+    if (stem) validSections.add(stem);
+  }
+  validSections.add('core rules');
+  validSections.add('core rule');
+  validSections.add('cross-cutting yii 2 bans');
+  validSections.add('quick guard list');
+  validSections.add('definition of done');
+  validSections.add('chain integrity');
+  validSections.add('task & intent routing matrix');
+  validSections.add('task routing matrix');
+  validSections.add('mission workflow');
+  validSections.add('ai factory adapter');
+
+  const filesToScan = [join(root, 'README.md')];
+  if (Array.isArray(manifest?.injections)) {
+    for (const inj of manifest.injections) {
+      if (typeof inj?.file === 'string' && inj.file.trim() !== '') {
+        filesToScan.push(join(root, inj.file));
+      }
+    }
+  }
+
+  for (const filePath of filesToScan) {
+    if (!existsSync(filePath)) continue;
+    const text = readText(filePath);
+
+    // Pattern 1: per the <Name> in SKILL.md (only when not followed by a section name like Stage 0)
+    for (const match of text.matchAll(/(?:per|in|see)\s+the\s+([A-Za-z0-9\s—–-]+?)\s+(?:in|of)\s+SKILL\.md(?!\s+[A-Za-z0-9])/g)) {
+      const name = match[1].trim().toLowerCase();
+      const isKnown = [...validSections].some((v) => name.includes(v) || v.includes(name));
+      if (!isKnown) {
+        err(displayPath(filePath), lineOf(text, match.index), 'skill-section-ref', `referenced section "${match[1].trim()}" does not exist in SKILL.md`);
+      }
+    }
+
+    // Pattern 2: SKILL.md <SectionName> (e.g. SKILL.md Stage 0, SKILL.md Core rules, SKILL.md Finale)
+    for (const match of text.matchAll(/SKILL\.md\s+([A-Za-z0-9]+(?:\s+[A-Za-z0-9]+)?)/g)) {
+      const token = match[1].trim().toLowerCase();
+      // Skip words that are not section names (e.g. "item", "and", "or", "Core rule")
+      if (['item', 'and', 'or', 'row', 'checks'].includes(token.split(' ')[0])) continue;
+      const isKnown = [...validSections].some((v) => token.includes(v) || v.includes(token));
+      if (!isKnown) {
+        err(displayPath(filePath), lineOf(text, match.index), 'skill-section-ref', `referenced section "${match[1].trim()}" does not exist in SKILL.md`);
+      }
+    }
+
+    for (const match of text.matchAll(/(?:the skill's|its)\s+"([^"]+)"\s*(?:section|—)/g)) {
+      const name = match[1].trim().toLowerCase();
+      const isKnown = [...validSections].some((v) => name.includes(v) || v.includes(name));
+      if (!isKnown) {
+        err(displayPath(filePath), lineOf(text, match.index), 'skill-section-ref', `quoted section "${match[1].trim()}" does not exist in SKILL.md`);
+      }
+    }
+
+    for (const match of text.matchAll(/SKILL\.md\s+"([^"]+)"/g)) {
+      const name = match[1].trim().toLowerCase();
+      const isKnown = [...validSections].some((v) => name.includes(v) || v.includes(name));
+      if (!isKnown) {
+        err(displayPath(filePath), lineOf(text, match.index), 'skill-section-ref', `quoted section "${match[1].trim()}" does not exist in SKILL.md`);
+      }
+    }
+  }
+}
+
 function checkReferencesInventory(skillDir, skillMdPath, text) {
   const indexMdPath = join(skillDir, 'references', 'INDEX.md');
   const hasIndexMd = existsSync(indexMdPath);
@@ -431,6 +504,9 @@ function main() {
       }
 
       checkInjectionGuards(manifest);
+      if (Array.isArray(manifest.skills) && manifest.skills[0]) {
+        checkSkillTextReferences(join(root, manifest.skills[0]), manifest);
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync
 import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { changedFiles } from '../lib/checks.mjs';
+import { runRuntimeEvaluation } from '../lib/runtime.mjs';
 
 export const copyDir = (src, dst) => cpSync(src, dst, { recursive: true });
 
@@ -42,6 +43,10 @@ export async function evaluateWork(scenarioDir, { dir, transcript, mode, run = 1
   const changed = changedFiles(dir, base).filter((c) => c.path !== 'transcript.txt' && c.path !== 'AGENTS.md');
   const ctx = { dir, base, transcript, changed, mode };
   const results = await runChecks(scenarioDir, ctx);
+  if (extra.runtime || process.env.EVAL_ENABLE_RUNTIME === '1') {
+    const runtimeResults = runRuntimeEvaluation(dir, changed);
+    results.push(...runtimeResults);
+  }
   const runDir = join(outRoot, basename(scenarioDir), `${mode}-${run}`);
   mkdirSync(runDir, { recursive: true });
   writeFileSync(join(runDir, 'result.json'), JSON.stringify({ id: basename(scenarioDir), mode, run, ...extra, changed: changed.map((c) => c.path), results }, null, 2));

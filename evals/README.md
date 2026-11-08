@@ -113,6 +113,27 @@ scenario whose baseline mean stays >= 80% (delta < ~10 pp) must be hardened (ind
 distractors, extra gates) or retired; in composites, harden or retire individual checks instead.
 Headline metric of the suite = delta on composite scenarios; unit scenarios are the diagnostic layer.
 
+## Runtime Verification Layer (L4/L5)
+
+The harness includes a runtime verification module (`evals/lib/runtime.mjs`) supporting PHP syntax linting (`php -l`), `composer validate`, and `phpunit` test execution:
+
+```bash
+# Enable runtime checks on evaluate.mjs
+node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --runtime
+
+# Validate syntax across all scenario samples
+node evals/runner/selftest.mjs --runtime
+
+# Or set the environment variable for batch runs
+export EVAL_ENABLE_RUNTIME=1
+```
+
+- **Environment Detection:** Automatically detects local PHP and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). When PHP is absent in offline runner sandboxes, runtime checks report `skipped` without failing structural checks.
+- **Checks executed:**
+  - `runtime-php-lint`: Verifies valid PHP 8.2+ syntax (`php -l`) on all generated or touched `.php` files.
+  - `runtime-composer-validate`: Verifies `composer.json` syntax and schema.
+  - `runtime-phpunit`: Executes PHPUnit tests when tests and configuration exist.
+
 ## Adding a scenario
 
 1. Copy the closest scenario, adjust the fixture and `prompt.md`.
@@ -126,7 +147,7 @@ Rule: every agent failure found on a real project becomes a new scenario.
 ## Not implemented (TODO)
 
 - Judge over `rubric.md` (a model call; the judge must not know the with-skill/baseline mode).
-- Running `composer install` and `phpunit` in the working copy as a check (currently text analysis only).
+- Automatic `composer install` inside ephemeral test sandboxes (syntax check, composer validate, and phpunit are implemented in `evals/lib/runtime.mjs`, but full package installation currently requires network or pre-warmed vendor).
 - Guide coverage: 62+ of 80+ `skills/yii3/references/` guides have scenarios
   (55 scenarios: unit, composite anchors 01/13/23/25/31, and AI Factory E2E workflow in `evals/scenarios/55-aif-e2e-workflow/`;
   the light / drift / convention-conflict / no-vendor / negative-trigger scenarios

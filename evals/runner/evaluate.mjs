@@ -29,7 +29,8 @@ const tPath = args.transcript ? resolve(args.transcript) : join(work, 'transcrip
 const transcript = existsSync(tPath) ? readFileSync(tPath, 'utf8') : '';
 if (!transcript) console.error('WARN: no transcript found - transcript-based checks will fail.');
 
-const { rate, reqFailed, results } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot });
+const runtime = process.argv.includes('--runtime') || args.runtime === 'true' || args.runtime === '1';
+const { rate, reqFailed, results } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot, extra: { runtime } });
 for (const r of results) console.log(`${r.pass ? 'PASS' : 'FAIL'}${r.required ? '' : ' (opt)'} ${r.id}: ${r.evidence}`);
 console.log(`pass-rate: ${(rate * 100).toFixed(0)}%  required-failed=[${reqFailed}]`);
 console.log(`artifacts: ${join(outRoot, id, `${mode}-${run}`)}`);

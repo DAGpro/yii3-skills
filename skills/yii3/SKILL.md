@@ -15,15 +15,19 @@ End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to
 
 ## Mode & Decomposition Selection
 
-Pick and print the mode, decomposition tier, and architecture pattern at Stage 0 before writing code:
+Pick and print the execution scope mode and architectural decomposition tier at Stage 0 before writing code.
+The 3 architectural decomposition tiers govern domain code depth, and directly determine the execution scope mode:
 
-- **Mode (Execution Scope):**
-  - **Light** — single route, config/DI change, small bugfix, or guide lookup. Flow: Stage 0 → touched stages → touched Chain Integrity lines; extended Definition of Done (`references/core-definition-of-done.md`) is skipped.
-  - **Full** — regular features, CRUD, runtime/auth/queue/infrastructure tasks. Default: runs full Mission Workflow and Finale with `references/core-definition-of-done.md`.
-- **Decomposition Intensity (Architectural Tiers):**
-  - **Lightweight** (maps to `Mode: Light`): targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips domain layers and extended Definition of Done.
-  - **Standard** (maps to `Mode: Full`): regular business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when project architecture permits (Core rule 3). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
-  - **Full** (maps to `Mode: Full`): complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
+- **1. Lightweight Tier (paired with `Mode: Light`):**
+  - **Scope & Use:** Targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips pure domain abstraction layers and skips extended Definition of Done (`references/core-definition-of-done.md`). Flow: Stage 0 → touched stages → touched Chain Integrity lines.
+- **2. Standard Tier (paired with `Mode: Full`):**
+  - **Scope & Use:** Regular business features or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). Runs full Mission Workflow and Finale with `references/core-definition-of-done.md`.
+  - **Collapsed Abstractions:** Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when project architecture permits (Core rule 3). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
+- **3. Full Tier (Domain-Driven, paired with `Mode: Full`):**
+  - **Scope & Use:** Complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case Handler, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
+- **Execution Scope Summary:**
+  - `Mode: Light` answers *how much workflow ceremony to run* for Lightweight tasks (touched stages only, no extended DoD).
+  - `Mode: Full` runs complete 7-stage workflow discipline and extended DoD for both Standard and Full decomposition tiers.
 - **Architectural Patterns** (detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):
   - **Strict (Explicit / Hexagonal):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers.
   - **Balanced (Structured Modules):** feature modules, Active Record permitted, interfaces at module boundaries or for swappable components.
@@ -42,7 +46,7 @@ When executing inside an automated AI Factory workflow (`aif-plan`, `aif-impleme
 
 ## Stage 0 — Mission Bootstrap
 
-Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 applications — at least one `yiisoft/yii-*` package (app/runtime stack: `yiisoft/yii-runner*`, `yiisoft/yii-http`, `yiisoft/yii-console`, `yiisoft/yii-event`, ...; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. A Yii 2 project (`yiisoft/yii2` present), a Yii-ecosystem library project (base `yiisoft/*` packages only — `yiisoft/di`, `yiisoft/strings`, ... — with no `yiisoft/yii-*`), or a non-Yii project: stop and report inapplicability — never apply Yii 3 rules to them. Unknown project state (missing `composer.lock`, contradictory evidence): report and ask before applying; autonomous runs report the task blocked.
+Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 applications — at least one `yiisoft/yii-*` package (application/runtime stack: `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, `yiisoft/yii-console`, ...; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. A Yii 2 project (`yiisoft/yii2` present), a Yii-ecosystem library project (base `yiisoft/*` packages only — `yiisoft/di`, `yiisoft/strings`, ... — without application runtime stack), or a non-Yii project: stop and report inapplicability — never apply Yii 3 rules to them. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): report and ask before applying; autonomous runs report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions).
 
 1. **Bootstrap checklist** (skip items the running workflow already resolved — never redo):
    - Architecture source: the project's architecture artifact if present (`references/core-architecture-alignment.md`); otherwise guide placement rules — check 2–3 similar existing features as integration context (Core rule 3).
@@ -148,23 +152,30 @@ Run after the last stage, in every mode.
 
 Full grounded matrices: each guide's Anti-Pattern Matrix:
 
-| # | Forbidden Legacy / Anti-Pattern | Mandatory Idiomatic Yii 3 Replacement |
-|---|---|---|
-| 1 | `Yii::$app->...` or any static facade | Inject PSR / Yiisoft interfaces via constructor DI |
-| 2 | `class SiteController extends Controller` with `actionIndex()` | `final readonly class IndexAction` with `__invoke()` |
-| 3 | `$this->render('index', $data)` inside controllers | Inject `WebViewRenderer` and return `$this->viewRenderer->render(...)` |
-| 4 | `$request->post('name')` / `$request->get('id')` | PSR-7 `getParsedBody()` or typed DTOs (`yiisoft/input-http`); route args via `CurrentRoute` |
-| 5 | `rules()` and `behaviors()` on ActiveRecord models | Validation attributes on DTOs; PSR-14 events replace behaviors |
-| 6 | `ActiveForm::begin()` in templates | `Html::form()->post()->csrf($csrf)->open()` and `Field::text(...)` |
-| 7 | `Route::get('/path')` / `Group::create()` (deprecated since router 4.0.3 — `references/core-version-notes.md#r1-router-static-route--group-factories-deprecated-router-403`) | `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Group()` |
-| 8 | `./yii migrate/up` (slash separator) | `./yii migrate:up` (colon separator — `references/core-version-notes.md#r8-console-migration-commands-use-colon-names-db-migration`) |
-| 9 | Editing `vendor/` or `config/.merge-plan.php` | Edit `config/**/params.php` / `di/*.php`, then `composer yii-config-rebuild` |
-| 10 | `echo`, `print`, `die()`, `exit()` in actions | Return a PSR-7 `ResponseInterface` instance |
-| 11 | Mixing Active Record and Cycle ORM | Choose strictly one persistence stack |
-| 12 | `$session->getFlash(...)` / `$session->setFlash(...)` | Inject `FlashInterface` separately |
-| 13 | `if ($currentUser->getIdentity() === null)` | `$currentUser->isGuest()` — `getIdentity()` never returns null (`references/core-version-notes.md#r7-currentusergetidentity-never-returns-null-user`) |
-| 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` |
-| 15 | `#[Override]` attribute on methods | Omit it in new code — Yii 3 convention: `yiisoft/code-style` ships `RemoveOverrideAttributeRector` in the `YII_CORE` set (`references/core-version-notes.md#r10-override-attribute-ban-code-style-yii_core-set`). Tooling-dependent enforcement: report a convention suggestion, never a blocking error, unless the project's Rector preset enables the rule (R10 verify step) |
+#### 1. Hard Architectural Bans (Strict Quality Gate Blockers)
+
+| # | Forbidden Legacy / Anti-Pattern | Mandatory Idiomatic Yii 3 Replacement | Severity |
+|---|---|---|---|
+| 1 | `Yii::$app->...` or any static facade | Inject PSR / Yiisoft interfaces via constructor DI | BLOCKER |
+| 2 | `class SiteController extends Controller` with `actionIndex()` | `final readonly class IndexAction` with `__invoke()` | BLOCKER |
+| 3 | `$this->render('index', $data)` inside controllers | Inject `WebViewRenderer` and return `$this->viewRenderer->render(...)` | BLOCKER |
+| 4 | `$request->post('name')` / `$request->get('id')` | PSR-7 `getParsedBody()` or typed DTOs (`yiisoft/input-http`); route args via `CurrentRoute` | BLOCKER |
+| 5 | `rules()` and `behaviors()` on ActiveRecord models | Validation attributes on DTOs; PSR-14 events replace behaviors | BLOCKER |
+| 6 | `ActiveForm::begin()` in templates | `Html::form()->post()->csrf($csrf)->open()` and `Field::text(...)` | BLOCKER |
+| 7 | `Route::get('/path')` / `Group::create()` (deprecated since router 4.0.3 — `references/core-version-notes.md#r1-router-static-route--group-factories-deprecated-router-403`) | `new \Yiisoft\Router\Route\Get('/path')`, `new \Yiisoft\Router\Group()` | BLOCKER |
+| 8 | `./yii migrate/up` (slash separator) | `./yii migrate:up` (colon separator — `references/core-version-notes.md#r8-console-migration-commands-use-colon-names-db-migration`) | BLOCKER |
+| 9 | Editing `vendor/` or `config/.merge-plan.php` | Edit `config/**/params.php` / `di/*.php`, then `composer yii-config-rebuild` | BLOCKER |
+| 10 | `echo`, `print`, `die()`, `exit()` in actions | Return a PSR-7 `ResponseInterface` instance | BLOCKER |
+| 11 | Mixing Active Record and Cycle ORM | Choose strictly one persistence stack | BLOCKER |
+| 12 | `$session->getFlash(...)` / `$session->setFlash(...)` | Inject `FlashInterface` separately | BLOCKER |
+| 13 | `if ($currentUser->getIdentity() === null)` | `$currentUser->isGuest()` — `getIdentity()` never returns null (`references/core-version-notes.md#r7-currentusergetidentity-never-returns-null-user`) | BLOCKER |
+
+#### 2. Tooling & Code-Style Conventions (Non-Blocking Suggestions unless project config enforces)
+
+| # | Tooling / Convention Pattern | Idiomatic Yii 3 Practice | Severity & Handling |
+|---|---|---|---|
+| 14 | `symplify/easy-coding-standard` (ecs) | `friendsofphp/php-cs-fixer` with `yiisoft/code-style` | Suggestion: recommend standard Yii 3 fixer toolchain |
+| 15 | `#[Override]` attribute on methods | Omit it in new code — Yii 3 convention: `yiisoft/code-style` ships `RemoveOverrideAttributeRector` in the `YII_CORE` set (`references/core-version-notes.md#r10-override-attribute-ban-code-style-yii_core-set`) | Suggestion: report convention drift, never a blocker, unless project Rector preset enables the rule (R10 verify step) |
 
 ## Task & Intent Routing Matrix
 

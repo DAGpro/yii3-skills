@@ -36,7 +36,7 @@ console.log('=== AI Factory Workflow End-to-End Contract Test ===\n');
 console.log('1. Validating Injections Activation Guards (AGENTS.md §4.6)...');
 const manifest = JSON.parse(readFileSync(join(root, 'extension.json'), 'utf8'));
 const CANONICAL_GUARD =
-  'Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (app/runtime stack, e.g. `yiisoft/yii-runner-http` or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, no `yiisoft/yii-*`), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (missing `composer.lock`, contradictory evidence): do not auto-activate — ask the user or report the task blocked. Otherwise';
+  'Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (application/runtime stack, e.g. `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, without application runtime stack), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): do not auto-activate — ask the user or report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions). Otherwise';
 
 for (const inj of manifest.injections) {
   const injPath = join(root, inj.file);
@@ -427,8 +427,17 @@ function shouldActivateYii3Skill(composerJsonText) {
     return false;
   }
 
-  // Must have at least one yiisoft/yii-* app/runtime package
-  return keys.some((k) => k.startsWith('yiisoft/yii-'));
+  // Must have at least one yiisoft/yii-* application/runtime stack package
+  const runtimePackages = [
+    'yiisoft/yii-runner',
+    'yiisoft/yii-runner-http',
+    'yiisoft/yii-runner-console',
+    'yiisoft/yii-runner-roadrunner',
+    'yiisoft/yii-runner-frankenphp',
+    'yiisoft/yii-http',
+    'yiisoft/yii-console',
+  ];
+  return keys.some((k) => runtimePackages.includes(k) || k.startsWith('yiisoft/yii-runner'));
 }
 
 assert(
@@ -446,6 +455,10 @@ assert(
 assert(
   shouldActivateYii3Skill(JSON.stringify({ require: { 'yiisoft/di': '^1.3', 'yiisoft/strings': '^2.0' } })) === false,
   'Suppresses for plain Yiisoft ecosystem library'
+);
+assert(
+  shouldActivateYii3Skill(JSON.stringify({ require: { 'yiisoft/yii-event': '^1.0', 'yiisoft/di': '^1.3' } })) === false,
+  'Suppresses for isolated library with yiisoft/yii-event without runtime stack'
 );
 assert(
   shouldActivateYii3Skill(JSON.stringify({ require: { 'laravel/framework': '^11.0' } })) === false,

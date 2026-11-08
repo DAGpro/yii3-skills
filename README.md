@@ -13,7 +13,7 @@
 - **Standalone** — the skill is loaded directly (Claude Code / Cursor / any Agent Skills host). It leads the agent start-to-finish: Stage 0 → Mission Workflow → Finale is the closing gate.
 - **AI Factory** — the skill is loaded by the `yii3` injection inside an `aif-*` workflow. Stage 0 detects what the workflow already resolved and continues without redoing it; the Finale hands control to `/aif-verify` (findings merge into its `aif-gate-result`).
 
-The rules are identical in both modes; only who closes the final gate differs. All AI Factory specifics are consolidated in the skill's "AI Factory mode" section, so standalone users never need to know the workflow internals.
+The rules are identical in both modes; only who closes the final gate differs. All AI Factory specifics are consolidated in the skill's "AI Factory Adapter" section, so standalone users never need to know the workflow internals.
 
 ## Installation
 

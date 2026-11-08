@@ -26,6 +26,7 @@ The same checks the verify workflow runs; most are already covered by the Chain 
 - **CSRF middleware order:** `CsrfTokenMiddleware` after `SessionMiddleware`, before `Router`; stateless token-authenticated JSON APIs sit outside the CSRF gate.
 - **PSR-3 logging:** `LoggerInterface` DI-bound with explicit targets — never the concrete `Yiisoft\Log\Logger` or static `Yii::getLogger()`.
 - **File placement per the architecture source** (`references/core-architecture-alignment.md`): vendor-isolated core, one mechanism per concern.
+- **Defect severity classification:** Hard architectural bans (Yii::$app, static facades, controller base class, SQL in actions) are strict blocking gate failures (`BLOCKER`). Tooling and code-style rules (such as `#[Override]` omission per `yiisoft/code-style`) are non-blocking convention suggestions (`SUGGESTION`), unless explicitly enforced by the project's own Rector preset or CI rules.
 
 ## 2. Multi-Dimensional Quality Evaluation Matrix
 

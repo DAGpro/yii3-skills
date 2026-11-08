@@ -80,7 +80,6 @@ Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 a
      - **Touched Stages:** <e.g. Stage 5 (Action) | Stage 6 (Routes)>
      - **Wiring Gate:** pending
      ```
-   *Plan artifact persistence:* when working from an approved plan (`.ai-factory/plans/*.md` or `PLAN.md`), the plan is the durable carrier of mission state across AI Factory workflow sessions — update task checkboxes `- [x]` as phases land and record stage completion so subsequent workflows have complete visibility.
 
 ## Mission Workflow (Stages 1–7)
 
@@ -127,7 +126,7 @@ Run after the last stage, in every mode.
 3. **Runtime smoke** (optional, Full mode, `vendor/` present):
    - Console (`yiisoft/yii-console` installed): `./yii list` must exit 0 and list newly registered commands (`references/infra-runners-and-runtimes.md`).
    - HTTP (adapt to project's installed runner): SAPI (`yiisoft/yii-runner-http`) boots without config errors and ping route responds; RoadRunner (`yiisoft/yii-runner-roadrunner`) or FrankenPHP (`yiisoft/yii-runner-frankenphp`) worker scripts initialize cleanly.
-4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Multi-Dimensional Quality Evaluation Matrix, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
+4. **Load `references/core-definition-of-done.md`** for Full-mode tasks: Full decomposition tasks (stateful domain features, runtime, auth, queues, infrastructure slices) run all sections including the Production Readiness Gate (§3); Standard decomposition tasks (pass-through features, dictionaries) run Architecture & Quality Matrix checks (§1–§2) and report `production readiness gate: n/a`. Light mode stops here.
 5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §4, one line each: `Mode: <Light|Full>`, `Decomposition: <Lightweight|Standard|Full>`, `Architecture: <source>`, fixes applied, tests (`pass | fail | not run | blocked (<reason>) | n/a`), static analysis (`pass | fail | not run | blocked (<reason>) | n/a`), packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
 
 ## Core rules

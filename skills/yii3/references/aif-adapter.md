@@ -19,7 +19,7 @@ When running inside an automated AI Factory environment, the `yii3` skill operat
 
 The standard feature lifecycle follows a strict state-machine protocol:
 
-$$\text{plan} \longrightarrow \text{implement} \longrightarrow \text{verify} \underset{\text{fixes needed}}{\overset{\text{blockers}}{\rightleftarrows}} \text{fix} \longrightarrow \text{verify} \longrightarrow \text{complete}$$
+`plan` → `implement` → `verify` ⇄ (blockers / fixes) → `fix` → `verify` → `complete`
 
 ### Workflow Responsibility & Boundary Matrix
 
@@ -98,3 +98,4 @@ In automated or headless execution environments (`HANDOFF_MODE=1`), interactive 
 
 - **Missing Decision:** Always prefer what the target project already uses (dominant convention in `src/`); if ambiguous, default to the official `yiisoft/*` recommendation.
 - **Blocking Impediment:** If a mandatory dependency cannot be resolved or an ambiguous architecture choice violates core rules, record the exact technical reason and return `Status: BLOCKED` in `aif-gate-result` instead of guessing or stalling.
+

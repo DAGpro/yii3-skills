@@ -128,7 +128,7 @@ Rule: every agent failure found on a real project becomes a new scenario.
 - Judge over `rubric.md` (a model call; the judge must not know the with-skill/baseline mode).
 - Running `composer install` and `phpunit` in the working copy as a check (currently text analysis only).
 - Guide coverage: 62+ of 80+ `skills/yii3/references/` guides have scenarios
-  (55 scenarios: unit, composite anchors 01/13/23/25/31, and AI Factory workflow 55;
+  (55 scenarios: unit, composite anchors 01/13/23/25/31, and AI Factory E2E workflow in `evals/scenarios/55-aif-e2e-workflow/`;
   the light / drift / convention-conflict / no-vendor / negative-trigger scenarios
   are implemented as 02/05/06/08/12; see `references/INDEX.md`). Still unbound: openapi index/views-twig/
   bootstrap5/bulma, runners & runtime variants (roadrunner/frankenphp),

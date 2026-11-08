@@ -118,10 +118,12 @@ function validatePlanArtifact(planText, { allowCollapsed = false } = {}) {
   }
 
   if (allowCollapsed) {
-    assert(
-      /collapsed\s+—/i.test(planText),
-      'Standard-tier collapsed plan must explicitly mark folded artifacts `collapsed — <reason>`'
-    );
+    if (!/collapsed\s+—/i.test(planText)) {
+      throw new Error('Standard-tier collapsed plan must explicitly mark folded artifacts `collapsed — <reason>`');
+    }
+    if (/collapsed\s+—[^.\n\r]*(?:into\s+(?:single-action|action|controller)|folded\s+directly\s+into)/i.test(planText)) {
+      throw new Error('Standard-tier cannot collapse Phase 4 business logic directly into an Action — actions strictly remain thin HTTP adapters');
+    }
   }
 
   return missingPhases;
@@ -160,10 +162,10 @@ const mockStandardPlan = `
 ## Phase 3 Repository Implementation
 - [ ] Task 3.1: StatusRepository in src/Setting/
 ## Phase 4 Use Case Handler & Events
-- [ ] collapsed — folded directly into single-action handler
+- [ ] collapsed — pass-through CRUD without domain events; StatusService application service coordinates repository
 ## Phase 5 Input DTO & Single-Action Handler
 - [ ] Task 5.1: ToggleStatusRequest DTO with validator rules
-- [ ] Task 5.2: ToggleStatusAction
+- [ ] Task 5.2: ToggleStatusAction delegating to StatusService
 ## Phase 6 Wiring & Tests
 - [ ] Task 6.1: Route and DI wiring
 - [ ] Task 6.2: Action test
@@ -171,6 +173,29 @@ const mockStandardPlan = `
 
 const missingStandard = validatePlanArtifact(mockStandardPlan, { allowCollapsed: true });
 assert(missingStandard.length === 0, 'Standard plan preserves 6 phases with collapsed markers');
+
+// Canary: reject plans collapsing use cases directly into action controllers
+const mockInvalidCollapsedPlan = `
+## Phase 1 Migration & Schema
+- [ ] Task 1.1: migration
+## Phase 2 Domain Entity & Repository Interface
+- [ ] collapsed
+## Phase 3 Repository Implementation
+- [ ] Task 3.1: repo
+## Phase 4 Use Case Handler & Events
+- [ ] collapsed — folded directly into single-action handler
+## Phase 5 Input DTO & Single-Action Handler
+- [ ] Task 5.1: action
+## Phase 6 Wiring & Tests
+- [ ] Task 6.1: tests
+`;
+let invalidCollapsedCaught = false;
+try {
+  validatePlanArtifact(mockInvalidCollapsedPlan, { allowCollapsed: true });
+} catch {
+  invalidCollapsedCaught = true;
+}
+assert(invalidCollapsedCaught, 'Canary rejects collapsing Phase 4 directly into single-action controller');
 
 // ---------------------------------------------------------------------------
 // 4. Execution Bottom-Up & Mission State Contract (aif-implement)
@@ -184,7 +209,15 @@ function validateMissionState(transcript) {
   const hasArchitecture = /Architecture:?\*{0,2}\s*[^\n\r]+/i.test(transcript);
   const hasStageProgress = /Stage\s*1.*Migration/i.test(transcript) && /Stage\s*6.*Config/i.test(transcript);
 
-  return hasMissionStateHeading && hasMode && hasDecomposition && hasArchitecture && hasStageProgress;
+  // Semantic check: sequential bottom-up stage progression
+  const stageMatches = [...transcript.matchAll(/Stage\s+(\d+)\s+complete:/gi)].map((m) => Number(m[1]));
+  const isSequential = stageMatches.length > 0 && stageMatches.every((val, idx) => idx === 0 ? true : val > stageMatches[idx - 1]);
+
+  // Semantic check: all completed stages must verify wiring gate
+  const completionLines = transcript.split('\n').filter((l) => /Stage\s+\d+\s+complete:/i.test(l));
+  const allGatesPassed = completionLines.length > 0 && completionLines.every((l) => /Wiring gate:\s*pass/i.test(l));
+
+  return hasMissionStateHeading && hasMode && hasDecomposition && hasArchitecture && hasStageProgress && isSequential && allGatesPassed;
 }
 
 const mockTranscript = `
@@ -212,6 +245,18 @@ Stage 7 complete: tests/User/RegisterTest.php | Wiring gate: pass
 `;
 
 assert(validateMissionState(mockTranscript), 'Transcript satisfies Mission State Tracker contract');
+
+const mockOutOfOrderTranscript = mockTranscript.replace(
+  'Stage 2 complete: User.php',
+  'Stage 5 complete: User.php'
+);
+assert(!validateMissionState(mockOutOfOrderTranscript), 'Canary rejects out-of-order stage progression');
+
+const mockFailedGateTranscript = mockTranscript.replace(
+  'Stage 3 complete: SqlUserRepository.php | Wiring gate: pass',
+  'Stage 3 complete: SqlUserRepository.php | Wiring gate: fail'
+);
+assert(!validateMissionState(mockFailedGateTranscript), 'Canary rejects failed wiring gate in mission progress');
 
 // ---------------------------------------------------------------------------
 // 5. Verification & Handoff Contract (aif-verify -> aif-gate-result)
@@ -415,13 +460,39 @@ console.log('\n7. Validating Durable Plan Execution State (### Execution State).
 function validateExecutionStateBlock(planText) {
   const hasHeading = /###\s*Execution State/i.test(planText);
   const hasStage = /Stage:?\*{0,2}\s*[^\n\r]+/i.test(planText);
-  const hasStatus = /Status:?\*{0,2}\s*(IN PROGRESS|COMPLETE|BLOCKED)/i.test(planText);
+  const statusMatch = planText.match(/Status:?\*{0,2}\s*(IN PROGRESS|COMPLETE|BLOCKED)/i);
   const hasArtifacts = /Artifacts:?\*{0,2}\s*[\s\S]*?-\s*`[^`]+`/i.test(planText);
   const hasWiring = /Wiring Gates:?\*{0,2}\s*[\s\S]*?DI binding:?\*{0,2}\s*(PASS|PENDING|N\/A)/i.test(planText);
   const hasVerification = /Verification:?\*{0,2}\s*[\s\S]*?Syntax.*?:?\*{0,2}\s*(PASS|FAIL|NOT RUN)/i.test(planText);
   const hasNextStage = /Next Stage:?\*{0,2}\s*[^\n\r]+/i.test(planText);
 
-  return hasHeading && hasStage && hasStatus && hasArtifacts && hasWiring && hasVerification && hasNextStage;
+  if (!hasHeading || !hasStage || !statusMatch || !hasArtifacts || !hasWiring || !hasVerification || !hasNextStage) {
+    return false;
+  }
+
+  const status = statusMatch[1].toUpperCase();
+
+  // Semantic check: COMPLETE status requires all wiring gates to be PASS or N/A
+  if (status === 'COMPLETE') {
+    const wiringBlock = planText.match(/Wiring Gates:?[\s\S]*?(?=Verification|$)/i)?.[0] ?? '';
+    if (/PENDING|FAIL/i.test(wiringBlock)) {
+      return false;
+    }
+    const verifBlock = planText.match(/Verification:?[\s\S]*?(?=Open Issues|$)/i)?.[0] ?? '';
+    if (/FAIL/i.test(verifBlock)) {
+      return false;
+    }
+  }
+
+  // Semantic check: BLOCKED status requires an explicit explanation in Open Issues
+  if (status === 'BLOCKED') {
+    const issuesMatch = planText.match(/Open Issues:?\*{0,2}\s*([^\n\r]+)/i);
+    if (!issuesMatch || /none/i.test(issuesMatch[1])) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 const mockPlanWithExecutionState = `
@@ -446,6 +517,20 @@ const mockPlanWithExecutionState = `
 `;
 
 assert(validateExecutionStateBlock(mockPlanWithExecutionState), 'Validates complete ### Execution State block in plan');
+
+// Semantic canary: COMPLETE status rejected if wiring gates are still PENDING
+const mockPrematureCompletePlan = mockPlanWithExecutionState.replace(
+  '- **Status:** IN PROGRESS',
+  '- **Status:** COMPLETE'
+);
+assert(!validateExecutionStateBlock(mockPrematureCompletePlan), 'Canary rejects COMPLETE status when wiring gates are PENDING');
+
+// Semantic canary: BLOCKED status rejected if Open Issues is None
+const mockBadBlockedPlan = mockPlanWithExecutionState.replace(
+  '- **Status:** IN PROGRESS',
+  '- **Status:** BLOCKED'
+);
+assert(!validateExecutionStateBlock(mockBadBlockedPlan), 'Canary rejects BLOCKED status when Open Issues is None');
 
 // ---------------------------------------------------------------------------
 // 8. Canonical 5-State Verification Vocabulary

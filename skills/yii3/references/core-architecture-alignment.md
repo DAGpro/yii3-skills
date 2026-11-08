@@ -115,6 +115,14 @@ A project must avoid competing framework implementations for the same responsibi
 - One test runner (either `phpunit/phpunit` or `testo/testo`).
 - One queue transport (e.g., `yiisoft/queue-redis` or `queue-db`).
 
+### 3.5. Application Layer: Use Case Handlers vs Application Services
+
+In Yii 3 architectures, **Application Service** and **Use Case Handler** are two structural representations of the same Application Layer:
+
+- **Explicit Architecture (Strict):** Prefers single-responsibility **Use Case Handlers** (`CreateUserHandler`, `CheckoutHandler`) where each business action or command is isolated into its own class. This guarantees strict CQRS compliance and decoupled domain port dependencies.
+- **Structured Modules (Balanced) & Layered (Pragmatic):** Cohesive **Application Services** (`UserService`, `CatalogService` grouping related entity workflows) or Use Case Handlers are equally valid. In the Standard decomposition tier, application services may directly consume concrete repositories when domain aggregate abstractions collapse.
+- **Presentation Layer Boundary Invariant:** Regardless of architectural pattern or tier, HTTP Actions (`*Action`) and Console Commands (`*Command`) belong strictly to the **Presentation Layer**. They orchestrate transport concerns (request parsing, typed DTO validation, status code mapping, response wrapping, or CLI formatting) and delegate to the Application Layer. **Presentation never acts as an Application Service and must never absorb database persistence, raw SQL, or transaction boundaries.**
+
 ---
 
 ## 4. Package Placement Matrix by Pattern

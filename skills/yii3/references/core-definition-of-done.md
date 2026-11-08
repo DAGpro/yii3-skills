@@ -65,9 +65,21 @@ Mode: <Light | Full>
 Decomposition: <Lightweight | Standard | Full>
 Architecture: <source>
 fixes applied: <list | none>
-tests: pass | fail | not run (no vendor / runner) | blocked (<reason>) | n/a
-static analysis (Psalm/PHPStan, Rector): pass | fail | not run | blocked | n/a
+tests: pass | fail | not run | blocked (<reason>) | n/a
+static analysis (Psalm/PHPStan, Rector): pass | fail | not run | blocked (<reason>) | n/a
 packages added: <list | none>
 config files changed: <list | none>
 production readiness gate: pass | fail (<items>) | n/a
 ```
+
+### Canonical Status Vocabulary
+
+All automated gates and check lines strictly adhere to one unified 5-state vocabulary:
+
+| Status | Meaning & Machine Interpretation |
+|---|---|
+| **`pass`** / `PASS` | Check was executed and completed cleanly with zero errors/violations. |
+| **`fail`** / `FAIL` | Check was executed and detected concrete failures or defects. |
+| **`not run`** / `NOT RUN` | Check was not executed (e.g. offline environment, test runner or `vendor/` not present). Never conflate with `fail` or `blocked`. |
+| **`blocked (<reason>)`** / `BLOCKED` | Check could not run due to an environmental or external dependency blocker (e.g. missing database container, network boundary). |
+| **`n/a`** / `N/A` | Check is not applicable to the current task scope (e.g. Production Readiness Gate on Light-mode tasks). |

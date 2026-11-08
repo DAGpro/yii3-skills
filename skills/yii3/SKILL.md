@@ -23,17 +23,38 @@ Pick and print the mode and decomposition tier at Stage 0 before writing code.
 
 ### Decomposition Intensity (Architectural Tiers)
 - **Lightweight** — targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips domain layers and extended definition-of-done.
-- **Standard** — regular business feature or CRUD without complex domain invariants (simple admin dictionary, lookup tables, settings toggles). Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when the project's architecture artifact does not mandate the layered shape (Core rule 3). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
+- **Standard** — regular business feature or CRUD without complex domain invariants (simple admin dictionary, lookup tables, settings toggles). Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when the project's architecture artifact does not mandate the layered shape (Core rule 3). Application Services and Use Case Handlers are two structural forms of the same Application Layer (Strict prefers single-purpose Use Case Handlers; Balanced and Pragmatic permit cohesive Application Services grouping related operations or Use Case Handlers). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
 - **Full** — complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
 
 ## AI Factory Adapter (Workflow Integration)
 
-When executing inside an automated AI Factory workflow (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`), this adapter handles inter-agent coordination:
+When executing inside an automated AI Factory workflow (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`), this adapter governs inter-agent coordination:
 
 - The skill was loaded by the `yii3` injection inside an `aif-*` workflow: Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present — including the configured plans directory — architecture artifact, rules file; never redo).
 - `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked. This is the non-interactive contract; the same behavior applies to any external workflow that cannot ask questions.
-- Plan artifacts: an external workflow supplies the active plan from its own configured plans location; without it, Stage 0 falls back to the standalone resolution order in item 3(a).
-- The Finale hands control to `/aif-verify` (findings merge into `aif-gate-result`); a direct invocation closes the Finale itself.
+- **Workflow Lifecycle Contract (`plan → implement → verify → fix → verify`):**
+  - **`aif-plan`:** Reads prompt/requirements + architecture source; outputs 6 canonical plan phases with target file paths, package requirements, and initializes the durable `### Execution State` block in the plan artifact.
+  - **`aif-implement`:** Consumes active plan; executes stages sequentially bottom-up; enforces per-step wiring gates; marks task checkboxes `- [x]`; updates `### Execution State` (Artifacts, Wiring, Verification, Next Stage).
+  - **`aif-verify`:** Read-only gate; runs project checks + Chain Integrity + DoD; writes findings to `aif-gate-result` (`blockers`, `affected_files`); updates plan `### Execution State` (`Status: COMPLETE` or `BLOCKED`).
+  - **`aif-fix`:** Consumes `aif-gate-result` blockers; targets root causes per Stage 0 item 3(c); updates affected code and plan `### Execution State`; hands off to `/aif-verify`.
+- **Durable Plan State (`### Execution State`):** The active plan artifact (`.ai-factory/plans/*.md` or `PLAN.md`) is the durable state carrier across workflow sessions. Update checkboxes `- [x]` and append or update the execution record:
+  ```markdown
+  ### Execution State
+  - **Stage:** <Current Stage number and name>
+  - **Status:** <IN PROGRESS | COMPLETE | BLOCKED>
+  - **Artifacts:**
+    - `<path/to/file.php>` (<Role / Layer>)
+  - **Wiring Gates:**
+    - DI bindings: <PASS | PENDING | N/A>
+    - Routes / CLI: <PASS | PENDING | N/A>
+    - Events / Migrations: <PASS | PENDING | N/A>
+  - **Verification:**
+    - Syntax / Project Checks: <PASS | FAIL | NOT RUN>
+    - Unit / HTTP Tests: <PASS | FAIL | NOT RUN | BLOCKED>
+  - **Open Issues:** <None | description>
+  - **Next Stage:** <Next Stage number and name | Finale>
+  ```
+- The Finale hands control to `/aif-verify` (findings merge into `aif-gate-result`); a direct standalone invocation closes the Finale itself.
 
 ## Stage 0 — Mission Bootstrap
 
@@ -104,8 +125,8 @@ Never implement an Action or Controller before its Input DTO, Repository Interfa
 - **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations-schema.md`, `references/persistence-migrations-operations.md`, `references/persistence-db.md`.
 - **Stage 2 — Domain Entity & Repository Interface (Phase 2).** Pure aggregate, value objects, PSR-14 domain events, repository contract. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
 - **Stage 3 — Repository Implementation (Phase 3).** Strictly the project's one persistence path (`yiisoft/db` / Active Record / Cycle); wrap multi-step persistence in transactions. Guides: the matching persistence row in the matrix.
-- **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler; domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
-- **Stage 5 — Input DTO & Single-Action Handler (or Console Command) (Phase 5).** Typed input DTO with `yiisoft/validator` rule attributes (rule names must exist in the installed validator); separate Create/Update DTOs. Thin Action = HTTP orchestration only, returning `ResponseInterface` via `DataResponseFactoryInterface`; thin console command = CLI I/O only (`SymfonyStyle`, `ExitCode`) delegating to use cases. Guides: the matrix row for the archetype.
+- **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler (or cohesive Application Service methods in Balanced/Pragmatic tiers; Strict prefers dedicated single-responsibility Use Case Handlers); domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
+- **Stage 5 — Input DTO & Single-Action Handler (or Console Command) (Phase 5).** Typed input DTO with `yiisoft/validator` rule attributes (rule names must exist in the installed validator); separate Create/Update DTOs. Thin Action = HTTP transport orchestration only, returning `Psr\Http\Message\ResponseInterface` via the archetype's response adapter (`WebViewRenderer` for HTML views, `DataResponseFactoryInterface` for REST/JSON API data responses, PSR-7 `ResponseFactoryInterface` for redirects/downloads); thin console command = CLI I/O only (`SymfonyStyle`, `ExitCode`) delegating to use cases. Actions never act as Application Services or execute direct queries. Guides: the matrix row for the archetype.
 - **Stage 6 — Config Audit & Consolidation (Phase 6).** Final configuration pass: wiring already landed per step (wiring gates above) — verify every gate and add only cross-artifact config that no single step owns. Where things live: DI bindings in `config/**/di/*.php`; routes in `config/**/routes.php`; console commands in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`; custom RBAC rules in `config/common/params.php` under `'yiisoft/rbac-rules-container'`; events in `config/**/events.php`. Guide: `references/core-di-and-config.md`.
 - **Stage 7 — Tests (Phase 6).** Unit tests (use case / domain) + functional/HTTP tests on the project's single test runner. Guides: `references/testing-core.md` + the Testing row of the matrix.
 
@@ -120,10 +141,10 @@ Run after the last stage, in every mode.
 1. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Used packages must be declared in `composer.json`.
 2. **Chain Integrity & Mission State Checklist** (blocking): all active stages in the Mission State tracker completed; every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
 3. **Runtime smoke** (optional, Full mode, `vendor/` present):
-   - Console: `./yii list` must exit 0 and list the new commands (`references/infra-runners-and-runtimes.md`).
-   - HTTP: verify runner boots without configuration errors and ping route responds.
+   - Console (`yiisoft/yii-console` installed): `./yii list` must exit 0 and list newly registered commands (`references/infra-runners-and-runtimes.md`).
+   - HTTP (adapt to project's installed runner): SAPI (`yiisoft/yii-runner-http`) boots without config errors and ping route responds; RoadRunner (`yiisoft/yii-runner-roadrunner`) or FrankenPHP (`yiisoft/yii-runner-frankenphp`) worker scripts initialize cleanly.
 4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Multi-Dimensional Quality Evaluation Matrix, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
-5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §4, one line each: `Mode: <Light|Full>`, `Decomposition: <Lightweight|Standard|Full>`, `Architecture: <source>`, fixes applied, tests (`pass | fail | not run | blocked | n/a`), static analysis (`pass | fail | not run | blocked | n/a`), packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
+5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §4, one line each: `Mode: <Light|Full>`, `Decomposition: <Lightweight|Standard|Full>`, `Architecture: <source>`, fixes applied, tests (`pass | fail | not run | blocked (<reason>) | n/a`), static analysis (`pass | fail | not run | blocked (<reason>) | n/a`), packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
 
 ## Core rules
 
@@ -185,4 +206,4 @@ Load only the archetype's guides:
 
 ## References (read on demand)
 
-Load targeted topic guides via the Task & Intent Routing Matrix above. The complete categorized catalog of all 81 topic guides with descriptions is maintained in [`references/INDEX.md`](references/INDEX.md).
+Load targeted topic guides via the Task & Intent Routing Matrix above. The complete categorized catalog of specialized topic guides with descriptions is maintained in [`references/INDEX.md`](references/INDEX.md).

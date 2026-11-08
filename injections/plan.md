@@ -9,4 +9,5 @@ Plan-specific duties (the rules themselves live in the skill):
 - Check `composer.json` against the skill's `references/package-catalog.md`. For each missing capability add an early task "Install `yiisoft/<pkg>` and wire config" (composer require + params/DI/bootstrap) BEFORE the tasks whose code uses it, per `references/core-dependency-protocol.md`; pick exactly one driver per family per catalog §3.
 - Put config tasks (routes, DI, params, migrations, console/event registration) before the code that depends on them; every planned `*Interface` gets a DI-binding task in `config/**/di/*.php`, every Action a route task in `config/**/routes.php`. At execution the wiring happens per step (the skill's per-step wiring gates), so the Stage 6 config task is the final audit — never deferred wiring.
 - Do not plan a new folder structure or a second mechanism (ORM, router, DI style) next to the existing one — SKILL.md Stage 0 item 2.
+- Initialize the durable `### Execution State` block at the end of the plan artifact per the AI Factory Lifecycle Contract in SKILL.md.
 - Existing-code refactoring goes only to "💡 Out of scope".

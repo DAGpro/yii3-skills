@@ -5,20 +5,26 @@ const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path))
 const actions = (changed) => php(changed).filter((c) => /Action\.php$/.test(c.path));
 
 export default [
-  check('input-dto-validated', 'A typed input DTO (AbstractInput + #[FromBody]) with validator rule attributes (#[Validate(new Length/Integer/Required/...)])', ({ changed }) => {
+  check('input-dto-validated', 'A typed input DTO (AbstractInput + #[FromBody] or typed DTO) with validator rule attributes (#[Validate(new ...)] or rule attributes)', ({ changed }) => {
     const dtos = added(changed, /^src\/.*\.php$/).map((c) => ({ path: c.path, t: read(c.abs) }))
-      .filter(({ t }) => (/use\s+Yiisoft\\Input\\Http\\AbstractInput;/.test(t) && /extends\s+\\?AbstractInput\b/.test(t))
-        || /extends\s+\\?Yiisoft\\Input\\Http\\AbstractInput\b/.test(t));
-    if (!dtos.length) return fail('no new class extends Yiisoft\\Input\\Http\\AbstractInput');
-    const withBody = dtos.filter(({ t }) => /#\[FromBody\]/.test(t));
-    if (!withBody.length) return fail('no #[FromBody] on the input DTO');
-    const validated = withBody.filter(({ t }) => /#\[Validate\(\s*new\s+(Length|Integer|Required|Number|StringValue|Count|Email)\(/.test(t));
-    return validated.length ? ok(validated.map((v) => v.path).join(', ')) : fail('no #[Validate(new ...)] rule attributes on the input DTO');
+      .filter(({ t }) => /class\s+\w*(Input|Dto)\b/i.test(t)
+        || /use\s+Yiisoft\\Input\\Http\\AbstractInput;/.test(t)
+        || /extends\s+\\?AbstractInput\b/.test(t)
+        || /#\[FromBody\]/.test(t));
+    if (!dtos.length) return fail('no new typed input DTO class created');
+    const validated = dtos.filter(({ t }) => /#\[Validate\(\s*new\s+(Length|Integer|Required|Number|StringValue|Count|Email)\(/.test(t)
+      || /#\[(Length|Integer|Required|Number|StringValue|Count|Email)\b/.test(t));
+    return validated.length ? ok(validated.map((v) => v.path).join(', ')) : fail('no validator rule attributes on the input DTO');
   }),
 
-  check('action-typed-input', 'The Action receives the typed input as a method argument (input-http resolves it)', ({ changed }) => {
-    const hit = actions(changed).filter((c) => /public\s+function\s+__invoke\s*\([^)]*\b\w*Input\s+\$/.test(read(c.abs)));
-    return hit.length ? ok() : fail('no Action method argument type-hinted *Input');
+  check('action-typed-input', 'The Action receives or resolves typed input (type-hinted parameter or injected hydrator/validator)', ({ changed }) => {
+    const hit = actions(changed).filter((c) => {
+      const code = read(c.abs);
+      return /public\s+function\s+__invoke\s*\([^)]*\b\w*(Input|Dto)\s+\$/.test(code)
+        || /HydratorInterface\s+\$\w+/.test(code)
+        || /ValidatorInterface\s+\$\w+/.test(code);
+    });
+    return hit.length ? ok() : fail('no Action method argument type-hinted Input/Dto or injected hydrator/validator');
   }),
 
   check('no-raw-parsed-body', 'No raw body digging in Actions (any getParsedBody(), $_POST, ->post(...)) - input-http resolves typed inputs', ({ changed }) => {

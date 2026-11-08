@@ -5,7 +5,7 @@
 ## What is inside
 
 - **`skills/yii3/SKILL.md`** — the skill entry point: mode selection (Light vs Full), Stage 0 bootstrap, Mission Workflow (Stages 1–7), Finale with the Chain Integrity checklist, core rules with the Yii 2 ban list, and the task routing matrix.
-- **`skills/yii3/references/`** — 78 topic guides (core/DI/events, HTTP, persistence, infrastructure, testing — large topics split into focused subtopic guides with index files) plus the runtime package catalog and version-gated behavior notes.
+- **`skills/yii3/references/`** — 80+ specialized topic guides (core/DI/events, HTTP, persistence, infrastructure, testing — large topics split into focused subtopic guides with index files) plus the runtime package catalog and version-gated behavior notes.
 - **`injections/*.md`** — thin workflow hooks for AI Factory (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, `aif-architecture`); the skill itself is the single source of rules.
 
 ## Operating modes

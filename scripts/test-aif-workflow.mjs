@@ -407,4 +407,119 @@ assert(
   'Suppresses for non-Yii project'
 );
 
+// ---------------------------------------------------------------------------
+// 7. Durable Plan Execution State Contract (### Execution State)
+// ---------------------------------------------------------------------------
+console.log('\n7. Validating Durable Plan Execution State (### Execution State)...');
+
+function validateExecutionStateBlock(planText) {
+  const hasHeading = /###\s*Execution State/i.test(planText);
+  const hasStage = /Stage:?\*{0,2}\s*[^\n\r]+/i.test(planText);
+  const hasStatus = /Status:?\*{0,2}\s*(IN PROGRESS|COMPLETE|BLOCKED)/i.test(planText);
+  const hasArtifacts = /Artifacts:?\*{0,2}\s*[\s\S]*?-\s*`[^`]+`/i.test(planText);
+  const hasWiring = /Wiring Gates:?\*{0,2}\s*[\s\S]*?DI binding:?\*{0,2}\s*(PASS|PENDING|N\/A)/i.test(planText);
+  const hasVerification = /Verification:?\*{0,2}\s*[\s\S]*?Syntax.*?:?\*{0,2}\s*(PASS|FAIL|NOT RUN)/i.test(planText);
+  const hasNextStage = /Next Stage:?\*{0,2}\s*[^\n\r]+/i.test(planText);
+
+  return hasHeading && hasStage && hasStatus && hasArtifacts && hasWiring && hasVerification && hasNextStage;
+}
+
+const mockPlanWithExecutionState = `
+# Plan: User Registration Feature
+## Phase 1 Migration & Schema
+- [x] Task 1.1: Create users table migration
+
+### Execution State
+- **Stage:** Stage 3 — Repository Implementation
+- **Status:** IN PROGRESS
+- **Artifacts:**
+  - \`src/Infrastructure/Repository/UserRepository.php\` (Repository Implementation)
+- **Wiring Gates:**
+  - DI binding: PASS
+  - Routes / CLI: PENDING
+  - Events / Migrations: PASS
+- **Verification:**
+  - Syntax / Project Checks: PASS
+  - Unit / HTTP Tests: NOT RUN
+- **Open Issues:** None
+- **Next Stage:** Stage 4 — Use Case Handler
+`;
+
+assert(validateExecutionStateBlock(mockPlanWithExecutionState), 'Validates complete ### Execution State block in plan');
+
+// ---------------------------------------------------------------------------
+// 8. Canonical 5-State Verification Vocabulary
+// ---------------------------------------------------------------------------
+console.log('\n8. Validating Canonical 5-State Verification Vocabulary...');
+
+const CANONICAL_STATUSES = new Set(['pass', 'fail', 'not run', 'blocked', 'n/a']);
+
+function parseVerificationStatuses(reportText) {
+  const testsMatch = reportText.match(/tests:\s*([^\n\r]+)/i);
+  const psalmMatch = reportText.match(/static analysis[^:]*:\s*([^\n\r]+)/i);
+  const results = [];
+
+  for (const match of [testsMatch, psalmMatch]) {
+    if (!match) continue;
+    const rawStatus = match[1].trim().toLowerCase();
+    const baseStatus = rawStatus.split(' ')[0] === 'not' ? 'not run' : rawStatus.split(' ')[0].replace(/\(.*?\)/, '').trim();
+    results.push(baseStatus);
+  }
+  return results;
+}
+
+const mockReport = `
+Mode: Full
+Decomposition: Full
+Architecture: .ai-factory/ARCHITECTURE.md
+fixes applied: none
+tests: not run (offline environment)
+static analysis (Psalm/PHPStan, Rector): pass
+packages added: none
+config files changed: config/common/di/user.php
+production readiness gate: pass
+`;
+
+const parsed = parseVerificationStatuses(mockReport);
+assert(parsed.length === 2, 'Parsed both verification status lines');
+for (const status of parsed) {
+  assert(CANONICAL_STATUSES.has(status), `Status "${status}" is in canonical 5-state vocabulary`);
+}
+
+// ---------------------------------------------------------------------------
+// 9. Adaptive Runtime Smoke Target Resolution
+// ---------------------------------------------------------------------------
+console.log('\n9. Validating Adaptive Runtime Smoke Target Resolution...');
+
+function resolveSmokeTargets(composerPackages) {
+  const targets = [];
+  if (composerPackages.includes('yiisoft/yii-console')) {
+    targets.push('console');
+  }
+  if (composerPackages.includes('yiisoft/yii-runner-roadrunner')) {
+    targets.push('roadrunner');
+  } else if (composerPackages.includes('yiisoft/yii-runner-frankenphp')) {
+    targets.push('frankenphp');
+  } else if (composerPackages.includes('yiisoft/yii-runner-http')) {
+    targets.push('sapi');
+  }
+  return targets;
+}
+
+assert(
+  JSON.stringify(resolveSmokeTargets(['yiisoft/yii-runner-http', 'yiisoft/yii-console'])) ===
+    JSON.stringify(['console', 'sapi']),
+  'Resolves console + sapi smoke targets'
+);
+assert(
+  JSON.stringify(resolveSmokeTargets(['yiisoft/yii-runner-roadrunner', 'yiisoft/yii-console'])) ===
+    JSON.stringify(['console', 'roadrunner']),
+  'Resolves console + roadrunner smoke targets'
+);
+assert(
+  JSON.stringify(resolveSmokeTargets(['yiisoft/yii-runner-frankenphp'])) ===
+    JSON.stringify(['frankenphp']),
+  'Resolves frankenphp smoke target'
+);
+
 console.log(`\nAll AI Factory Workflow contract tests passed! (${testsPassed} passed, ${testsFailed} failed)\n`);

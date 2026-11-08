@@ -10,8 +10,9 @@ Load this guide at the Finale when the task is a **new feature**, or when it tou
 
 ## Contents
 - [1. Architecture & Decomposition Checks](#1-architecture--decomposition-checks)
-- [2. Production Readiness Gate](#2-production-readiness-gate)
-- [3. Verification Report Format](#3-verification-report-format)
+- [2. Multi-Dimensional Quality Evaluation Matrix](#2-multi-dimensional-quality-evaluation-matrix)
+- [3. Production Readiness Gate](#3-production-readiness-gate)
+- [4. Verification Report Format](#4-verification-report-format)
 
 ---
 
@@ -26,7 +27,20 @@ The same checks the verify workflow runs; most are already covered by the Chain 
 - **PSR-3 logging:** `LoggerInterface` DI-bound with explicit targets — never the concrete `Yiisoft\Log\Logger` or static `Yii::getLogger()`.
 - **File placement per the architecture source** (`references/core-architecture-alignment.md`): vendor-isolated core, one mechanism per concern.
 
-## 2. Production Readiness Gate
+## 2. Multi-Dimensional Quality Evaluation Matrix
+
+In addition to technical compilation and DI wiring, every delivered feature is evaluated against six independent quality dimensions before sign-off:
+
+| Dimension | Scope & Verification Invariants | Grounding / Source |
+|---|---|---|
+| **1. Functional Correctness** | All requested business invariants and user flows are implemented. Proper HTTP status codes (`200`, `201`, `400`, `404`, `422`) or console `ExitCode` (`OK`, `UNSPECIFIED_ERROR`) returned. Validation errors surfaced cleanly in response bodies. | Feature specification, `references/http-actions-core.md`, `references/infra-commands.md` |
+| **2. Architectural Correctness** | Domain layer is isolated from HTTP/Persistence details. Single-Action controllers implement `__invoke()` returning `ResponseInterface`. Decomposition tier adheres to task scope (`Lightweight` / `Standard` / `Full`). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
+| **3. API & Signature Correctness** | Every invoked method, constructor, and parameter type verified against installed package sources in `vendor/yiisoft/*/src/`. Zero deprecated Yii2 facades or static helpers (`Yii::$app`, `ActiveRecord::find()`). Version-gated syntax respected. | `references/core-version-notes.md`, Mandatory Signature Lookup Protocol |
+| **4. Integration & Wiring Correctness** | Every new interface is DI-bound in `config/**/di/*.php`. Actions mapped in `config/**/routes.php`. Commands registered in `config/console/params.php`. Domain events subscribed in `config/**/events.php`. All packages declared in `composer.json`. | SKILL.md per-step wiring gates, `references/core-di-and-config.md` |
+| **5. Security & Safety** | Typed input DTOs validate all untrusted user data. Mutating HTML routes protected by `CsrfTokenMiddleware` preceded by `SessionMiddleware`. Route-level authentication and RBAC permissions (`CurrentUser::can()`) verified before execution. Views escape dynamic data via `Html::encode()`. | `references/http-validation-rules.md`, `references/http-state.md`, `references/infra-auth-and-rbac.md`, `references/http-views.md` |
+| **6. Reliability & Performance** | Multi-step database persistence wrapped in explicit transactions (`ConnectionInterface::transaction()`). Domain event dispatching deferred until after database transaction commit (post-commit rule). Pagination (`OffsetPaginator`) or SQL limits enforced on listings. Worker state safely cleared via `StateResetter`. | `references/persistence-db-connection-and-queries.md`, `references/core-events-design.md`, `references/infra-state-resetter.md` |
+
+## 3. Production Readiness Gate
 
 The difference between "milestone closed" and "product ready". Every item is grounded in an existing guide:
 
@@ -40,16 +54,17 @@ The difference between "milestone closed" and "product ready". Every item is gro
 - cache on hot paths (`references/persistence-caching.md`) + pagination limits (`references/persistence-db.md`);
 - unit + HTTP tests and static analysis green (`references/testing-core.md`).
 
-Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see SKILL.md "AI Factory mode").
+Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see SKILL.md "AI Factory Adapter").
 
-## 3. Verification Report Format
+## 4. Verification Report Format
 
 Bind the verification report to the Finale and extend it with added packages, changed config files, and the Production Readiness Gate status:
 
 ```
 Mode: <Light | Full>
+Decomposition: <Lightweight | Standard | Full>
 Architecture: <source>
-fixes applied: persistence moved from CreateCommentAction to CommentRepository
+fixes applied: <list | none>
 tests: pass | fail
 static analysis (Psalm/PHPStan, Rector): pass | fail
 packages added: <list | none>

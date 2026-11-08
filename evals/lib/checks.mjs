@@ -10,7 +10,8 @@ export function walk(dir) {
   if (!existsSync(dir)) return out;
   for (const name of readdirSync(dir)) {
     // Dot-entries are tooling/agent state (.git, skill install dirs, ...) — never task work.
-    if (name.startsWith('.') || SKIP.includes(name)) continue;
+    // Exception: .ai-factory is the operational control center of AI Factory projects.
+    if ((name.startsWith('.') && name !== '.ai-factory') || SKIP.includes(name)) continue;
     const p = join(dir, name);
     if (statSync(p).isDirectory()) out.push(...walk(p));
     else out.push(p);

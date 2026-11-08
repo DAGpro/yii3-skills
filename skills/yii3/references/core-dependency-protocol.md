@@ -97,7 +97,7 @@ The three persistence architectures in Yii 3 are mutually distinct and cannot be
 
 ### 2.2. Autonomous Mode Invariants (non-interactive runs)
 
-When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see SKILL.md, "AI Factory mode"):
+When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see SKILL.md, "AI Factory Adapter"):
 
 1. **Never Prompt:** Do not emit interactive clarification prompts.
 2. **Follow Existing Stack:** Adopt whatever architecture is already present in `composer.json` and `config/`.

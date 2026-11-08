@@ -647,7 +647,41 @@ src/
 
 ## 6. Chain Integrity Checklist (No Missing Links)
 
-Every feature implementation plan must satisfy these integrity invariants:
+Every feature implementation must satisfy these architectural tiers and integrity invariants:
+
+### 6.1. Three-Tier Decomposition Intensity
+
+| Tier | Applicable Scope | Graph Shape & Permitted Collapses | Mandatory Invariants |
+|---|---|---|---|
+| **Lightweight** | Single route, config/DI edit, single bugfix, helper lookup. | Touched stages only. Domain layers and extended DoD skipped. | Per-step wiring gate for any touched interface/route/command. |
+| **Standard** | Standard business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). | Collapsed domain layers: Use Case folded into Action; concrete repository replacing interface+implementation pair (if project architecture permits). | Input DTOs with validation rules, DB transactions, per-step wiring gates, unit/functional tests. |
+| **Full** | State-changing business processes, state machines, multi-step transactions, async queues/events, auth/security, infrastructure slices. | Complete bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Implementation, Use Case Command & Handler, Domain Events, Input DTOs, Actions, Tests. | All per-step wiring gates, post-commit event dispatch, full Production Readiness Gate. |
+
+### 6.2. Mission State Tracker Schema
+
+Before writing code, establish and print the explicit Mission State:
+
+```markdown
+### Mission State
+- **Mode:** <Light | Full>
+- **Decomposition:** <Lightweight | Standard (collapsed — reason) | Full>
+- **Architecture:** <project source | convention fallback>
+- **Guides:** <primary guides to load>
+- **Stage Progress:**
+  - Stage 1 [Migration & Schema]: <pending | skipped — reason>
+  - Stage 2 [Domain Entity & Repository Contract]: <pending | skipped — reason>
+  - Stage 3 [Repository Implementation]: <pending | skipped — reason>
+  - Stage 4 [Use Case & Domain Events]: <pending | skipped — reason>
+  - Stage 5 [Input DTO & Action / Command]: <pending | skipped — reason>
+  - Stage 6 [Config Audit & Wiring Gate]: pending
+  - Stage 7 [Tests & Quality Gate]: pending
+```
+
+As each stage completes, verify its per-step wiring gate immediately and record the transition (`Stage N complete: <artifacts> | Wiring gate: pass`).
+
+### 6.3. Chain Integrity Invariants
+
+- [ ] **Mission State complete:** All active stages in the Mission State tracker completed with passing wiring gates.
 - [ ] **Data layer connected:** If entity persists state → Migration exists + Repository implements Interface.
 - [ ] **DI registered:** Every newly introduced interface has a binding in `config/common/di/*.php` or `config/web/di/*.php`.
 - [ ] **Route reachable:** Every newly created Action is mounted in `config/common/routes.php` (the canonical template has no `routes-web` group) with correct HTTP method and typed parameter tokens (`{id:\d+}`).

@@ -1,27 +1,34 @@
 ---
 name: yii3
 description: >-
-  Yii 3 (PHP 8.2+, yiisoft/* packages) end-to-end development workflow:
-  mission bootstrap, bottom-up implementation stages, production readiness
-  gate. Use when user says "Yii3", "Yii 3", "yiisoft", "yii3 action",
-  "yii3 route", "yii3 DI configuration", "yii3 migration", "yii3 middleware",
-  "yii3 console command", "yiisoft/db", "yiisoft/validator".
+  Architect, develop, test, and verify applications using modern Yii 3 (PHP 8.2+,
+  yiisoft/* packages). Enforces bottom-up implementation stages, mandatory signature
+  inspection in vendor sources, per-step wiring gates, and production readiness checks.
+  Use when user says "Yii3", "Yii 3", "yiisoft", or asks for Yii 3 actions, routes,
+  DI configuration, migrations, middleware, console commands, database persistence
+  (yiisoft/db), or validation rules (yiisoft/validator).
 ---
 
 # Yii3 development
 
 End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to done.
 
-## Mode selection: Light vs Full
+## Mode & Decomposition Selection
 
-Pick and print the mode at Stage 0.
+Pick and print the mode and decomposition tier at Stage 0 before writing code.
 
+### Mode (Execution Scope)
 - **Light** — a single route, config/DI change, small fix, or guide lookup. Flow: Stage 0 → touched stages → touched Chain Integrity lines; the extended Finale (`references/core-definition-of-done.md`) is skipped.
-- **Full** — everything else, default: new features and runtime/auth/queue/infrastructure tasks run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
+- **Full** — everything else, default: new business features and runtime/auth/queue/infrastructure tasks run the full Mission Workflow and Finale with `references/core-definition-of-done.md`.
 
-## AI Factory mode
+### Decomposition Intensity (Architectural Tiers)
+- **Lightweight** — targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips domain layers and extended definition-of-done.
+- **Standard** — regular business feature or CRUD without complex domain invariants (simple admin dictionary, lookup tables, settings toggles). May collapse domain layers: the Use Case folds into the Action, and a concrete repository class may replace the interface + implementation pair — only when the project's architecture artifact does not mandate the layered shape (Core rule 3). Mandatory invariants: Input DTOs + validation, DB transactions, per-step wiring gates, tests. The plan marks folded artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
+- **Full** — complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
 
-Integration specifics live here; the rest of the skill is mode-neutral. "External workflow" means the skill was loaded by a workflow step (an `aif-*` command or any other automation) rather than invoked directly by the user.
+## AI Factory Adapter (Workflow Integration)
+
+When executing inside an automated AI Factory workflow (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`), this adapter handles inter-agent coordination:
 
 - The skill was loaded by the `yii3` injection inside an `aif-*` workflow: Stage 0 detects what the workflow already resolved (`.ai-factory/config.yaml` paths when present — including the configured plans directory — architecture artifact, rules file; never redo).
 - `HANDOFF_MODE=1`: never ask the user — prefer what the project already uses, else the `yiisoft/*` default; record the decision or report blocked. This is the non-interactive contract; the same behavior applies to any external workflow that cannot ask questions.
@@ -38,11 +45,23 @@ Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 a
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages — re-anchor SSOT (Core rule 2), check against `references/package-catalog.md`.
 2. **Cross-milestone consistency:** past milestones fixed the stack — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
 3. **Lifecycle position** — detect and print one of:
-   - **(a) Plan task:** a plan artifact exists → execute the task per its phases (6-phase contract, see Mission Workflow). Resolution order, first match wins — print the chosen path: (1) a plan file explicitly passed by the user or the invoking command (argument, path, or link); (2) `PLAN.md` at the project root; (3) the most recently modified `*.md` under `docs/plans/` or `docs/plan/`. Nothing matched → treat as (b). An external workflow overrides this with its own plan location (see AI Factory mode).
+   - **(a) Plan task:** a plan artifact exists → execute the task per its phases (6-phase contract, see Mission Workflow). Resolution order, first match wins — print the chosen path: (1) a plan file explicitly passed by the user or the invoking command (argument, path, or link); (2) `PLAN.md` at the project root; (3) the most recently modified `*.md` under `docs/plans/` or `docs/plan/`. Nothing matched → treat as (b). An external workflow overrides this with its own plan location (see AI Factory Adapter).
    - **(b) Standalone feature** → full Mission Workflow route.
    - **(c) Bug / diagnostics:** root-cause checklist, in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. No Yii2 facade workarounds.
-4. **Archetype & mode:** classify the task via the Task & Intent Routing Matrix; print `Light` or `Full`.
-5. **Mission plan** — print before implementing: `Architecture: <source>`, guides to load, Finale gate.
+4. **Archetype, Mode & Decomposition:** classify the task via the Task & Intent Routing Matrix; print `Mode: Light` or `Mode: Full`, and `Decomposition: Lightweight`, `Standard`, or `Full`.
+5. **Mission plan & state tracker** — print before implementing to establish the explicit mission state:
+   - **Mode:** `<Light | Full>`
+   - **Decomposition:** `<Lightweight | Standard (collapsed — reason) | Full>`
+   - **Architecture:** `<project source | convention fallback>`
+   - **Guides to load:** `<primary guides>`
+   - **Stage progress:**
+     - Stage 1 [Migration & Schema]: `<pending | skipped — reason>`
+     - Stage 2 [Domain Entity & Repository Contract]: `<pending | skipped — reason>`
+     - Stage 3 [Repository Implementation]: `<pending | skipped — reason>`
+     - Stage 4 [Use Case & Domain Events]: `<pending | skipped — reason>`
+     - Stage 5 [Input DTO & Action / Command]: `<pending | skipped — reason>`
+     - Stage 6 [Config Audit & Wiring Gate]: `pending`
+     - Stage 7 [Tests & Quality Gate]: `pending`
 
 ## Mission Workflow (Stages 1–7)
 
@@ -57,9 +76,14 @@ For business features execute the stages strictly bottom-up, wiring each artifac
 | 5 Input DTO & Single-Action Handler | Stage 5 |
 | 6 Wiring & Tests | Stages 6–7 |
 
-Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist — unless the decomposition-intensity rule below collapses the layers for a thin pass-through feature. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
+Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist — unless the decomposition-intensity rule above collapses the layers for a Standard-tier pass-through feature. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
 
-**Decomposition intensity.** The full phase graph is the default for state-changing business processes (Archetype A) and full-lifecycle REST resources (Archetype F). A thin pass-through over one table with no domain invariants (simple admin dictionary CRUD, lookup tables, settings toggles) may collapse the domain layers: the Use Case folds into the Action, and one concrete repository class may replace the interface + implementation pair — only when the project's architecture artifact does not mandate the layered shape (Core rule 3). Never collapse: Input DTOs + validation, transactions around multi-step persistence, per-step wiring gates, tests. Phases remain the plan structure under a collapse: the plan marks the folded artifacts `collapsed — <reason>` (never a generic 1–2-task plan), and the Stage 6 config audit plus Stage 7 tests stay mandatory. Print any collapse in the Stage 0 mission plan (`Decomposition: collapsed — <reason>`).
+**Mission State execution discipline:**
+1. Progress through active stages sequentially bottom-up.
+2. Complete each stage's per-step wiring gate immediately upon creating an artifact — never batch wiring.
+3. For multi-stage tasks, record stage transitions as they occur:
+   `Stage N complete: <artifacts created> | Wiring gate: pass`
+4. Stage 6 (Config Audit) verifies that all per-step wiring gates landed and reconciles cross-artifact configuration. Never begin Stage 6 while prior active stages remain incomplete.
 
 **Mandatory Signature Lookup Protocol:** before calling any `yiisoft/*` method or constructor with more than 1 argument, look up the installed signature in `vendor/yiisoft/<pkg>/src` (Core rule 2, API row); never invent method names or copy Yii2 APIs. If `vendor/` is absent, request `composer install` first; when that is impossible, flag every API used as "not verified against sources" in the final report.
 
@@ -80,10 +104,10 @@ Non-feature tasks (pure config, docs, refactoring): Stage 0 marks the inapplicab
 Run after the last stage, in every mode.
 
 1. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Used packages must be declared in `composer.json`.
-2. **Chain Integrity Checklist** (blocking): every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
+2. **Chain Integrity & Mission State Checklist** (blocking): all active stages in the Mission State tracker completed; every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
 3. **Runtime smoke** (optional, Full mode, `vendor/` present): `./yii list` must exit 0 and list the new commands — catches wiring failures the checklist review cannot see (`references/infra-runners-and-runtimes.md`).
-4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
-5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §3, one line each: `Mode: <Light|Full>`, `Architecture: <source>`, fixes applied, tests, static analysis, packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
+4. **Load `references/core-definition-of-done.md`** for Full-mode tasks (new features; runtime, auth, queues, infrastructure): Architecture & Decomposition checks, Multi-Dimensional Quality Evaluation Matrix, Production Readiness Gate, and the Verification Report format live there. Light mode stops here.
+5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §4, one line each: `Mode: <Light|Full>`, `Decomposition: <Lightweight|Standard|Full>`, `Architecture: <source>`, fixes applied, tests, static analysis, packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
 
 ## Core rules
 
@@ -96,7 +120,7 @@ Run after the last stage, in every mode.
    | **Implementation patterns** — transactions, events, thin actions, DTOs | Skill guides (`references/*.md`); project divergence = `legacy drift` — flag, never copy. |
    | **Project conventions** — namespaces, layout, naming, chosen DB/cache/queue drivers | Architecture artifact when present; else dominant style of existing `src/` — new code continues it. |
 
-   **Conflict rule:** a project convention that contradicts a guide wins unless correctness or security is violated (e.g. event dispatch inside a transaction) — then follow the guide and, in interactive runs, ask the user first (inside an external workflow, record the decision and continue; see AI Factory mode). Record every divergence in the report.
+   **Conflict rule:** a project convention that contradicts a guide wins unless correctness or security is violated (e.g. event dispatch inside a transaction) — then follow the guide and, in interactive runs, ask the user first (inside an external workflow, record the decision and continue; see AI Factory Adapter). Record every divergence in the report.
 3. **Placement:** per `references/core-architecture-alignment.md`; a resolved architecture artifact overrides guide defaults. Existing `src/` + `config/` are drift checks for rows 1–2 and the convention source for row 3.
 4. Every capability goes through `references/core-dependency-protocol.md` before code is written.
 

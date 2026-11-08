@@ -1,0 +1,69 @@
+Executing task via AI Factory workflow (HANDOFF_MODE=1).
+
+Stage 0 — Mission Bootstrap:
+Applicability guard passed: yiisoft/yii-runner-http detected in composer.json.
+Detected AI Factory configuration in .ai-factory/config.yaml:
+- Active plan: .ai-factory/plans/2026-11-08-newsletter-subscription.md
+- Architecture: .ai-factory/ARCHITECTURE.md (Vertical Slice)
+- Rules: .ai-factory/rules/YII3.md
+
+### Mission State
+- **Mode:** Full
+- **Decomposition:** Full
+- **Architecture:** .ai-factory/ARCHITECTURE.md
+- **Guides:** references/http-actions-core.md, references/persistence-db.md, references/core-events-design.md
+- **Stage Progress:**
+  - Stage 1 [Migration & Schema]: pending
+  - Stage 2 [Domain Entity & Repository Contract]: pending
+  - Stage 3 [Repository Implementation]: pending
+  - Stage 4 [Use Case & Domain Events]: pending
+  - Stage 5 [Input DTO & Action / Command]: pending
+  - Stage 6 [Config Audit & Wiring Gate]: pending
+  - Stage 7 [Tests & Quality Gate]: pending
+
+Executing Mission Workflow stages bottom-up:
+- Stage 1 complete: migrations/20261108_000001_create_newsletter_subscribers.php | Wiring gate: pass (reversible down())
+- Stage 2 complete: src/Newsletter/Domain/Subscriber.php, SubscriberRepositoryInterface.php | Wiring gate: pass
+- Stage 3 complete: src/Newsletter/Infrastructure/SqlSubscriberRepository.php | Wiring gate: pass
+- Stage 4 complete: src/Newsletter/Application/SubscribeCommand.php, SubscribeHandler.php, SubscribedEvent.php | Wiring gate: pass (post-commit dispatch)
+- Stage 5 complete: src/Newsletter/Presentation/SubscribeRequest.php, SubscribeAction.php | Wiring gate: pass (thin action, typed DTO validation)
+- Stage 6 complete: config/common/di/newsletter.php, config/common/routes.php | Wiring gate: pass (interface bound, route mounted)
+- Stage 7 complete: tests/Newsletter/SubscribeTest.php | Wiring gate: pass (unit tests passing)
+
+Finale — Definition of Done & Chain Integrity Checklist:
+- Chain Integrity Checklist: pass
+- Multi-Dimensional Quality Evaluation Matrix: pass (Functional, Architectural, API, Integration, Security, Reliability)
+- Production Readiness Gate: pass
+
+Verification Report:
+Mode: Full
+Decomposition: Full
+Architecture: .ai-factory/ARCHITECTURE.md
+fixes applied: none
+tests: pass
+static analysis (Psalm/PHPStan, Rector): pass
+packages added: none
+config files changed: config/common/di/newsletter.php, config/common/routes.php
+production readiness gate: pass
+
+Handoff to /aif-verify:
+aif-gate-result:
+{
+  "status": "pass",
+  "blockers": [],
+  "affected_files": [
+    "migrations/20261108_000001_create_newsletter_subscribers.php",
+    "src/Newsletter/Domain/Subscriber.php",
+    "src/Newsletter/Domain/SubscriberRepositoryInterface.php",
+    "src/Newsletter/Infrastructure/SqlSubscriberRepository.php",
+    "src/Newsletter/Application/SubscribeCommand.php",
+    "src/Newsletter/Application/SubscribeHandler.php",
+    "src/Newsletter/Application/Event/SubscribedEvent.php",
+    "src/Newsletter/Presentation/SubscribeRequest.php",
+    "src/Newsletter/Presentation/SubscribeAction.php",
+    "config/common/di/newsletter.php",
+    "config/common/routes.php",
+    "tests/Newsletter/SubscribeTest.php"
+  ]
+}
+

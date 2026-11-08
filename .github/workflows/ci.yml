@@ -22,6 +22,9 @@ jobs:
       - name: Eval selftest (positive/negative samples, guide bindings)
         run: node evals/runner/selftest.mjs
 
+      - name: AI Factory workflow end-to-end contract test
+        run: node scripts/test-aif-workflow.mjs
+
       # scripts/check-symbols.mjs is intentionally NOT run here: it validates
       # guide symbols against the offline reference clones under references/
       # (68 MB, gitignored — local-only authoring material, see .gitignore).

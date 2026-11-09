@@ -13,16 +13,49 @@
 //
 // Zero npm or composer dependencies; parses and statically evaluates purely in Node.js.
 // Exit codes:
-//   0 — all calls and signatures confirmed, or references/ missing in clean CI
+//   0 — all calls and signatures confirmed, or verified against AST manifest on CI
 //   1 — at least one call defect found (method missing, arity/visibility/named arg violation)
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const guidesDir = join(root, 'skills', 'yii3', 'references');
 const referencesDir = join(root, 'references');
+const manifestPath = join(root, 'evals', 'data', 'ast-signatures-manifest.json');
+const shouldExportManifest = process.argv.includes('--export-manifest') || process.env.UPDATE_MANIFEST === '1';
+const forceManifestMode = process.argv.includes('--manifest-mode');
+
+const confirmedManifest = {
+  classes: new Set(),
+  methods: {}
+};
+
+function recordManifestMethod(fqcn, methodName, info) {
+  if (!info) return;
+  const key = `${fqcn}::${methodName}`;
+  confirmedManifest.methods[key] = {
+    visibility: info.visibility || 'public',
+    isStatic: Boolean(info.isStatic),
+    requiredCount: info.requiredCount ?? 0,
+    totalCount: info.isVariadic ? 999 : (info.totalCount ?? 0),
+    isVariadic: Boolean(info.isVariadic),
+    returnType: info.returnType || null,
+    definedIn: info.definedIn || fqcn,
+    isConstOrCase: Boolean(info.isConstOrCase),
+    params: (info.params || []).map((p) => ({
+      name: p.name,
+      hasDefault: Boolean(p.hasDefault),
+      isVariadic: Boolean(p.isVariadic)
+    }))
+  };
+  confirmedManifest.classes.add(fqcn);
+  if (info.definedIn) confirmedManifest.classes.add(info.definedIn);
+  if (info.returnType && info.returnType.startsWith('Yiisoft\\')) {
+    confirmedManifest.classes.add(info.returnType);
+  }
+}
 
 // Allowlist of intentional negative or anti-pattern examples documented in guides.
 // Each entry: { match: RegExp | string, reason: string }.
@@ -362,13 +395,23 @@ function extractMethodSignature(src, methodName, fqcn, callingClass = fqcn) {
   };
 }
 
-function findMethodInfo(fqcn, method, classMap, callingClass = fqcn, depth = 0, visited = new Set()) {
+function findMethodInfo(fqcn, method, classMap, callingClass = fqcn, depth = 0, visited = new Set(), manifest = null) {
   const visitKey = `${fqcn}::${method}`;
   if (visited.has(visitKey) || depth > 4) return null;
   visited.add(visitKey);
 
   if (EXTERNAL_INTERFACES[fqcn]?.methods[method]) {
-    return { ...EXTERNAL_INTERFACES[fqcn].methods[method], definedIn: fqcn, isConstOrCase: false };
+    const res = { ...EXTERNAL_INTERFACES[fqcn].methods[method], definedIn: fqcn, isConstOrCase: false };
+    recordManifestMethod(fqcn, method, res);
+    return res;
+  }
+
+  if (manifest) {
+    const key = `${fqcn}::${method}`;
+    if (manifest.methods?.[key]) {
+      return manifest.methods[key];
+    }
+    return null;
   }
 
   const resolved = resolveFqcn(fqcn, classMap);
@@ -376,15 +419,24 @@ function findMethodInfo(fqcn, method, classMap, callingClass = fqcn, depth = 0, 
   const src = readText(resolved.path);
 
   const sig = extractMethodSignature(src, method, fqcn, callingClass);
-  if (sig) return { ...sig, definedIn: fqcn, isConstOrCase: false };
+  if (sig) {
+    const res = { ...sig, definedIn: fqcn, isConstOrCase: false };
+    recordManifestMethod(fqcn, method, res);
+    return res;
+  }
 
   if (new RegExp(`(const|case)\\s+${method}\\b`).test(src)) {
-    return { isStatic: true, isConstOrCase: true, definedIn: fqcn, requiredCount: 0, totalCount: 0 };
+    const res = { isStatic: true, isConstOrCase: true, definedIn: fqcn, requiredCount: 0, totalCount: 0 };
+    recordManifestMethod(fqcn, method, res);
+    return res;
   }
 
   for (const parent of collectAncestors(src)) {
-    const parentInfo = findMethodInfo(parent, method, classMap, callingClass, depth + 1, visited);
-    if (parentInfo) return parentInfo;
+    const parentInfo = findMethodInfo(parent, method, classMap, callingClass, depth + 1, visited, manifest);
+    if (parentInfo) {
+      recordManifestMethod(fqcn, method, parentInfo);
+      return parentInfo;
+    }
   }
   return null;
 }
@@ -479,7 +531,7 @@ function matchCallParen(text, openIdx) {
   return -1;
 }
 
-function extractChainedCalls(code, startIdx, initialType, initialVarName, imports, classMap) {
+function extractChainedCalls(code, startIdx, initialType, initialVarName, imports, classMap, manifest = null) {
   const calls = [];
   let currentIdx = startIdx;
   let currentType = initialType;
@@ -505,7 +557,7 @@ function extractChainedCalls(code, startIdx, initialType, initialVarName, import
     });
 
     if (currentType) {
-      const info = findMethodInfo(currentType, methodName, classMap);
+      const info = findMethodInfo(currentType, methodName, classMap, currentType, 0, new Set(), manifest);
       if (info?.returnType) {
         currentType = info.returnType;
       } else {
@@ -522,10 +574,16 @@ function extractChainedCalls(code, startIdx, initialType, initialVarName, import
 // Main execution
 function main() {
   const classMap = buildClassMap();
+  let manifest = null;
 
-  if (classMap.prefixes.length === 0) {
-    console.log('[check-ast] references/ directory not present (clean CI environment). Skipping full AST source validation.');
-    process.exit(0);
+  if (forceManifestMode || classMap.prefixes.length === 0) {
+    if (existsSync(manifestPath)) {
+      console.log('NOTE [check-ast] running in manifest verification mode (CI environment without references/ clones).');
+      manifest = JSON.parse(readText(manifestPath));
+    } else {
+      console.log('[check-ast] references/ directory not present and no manifest found. Skipping full AST validation.');
+      process.exit(0);
+    }
   }
 
   const guideFiles = existsSync(guidesDir)
@@ -588,14 +646,14 @@ function main() {
 
         let fqcn = rawType.startsWith('\\') ? rawType.slice(1) : (imports.get(rawType) || rawType);
 
-        const { calls } = extractChainedCalls(code, m.index + m[0].length, fqcn, varKey, imports, classMap);
+        const { calls } = extractChainedCalls(code, m.index + m[0].length, fqcn, varKey, imports, classMap, manifest);
 
         for (const call of calls) {
           if (!call.targetType || !call.targetType.startsWith('Yiisoft\\')) continue;
 
           totalInstanceCalls++;
           const methodName = call.methodName;
-          const methodInfo = findMethodInfo(call.targetType, methodName, classMap);
+          const methodInfo = findMethodInfo(call.targetType, methodName, classMap, call.targetType, 0, new Set(), manifest);
 
           if (!methodInfo) {
             const err = `${file}: instance call $${call.varName} (${call.targetType})->${methodName}() not found`;
@@ -618,7 +676,7 @@ function main() {
             if (argCount < methodInfo.requiredCount) {
               const err = `${file}: arity underflow on $${call.varName} (${call.targetType})->${methodName}(): expected >= ${methodInfo.requiredCount}, got ${argCount}`;
               if (!isAllowlisted(err)) defects.push(err);
-            } else if (argCount > methodInfo.totalCount) {
+            } else if (!methodInfo.isVariadic && methodInfo.totalCount !== null && argCount > methodInfo.totalCount) {
               const err = `${file}: arity overflow on $${call.varName} (${call.targetType})->${methodName}(): expected <= ${methodInfo.totalCount}, got ${argCount}`;
               if (!isAllowlisted(err)) defects.push(err);
             } else {
@@ -651,7 +709,7 @@ function main() {
         if (!fqcn.startsWith('Yiisoft\\')) continue;
 
         totalStaticCalls++;
-        const methodInfo = findMethodInfo(fqcn, methodName, classMap);
+        const methodInfo = findMethodInfo(fqcn, methodName, classMap, fqcn, 0, new Set(), manifest);
         if (!methodInfo) {
           const err = `${file}: static call ${fqcn}::${methodName}() not found`;
           if (!isAllowlisted(err)) defects.push(err);
@@ -683,7 +741,7 @@ function main() {
             if (argCount < methodInfo.requiredCount) {
               const err = `${file}: arity underflow on ${fqcn}::${methodName}(): expected >= ${methodInfo.requiredCount}, got ${argCount}`;
               if (!isAllowlisted(err)) defects.push(err);
-            } else if (argCount > methodInfo.totalCount) {
+            } else if (!methodInfo.isVariadic && methodInfo.totalCount !== null && argCount > methodInfo.totalCount) {
               const err = `${file}: arity overflow on ${fqcn}::${methodName}(): expected <= ${methodInfo.totalCount}, got ${argCount}`;
               if (!isAllowlisted(err)) defects.push(err);
             } else {
@@ -705,11 +763,11 @@ function main() {
 
           // Chained calls on static return type (e.g. Route::get()->action(), GridView::widget()->dataReader())
           if (methodInfo.returnType) {
-            const { calls } = extractChainedCalls(code, callCloseIdx + 1, methodInfo.returnType, `${className}::${methodName}()`, imports, classMap);
+            const { calls } = extractChainedCalls(code, callCloseIdx + 1, methodInfo.returnType, `${className}::${methodName}()`, imports, classMap, manifest);
             for (const call of calls) {
               if (!call.targetType || !call.targetType.startsWith('Yiisoft\\')) continue;
               totalInstanceCalls++;
-              const chainedInfo = findMethodInfo(call.targetType, call.methodName, classMap);
+              const chainedInfo = findMethodInfo(call.targetType, call.methodName, classMap, call.targetType, 0, new Set(), manifest);
               if (!chainedInfo) {
                 const err = `${file}: chained instance call on ${call.varName} (${call.targetType})->${call.methodName}() not found`;
                 if (!isAllowlisted(err)) defects.push(err);
@@ -725,7 +783,7 @@ function main() {
                 if (cArgs < chainedInfo.requiredCount) {
                   const err = `${file}: arity underflow on ${call.targetType}->${call.methodName}(): expected >= ${chainedInfo.requiredCount}, got ${cArgs}`;
                   if (!isAllowlisted(err)) defects.push(err);
-                } else if (cArgs > chainedInfo.totalCount) {
+                } else if (!chainedInfo.isVariadic && chainedInfo.totalCount !== null && cArgs > chainedInfo.totalCount) {
                   const err = `${file}: arity overflow on ${call.targetType}->${call.methodName}(): expected <= ${chainedInfo.totalCount}, got ${cArgs}`;
                   if (!isAllowlisted(err)) defects.push(err);
                 } else {
@@ -748,6 +806,16 @@ function main() {
         }
       }
     }
+  }
+
+  if (shouldExportManifest && defects.length === 0) {
+    mkdirSync(dirname(manifestPath), { recursive: true });
+    const payload = {
+      classes: [...confirmedManifest.classes].sort(),
+      methods: confirmedManifest.methods
+    };
+    writeFileSync(manifestPath, JSON.stringify(payload, null, 2));
+    console.log(`[check-ast] exported AST signatures manifest with ${payload.classes.length} classes and ${Object.keys(payload.methods).length} signatures to ${manifestPath}`);
   }
 
   console.log(`=== AST PHP Code Analyzer ===`);

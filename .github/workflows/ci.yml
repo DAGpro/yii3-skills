@@ -25,5 +25,11 @@ jobs:
       - name: AI Factory workflow end-to-end contract test
         run: node scripts/test-aif-workflow.mjs
 
+      - name: Eval guide coverage check (100% coverage gate)
+        run: node scripts/check-eval-coverage.mjs
+
       - name: API symbols grounding check (manifest mode on CI, package clones locally)
         run: node scripts/check-symbols.mjs
+
+      - name: AST PHP code grounding analyzer
+        run: node scripts/check-ast.mjs

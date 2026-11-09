@@ -14,7 +14,7 @@ instructed to be followed). This file is the committed record; raw per-run artif
   `<work>/.opencode/skills/yii3`. Identical hard rules in both arms: work-dir
   confinement, **no network in either arm**, no git/composer. The only difference is
   skill presence (+ the instruction to read its SKILL.md and follow it).
-- **Grading:** `runner/evaluate.mjs` — deterministic checks only; no model judge yet.
+- **Grading:** `runner/evaluate.mjs` — deterministic checks only (the campaign ran prior to the implementation of the semantic LLM judge in `evals/runner/judge.mjs`).
 - **Agent:** session subagents (general-purpose), model GLM-5.3-Flash (ZCode),
   20 runs, ≈29M subagent tokens.
 - **Contamination control:** source-repo `git log`/`git status` verified unchanged
@@ -95,8 +95,7 @@ Recurring baseline failures that the with-skill arm eliminated: session-flash me
 
 - n=1 per arm: no variance estimates; deltas are point estimates. Rerun policy: add
   runs per arm before drawing fine-grained conclusions (esp. for deltas < 15 pp).
-- Deterministic text checks only: no `composer install`/`phpunit` execution, no rubric
-  judge (both remain TODO in `evals/README.md`). Code was never compiled or run.
+- Deterministic text checks only: no `composer install`/`phpunit` execution in this historical dataset (both the semantic LLM judge in `evals/runner/judge.mjs` and PHP syntax linting in `evals/lib/runtime.mjs` were introduced after this baseline campaign). Code was not compiled or executed during this run.
 - Same day, same model, same harness for both arms; prompts are verbatim-identical.
 - The with-skill arm's extra instruction ("read SKILL.md and follow it") models a
   harness that loads project skills; agents without such harness integration may

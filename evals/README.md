@@ -134,6 +134,36 @@ export EVAL_ENABLE_RUNTIME=1
   - `runtime-composer-validate`: Verifies `composer.json` syntax and schema.
   - `runtime-phpunit`: Executes PHPUnit tests when tests and configuration exist.
 
+## Semantic LLM Judge Layer (`rubric.md`)
+
+The harness includes an automated LLM-as-a-judge runner (`evals/runner/judge.mjs`) for qualitative rubric assessment across scenarios:
+
+```bash
+# Evaluate a work directory with the LLM judge (using dry-run mock)
+node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --judge --dry-run
+
+# Run judge against a real LLM provider (OpenAI, Anthropic, or external CLI command)
+OPENAI_API_KEY="sk-..." node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --judge
+ANTHROPIC_API_KEY="sk-ant-..." node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --judge
+EVAL_JUDGE_CMD="my-eval-cli --format json" node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --judge
+
+# Batch judge evaluation over existing result directories
+node evals/runner/judge.mjs --results evals/results/campaign-2026-11-07/ --dry-run
+
+# Run built-in judge self-tests
+npm run judge:selftest
+# or
+node evals/runner/judge.mjs --selftest
+```
+
+- **Blind Evaluation Invariant:** The judge prompt strictly redacts mode indicators (`with-skill`, `baseline`) to prevent LLM grading bias. Internal harness artifacts (`AGENTS.md`, `result.json`) are excluded.
+- **Structured Scoring Contract:** Outputs a typed `judge.json` artifact containing:
+  - `score`: Normalized score between 0.0 and 1.0.
+  - `verdict`: `"pass"` | `"fail"` | `"inconclusive"`.
+  - `summary`: Concise synthesis of model performance.
+  - `criteria`: Array of per-rubric-criterion items `[{ id, name, passed, weight, note }]`.
+  - `strengths` / `weaknesses`: Specific concrete observations.
+
 ## Adding a scenario
 
 1. Copy the closest scenario, adjust the fixture and `prompt.md`.
@@ -146,12 +176,5 @@ Rule: every agent failure found on a real project becomes a new scenario.
 
 ## Not implemented (TODO)
 
-- Judge over `rubric.md` (a model call; the judge must not know the with-skill/baseline mode).
 - Automatic `composer install` inside ephemeral test sandboxes (syntax check, composer validate, and phpunit are implemented in `evals/lib/runtime.mjs`, but full package installation currently requires network or pre-warmed vendor).
-- Guide coverage: 81 of 81 (100.0%) `skills/yii3/references/` topic guides have dedicated scenarios
-  (see full live matrix in [COVERAGE.md](COVERAGE.md); validated via `node scripts/check-eval-coverage.mjs`).
-  Covered across 65 scenarios: unit diagnostics, composite anchors (01/13/23/25/31), AI Factory E2E workflow (`55-aif-e2e-workflow`),
-  QA Rector/CS-Fixer (`56-qa-rector-cs-fixer`), mutation testing (`57-mutation-testing-infection`), runtimes and workers (`58-runners-and-runtimes`, `59-roadrunner-worker`, `60-frankenphp-worker`),
-  worker state safety (`61-state-resetter`), CSS widget themes (`62-bootstrap5-widgets`, `63-bulma-widgets`),
-  and alternative test runners (`64-codeception-tests`, `65-testo-runner`).
 - Tokens/cost in `result.json` (depends on the agent adapter).

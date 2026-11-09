@@ -4,10 +4,11 @@
 // scenario fixture and already contain whoever did the task (a CLI agent, a chat agent, a human).
 // The agent's final answer goes to the transcript (default: <work>/transcript.txt).
 // Exit codes: 0 - all required checks passed, 1 - a required check failed, 2 - usage error.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listScenarios, evaluateWork } from './core.mjs';
+import { judgeSingleWork } from './judge.mjs';
 
 const evalsRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, x, i, arr) => (x.startsWith('--') ? [...a, [x.slice(2), arr[i + 1]]] : a), []));
@@ -30,8 +31,27 @@ const transcript = existsSync(tPath) ? readFileSync(tPath, 'utf8') : '';
 if (!transcript) console.error('WARN: no transcript found - transcript-based checks will fail.');
 
 const runtime = process.argv.includes('--runtime') || args.runtime === 'true' || args.runtime === '1';
+const judgeFlag = process.argv.includes('--judge') || args.judge === 'true' || args.judge === '1';
+const dryRun = process.argv.includes('--dry-run') || args['dry-run'] === 'true';
+
 const { rate, reqFailed, results } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot, extra: { runtime } });
 for (const r of results) console.log(`${r.pass ? 'PASS' : 'FAIL'}${r.required ? '' : ' (opt)'} ${r.id}: ${r.evidence}`);
 console.log(`pass-rate: ${(rate * 100).toFixed(0)}%  required-failed=[${reqFailed}]`);
+
+if (judgeFlag) {
+  try {
+    const judgeResult = await judgeSingleWork({
+      scenarioDir: join(evalsRoot, 'scenarios', id),
+      workDir: work,
+      transcript,
+      options: { dryRun }
+    });
+    console.log(`judge-score: ${(judgeResult.score * 100).toFixed(0)}%  verdict=${judgeResult.verdict}`);
+    writeFileSync(join(outRoot, id, `${mode}-${run}`, 'judge.json'), JSON.stringify(judgeResult, null, 2));
+  } catch (jErr) {
+    console.error(`judge-error: ${jErr.message}`);
+  }
+}
+
 console.log(`artifacts: ${join(outRoot, id, `${mode}-${run}`)}`);
 process.exit(reqFailed.length ? 1 : 0);

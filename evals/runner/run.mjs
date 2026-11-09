@@ -13,6 +13,7 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { copyDir, listScenarios, loadScenario, evaluateWork } from './core.mjs';
+import { judgeSingleWork } from './judge.mjs';
 
 const evalsRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = resolve(evalsRoot, '..');
@@ -22,6 +23,8 @@ const runs = Number(args.runs ?? 3);
 const agentCmd = process.env.EVAL_AGENT_CMD;
 const skillDest = process.env.EVAL_SKILL_DEST;
 const ids = args.scenario ? [args.scenario] : listScenarios(evalsRoot);
+const judgeFlag = process.argv.includes('--judge') || args.judge === 'true' || args.judge === '1';
+const dryRun = process.argv.includes('--dry-run') || args['dry-run'] === 'true';
 
 // --- scenario selection -------------------------------------------------
 // --guides a.md,b.md  : scenarios bound to these skills/yii3/ paths
@@ -129,20 +132,41 @@ for (const id of selected) {
         console.error(`WARN: the source repository changed during the ${id} ${mode} #${n} agent run - the agent likely escaped its work dir. Inspect git status/log before trusting these results.`);
       }
       const { rate, reqFailed } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000, repoTouched } });
-      rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, reqFailed });
-      console.log(`${id} ${mode} #${n}: ${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]`);
+      let judgeScore = null;
+      if (judgeFlag) {
+        try {
+          const jRes = await judgeSingleWork({ scenarioDir: sDir, workDir: work, transcript, options: { dryRun } });
+          judgeScore = jRes.score;
+          writeFileSync(join(outRoot, id, `${mode}-${n}`, 'judge.json'), JSON.stringify(jRes, null, 2));
+        } catch (jErr) {
+          console.error(`WARN: judge failed on ${id} ${mode} #${n}: ${jErr.message}`);
+        }
+      }
+      rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, reqFailed, judgeScore });
+      console.log(`${id} ${mode} #${n}: ${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]${judgeScore !== null ? ` judge=${(judgeScore * 100).toFixed(0)}%` : ''}`);
     }
   }
 }
 
 // summary.md: average pass-rate per scenario and mode + the with-skill - baseline delta
 const avg = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
-let md = '| scenario | layer | with-skill | baseline | delta |\n|---|---|---|---|---|\n';
+let md = judgeFlag
+  ? '| scenario | layer | with-skill (code/judge) | baseline (code/judge) | delta (code/judge) |\n|---|---|---|---|---|\n'
+  : '| scenario | layer | with-skill | baseline | delta |\n|---|---|---|---|---|\n';
+
 for (const id of [...new Set(rows.map((r) => r.id))]) {
-  const w = avg(rows.filter((r) => r.id === id && r.mode === 'with-skill').map((r) => r.rate));
-  const b = avg(rows.filter((r) => r.id === id && r.mode === 'baseline').map((r) => r.rate));
+  const wRate = avg(rows.filter((r) => r.id === id && r.mode === 'with-skill').map((r) => r.rate));
+  const bRate = avg(rows.filter((r) => r.id === id && r.mode === 'baseline').map((r) => r.rate));
   const f = (x) => (Number.isNaN(x) ? '-' : `${(x * 100).toFixed(0)}%`);
-  md += `| ${id} | ${rows.find((r) => r.id === id)?.layer ?? '-'} | ${f(w)} | ${f(b)} | ${Number.isNaN(w - b) ? '-' : `${((w - b) * 100).toFixed(0)} pp`} |\n`;
+  const fPp = (w, b) => (Number.isNaN(w - b) ? '-' : `${((w - b) * 100).toFixed(0)} pp`);
+
+  if (judgeFlag) {
+    const wJudge = avg(rows.filter((r) => r.id === id && r.mode === 'with-skill' && typeof r.judgeScore === 'number').map((r) => r.judgeScore));
+    const bJudge = avg(rows.filter((r) => r.id === id && r.mode === 'baseline' && typeof r.judgeScore === 'number').map((r) => r.judgeScore));
+    md += `| ${id} | ${rows.find((r) => r.id === id)?.layer ?? '-'} | ${f(wRate)} / ${f(wJudge)} | ${f(bRate)} / ${f(bJudge)} | ${fPp(wRate, bRate)} / ${fPp(wJudge, bJudge)} |\n`;
+  } else {
+    md += `| ${id} | ${rows.find((r) => r.id === id)?.layer ?? '-'} | ${f(wRate)} | ${f(bRate)} | ${fPp(wRate, bRate)} |\n`;
+  }
 }
 mkdirSync(outRoot, { recursive: true });
 writeFileSync(join(outRoot, 'summary.md'), md);

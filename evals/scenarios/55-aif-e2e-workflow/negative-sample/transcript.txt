@@ -1,6 +1,6 @@
 Execution finished, but interface was not bound and route was not mounted.
 Verification failed.
-aif-gate-result:
+```aif-gate-result
 {
   "schema_version": 1,
   "gate": "verify",
@@ -36,4 +36,5 @@ aif-gate-result:
     "reason": "Blocking implementation violations remain."
   }
 }
+```
 

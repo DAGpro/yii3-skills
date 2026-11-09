@@ -6,5 +6,5 @@ Fix-specific duties:
 - Root-cause diagnostics: apply SKILL.md Stage 0 item 3(c) "Bug / diagnostics" root-cause checklist in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. For the failing component, inspect its topic guide from `references/INDEX.md` (Anti-Pattern Matrix and reference recipes).
 - File placement & style: keep the fix in the file's current place and local style (SKILL.md Core rule 2); do not relocate code.
 - Implementation grounding: implement API calls strictly per installed vendor sources and the skill's reference guides; flag legacy drift patterns without copying them into new code.
-- Zero-ambiguity resolution: resolve structured blockers from `aif-gate-result` strictly within `affected_files`, clear resolved items from `Open Issues` in `### Execution State`, set `Status: PENDING_VERIFICATION`, and hand off cleanly to `/aif-verify`.
+- Zero-ambiguity resolution: resolve structured blockers from `aif-gate-result` (modifying only files needed to remediate `blockers[].file` within the inspected perimeter `affected_files`), clear resolved items from `Open Issues` in `### Execution State`, set `Status: PENDING_VERIFICATION`, and hand off cleanly to `/aif-verify`.
 

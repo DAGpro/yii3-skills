@@ -1,7 +1,7 @@
 {
   "id": "55-aif-e2e-workflow",
   "title": "AI Factory end-to-end workflow: plan resolution, bottom-up implementation, and aif-gate-result handoff",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "ai-factory",
     "workflow",
@@ -26,6 +26,8 @@
   "layer": "composite",
   "guides": [
     "SKILL.md",
+    "references/aif-adapter.md",
+    "references/core-config-tree.md",
     "references/core-definition-of-done.md",
     "references/core-feature-recipes.md",
     "references/core-architecture-alignment.md",

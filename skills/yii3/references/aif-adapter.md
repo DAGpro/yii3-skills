@@ -121,9 +121,10 @@ Across AI Factory workflows, independent agents run in separate conversational c
 - **Task Checkboxes:** All completed phase tasks must be marked `- [x]`.
 - **Handoff Status:** Set `Status: COMPLETE` (or ready for verification) and `Next Stage: /aif-verify`.
 
-### 6.3. Handoff: `aif-verify` → `aif-fix` (Zero-Ambiguity Defect Reporting)
-- **Canonical `aif-gate-result` Schema (AI Factory 2.x):** Emit the structured gate result matching the official AI Factory specification:
-  ```json
+### 6.3. Handoff: `aif-verify` → `aif-fix` / `/aif-commit` (Zero-Ambiguity Defect Reporting)
+- **Canonical `aif-gate-result` Schema (AI Factory 2.x):** Emit the structured gate result as the final fenced block with language `aif-gate-result` at the end of the output:
+  ````markdown
+  ```aif-gate-result
   {
     "schema_version": 1,
     "gate": "verify",
@@ -147,13 +148,20 @@ Across AI Factory workflows, independent agents run in separate conversational c
     }
   }
   ```
-  When all checks pass cleanly, set `"status": "pass"`, `"blocking": false`, `"blockers": []`, and point `"suggested_next"` to the closing gate or next phase.
-- **Actionable Blocker Reports:** Every entry in `blockers` must be a structured object with `id`, `severity: "error"`, `file`, and `summary`.
-- **Strict Modification Perimeter:** `aif-gate-result` must populate `affected_files` with the exact list of files requiring remediation so `aif-fix` knows its exact boundary.
-- **Handoff Status:** Set `Status: BLOCKED` and `Next Stage: /aif-fix` in `### Execution State`.
+  ````
+- **Status Semantics:**
+  - `status: "pass"`: All architectural gates and checks pass without blocking or warning findings. Set `blocking: false`, `blockers: []`, and `suggested_next: { command: "/aif-commit", reason: "Verification passed." }` (or `null`).
+  - `status: "warn"`: Completed with non-blocking findings (e.g. unverified API symbols without vendor, non-blocking architecture drift `WARN [architecture-drift]`). Set `blocking: false`, `blockers: []`, and `suggested_next: { command: "/aif-commit", reason: "Verification passed with advisory warnings." }`.
+  - `status: "fail"`: Found at least one blocker. Set `blocking: true`, populate `blockers: [...]` with structured objects, and set `suggested_next: { command: "/aif-fix", reason: "Blocking implementation violations remain." }`.
+- **Actionable Blocker Reports:** Every entry in `blockers` must be a structured object with `id`, `severity: "error"` (or `"warning"` if policy treats warning as blocking), `file`, and `summary`.
+- **Inspected Perimeter vs Remediation Scope (`affected_files` vs `blockers[].file`):**
+  - `affected_files` is the array of files the gate actually evaluated or cited during verification (the inspected perimeter).
+  - `blockers[].file` indicates the specific file containing an identified violation.
+  - `aif-fix` modifies only the files needed to resolve the blockers within the inspected perimeter, never modifying unaffected evaluated files.
+- **Handoff Status:** Set `Status: BLOCKED` and `Next Stage: /aif-fix` in `### Execution State` when blockers exist; set `Status: COMPLETE` when all checks pass.
 
 ### 6.4. Handoff: `aif-fix` → `aif-verify` (Clean Defect Resolution Loop)
-- **Scope Compliance:** Corrective edits must remain strictly within `affected_files` without introducing new architectural mechanisms.
+- **Scope Compliance:** Corrective edits must target the files identified in `blockers[].file` within the `affected_files` perimeter without introducing unrelated changes or new architectural mechanisms.
 - **State Reconciliation:** Clear resolved defects from `Open Issues`, confirm wiring gates remain `PASS`, set `Status: PENDING_VERIFICATION`, and hand off cleanly to `/aif-verify`.
 
 

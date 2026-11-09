@@ -17,6 +17,7 @@
   ],
   "layer": "unit",
   "guides": [
+    "references/http-views-and-widgets.md",
     "references/http-widgets-and-assets.md"
   ]
 }

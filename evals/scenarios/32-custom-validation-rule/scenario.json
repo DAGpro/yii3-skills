@@ -20,6 +20,7 @@
   ],
   "layer": "unit",
   "guides": [
+    "references/http-validation-and-forms.md",
     "references/http-validation-custom-rules.md"
   ]
 }

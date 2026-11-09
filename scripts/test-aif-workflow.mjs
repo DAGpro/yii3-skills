@@ -3,7 +3,7 @@
 // Validates the integration between yii3-skills and AI Factory workflows:
 // 1. Injections Canonical Guard & Structure Contract (AGENTS.md §4.6)
 // 2. Stage 0 AI Factory Config & Path Resolution Contract (.ai-factory/config.yaml)
-// 3. Plan Phase Contract (aif-plan -> 6 canonical plan phases, collapsed decomposition)
+// 3. Plan Phase Contract (aif-plan -> 6 canonical plan phases per execution mode)
 // 4. Implementation Bottom-Up & Mission State Contract (aif-implement -> stages 1-7, wiring gates)
 // 5. Verification & Handoff Contract (aif-verify -> aif-gate-result: blockers, affected_files)
 // 6. Canary / Mutation Tests (detecting unbound interfaces, unrouted actions, broken migrations)
@@ -257,8 +257,9 @@ assert(!validateMissionState(mockFailedGateTranscript), 'Canary rejects failed w
 // ---------------------------------------------------------------------------
 console.log('\n5. Validating Verification Handoff Engine & aif-gate-result (AI Factory 2.x)...');
 
-function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
+function simulateAifVerify({ changedFiles, projectFiles, composerPackages, unverifiedApis = [] }) {
   const blockers = [];
+  const warnings = [];
   const affected_files = changedFiles.map((c) => c.path);
   let blockerSeq = 1;
 
@@ -333,17 +334,35 @@ function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
     }
   }
 
+  // 5. Unverified API symbols (advisory warnings per AGENTS.md §4.7)
+  for (const api of unverifiedApis) {
+    warnings.push({
+      id: `verify-unverified-api-${String(blockerSeq++).padStart(3, '0')}`,
+      severity: 'warning',
+      summary: `API symbol "${api}" is not verified against installed vendor sources`,
+    });
+  }
+
   const hasBlockers = blockers.length > 0;
+  const hasWarnings = warnings.length > 0;
+  const status = hasBlockers ? 'fail' : (hasWarnings ? 'warn' : 'pass');
+
+  const ALLOWED_COMMANDS = ['/aif-fix', '/aif-rules', '/aif-architecture', '/aif-roadmap', '/aif-commit', null];
+
+  const suggested_next = hasBlockers
+    ? { command: '/aif-fix', reason: 'Blocking implementation violations remain.' }
+    : { command: '/aif-commit', reason: hasWarnings ? 'Verification passed with non-blocking advisory warnings.' : 'All architectural gates and checks passed.' };
+
+  assert(ALLOWED_COMMANDS.includes(suggested_next.command), `suggested_next command "${suggested_next.command}" must be in allowlist`);
+
   return {
     schema_version: 1,
     gate: 'verify',
-    status: hasBlockers ? 'fail' : 'pass',
+    status,
     blocking: hasBlockers,
     blockers,
     affected_files,
-    suggested_next: hasBlockers
-      ? { command: '/aif-fix', reason: 'Blocking implementation violations remain.' }
-      : { command: '/aif-verify', reason: 'All architectural gates and checks passed.' },
+    suggested_next,
   };
 }
 
@@ -382,6 +401,7 @@ assert(cleanFeature.status === 'pass', 'Clean feature passes verify gate');
 assert(cleanFeature.blocking === false, 'Clean feature has blocking: false');
 assert(cleanFeature.blockers.length === 0, 'Clean feature has 0 blockers');
 assert(cleanFeature.affected_files.length === 3, 'Clean feature records affected_files');
+assert(cleanFeature.suggested_next.command === '/aif-commit', 'Clean feature suggests /aif-commit');
 
 // 5b. Canary: Unbound interface caught
 const canaryUnbound = simulateAifVerify({
@@ -443,6 +463,67 @@ const canaryUndeclared = simulateAifVerify({
 });
 assert(canaryUndeclared.status === 'fail', 'Canary catches undeclared package');
 assert(canaryUndeclared.blockers.some((b) => b.summary.includes('yiisoft/mailer')), 'Blocker explicitly names undeclared package');
+
+// 5f. Non-blocking warning scenario (warn status)
+const canaryWarn = simulateAifVerify({
+  changedFiles: [
+    {
+      path: 'src/Comment/CommentRepositoryInterface.php',
+      content: '<?php\ndeclare(strict_types=1);\nnamespace App\\Comment;\ninterface CommentRepositoryInterface {}',
+    },
+  ],
+  projectFiles: [
+    {
+      path: 'config/common/di/comment.php',
+      content: 'return [CommentRepositoryInterface::class => SqlCommentRepository::class];',
+    },
+  ],
+  composerPackages: ['yiisoft/yii-runner-http', 'yiisoft/di'],
+  unverifiedApis: ['Yiisoft\\Widget\\SpecialWidget::run()'],
+});
+assert(canaryWarn.status === 'warn', 'Unverified API returns status "warn"');
+assert(canaryWarn.blocking === false, 'Advisory warning marks blocking: false');
+assert(canaryWarn.blockers.length === 0, 'Advisory warnings do not enter blocking blockers list');
+assert(canaryWarn.suggested_next.command === '/aif-commit', 'Advisory warning suggested_next is /aif-commit');
+
+// 5g. Full Closed-Loop Remediation Contract Test (verify -> aif-fix -> verify -> PASS)
+const initialProjectFiles = [
+  { path: 'config/common/di/order.php', content: 'return [];' },
+  { path: 'config/common/routes.php', content: "return [new \\Yiisoft\\Router\\Route\\Post('/order/cancel', CancelOrderAction::class)];" },
+];
+const initialChangedFiles = [
+  { path: 'src/Order/OrderRepositoryInterface.php', content: '<?php\ninterface OrderRepositoryInterface {}' },
+  { path: 'src/Order/CancelOrderAction.php', content: '<?php\nfinal class CancelOrderAction {}' },
+];
+
+// Loop step 1: initial verify fails with blocker
+const initialVerification = simulateAifVerify({
+  changedFiles: initialChangedFiles,
+  projectFiles: initialProjectFiles,
+  composerPackages: ['yiisoft/yii-runner-http', 'yiisoft/di', 'yiisoft/router'],
+});
+assert(initialVerification.status === 'fail', 'E2E loop: Initial verification fails with blocker');
+assert(initialVerification.blocking === true, 'E2E loop: Initial verification is blocking');
+assert(initialVerification.blockers.length === 1, 'E2E loop: Exactly one blocker found');
+assert(initialVerification.blockers[0].file === 'src/Order/OrderRepositoryInterface.php', 'E2E loop: Blocker identifies exact defect file');
+assert(initialVerification.suggested_next.command === '/aif-fix', 'E2E loop: Hands off cleanly to /aif-fix');
+
+// Loop step 2: simulate aif-fix remediating the defect strictly for the blocker file
+const remediatedProjectFiles = [
+  { path: 'config/common/di/order.php', content: 'return [OrderRepositoryInterface::class => SqlOrderRepository::class];' },
+  { path: 'config/common/routes.php', content: "return [new \\Yiisoft\\Router\\Route\\Post('/order/cancel', CancelOrderAction::class)];" },
+];
+
+// Loop step 3: re-verify the remediated codebase
+const reVerification = simulateAifVerify({
+  changedFiles: initialChangedFiles,
+  projectFiles: remediatedProjectFiles,
+  composerPackages: ['yiisoft/yii-runner-http', 'yiisoft/di', 'yiisoft/router'],
+});
+assert(reVerification.status === 'pass', 'E2E loop: Re-verification passes cleanly after fix');
+assert(reVerification.blocking === false, 'E2E loop: Re-verification is non-blocking');
+assert(reVerification.blockers.length === 0, 'E2E loop: Blockers are completely resolved');
+assert(reVerification.suggested_next.command === '/aif-commit', 'E2E loop: Final handoff proceeds to /aif-commit');
 
 // ---------------------------------------------------------------------------
 // 6. Guard Discrimination on Non-Yii3 Project

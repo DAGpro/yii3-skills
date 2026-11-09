@@ -8,8 +8,7 @@ Detected AI Factory configuration in .ai-factory/config.yaml:
 - Rules: .ai-factory/rules/YII3.md
 
 ### Mission State
-- **Mode:** Full
-- **Decomposition:** Full
+- **Mode:** Feature
 - **Architecture:** .ai-factory/ARCHITECTURE.md
 - **Guides:** references/http-actions-core.md, references/persistence-db.md, references/core-events-design.md
 - **Stage Progress:**
@@ -36,8 +35,7 @@ Finale — Definition of Done & Chain Integrity Checklist:
 - Production Readiness Gate: pass
 
 Verification Report:
-Mode: Full
-Decomposition: Full
+Mode: Feature
 Architecture: .ai-factory/ARCHITECTURE.md
 fixes applied: none
 tests: pass
@@ -47,7 +45,7 @@ config files changed: config/common/di/newsletter.php, config/common/routes.php
 production readiness gate: pass
 
 Handoff to /aif-verify:
-aif-gate-result:
+```aif-gate-result
 {
   "schema_version": 1,
   "gate": "verify",
@@ -69,8 +67,9 @@ aif-gate-result:
     "tests/Newsletter/SubscribeTest.php"
   ],
   "suggested_next": {
-    "command": "/aif-verify",
+    "command": "/aif-commit",
     "reason": "All architectural gates and checks passed."
   }
 }
+```
 

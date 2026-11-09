@@ -215,30 +215,52 @@ All workflow injections (`injections/*.md`) must expose one canonical activation
 
 The Yii3 skill and the AI Factory workflows exchange results through explicit artifacts; this contract fixes the boundary between the two systems. Neither side may invent new channels or field names silently.
 
-1. **Finale → `/aif-verify` (AI Factory 2.x `aif-gate-result` Contract).** In AI Factory mode, the skill's Finale hands control to `/aif-verify`; findings merge into the canonical AI Factory 2.x `aif-gate-result` JSON artifact:
+1. **Finale → `/aif-verify` (AI Factory 2.x `aif-gate-result` Contract).** In AI Factory mode, the skill's Finale hands control to `/aif-verify`; findings merge into the canonical AI Factory 2.x machine-readable fenced block appended as the final block of the output:
+   ````markdown
+   ```aif-gate-result
+   {
+     "schema_version": 1,
+     "gate": "verify",
+     "status": "pass",
+     "blocking": false,
+     "blockers": [],
+     "affected_files": ["src/Example/ExampleAction.php"],
+     "suggested_next": {
+       "command": "/aif-commit",
+       "reason": "Verification passed."
+     }
+   }
+   ```
+   ````
    - `schema_version`: integer (`1`).
    - `gate`: string (`"verify"`).
-   - `status`: `"pass"` | `"fail"`.
+   - `status`: `"pass"` | `"warn"` | `"fail"`.
+     - `pass`: completed cleanly without blocking defects or warnings (`blocking: false`, `blockers: []`).
+     - `warn`: completed with non-blocking findings (e.g., unverified API symbols without vendor, non-blocking architecture drift, advisory notices; `blocking: false`, `blockers: []`).
+     - `fail`: found at least one blocker that stops commit/merge (`blocking: true`, `blockers: [...]`).
    - `blocking`: boolean (`true` if blockers are non-empty, else `false`).
-   - `blockers`: array of structured objects `[{ "id": string, "severity": "error", "file": string, "line"?: number, "summary": string }]` (blocking gate failures: Chain Integrity violations, failing project checks, packages used in code but not declared in `composer.json`). Convention-only mismatches are reported as drift warnings, never as blockers.
-   - `affected_files`: array of touched file paths defining the exact remediation perimeter for `/aif-fix`.
-   - `suggested_next`: object `{ "command": "/aif-fix", "reason": string }` when blocking defects remain, or next workflow command (`/aif-verify` / finale) upon pass.
-2. **Unverified API flag.** Any `yiisoft/*` API used without a verified installed signature (no `vendor/`, offline environment) is listed in the final report as "not verified against sources" and enters `aif-gate-result` as a warning, not a blocker — unless static analysis also fails on it.
+   - `blockers`: array of structured objects `[{ "id": string, "severity": "error" | "warning", "file"?: string, "summary": string }]` (blocking gate failures: Chain Integrity violations, failing project checks, packages used in code but not declared in `composer.json`). Convention-only mismatches are reported as drift warnings, never as blockers.
+   - `affected_files`: array of file paths that the gate actually evaluated or cited in the result (the inspected perimeter; not limited to blocker files, but excluding unrelated repository files).
+   - **Remediation Perimeter Contract (`blockers[].file` vs `affected_files`):** `blockers[].file` indicates the specific file containing an identified violation; `/aif-fix` modifies only the files necessary to resolve specific blockers within the evaluated perimeter, never touching all evaluated files blindly.
+   - `suggested_next`: object `{ "command": string | null, "reason": string | null }`. Allowed commands for `verify`: `"/aif-fix"`, `"/aif-rules"`, `"/aif-architecture"`, `"/aif-roadmap"`, `"/aif-commit"`, or `null`. On pass/warn: `command: "/aif-commit"`. On failure (blocking defects): `command: "/aif-fix"`.
+2. **Unverified API flag.** Any `yiisoft/*` API used without a verified installed signature (no `vendor/`, offline environment) is listed in the final report as "not verified against sources" and enters `aif-gate-result` as an advisory finding with `status: "warn"` and `blocking: false`, not a blocker — unless static analysis also fails on it.
 3. **Blocked tasks.** When the skill cannot proceed safely (unknown activation state, high-impact dependency decision without a user, mandatory offline install), it reports the task `blocked` with an explicit reason instead of silently choosing; the workflow surfaces the `blocked` status as-is.
 4. **Plan artifacts.** The workflow owns the plan location (`paths.plans` from the target `.ai-factory/config.yaml`); the skill never invents one in AI Factory mode. Plans follow the 6-phase contract, and the SKILL.md phase → stage table is the only mapping.
 
-### 4.8. Task Execution Modes Contract (Patch, Feature, Enterprise)
+### 4.8. Task Execution Modes & Architectural Tiers Contract
 
-Agents and workflows must strictly classify tasks into one of the three canonical execution modes (or respect `--mode=<patch|feature|enterprise>`):
-
-1. **Patch Mode (`Mode: Patch`):**
-   - **Scope:** Targeted surgical micro-tasks (isolated 1–3 files), single route addition, typo/config/DI adjustments, docs updates.
-   - **Discipline:** Executes touched stages only; bypasses domain layer overhead and schema migrations; skips extended Definition of Done.
-2. **Feature Mode (`Mode: Feature`) — Canonical Default:**
-   - **Scope:** Standard business features, CRUD endpoints, queries, data listings, and Active Record / Cycle flows (~80% of daily tasks).
-   - **Discipline:** Executes the full 7-stage Mission Workflow bottom-up (Migration → Domain/Interface → Repository → Use Case Handler → DTO & Thin Action → Wiring → Tests) and standard Definition of Done.
-   - **Anti-Collapsing Invariant:** Agents must **NEVER** collapse this bottom-up graph into 1–2 generic monolithic controller actions. Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero SQL, direct persistence, or transaction management in presentation.
-3. **Enterprise Mode (`Mode: Enterprise`):**
-   - **Scope:** Mission-critical, high-throughput systems, multi-step transactions, event-driven pipelines, auth/security cores, or modular architecture slices.
-   - **Discipline:** Full DDD graph: pure Aggregate Entities, Value Objects, Repository Interfaces + implementations, dedicated single-responsibility Use Case Handlers, domain events, and complete Production Readiness Gate.
+The execution workflow separates the task's scope from the target project's structural constraints into two independent axes:
+1. **Execution Mode (`Mode: Patch | Feature | Enterprise`)** — determines the scope, depth, and workflow rigor of the agent:
+   - **Patch Mode (`Mode: Patch`):**
+     - **Scope:** Targeted surgical micro-tasks (isolated 1–3 files), single route addition, typo/config/DI adjustments, docs updates.
+     - **Discipline:** Executes touched stages only; bypasses domain layer overhead; skips schema migrations ONLY when the patch does not require schema changes (if a bugfix or patch alters the database schema, a reversible migration is mandatory); skips extended Definition of Done.
+   - **Feature Mode (`Mode: Feature`) — Canonical Default (~80%):**
+     - **Scope:** Standard business features, CRUD endpoints, queries, data listings, and Active Record / Cycle flows.
+     - **Discipline:** Executes the full 7-stage Mission Workflow bottom-up (Migration → Domain/Interface → Repository → Use Case Handler → DTO & Thin Action → Wiring → Tests) and standard Definition of Done.
+     - **Anti-Collapsing Invariant:** Agents must **NEVER** collapse this bottom-up graph into 1–2 generic monolithic controller actions. Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero SQL, direct persistence, or transaction management in presentation.
+   - **Enterprise Mode (`Mode: Enterprise`):**
+     - **Scope:** Mission-critical, high-throughput systems, multi-step transactions, event-driven pipelines, auth/security cores, or modular architecture slices.
+     - **Discipline:** Full DDD graph: pure Aggregate Entities, Value Objects, Repository Interfaces + implementations, dedicated single-responsibility Use Case Handlers (`*Command` + `*Handler`), domain events, and complete Production Readiness Gate.
+2. **Architectural Tier (`Pragmatic | Balanced | Strict`)** — determined by the target project (`.ai-factory/ARCHITECTURE.md` or dominant `src/` layout):
+   - All 9 combinations (Mode × Tier) are valid. An Enterprise task in a Balanced project enforces enterprise-grade reliability, event publishing, and comprehensive tests while respecting the project's existing modular service/repository conventions without unilaterally rewriting the project into Strict Clean Architecture. A Feature task in a Strict project complies with Strict ports & adapters conventions.
 

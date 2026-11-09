@@ -148,12 +148,11 @@ Rule: every agent failure found on a real project becomes a new scenario.
 
 - Judge over `rubric.md` (a model call; the judge must not know the with-skill/baseline mode).
 - Automatic `composer install` inside ephemeral test sandboxes (syntax check, composer validate, and phpunit are implemented in `evals/lib/runtime.mjs`, but full package installation currently requires network or pre-warmed vendor).
-- Guide coverage: 65+ of 80+ `skills/yii3/references/` guides have scenarios
-  (57 scenarios: unit, composite anchors 01/13/23/25/31, AI Factory E2E workflow in `evals/scenarios/55-aif-e2e-workflow/`,
-  QA Rector/CS-Fixer in `56-qa-rector-cs-fixer`, and mutation testing in `57-mutation-testing-infection`;
-  the patch / drift / convention-conflict / no-vendor / negative-trigger scenarios
-  are implemented as 02/05/06/08/12; see `references/INDEX.md`). Still unbound: openapi index/views-twig/
-  bootstrap5/bulma, runners & runtime variants (roadrunner/frankenphp),
-  state-resetter, package-catalog, alternative test runners (testo/codeception);
-  continue per-guide coverage in batches on request.
+- Guide coverage: 73 of 81 (90.1%) `skills/yii3/references/` topic guides have dedicated scenarios
+  (see full live matrix in [COVERAGE.md](COVERAGE.md); validated via `node scripts/check-eval-coverage.mjs`).
+  Covered across 57 scenarios: unit diagnostics, composite anchors (01/13/23/25/31), AI Factory E2E workflow (`55-aif-e2e-workflow`),
+  QA Rector/CS-Fixer (`56-qa-rector-cs-fixer`), and mutation testing (`57-mutation-testing-infection`).
+  The 8 remaining unbound guides (Roadmap P3) are documented in [COVERAGE.md](COVERAGE.md#3-unbound-guides-gap-analysis-roadmap-p3):
+  runtimes (roadrunner/frankenphp/runners), worker state (state-resetter), CSS widget themes (bootstrap5/bulma),
+  and alternative test runners (codeception/testo).
 - Tokens/cost in `result.json` (depends on the agent adapter).

@@ -37,18 +37,27 @@
 
 ## 1. Feature Archetypes
 
-When a feature request arrives, classify it into an archetype and align decomposition intensity with the active mode (`Patch`, `Feature`, `Enterprise`) and project architectural tier (`references/core-architecture-alignment.md`):
+When a feature request arrives, classify it into an archetype and align decomposition intensity with two independent axes: the active **Execution Mode** (`Patch`, `Feature`, `Enterprise`) and the project's **Architectural Tier** (`Pragmatic`, `Balanced`, `Strict` per `references/core-architecture-alignment.md`):
 
-### Decomposition Intensity by Mode & Architectural Tier
+### Decomposition Intensity by Execution Mode & Architectural Tier
+
+The workflow decouples the task's operational scope (**Execution Mode**) from the target codebase's architectural constraints (**Architectural Tier**). All 9 combinations are valid:
 
 | Execution Mode | Architectural Tier | Domain / Entity | Service / Handler | Repository Contract | Presentation (Action) |
 |---|---|---|---|---|---|
-| **Patch** (`--mode=patch`) | Any | Skipped | Skipped | Touched only | Surgical edit (touched files only) |
-| **Feature** (default, ~80%) | **Pragmatic** (`layers`) | Active Record / DB model (optional POPO) | Application Service or Action Handler | Concrete Repository or Active Record model directly | Thin Action returning `ResponseInterface` |
-| **Feature** (default, ~80%) | **Balanced** (`structured`) | Module Entity / Rich Model | Feature Service or Handler | Module Repository (interfaces at boundaries) | Thin Action returning `ResponseInterface` |
+| **Patch** (`--mode=patch`) | Any (Pragmatic / Balanced / Strict) | Skipped | Skipped | Touched only | Surgical edit (touched files only; schema migrations skipped unless patch requires schema changes) |
+| **Feature** (default, ~80%) | **Pragmatic** (`layers`) | Active Record / DB model (optional POPO) | Application Service | Concrete Repository or Active Record model directly | Thin Action returning `ResponseInterface` |
+| **Feature** (default, ~80%) | **Balanced** (`structured`) | Module Entity / Rich Model | Feature Service or Use Case Handler | Module Repository (interfaces at module boundaries) | Thin Action returning `ResponseInterface` |
+| **Feature** (default, ~80%) | **Strict** (`explicit`) | Pure Entity + Value Objects | Use Case Handler (`*Command` + `*Handler`) | Pure Repository Interface + Infrastructure Implementation | Thin Action returning `ResponseInterface` |
+| **Enterprise** (`--mode=enterprise`) | **Pragmatic** (`layers`) | Validated Model / Entity | Application Service with atomic transactions & events | Explicit Repository | Thin Action returning `ResponseInterface` |
+| **Enterprise** (`--mode=enterprise`) | **Balanced** (`structured`) | Module Aggregate + Domain Events | Module Use Case Handler + transaction boundary | Module Repository Interface + Implementation | Thin Action returning `ResponseInterface` |
 | **Enterprise** (`--mode=enterprise`) | **Strict** (`explicit`) | Pure Aggregate Entity + Value Objects | Dedicated Use Case Handler (`*Command` + `*Handler`) + Domain Events | Explicit Repository Interface + DB Implementation | Thin Action returning `ResponseInterface` |
 
-*Universal Invariant across all modes:* Actions strictly remain thin HTTP transport adapters; zero direct SQL, persistence, or transaction management in presentation.
+*Universal Invariants across all modes and tiers:*
+- **Thin Actions:** Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero direct SQL, persistence, or transaction management in presentation.
+- **Transactions:** Handled strictly in Application Services or Use Case Handlers via `ConnectionInterface::transaction()`, never inside HTTP Actions.
+- **Patch Migrations:** In Patch Mode, schema migrations are skipped *only* when the patch does not require schema changes. If a bugfix or patch alters the database schema, a reversible migration (`up()` / `down()`) MUST be authored.
+- **Architectural Respect:** An Enterprise task in a Balanced project demands enterprise rigor (atomic transactions, event publishing, idempotency, comprehensive integration tests) while respecting the project's Balanced modular conventions without unilaterally rewriting the project into Strict Clean Architecture.
 
 ### Archetype A: State-Changing Business Process (e.g., checkout, registration, booking, payment)
 Creates or modifies domain state and involves side-effects.
@@ -56,7 +65,7 @@ Creates or modifies domain state and involves side-effects.
 **Artifact Graph by Execution Mode:**
 - **In Feature Mode (Canonical Default):**
   1. **Persistence & Schema:** DB migration (`yiisoft/db-migration`) with reversible `down()`. Storage via concrete repository, Active Record model, or Cycle mapper.
-  2. **Application / Business Logic:** Application Service (e.g. `OrderService::createOrder()`) or Action Handler wrapping multi-step persistence in `ConnectionInterface::transaction()`. Events dispatched strictly after commit.
+  2. **Application / Business Logic:** Application Service (e.g. `OrderService::createOrder()`) or Use Case Handler wrapping multi-step persistence in `ConnectionInterface::transaction()`. Events dispatched strictly after commit.
   3. **Presentation / HTTP:** Typed Input DTO with `Yiisoft\Validator\Rule\*` attributes; thin single-action controller returning `ResponseInterface`.
   4. **Wiring & Tests:** Route in `config/common/routes.php`, DI bindings in `config/common/di/*.php`, unit and HTTP integration tests.
 - **In Enterprise Mode (Full DDD Graph):**
@@ -64,7 +73,7 @@ Creates or modifies domain state and involves side-effects.
   2. **Infrastructure / Persistence:** DB migration; storage implementation of the repository interface (`Sql*Repository`).
   3. **Application / Use Case:** Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`); post-commit event listeners.
   4. **Presentation & Wiring:** Typed Input DTO; thin Action delegating to the Use Case Handler; full DI binding and Production Readiness Gate.
-- **In Patch Mode:** Touched stages only (1–3 files); skips domain aggregates and migrations.
+- **In Patch Mode:** Touched stages only (1–3 files); skips domain aggregates; skips migrations only if no DB schema changes are required (author reversible migration if schema changes).
 
 **Standard Artifact Graph (Enterprise / Strict baseline):**
 1. **Domain:**
@@ -80,7 +89,7 @@ Creates or modifies domain state and involves side-effects.
    - **Event Listeners / Handlers:** Handle side-effects asynchronously or detached (e.g., `SendWelcomeEmailListener` via `yiisoft/mailer`).
 4. **Presentation / HTTP:**
    - **Input DTO:** Strongly-typed class with `Yiisoft\Validator\Rule\*` PHP attributes (note: the `Image`, `Date\*`, and `Type\*` rule families are nested one level deeper, e.g. `Yiisoft\Validator\Rule\Image\Image`).
-   - **Single Action Handler:** Commonly an invokable class (`__invoke(ServerRequestInterface $request): ResponseInterface`) or a PSR-15 `RequestHandlerInterface` implementation.
+   - **Single-Action Controller / Action:** Commonly an invokable class (`__invoke(ServerRequestInterface $request): ResponseInterface`) or a PSR-15 `RequestHandlerInterface` implementation.
      - *Responsibility:* Hydrate DTO (`yiisoft/hydrator`; the integrated HTTP path is `yiisoft/hydrator-validator` + `yiisoft/input-http`), validate (`yiisoft/validator`), call Use Case, return `ResponseInterface` via `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` (API) or `Yiisoft\Yii\View\Renderer\WebViewRenderer` (HTML; `ViewRenderer` is deprecated since yii-view-renderer 7.4.0).
      - *Anti-pattern:* Never put SQL queries, password hashing, or email sending directly inside the Action.
 5. **Configuration & Wiring (Mandatory):**

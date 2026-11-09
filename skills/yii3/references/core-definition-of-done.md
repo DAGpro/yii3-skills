@@ -9,24 +9,28 @@ Load this guide at the Finale when the task is a **new feature**, or when it tou
 ---
 
 ## Contents
-- [1. Architecture & Decomposition Checks](#1-architecture--decomposition-checks)
+- [1. Architecture & Code-to-Reference Compliance Checks](#1-architecture--code-to-reference-compliance-checks)
 - [2. Multi-Dimensional Quality Evaluation Matrix](#2-multi-dimensional-quality-evaluation-matrix)
 - [3. Production Readiness Gate](#3-production-readiness-gate)
 - [4. Verification Report Format](#4-verification-report-format)
 
 ---
 
-## 1. Architecture & Decomposition Checks
+## 1. Architecture & Code-to-Reference Compliance Checks
 
-The same checks the verify workflow runs; most are already covered by the Chain Integrity checklist and the gate below — keep an explicit checklist line only for what remains uncovered:
+Before sign-off, every newly created or modified artifact MUST be audited against its governing topic guide in `references/`:
 
-- **Thin Actions:** no SQL/ActiveRecord persistence, hashing, or notifications in Actions (side-effects live in use case handlers and listeners).
-- **Strict `Psr\Http\Message\ResponseInterface` return** on every action method.
-- **Validator rule names from the installed `yiisoft/validator`** (`Length`, `StringValue`, `Integer` — not Yii2-style `HasLength`/`IsString`).
-- **CSRF middleware order:** `CsrfTokenMiddleware` after `SessionMiddleware`, before `Router`; stateless token-authenticated JSON APIs sit outside the CSRF gate.
-- **PSR-3 logging:** `LoggerInterface` DI-bound with explicit targets — never the concrete `Yiisoft\Log\Logger` or static `Yii::getLogger()`.
-- **File placement per the architecture source** (`references/core-architecture-alignment.md`): vendor-isolated core, one mechanism per concern.
-- **Defect severity classification:** Hard architectural bans (Yii::$app, static facades, controller base class, SQL in actions) are strict blocking gate failures (`BLOCKER`). Tooling and code-style rules (such as `#[Override]` omission per `yiisoft/code-style`) are non-blocking convention suggestions (`SUGGESTION`), unless explicitly enforced by the project's own Rector preset or CI rules.
+1. **Resolve Governing Guide:** Identify the specific topic guide (`references/<topic>.md`) governing the artifact via the active plan, the Task Routing Matrix in `SKILL.md`, or `references/INDEX.md` (e.g. actions → `http-actions-core.md`, middlewares → `http-middlewares.md`, DI → `core-di-and-config.md`, queue → `infra-queue-jobs.md`, events → `core-events-and-listeners.md`, migrations → `persistence-migrations-operations.md`).
+2. **Anti-Pattern Audit [BLOCKER]:** Inspect the `## Anti-Pattern Matrix` (or `## Anti-Patterns & Common Traps`) in that governing guide. Every forbidden pattern is a hard failure (`[BLOCKER]`). If the code reproduces any forbidden pattern from that guide's matrix, verification fails.
+3. **Core Invariants [BLOCKER]:**
+   - **Thin Actions:** zero direct SQL, persistence, `$db->transaction()`, hashing, or notifications; strictly return `Psr\Http\Message\ResponseInterface`; input via typed DTO + validator.
+   - **Post-Commit Events:** domain events dispatched strictly after database transaction commit, never inside an open transaction.
+   - **SQL Injection Safety:** all dynamic SQL values use parameterized binding; collection queries enforce pagination (`OffsetPaginator`) or explicit SQL `limit`.
+   - **Validator Grounding:** rules use modern PHP 8 attributes from installed `yiisoft/validator` (never Yii 2 `rules()`).
+   - **CSRF Order:** `CsrfTokenMiddleware` after `SessionMiddleware`, before `Router`; stateless APIs exempt.
+   - **PSR-3 Logging:** `LoggerInterface` DI-bound with explicit targets; never concrete `Yiisoft\Log\Logger` or static facades.
+   - **Constructor DI:** dependencies injected via `__construct()`; never inject `ContainerInterface` into services.
+4. **Defect Severity Classification:** Hard architectural bans (Yii::$app, static facades, controller base class, SQL in actions, uncommitted event dispatch) are strict blocking gate failures (`BLOCKER`). Tooling and code-style rules (such as `#[Override]` omission per `yiisoft/code-style`) are non-blocking convention suggestions (`SUGGESTION`), unless explicitly enforced by the project's own Rector preset or CI rules.
 
 ## 2. Multi-Dimensional Quality Evaluation Matrix
 

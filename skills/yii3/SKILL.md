@@ -4,9 +4,14 @@ description: >-
   Architect, develop, test, and verify applications using modern Yii 3 (PHP 8.2+,
   yiisoft/* packages). Enforces bottom-up implementation stages, mandatory signature
   inspection in vendor sources, per-step wiring gates, and production readiness checks.
-  Use when user says "Yii3", "Yii 3", "yiisoft", or asks for Yii 3 actions, routes,
-  DI configuration, migrations, middleware, console commands, database persistence
-  (yiisoft/db), or validation rules (yiisoft/validator).
+  Use when user says "Yii3", "Yii 3", "yiisoft", or asks to build, refactor, or test
+  daily Yii 3 features: REST API endpoints, CRUD operations, thin actions, PSR-7/PSR-15
+  routes and middleware, DI container wiring (yiisoft/di, config), database queries,
+  transactions and migrations (yiisoft/db, Active Record, Cycle), input DTO hydration
+  (yiisoft/hydrator) and validation (yiisoft/validator), forms and file uploads, OpenAPI
+  docs (yiisoft/swagger), views and widgets (yiisoft/view, GridView), console commands
+  (yiisoft/yii-console), queue jobs (yiisoft/queue), caching, events, error handling,
+  RBAC and auth (yiisoft/rbac, yiisoft/auth), or when migrating Yii 2 code to Yii 3.
 ---
 
 # Yii3 development
@@ -125,7 +130,9 @@ Non-feature tasks (pure config, docs, refactoring): Stage 0 marks the inapplicab
 Run after the last stage, in every mode.
 
 1. **Project checks** per the project's actual configuration: tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured. Used packages must be declared in `composer.json`.
-2. **Chain Integrity & Mission State Checklist** (blocking): all active stages in the Mission State tracker completed; every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
+2. **Chain Integrity & Code-to-Reference Compliance Audit** (blocking):
+   - **Chain Integrity:** all active stages in the Mission State tracker completed; every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
+   - **Code-to-Reference Guide Compliance (per `references/core-definition-of-done.md` §1):** for every generated or modified file (Action, Middleware, Command, Migration, Job, Listener, Service, Repository, DTO, Config, View, or Test), resolve its governing guide in `references/` and audit the code directly against that guide's Anti-Pattern Matrix and idiomatic recipes. Zero forbidden anti-patterns permitted (e.g. actions: thin, no SQL/transactions; use cases: transactions, post-commit events; repositories: isolated SQL, typed returns; middlewares: PSR-15 pipeline order; queue jobs: message DTOs; DI: constructor injection without ContainerInterface; DTOs: validator attributes).
 3. **Runtime smoke** (optional, Full mode, `vendor/` present):
    - Console (`yiisoft/yii-console` installed): `./yii list` must exit 0 and list newly registered commands (`references/infra-runners-and-runtimes.md`).
    - HTTP (adapt to project's installed runner): SAPI (`yiisoft/yii-runner-http`) boots without config errors and ping route responds; RoadRunner (`yiisoft/yii-runner-roadrunner`) or FrankenPHP (`yiisoft/yii-runner-frankenphp`) worker scripts initialize cleanly.

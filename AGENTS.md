@@ -122,7 +122,7 @@ yii3-skills/ (Current baseline structure — subject to evolution)
 
 ├── references/           # [Authoring Only] Offline clones of yiisoft/* packages
 
-├── scripts/              # [Internal Dev Tooling] Quality gates (validate.mjs, check-symbols.mjs, test-aif-workflow.mjs)
+├── scripts/              # [Internal Dev Tooling] Quality gates (validate.mjs, check-symbols.mjs, check-ast.mjs, test-aif-workflow.mjs)
 
 ├── AGENTS.md             # [Internal Dev Tooling, tracked] This constitution
 
@@ -178,7 +178,7 @@ Agents **MUST NOT** rely on pre-trained parametric memory, assumptions, or gener
 
 - **Zero Hallucination Policy:** Never invent method names, guess configuration keys, or assume Yii 2 constructs (`Yii::$app`, static facades). If an API or feature cannot be confirmed directly within `references/`, it MUST NOT be written into the documentation.
 
-- **Automated Grounding Gate (`scripts/check-symbols.mjs`):** All `Yiisoft\...` FQCNs, method signatures, parameter types, and call arities quoted across reference guides are statically verified against `references/` (or `evals/data/api-symbols-manifest.json` in CI). Unconfirmed symbols or argument arity mismatches fail the quality gate unless explicitly allowlisted with a documented reason.
+- **Automated Grounding & AST Quality Gates (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`):** All `Yiisoft\...` FQCNs, method signatures, parameter types, and call arities quoted across reference guides are statically verified against `references/` (or `evals/data/api-symbols-manifest.json` in CI). In addition, `scripts/check-ast.mjs` performs AST-level verification of all PHP code blocks: validating instance calls on typed variables, static calls, fluent call chains, visibility, calling conventions, call arities, and named parameter names against declared signatures. Unconfirmed symbols or signature mismatches fail the quality gate unless explicitly allowlisted with a documented reason.
 
 ### 4.3. References Directory Safety & Search Discipline
 

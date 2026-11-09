@@ -1,0 +1,16 @@
+{
+    frankenphp {
+        num_threads 4
+    }
+}
+
+localhost {
+    root * public
+    encode zstd gzip
+
+    frankenphp {
+        worker worker.php 4
+    }
+
+    file_server
+}

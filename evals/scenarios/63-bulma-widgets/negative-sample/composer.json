@@ -1,0 +1,8 @@
+{
+  "name": "app/bulma-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/bootstrap5": "^2.0"
+  }
+}

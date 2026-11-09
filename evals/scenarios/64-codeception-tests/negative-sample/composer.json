@@ -1,0 +1,8 @@
+{
+  "name": "app/codeception-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "codeception/codeception": "^5.3.5"
+  }
+}

@@ -1,0 +1,1 @@
+Configured Codeception 5 in require-dev with codeception.yml, Api.suite.yml, and UserApiCest.php per references/testing-codeception.md.

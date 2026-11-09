@@ -1,0 +1,24 @@
+{
+  "id": "59-roadrunner-worker",
+  "title": "Unit: RoadRunner worker runtime setup (yiisoft/yii-runner-roadrunner) with worker.php, RoadRunnerApplicationRunner, and .rr.yaml",
+  "mode": "feature",
+  "tags": [
+    "roadrunner",
+    "worker",
+    "high-performance",
+    "runtime",
+    "infra"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "roadrunner-package-required",
+    "worker-script-exists",
+    "rr-config-exists",
+    "no-standard-sapi-emitter"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-runtime-roadrunner.md",
+    "references/infra-runners-and-runtimes.md"
+  ]
+}

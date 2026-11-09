@@ -1,0 +1,2 @@
+Configured FrankenPHP worker mode via worker.php, Caddyfile, and yiisoft/yii-runner-frankenphp in composer.json.
+Enforced ignore_user_abort(true) per references/infra-runtime-frankenphp.md.

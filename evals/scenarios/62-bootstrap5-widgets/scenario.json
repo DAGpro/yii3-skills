@@ -1,0 +1,23 @@
+{
+  "id": "62-bootstrap5-widgets",
+  "title": "Unit: Bootstrap 5 view integration (yiisoft/bootstrap5) with AlertVariant, NavLink::tab, and BootstrapAsset",
+  "mode": "feature",
+  "tags": [
+    "view",
+    "widgets",
+    "bootstrap5",
+    "assets",
+    "html"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "bootstrap5-package-required",
+    "alert-variant-enum-used",
+    "nav-widget-tab-factory",
+    "no-bulma-mix"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-views-bootstrap5.md"
+  ]
+}

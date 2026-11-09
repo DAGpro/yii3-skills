@@ -1,0 +1,24 @@
+{
+  "id": "64-codeception-tests",
+  "title": "Unit: Actor-driven testing with Codeception 5 (codeception/codeception), codeception.yml, and ApiTester Cest suites",
+  "mode": "feature",
+  "tags": [
+    "testing",
+    "codeception",
+    "functional",
+    "api",
+    "actor"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "codeception-package-required",
+    "no-codeception-in-runtime-require",
+    "codeception-config-exists",
+    "api-suite-config-exists",
+    "cest-implementation-exists"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/testing-codeception.md"
+  ]
+}

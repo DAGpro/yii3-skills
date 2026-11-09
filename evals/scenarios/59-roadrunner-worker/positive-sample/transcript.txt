@@ -1,0 +1,2 @@
+Configured RoadRunner worker mode via worker.php, .rr.yaml, and yiisoft/yii-runner-roadrunner in composer.json.
+Followed references/infra-runtime-roadrunner.md.

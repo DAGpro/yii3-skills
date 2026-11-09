@@ -1,0 +1,8 @@
+{
+  "name": "app/franken-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/yii-runner-frankenphp": "^2.0"
+  }
+}

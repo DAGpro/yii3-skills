@@ -1,0 +1,24 @@
+{
+  "id": "60-frankenphp-worker",
+  "title": "Unit: FrankenPHP worker runtime setup (yiisoft/yii-runner-frankenphp) with worker.php, Caddyfile, and ignore_user_abort protection",
+  "mode": "feature",
+  "tags": [
+    "frankenphp",
+    "caddy",
+    "worker",
+    "runtime",
+    "infra"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "frankenphp-package-required",
+    "worker-script-exists",
+    "caddyfile-exists",
+    "user-abort-protection"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-runtime-frankenphp.md",
+    "references/infra-runners-and-runtimes.md"
+  ]
+}

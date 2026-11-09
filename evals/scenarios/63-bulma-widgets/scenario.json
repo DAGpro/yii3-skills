@@ -1,0 +1,23 @@
+{
+  "id": "63-bulma-widgets",
+  "title": "Unit: Bulma view integration (yiisoft/yii-bulma) with ProgressBar constants, Tabs styling, and BulmaAsset",
+  "mode": "feature",
+  "tags": [
+    "view",
+    "widgets",
+    "bulma",
+    "assets",
+    "html"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "bulma-package-required",
+    "progressbar-constant-styling",
+    "tabs-associative-items",
+    "no-bootstrap-mix"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/http-views-bulma.md"
+  ]
+}

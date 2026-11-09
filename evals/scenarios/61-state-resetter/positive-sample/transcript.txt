@@ -1,0 +1,2 @@
+Configured RequestContext with an idiomatic 'reset' closure in config/di.php per references/infra-state-resetter.md.
+Avoided registering StateResetter::class in container definitions so $this->useResettersFromMeta remains true.

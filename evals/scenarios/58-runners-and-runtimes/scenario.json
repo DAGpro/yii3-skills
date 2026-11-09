@@ -1,0 +1,23 @@
+{
+  "id": "58-runners-and-runtimes",
+  "title": "Unit: Application runner entry points (public/index.php and ./yii) with decoupled bootstrapping (HttpApplicationRunner, ConsoleApplicationRunner)",
+  "mode": "feature",
+  "tags": [
+    "runner",
+    "http",
+    "console",
+    "entry-point",
+    "bootstrap"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "http-runner-entry-point",
+    "console-runner-entry-point",
+    "no-legacy-yii-facade",
+    "composer-runners-declared"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-runners-and-runtimes.md"
+  ]
+}

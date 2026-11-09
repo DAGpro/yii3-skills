@@ -1,0 +1,23 @@
+{
+  "id": "65-testo-runner",
+  "title": "Unit: Testo test runner setup (testo/testo) with testo.php, #[Test] attribute classes, and exclusive runner compliance (PHPUnit XOR Testo)",
+  "mode": "feature",
+  "tags": [
+    "testing",
+    "testo",
+    "runner",
+    "exclusive-runner",
+    "unit"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "testo-package-required",
+    "exclusive-runner-no-phpunit",
+    "testo-config-exists",
+    "test-attribute-usage"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/testing-testo.md"
+  ]
+}

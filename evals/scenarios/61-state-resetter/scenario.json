@@ -1,0 +1,22 @@
+{
+  "id": "61-state-resetter",
+  "title": "Unit: Long-running worker state safety with yiisoft/state-resetter and avoidance of the StateResetter::class container definition trap",
+  "mode": "feature",
+  "tags": [
+    "state-resetter",
+    "worker-safety",
+    "di",
+    "memory-leaks",
+    "infra"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "no-state-resetter-di-definition",
+    "service-reset-callback-configured",
+    "stateful-service-cleanable"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/infra-state-resetter.md"
+  ]
+}

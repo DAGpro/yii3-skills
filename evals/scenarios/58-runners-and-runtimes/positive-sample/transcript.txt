@@ -1,0 +1,3 @@
+Configured HttpApplicationRunner in public/index.php and ConsoleApplicationRunner in ./yii according to references/infra-runners-and-runtimes.md.
+Declared yiisoft/yii-runner-http and yiisoft/yii-runner-console in composer.json.
+Verified no static facades are used.

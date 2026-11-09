@@ -1,0 +1,9 @@
+{
+  "name": "app/runners-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/yii-runner-http": "^2.0",
+    "yiisoft/yii-runner-console": "^2.0"
+  }
+}

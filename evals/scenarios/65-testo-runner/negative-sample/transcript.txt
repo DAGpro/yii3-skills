@@ -1,0 +1,1 @@
+Failed to configure Testo; co-installed PHPUnit and omitted #[Test] attribute.

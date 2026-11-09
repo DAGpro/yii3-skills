@@ -1,0 +1,2 @@
+Rendered Bulma ProgressBar with ProgressBar::COLOR_SUCCESS and Tabs with Tabs::STYLE_BOX.
+Complied with exclusive CSS-driver rules per references/http-views-bulma.md.

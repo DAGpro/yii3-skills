@@ -1,0 +1,1 @@
+Configured Testo runner in testo.php, enforced PHPUnit XOR Testo rule, and implemented MathTest with #[Test] and Testo\Assert per references/testing-testo.md.

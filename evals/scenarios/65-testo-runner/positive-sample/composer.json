@@ -1,0 +1,11 @@
+{
+  "name": "app/testo-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/yii-runner-http": "^2.0"
+  },
+  "require-dev": {
+    "testo/testo": "^1.0"
+  }
+}

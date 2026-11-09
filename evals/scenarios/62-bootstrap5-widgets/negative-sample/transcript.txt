@@ -1,0 +1,1 @@
+Failed to use Bootstrap 5 typed widgets; co-installed Bulma.

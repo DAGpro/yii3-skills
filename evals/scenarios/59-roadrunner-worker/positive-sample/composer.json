@@ -1,0 +1,8 @@
+{
+  "name": "app/rr-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/yii-runner-roadrunner": "^2.0"
+  }
+}

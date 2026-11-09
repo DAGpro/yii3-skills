@@ -90,7 +90,7 @@ The repository is strictly divided into **Distributable Deliverables** and **Int
 
 | **Operational Nervous System** | `.ai-factory/` | Internal dev config & plans for *this* repo | **Working control center** of the target app (architecture, rules, plans) |
 
-| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (57 test cases), ground-truth symbol and arity verification, workflow contract tests | Not distributed to target applications |
+| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (65 test cases), ground-truth symbol and arity verification, workflow contract tests | Not distributed to target applications |
 
 | **Authoring References** | `references/` *(130 repos)*, `PACKAGES.md` (package navigation index) | Offline source of truth for APIs and doc examples; the index telling agents which packages to study per task | `references/` does not exist; `PACKAGES.md` is not used by target agents |
 
@@ -118,7 +118,7 @@ yii3-skills/ (Current baseline structure — subject to evolution)
 
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
 
-├── evals/                # [Internal Quality Tooling] 57 benchmark test scenarios, runner, and baseline metrics
+├── evals/                # [Internal Quality Tooling] 65 benchmark test scenarios, runner, and baseline metrics
 
 ├── references/           # [Authoring Only] Offline clones of yiisoft/* packages
 

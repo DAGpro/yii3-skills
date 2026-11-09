@@ -1,0 +1,8 @@
+{
+  "name": "app/bs5-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/yii-bulma": "^2.0"
+  }
+}

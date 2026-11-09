@@ -1,0 +1,7 @@
+{
+  "name": "app/runners-test",
+  "type": "project",
+  "require": {
+    "php": "^8.2"
+  }
+}

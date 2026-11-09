@@ -6,5 +6,5 @@ Guard: activate this block only for a Yii 3 application — at least one `yiisof
 - The phase → stage mapping table in the same section: plans must not merge or reorder phases; under the skill's `collapsed` decomposition intensity, folded artifacts are marked `collapsed — <reason>` inside their phases, never silently deleted.
 - "Finale — Definition of Done" item 2 Chain Integrity Checklist: every planned `*Interface` has a DI-binding task, every Action a route task, every console command/event/RBAC artifact its registration task, every schema change a migration task.
 - SKILL.md Stage 0 item 2: no second mechanism (driver/ORM/queue/cache/test runner) introduced next to the existing one.
-- Zero-ambiguity plan verification: ensure all tasks specify concrete target file paths and that the plan initializes the complete `### Execution State` block template per `references/aif-adapter.md`.
+- Zero-ambiguity plan verification: ensure all tasks specify concrete target file paths and an assigned `Guide: references/<topic>.md` (resolved via `references/INDEX.md` or the SKILL.md Task Routing Matrix), and that the plan initializes the complete `### Execution State` block template per `references/aif-adapter.md`.
 - Existing-code refactoring goes only to "💡 Out of scope".

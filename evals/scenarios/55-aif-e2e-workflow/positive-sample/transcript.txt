@@ -49,7 +49,10 @@ production readiness gate: pass
 Handoff to /aif-verify:
 aif-gate-result:
 {
+  "schema_version": 1,
+  "gate": "verify",
   "status": "pass",
+  "blocking": false,
   "blockers": [],
   "affected_files": [
     "migrations/20261108_000001_create_newsletter_subscribers.php",
@@ -64,6 +67,10 @@ aif-gate-result:
     "config/common/di/newsletter.php",
     "config/common/routes.php",
     "tests/Newsletter/SubscribeTest.php"
-  ]
+  ],
+  "suggested_next": {
+    "command": "/aif-verify",
+    "reason": "All architectural gates and checks passed."
+  }
 }
 

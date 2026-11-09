@@ -2,16 +2,38 @@ Execution finished, but interface was not bound and route was not mounted.
 Verification failed.
 aif-gate-result:
 {
+  "schema_version": 1,
+  "gate": "verify",
   "status": "fail",
+  "blocking": true,
   "blockers": [
-    "Interface SubscriberRepositoryInterface is not bound in DI",
-    "Action SubscribeAction has no active route",
-    "Migration has empty down()"
+    {
+      "id": "verify-001",
+      "severity": "error",
+      "file": "src/Newsletter/Domain/SubscriberRepositoryInterface.php",
+      "summary": "Interface SubscriberRepositoryInterface is not bound in DI"
+    },
+    {
+      "id": "verify-002",
+      "severity": "error",
+      "file": "src/Newsletter/Presentation/SubscribeAction.php",
+      "summary": "Action SubscribeAction has no active route"
+    },
+    {
+      "id": "verify-003",
+      "severity": "error",
+      "file": "migrations/20261108_000001_create_newsletter_subscribers.php",
+      "summary": "Migration has empty down()"
+    }
   ],
   "affected_files": [
     "migrations/20261108_000001_create_newsletter_subscribers.php",
     "src/Newsletter/Domain/SubscriberRepositoryInterface.php",
     "src/Newsletter/Presentation/SubscribeAction.php"
-  ]
+  ],
+  "suggested_next": {
+    "command": "/aif-fix",
+    "reason": "Blocking implementation violations remain."
+  }
 }
 

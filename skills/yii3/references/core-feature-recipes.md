@@ -5,7 +5,7 @@
 
 > Guides how to decompose high-level business feature requests into complete, idiomatic Yii3 architecture artifacts (Domain, Persistence, Use Cases, Presentation, Wiring, Tests).
 >
-> **Source of Truth:** For class signatures and interfaces, inspect the installed `vendor/yiisoft/<pkg>/src/`. Always decompose user business requests into the complete, layered artifact graph below.
+> **Source of Truth:** For class signatures and interfaces, inspect the installed `vendor/yiisoft/<pkg>/src/`. Decompose user business requests into the appropriate artifact graph per the execution mode (`Patch`, `Feature`, `Enterprise`) and the project's architectural tier (Pragmatic, Balanced, Strict per `references/core-architecture-alignment.md`).
 >
 > All complete class snippets carry `declare(strict_types=1);` and are grounded in installed package sources. APIs deprecated in current package versions are flagged inline with their replacements — see also [Section 7](#7-verified-pitfalls--deprecations).
 
@@ -37,12 +37,36 @@
 
 ## 1. Feature Archetypes
 
-When a feature request arrives, classify it into an archetype:
+When a feature request arrives, classify it into an archetype and align decomposition intensity with the active mode (`Patch`, `Feature`, `Enterprise`) and project architectural tier (`references/core-architecture-alignment.md`):
+
+### Decomposition Intensity by Mode & Architectural Tier
+
+| Execution Mode | Architectural Tier | Domain / Entity | Service / Handler | Repository Contract | Presentation (Action) |
+|---|---|---|---|---|---|
+| **Patch** (`--mode=patch`) | Any | Skipped | Skipped | Touched only | Surgical edit (touched files only) |
+| **Feature** (default, ~80%) | **Pragmatic** (`layers`) | Active Record / DB model (optional POPO) | Application Service or Action Handler | Concrete Repository or Active Record model directly | Thin Action returning `ResponseInterface` |
+| **Feature** (default, ~80%) | **Balanced** (`structured`) | Module Entity / Rich Model | Feature Service or Handler | Module Repository (interfaces at boundaries) | Thin Action returning `ResponseInterface` |
+| **Enterprise** (`--mode=enterprise`) | **Strict** (`explicit`) | Pure Aggregate Entity + Value Objects | Dedicated Use Case Handler (`*Command` + `*Handler`) + Domain Events | Explicit Repository Interface + DB Implementation | Thin Action returning `ResponseInterface` |
+
+*Universal Invariant across all modes:* Actions strictly remain thin HTTP transport adapters; zero direct SQL, persistence, or transaction management in presentation.
 
 ### Archetype A: State-Changing Business Process (e.g., checkout, registration, booking, payment)
 Creates or modifies domain state and involves side-effects.
 
-**Required Artifact Graph:**
+**Artifact Graph by Execution Mode:**
+- **In Feature Mode (Canonical Default):**
+  1. **Persistence & Schema:** DB migration (`yiisoft/db-migration`) with reversible `down()`. Storage via concrete repository, Active Record model, or Cycle mapper.
+  2. **Application / Business Logic:** Application Service (e.g. `OrderService::createOrder()`) or Action Handler wrapping multi-step persistence in `ConnectionInterface::transaction()`. Events dispatched strictly after commit.
+  3. **Presentation / HTTP:** Typed Input DTO with `Yiisoft\Validator\Rule\*` attributes; thin single-action controller returning `ResponseInterface`.
+  4. **Wiring & Tests:** Route in `config/common/routes.php`, DI bindings in `config/common/di/*.php`, unit and HTTP integration tests.
+- **In Enterprise Mode (Full DDD Graph):**
+  1. **Domain:** Pure Entity/Aggregate + Value Objects; PSR-14 Domain Events; pure `*RepositoryInterface`.
+  2. **Infrastructure / Persistence:** DB migration; storage implementation of the repository interface (`Sql*Repository`).
+  3. **Application / Use Case:** Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`); post-commit event listeners.
+  4. **Presentation & Wiring:** Typed Input DTO; thin Action delegating to the Use Case Handler; full DI binding and Production Readiness Gate.
+- **In Patch Mode:** Touched stages only (1–3 files); skips domain aggregates and migrations.
+
+**Standard Artifact Graph (Enterprise / Strict baseline):**
 1. **Domain:**
    - **Entity / Aggregate / Value Objects:** Domain state and invariants (POPO or mapped entity).
    - **Domain Events:** PSR-14 event classes (e.g., `UserRegisteredEvent`, `OrderCreatedEvent`).

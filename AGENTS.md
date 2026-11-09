@@ -215,7 +215,14 @@ All workflow injections (`injections/*.md`) must expose one canonical activation
 
 The Yii3 skill and the AI Factory workflows exchange results through explicit artifacts; this contract fixes the boundary between the two systems. Neither side may invent new channels or field names silently.
 
-1. **Finale → `/aif-verify`.** In AI Factory mode the skill's Finale hands control to `/aif-verify`; findings merge into `aif-gate-result` with exactly two fields: `blockers` (blocking gate failures: Chain Integrity violations, failing project checks, packages used in code but not declared in `composer.json`) and `affected_files` (changed file paths). Convention-only mismatches are reported as drift warnings, never as blockers.
+1. **Finale → `/aif-verify` (AI Factory 2.x `aif-gate-result` Contract).** In AI Factory mode, the skill's Finale hands control to `/aif-verify`; findings merge into the canonical AI Factory 2.x `aif-gate-result` JSON artifact:
+   - `schema_version`: integer (`1`).
+   - `gate`: string (`"verify"`).
+   - `status`: `"pass"` | `"fail"`.
+   - `blocking`: boolean (`true` if blockers are non-empty, else `false`).
+   - `blockers`: array of structured objects `[{ "id": string, "severity": "error", "file": string, "line"?: number, "summary": string }]` (blocking gate failures: Chain Integrity violations, failing project checks, packages used in code but not declared in `composer.json`). Convention-only mismatches are reported as drift warnings, never as blockers.
+   - `affected_files`: array of touched file paths defining the exact remediation perimeter for `/aif-fix`.
+   - `suggested_next`: object `{ "command": "/aif-fix", "reason": string }` when blocking defects remain, or next workflow command (`/aif-verify` / finale) upon pass.
 2. **Unverified API flag.** Any `yiisoft/*` API used without a verified installed signature (no `vendor/`, offline environment) is listed in the final report as "not verified against sources" and enters `aif-gate-result` as a warning, not a blocker — unless static analysis also fails on it.
 3. **Blocked tasks.** When the skill cannot proceed safely (unknown activation state, high-impact dependency decision without a user, mandatory offline install), it reports the task `blocked` with an explicit reason instead of silently choosing; the workflow surfaces the `blocked` status as-is.
 4. **Plan artifacts.** The workflow owns the plan location (`paths.plans` from the target `.ai-factory/config.yaml`); the skill never invents one in AI Factory mode. Plans follow the 6-phase contract, and the SKILL.md phase → stage table is the only mapping.

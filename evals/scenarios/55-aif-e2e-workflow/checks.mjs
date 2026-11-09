@@ -1,4 +1,4 @@
-import { check, ok, fail, read, filesMatching, matchParen, methodBody } from '../../lib/checks.mjs';
+import { check, ok, fail, read, filesMatching, matchParen, matchBrace, methodBody } from '../../lib/checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
@@ -77,14 +77,23 @@ export default [
     return offenders.length ? fail(offenders.join('; ')) : ok();
   }),
 
-  check('aif-gate-result-emitted', 'Valid aif-gate-result JSON emitted with status: pass and empty blockers', ({ transcript }) => {
-    const match = transcript.match(/aif-gate-result:\s*(\{[\s\S]*?\})/i) || transcript.match(/```json\s*(\{[\s\S]*?"blockers"[\s\S]*?\})\s*```/i);
-    if (!match) return fail('no aif-gate-result JSON found in transcript');
+  check('aif-gate-result-emitted', 'Valid aif-gate-result JSON emitted per AI Factory 2.x schema', ({ transcript }) => {
+    const marker = transcript.indexOf('aif-gate-result:');
+    if (marker === -1) return fail('no aif-gate-result marker found in transcript');
+    const openIdx = transcript.indexOf('{', marker);
+    if (openIdx === -1) return fail('no opening { after aif-gate-result');
+    const closeIdx = matchBrace(transcript, openIdx);
+    if (closeIdx === -1) return fail('no matching closing } for aif-gate-result JSON');
+    const jsonStr = transcript.slice(openIdx, closeIdx + 1);
     try {
-      const parsed = JSON.parse(match[1]);
+      const parsed = JSON.parse(jsonStr);
       if (parsed.status !== 'pass') return fail(`expected status pass, got ${parsed.status}`);
+      if (parsed.schema_version !== 1) return fail(`expected schema_version 1, got ${parsed.schema_version}`);
+      if (parsed.gate !== 'verify') return fail(`expected gate "verify", got ${parsed.gate}`);
+      if (parsed.blocking !== false) return fail(`expected blocking false, got ${parsed.blocking}`);
       if (!Array.isArray(parsed.blockers) || parsed.blockers.length > 0) return fail(`expected empty blockers, got ${JSON.stringify(parsed.blockers)}`);
       if (!Array.isArray(parsed.affected_files) || parsed.affected_files.length === 0) return fail('affected_files missing or empty');
+      if (!parsed.suggested_next || typeof parsed.suggested_next !== 'object') return fail('suggested_next missing or invalid');
       return ok();
     } catch (e) {
       return fail(`invalid aif-gate-result JSON: ${e.message}`);

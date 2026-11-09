@@ -94,7 +94,7 @@ try {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Plan Phase Contract (aif-plan -> 6 Canonical Plan Phases)
+// 3. Plan Phase Contract & Anti-Collapsing Invariant (aif-plan)
 // ---------------------------------------------------------------------------
 console.log('\n3. Validating 6-Phase Plan Contract & Decomposition Intensity...');
 
@@ -107,7 +107,7 @@ const CANONICAL_PHASES = [
   'Phase 6 Wiring & Tests',
 ];
 
-function validatePlanArtifact(planText, { allowCollapsed = false } = {}) {
+function validatePlanArtifact(planText, { mode = 'Feature' } = {}) {
   const missingPhases = [];
   for (const phase of CANONICAL_PHASES) {
     const num = phase.split(' ')[1];
@@ -117,13 +117,9 @@ function validatePlanArtifact(planText, { allowCollapsed = false } = {}) {
     }
   }
 
-  if (allowCollapsed) {
-    if (!/collapsed\s+—/i.test(planText)) {
-      throw new Error('Standard-tier collapsed plan must explicitly mark folded artifacts `collapsed — <reason>`');
-    }
-    if (/collapsed\s+—[^.\n\r]*(?:into\s+(?:single-action|action|controller)|folded\s+directly\s+into)/i.test(planText)) {
-      throw new Error('Standard-tier cannot collapse Phase 4 business logic directly into an Action — actions strictly remain thin HTTP adapters');
-    }
+  // Anti-collapsing invariant across all feature plans:
+  if (/into\s+(?:single-action|action|controller)|folded\s+directly\s+into/i.test(planText)) {
+    throw new Error('Plans cannot collapse Phase 4 business logic directly into an Action — actions strictly remain thin HTTP adapters');
   }
 
   return missingPhases;
@@ -153,16 +149,16 @@ const mockFullPlan = `
 const missingFull = validatePlanArtifact(mockFullPlan);
 assert(missingFull.length === 0, 'Full plan contains all 6 canonical phases');
 
-const mockStandardPlan = `
+const mockFeaturePlan = `
 # Plan: Simple Admin Status Toggle
 ## Phase 1 Migration & Schema
 - [ ] Task 1.1: Add status column migration
 ## Phase 2 Domain Entity & Repository Interface
-- [ ] collapsed — pass-through status toggle without domain invariants
+- [ ] skipped — pragmatic architecture consumes Status model directly
 ## Phase 3 Repository Implementation
 - [ ] Task 3.1: StatusRepository in src/Setting/
 ## Phase 4 Use Case Handler & Events
-- [ ] collapsed — pass-through CRUD without domain events; StatusService application service coordinates repository
+- [ ] Task 4.1: StatusService application service coordinates repository updates
 ## Phase 5 Input DTO & Single-Action Handler
 - [ ] Task 5.1: ToggleStatusRequest DTO with validator rules
 - [ ] Task 5.2: ToggleStatusAction delegating to StatusService
@@ -171,31 +167,31 @@ const mockStandardPlan = `
 - [ ] Task 6.2: Action test
 `;
 
-const missingStandard = validatePlanArtifact(mockStandardPlan, { allowCollapsed: true });
-assert(missingStandard.length === 0, 'Standard plan preserves 6 phases with collapsed markers');
+const missingFeature = validatePlanArtifact(mockFeaturePlan, { mode: 'Feature' });
+assert(missingFeature.length === 0, 'Feature plan preserves 6 phases with pragmatic service/repository separation');
 
 // Canary: reject plans collapsing use cases directly into action controllers
-const mockInvalidCollapsedPlan = `
+const mockInvalidActionPlan = `
 ## Phase 1 Migration & Schema
 - [ ] Task 1.1: migration
 ## Phase 2 Domain Entity & Repository Interface
-- [ ] collapsed
+- [ ] skipped
 ## Phase 3 Repository Implementation
 - [ ] Task 3.1: repo
 ## Phase 4 Use Case Handler & Events
-- [ ] collapsed — folded directly into single-action handler
+- [ ] folded directly into single-action handler
 ## Phase 5 Input DTO & Single-Action Handler
 - [ ] Task 5.1: action
 ## Phase 6 Wiring & Tests
 - [ ] Task 6.1: tests
 `;
-let invalidCollapsedCaught = false;
+let invalidActionCaught = false;
 try {
-  validatePlanArtifact(mockInvalidCollapsedPlan, { allowCollapsed: true });
+  validatePlanArtifact(mockInvalidActionPlan, { mode: 'Feature' });
 } catch {
-  invalidCollapsedCaught = true;
+  invalidActionCaught = true;
 }
-assert(invalidCollapsedCaught, 'Canary rejects collapsing Phase 4 directly into single-action controller');
+assert(invalidActionCaught, 'Canary rejects collapsing Phase 4 directly into single-action controller');
 
 // ---------------------------------------------------------------------------
 // 4. Execution Bottom-Up & Mission State Contract (aif-implement)
@@ -204,10 +200,7 @@ console.log('\n4. Validating Execution Bottom-Up & Mission State Tracker Contrac
 
 function validateMissionState(transcript) {
   const hasMissionStateHeading = /###\s*Mission State/i.test(transcript);
-  const hasMode = /Mode:?\*{0,2}\s*(Patch|Feature|Enterprise|Light|Full)/i.test(transcript);
-  const hasDecomposition = !/Mode:?\*{0,2}\s*(Patch|Feature|Enterprise)/i.test(transcript)
-    ? /Decomposition:?\*{0,2}\s*(Lightweight|Standard|Full)/i.test(transcript)
-    : true;
+  const hasMode = /Mode:?\*{0,2}\s*(Patch|Feature|Enterprise)/i.test(transcript);
   const hasArchitecture = /Architecture:?\*{0,2}\s*[^\n\r]+/i.test(transcript);
   const hasStageProgress = /Stage\s*1.*Migration/i.test(transcript) && /Stage\s*6.*Config/i.test(transcript);
 
@@ -219,13 +212,12 @@ function validateMissionState(transcript) {
   const completionLines = transcript.split('\n').filter((l) => /Stage\s+\d+\s+complete:/i.test(l));
   const allGatesPassed = completionLines.length > 0 && completionLines.every((l) => /Wiring gate:\s*pass/i.test(l));
 
-  return hasMissionStateHeading && hasMode && hasDecomposition && hasArchitecture && hasStageProgress && isSequential && allGatesPassed;
+  return hasMissionStateHeading && hasMode && hasArchitecture && hasStageProgress && isSequential && allGatesPassed;
 }
 
 const mockTranscript = `
 ### Mission State
-- **Mode:** Full
-- **Decomposition:** Full
+- **Mode:** Feature
 - **Architecture:** .ai-factory/ARCHITECTURE.md
 - **Guides:** references/http-actions-core.md, references/persistence-db.md
 - **Stage Progress:**
@@ -261,13 +253,14 @@ const mockFailedGateTranscript = mockTranscript.replace(
 assert(!validateMissionState(mockFailedGateTranscript), 'Canary rejects failed wiring gate in mission progress');
 
 // ---------------------------------------------------------------------------
-// 5. Verification & Handoff Contract (aif-verify -> aif-gate-result)
+// 5. Verification & Handoff Contract (aif-verify -> aif-gate-result AI Factory 2.x)
 // ---------------------------------------------------------------------------
-console.log('\n5. Validating Verification Handoff Engine & aif-gate-result...');
+console.log('\n5. Validating Verification Handoff Engine & aif-gate-result (AI Factory 2.x)...');
 
 function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
   const blockers = [];
   const affected_files = changedFiles.map((c) => c.path);
+  let blockerSeq = 1;
 
   // 1. Interfaces bound in DI
   const interfaces = changedFiles
@@ -279,7 +272,12 @@ function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
 
   for (const iface of interfaces) {
     if (!new RegExp(`\\b${iface}::class`).test(diContent)) {
-      blockers.push(`Interface "${iface}" is not bound in DI configuration`);
+      blockers.push({
+        id: `verify-di-${String(blockerSeq++).padStart(3, '0')}`,
+        severity: 'error',
+        file: changedFiles.find((c) => c.path.endsWith(`${iface}.php`))?.path ?? 'config/di.php',
+        summary: `Interface "${iface}" is not bound in DI configuration`,
+      });
     }
   }
 
@@ -291,7 +289,12 @@ function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
   for (const act of actions) {
     const actName = act.path.split('/').pop().replace('.php', '');
     if (!new RegExp(`\\b${actName}::class`).test(routeContent)) {
-      blockers.push(`Action "${actName}" has no active route mounted in config/routes.php`);
+      blockers.push({
+        id: `verify-route-${String(blockerSeq++).padStart(3, '0')}`,
+        severity: 'error',
+        file: act.path,
+        summary: `Action "${actName}" has no active route mounted in config/routes.php`,
+      });
     }
   }
 
@@ -300,7 +303,12 @@ function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
   for (const m of migrations) {
     const downMatch = m.content.match(/function\s+down\s*\([^)]*\)[^{]*\{([\s\S]*?)\}/i);
     if (!downMatch || !/\b(drop|delete|alter)\w*\(/i.test(downMatch[1])) {
-      blockers.push(`Migration "${m.path}" lacks a reversible down() method`);
+      blockers.push({
+        id: `verify-migration-${String(blockerSeq++).padStart(3, '0')}`,
+        severity: 'error',
+        file: m.path,
+        summary: `Migration "${m.path}" lacks a reversible down() method`,
+      });
     }
   }
 
@@ -308,17 +316,34 @@ function simulateAifVerify({ changedFiles, projectFiles, composerPackages }) {
   const phpFiles = changedFiles.filter((c) => c.path.endsWith('.php'));
   for (const file of phpFiles) {
     if (/Yiisoft\\Validator\\/i.test(file.content) && !composerPackages.includes('yiisoft/validator')) {
-      blockers.push(`Package "yiisoft/validator" is used in "${file.path}" but missing from composer.json`);
+      blockers.push({
+        id: `verify-pkg-${String(blockerSeq++).padStart(3, '0')}`,
+        severity: 'error',
+        file: file.path,
+        summary: `Package "yiisoft/validator" is used in "${file.path}" but missing from composer.json`,
+      });
     }
     if (/Yiisoft\\Mailer\\/i.test(file.content) && !composerPackages.includes('yiisoft/mailer')) {
-      blockers.push(`Package "yiisoft/mailer" is used in "${file.path}" but missing from composer.json`);
+      blockers.push({
+        id: `verify-pkg-${String(blockerSeq++).padStart(3, '0')}`,
+        severity: 'error',
+        file: file.path,
+        summary: `Package "yiisoft/mailer" is used in "${file.path}" but missing from composer.json`,
+      });
     }
   }
 
+  const hasBlockers = blockers.length > 0;
   return {
-    status: blockers.length === 0 ? 'pass' : 'fail',
+    schema_version: 1,
+    gate: 'verify',
+    status: hasBlockers ? 'fail' : 'pass',
+    blocking: hasBlockers,
     blockers,
     affected_files,
+    suggested_next: hasBlockers
+      ? { command: '/aif-fix', reason: 'Blocking implementation violations remain.' }
+      : { command: '/aif-verify', reason: 'All architectural gates and checks passed.' },
   };
 }
 
@@ -351,7 +376,10 @@ const cleanFeature = simulateAifVerify({
   composerPackages: ['yiisoft/yii-runner-http', 'yiisoft/di', 'yiisoft/router', 'yiisoft/db-migration'],
 });
 
+assert(cleanFeature.schema_version === 1, 'Clean feature has schema_version: 1');
+assert(cleanFeature.gate === 'verify', 'Clean feature has gate: "verify"');
 assert(cleanFeature.status === 'pass', 'Clean feature passes verify gate');
+assert(cleanFeature.blocking === false, 'Clean feature has blocking: false');
 assert(cleanFeature.blockers.length === 0, 'Clean feature has 0 blockers');
 assert(cleanFeature.affected_files.length === 3, 'Clean feature records affected_files');
 
@@ -367,10 +395,12 @@ const canaryUnbound = simulateAifVerify({
   composerPackages: ['yiisoft/yii-runner-http'],
 });
 assert(canaryUnbound.status === 'fail', 'Canary catches unbound interface');
+assert(canaryUnbound.blocking === true, 'Canary marks blocking: true');
 assert(
-  canaryUnbound.blockers.some((b) => b.includes('OrderRepositoryInterface')),
-  'Blocker explicitly names OrderRepositoryInterface'
+  canaryUnbound.blockers.some((b) => b.summary.includes('OrderRepositoryInterface') && b.severity === 'error'),
+  'Blocker structured object explicitly names OrderRepositoryInterface with error severity'
 );
+assert(canaryUnbound.suggested_next.command === '/aif-fix', 'Canary suggested_next command is /aif-fix');
 
 // 5c. Canary: Unrouted action caught
 const canaryUnrouted = simulateAifVerify({
@@ -384,7 +414,7 @@ const canaryUnrouted = simulateAifVerify({
   composerPackages: ['yiisoft/yii-runner-http'],
 });
 assert(canaryUnrouted.status === 'fail', 'Canary catches unrouted action');
-assert(canaryUnrouted.blockers.some((b) => b.includes('CancelOrderAction')), 'Blocker explicitly names CancelOrderAction');
+assert(canaryUnrouted.blockers.some((b) => b.summary.includes('CancelOrderAction')), 'Blocker explicitly names CancelOrderAction');
 
 // 5d. Canary: Irreversible migration caught
 const canaryMigration = simulateAifVerify({
@@ -398,7 +428,7 @@ const canaryMigration = simulateAifVerify({
   composerPackages: ['yiisoft/yii-runner-http'],
 });
 assert(canaryMigration.status === 'fail', 'Canary catches irreversible migration');
-assert(canaryMigration.blockers.some((b) => b.includes('down()')), 'Blocker explicitly notes missing reversible down()');
+assert(canaryMigration.blockers.some((b) => b.summary.includes('down()')), 'Blocker explicitly notes missing reversible down()');
 
 // 5e. Canary: Undeclared package caught
 const canaryUndeclared = simulateAifVerify({
@@ -412,7 +442,7 @@ const canaryUndeclared = simulateAifVerify({
   composerPackages: ['yiisoft/yii-runner-http'],
 });
 assert(canaryUndeclared.status === 'fail', 'Canary catches undeclared package');
-assert(canaryUndeclared.blockers.some((b) => b.includes('yiisoft/mailer')), 'Blocker explicitly names undeclared package');
+assert(canaryUndeclared.blockers.some((b) => b.summary.includes('yiisoft/mailer')), 'Blocker explicitly names undeclared package');
 
 // ---------------------------------------------------------------------------
 // 6. Guard Discrimination on Non-Yii3 Project

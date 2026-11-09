@@ -122,12 +122,35 @@ Across AI Factory workflows, independent agents run in separate conversational c
 - **Handoff Status:** Set `Status: COMPLETE` (or ready for verification) and `Next Stage: /aif-verify`.
 
 ### 6.3. Handoff: `aif-verify` → `aif-fix` (Zero-Ambiguity Defect Reporting)
-- **Actionable Blocker Reports:** Every failure in `aif-gate-result` (`blockers`) and `### Execution State` (`Open Issues`) must specify:
-  1. The exact file path and line number.
-  2. The violated rule, broken invariant (e.g. "SQL inside Action"), or failing test name.
-  3. The exact error output or exception trace.
+- **Canonical `aif-gate-result` Schema (AI Factory 2.x):** Emit the structured gate result matching the official AI Factory specification:
+  ```json
+  {
+    "schema_version": 1,
+    "gate": "verify",
+    "status": "fail",
+    "blocking": true,
+    "blockers": [
+      {
+        "id": "verify-001",
+        "severity": "error",
+        "file": "src/Blog/CreateCommentAction.php",
+        "line": 42,
+        "summary": "SQL query found inside Action; actions must remain thin HTTP transport adapters."
+      }
+    ],
+    "affected_files": [
+      "src/Blog/CreateCommentAction.php"
+    ],
+    "suggested_next": {
+      "command": "/aif-fix",
+      "reason": "Blocking implementation violations remain."
+    }
+  }
+  ```
+  When all checks pass cleanly, set `"status": "pass"`, `"blocking": false`, `"blockers": []`, and point `"suggested_next"` to the closing gate or next phase.
+- **Actionable Blocker Reports:** Every entry in `blockers` must be a structured object with `id`, `severity: "error"`, `file`, and `summary`.
 - **Strict Modification Perimeter:** `aif-gate-result` must populate `affected_files` with the exact list of files requiring remediation so `aif-fix` knows its exact boundary.
-- **Handoff Status:** Set `Status: BLOCKED` and `Next Stage: /aif-fix`.
+- **Handoff Status:** Set `Status: BLOCKED` and `Next Stage: /aif-fix` in `### Execution State`.
 
 ### 6.4. Handoff: `aif-fix` → `aif-verify` (Clean Defect Resolution Loop)
 - **Scope Compliance:** Corrective edits must remain strictly within `affected_files` without introducing new architectural mechanisms.

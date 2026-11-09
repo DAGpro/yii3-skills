@@ -594,7 +594,7 @@ return [
 
 #### Attaching `CookieLoginMiddleware` to Pipeline
 
-There is **no** `"middlewares"` params key — no package consumes it. The middleware pipeline is wired through the `Application::class` DI definition in `config/web/di/application.php`, whose `dispatcher` constructor parameter receives a `MiddlewareDispatcher` with middleware definitions passed to its constructor (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [error-handling.md](infra-error-handling.md), section 2).
+There is **no** `"middlewares"` params key — no package consumes it. The middleware pipeline is wired through the `Application::class` DI definition in `config/web/di/application.php`, whose `dispatcher` constructor parameter receives a `MiddlewareDispatcher` with middleware definitions passed to its constructor (`withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — see [infra-error-handling.md](infra-error-handling.md), section 2).
 
 In authenticated web pipelines, register `CookieLoginMiddleware` after `SessionMiddleware` (remember-me auto-login needs the session) and before `Authentication` / `LoginMiddleware`, so the remembered identity is resolved before identity consumers run:
 

@@ -11,7 +11,7 @@ description: >-
   (yiisoft/hydrator) and validation (yiisoft/validator), forms and file uploads, OpenAPI
   docs (yiisoft/swagger), views and widgets (yiisoft/view, GridView), console commands
   (yiisoft/yii-console), queue jobs (yiisoft/queue), caching, events, error handling,
-  RBAC and auth (yiisoft/rbac, yiisoft/auth), or when migrating Yii 2 code to Yii 3.
+  RBAC and auth (yiisoft/rbac, yiisoft/auth).
 ---
 
 # Yii3 development

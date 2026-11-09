@@ -61,9 +61,11 @@ export default [
     const p = join(dir, 'rector.php');
     if (!existsSync(p)) return fail('rector.php not found');
     const t = read(p);
-    return /(?:__DIR__\s*\.\s*)?['"](?:\/)?src['"]/.test(t) || /(?:withPaths|paths)\s*\(\s*\[[^\]]*src/.test(t)
-      ? ok('rector.php configures src/ path')
-      : fail('rector.php does not target src/ in paths');
+    const hasSrc = /(?:__DIR__\s*\.\s*)?['"](?:\/)?src['"]/.test(t) || /(?:withPaths|paths)\s*\(\s*\[[^\]]*src/.test(t);
+    const hasTests = /(?:__DIR__\s*\.\s*)?['"](?:\/)?tests['"]/.test(t) || /(?:withPaths|paths)\s*\(\s*\[[^\]]*tests/.test(t);
+    return hasSrc && hasTests
+      ? ok('rector.php configures src/ and tests/ paths')
+      : fail('rector.php does not target both src/ and tests/ in paths');
   }),
 
   check('cs-fixer-config-exists', '.php-cs-fixer.dist.php (or .php-cs-fixer.php) configuration file exists at project root', ({ dir }) => {

@@ -1,7 +1,7 @@
 # AI Factory Adapter — Multi-Agent Workflow Integration & Durable State
 
 > [!IMPORTANT]
-> **Grounding rule:** This guide defines the inter-agent coordination contract between the `yii3` skill and the AI Factory automation loop (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`). It governs workflow lifecycle transitions, active plan state persistence, and handoff boundaries.
+> **Grounding rule:** This guide defines the inter-agent coordination contract between the `yii3` skill and the AI Factory automation loop (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, `aif-architecture`). It governs workflow lifecycle transitions, active plan state persistence, and handoff boundaries.
 
 ---
 
@@ -25,6 +25,8 @@ The standard feature lifecycle follows a strict state-machine protocol:
 
 | Workflow | Role & Phase | Input Artifacts | Allowed Modifications | Output Artifacts | Next Handoff |
 |---|---|---|---|---|---|
+| **`aif-roadmap`** | Milestone sequencing & stack invariants | Project vision, requirements, package manifest | Roadmap file ONLY (`ROADMAP.md`) | Structured roadmap with stack invariants, driver choices, and architecture milestones | `/aif-architecture` or `/aif-plan` |
+| **`aif-architecture`** | Architectural guideline synthesis & tier alignment | Tech stack, project requirements, existing code | Architecture artifact ONLY (`paths.architecture`) | Canonical `ARCHITECTURE.md` defining directory structure, isolation tiers, and legacy strategies | `/aif-plan` |
 | **`aif-plan`** | Feature decomposition & planning | Prompt / user requirements, project architecture (`paths.architecture`) | Plan file ONLY (no application code) | Active plan artifact with 6 canonical phases + initial `### Execution State` | `/aif-implement` |
 | **`aif-implement`** | Bottom-up execution | Active plan artifact (`paths.plans`) | Application code (`src/`, `config/`, `migrations/`, `tests/`), task checkboxes `- [x]`, `### Execution State` | Fully wired feature code + updated plan state | `/aif-verify` |
 | **`aif-verify`** | Independent verification gate | Implemented code, test suite, active plan | **Code Read-Only:** Strictly forbidden to modify application code or fix bugs. Allowed to write gate results and update plan `### Execution State` | `aif-gate-result` (`blockers`, `affected_files`) + updated plan state (`COMPLETE` or `BLOCKED`) | `/aif-fix` (if blockers > 0) or complete |

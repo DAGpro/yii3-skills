@@ -5,15 +5,27 @@ import { join } from 'node:path';
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const composerFiles = (dir) => filesMatching(dir, /(^|\/)composer\.json$/);
 
+const parseJsonOrJson5 = (text) => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    try {
+      const stripped = text
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n\r]*/g, '')
+        .replace(/,\s*([\]}])/g, '$1');
+      return JSON.parse(stripped);
+    } catch {
+      return null;
+    }
+  }
+};
+
 const findInfectionConfig = (dir) => {
   for (const name of ['infection.json.dist', 'infection.json5.dist', 'infection.json', 'infection.json5']) {
     const p = join(dir, name);
     if (existsSync(p)) {
-      try {
-        return { name, path: p, data: JSON.parse(read(p)) };
-      } catch {
-        return { name, path: p, data: null };
-      }
+      return { name, path: p, data: parseJsonOrJson5(read(p)) };
     }
   }
   return null;

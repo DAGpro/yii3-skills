@@ -13,9 +13,11 @@
   "timeoutSec": 900,
   "negativeMustFail": [
     "code-style-package-required",
+    "rector-package-required",
     "no-dev-in-require",
     "rector-config-exists",
     "rector-yii-set-configured",
+    "rector-paths-configured",
     "cs-fixer-config-exists",
     "cs-fixer-yiisoft-rules",
     "composer-scripts-registered"

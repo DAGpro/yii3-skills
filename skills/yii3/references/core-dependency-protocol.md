@@ -265,7 +265,7 @@ To guarantee zero hallucination and complete fidelity to the installed codebase,
 
 ## 6. Verify the Result
 
-After dependencies are installed and wired, run the target project's own quality gates — tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured — and confirm the wiring per [SKILL.md → Finale](../SKILL.md); the blocking gate in AI Factory workflows is defined by `injections/verify.md`.
+After dependencies are installed and wired, run the target project's own quality gates — tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured — and confirm the wiring per [SKILL.md → Finale](../SKILL.md); the blocking gate in AI Factory workflows is defined in [references/aif-adapter.md](aif-adapter.md).
 
 ---
 

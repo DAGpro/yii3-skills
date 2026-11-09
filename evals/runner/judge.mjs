@@ -42,8 +42,9 @@ export function buildJudgePrompt({ scenarioDir, dir, base, transcript }) {
     ? read(join(scenarioDir, 'rubric.md')).trim()
     : 'No rubric provided.';
 
+  const ignoredInJudge = new Set(['transcript.txt', 'AGENTS.md', 'tokens.json', 'usage.json', 'telemetry.json']);
   const changed = changedFiles(dir, base).filter(
-    (c) => c.path !== 'transcript.txt' && c.path !== 'AGENTS.md'
+    (c) => !ignoredInJudge.has(c.path)
   );
 
   const fileSections = [];

@@ -34,9 +34,27 @@ const runtime = process.argv.includes('--runtime') || args.runtime === 'true' ||
 const judgeFlag = process.argv.includes('--judge') || args.judge === 'true' || args.judge === '1';
 const dryRun = process.argv.includes('--dry-run') || args['dry-run'] === 'true';
 
-const { rate, reqFailed, results } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot, extra: { runtime } });
+const extra = { runtime };
+if (args.tokens !== undefined) extra.tokens = args.tokens;
+if (args.cost !== undefined) extra.cost = args.cost;
+
+const { rate, reqFailed, results, tokens, cost } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot, extra });
 for (const r of results) console.log(`${r.pass ? 'PASS' : 'FAIL'}${r.required ? '' : ' (opt)'} ${r.id}: ${r.evidence}`);
 console.log(`pass-rate: ${(rate * 100).toFixed(0)}%  required-failed=[${reqFailed}]`);
+
+if (tokens || cost !== undefined) {
+  const parts = [];
+  if (tokens) {
+    const tokStr = typeof tokens === 'object' && tokens.total !== undefined
+      ? `${tokens.total}${tokens.prompt !== undefined ? ` (prompt: ${tokens.prompt}, completion: ${tokens.completion})` : ''}`
+      : JSON.stringify(tokens);
+    parts.push(`tokens: ${tokStr}`);
+  }
+  if (cost !== undefined) {
+    parts.push(`cost: $${cost}`);
+  }
+  console.log(`telemetry: ${parts.join('  ')}`);
+}
 
 if (judgeFlag) {
   try {

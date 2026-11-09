@@ -165,6 +165,41 @@ node evals/runner/judge.mjs --selftest
   - `criteria`: Array of per-rubric-criterion items `[{ id, name, passed, weight, note }]`.
   - `strengths` / `weaknesses`: Specific concrete observations.
 
+## Telemetry & Cost Tracking (Tokens & Cost)
+
+The runner automatically tracks and persists token usage and financial cost telemetry into `result.json` across evaluation runs:
+
+```bash
+# Pass explicit token count and cost via CLI
+node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --tokens 1500 --cost 0.0045
+
+# Or pass detailed token JSON
+node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --tokens '{"prompt":1200,"completion":300}'
+```
+
+- **Telemetry Sources (Priority Order):**
+  1. **CLI / Function Arguments:** `--tokens <number|json>`, `--cost <number>` passed to `evaluate.mjs` or `evaluateWork()`.
+  2. **Work Directory Telemetry Files:** Automatically parses `<work>/tokens.json`, `<work>/usage.json`, or `<work>/telemetry.json` dropped by agent wrappers. These files are excluded from task code diffs.
+  3. **Environment Variables:** `EVAL_AGENT_TOKENS` (number or JSON) and `EVAL_AGENT_COST` (number string).
+  4. **Transcript Regex Heuristics:** Automatically parses JSON usage blocks (`"usage": { "prompt_tokens": ..., "completion_tokens": ..., "total_tokens": ... }`) and key-value lines (`prompt_tokens: 1200`, `total tokens: 1500`, `cost: $0.0045`) in stdout/stderr transcripts.
+- **Normalized Schema in `result.json`:**
+  ```json
+  {
+    "id": "01-full-add-comment",
+    "mode": "with-skill",
+    "run": 1,
+    "tokens": {
+      "prompt": 1200,
+      "completion": 300,
+      "total": 1500
+    },
+    "cost": 0.0045,
+    "changed": [...],
+    "results": [...]
+  }
+  ```
+- **Campaign Reporting:** When telemetry is captured, `runner/run.mjs` appends an aggregate `## Telemetry (Tokens & Cost)` summary table into `summary.md`.
+
 ## Adding a scenario
 
 1. Copy the closest scenario, adjust the fixture and `prompt.md`.
@@ -174,7 +209,3 @@ node evals/runner/judge.mjs --selftest
 4. `node evals/runner/selftest.mjs` must be green.
 
 Rule: every agent failure found on a real project becomes a new scenario.
-
-## Not implemented (TODO)
-
-- Tokens/cost in `result.json` (depends on the agent adapter).

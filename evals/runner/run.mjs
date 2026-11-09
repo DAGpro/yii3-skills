@@ -131,7 +131,7 @@ for (const id of selected) {
         contaminated = true;
         console.error(`WARN: the source repository changed during the ${id} ${mode} #${n} agent run - the agent likely escaped its work dir. Inspect git status/log before trusting these results.`);
       }
-      const { rate, reqFailed } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000, repoTouched } });
+      const { rate, reqFailed, tokens, cost } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000, repoTouched } });
       let judgeScore = null;
       if (judgeFlag) {
         try {
@@ -142,14 +142,19 @@ for (const id of selected) {
           console.error(`WARN: judge failed on ${id} ${mode} #${n}: ${jErr.message}`);
         }
       }
-      rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, reqFailed, judgeScore });
-      console.log(`${id} ${mode} #${n}: ${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]${judgeScore !== null ? ` judge=${(judgeScore * 100).toFixed(0)}%` : ''}`);
+      rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, reqFailed, judgeScore, tokens, cost });
+      const tokInfo = tokens?.total ? ` tokens=${tokens.total}` : '';
+      const costInfo = cost !== undefined ? ` cost=$${cost}` : '';
+      console.log(`${id} ${mode} #${n}: ${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]${judgeScore !== null ? ` judge=${(judgeScore * 100).toFixed(0)}%` : ''}${tokInfo}${costInfo}`);
     }
   }
 }
 
 // summary.md: average pass-rate per scenario and mode + the with-skill - baseline delta
 const avg = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
+const hasTokens = rows.some((r) => r.tokens && typeof r.tokens.total === 'number');
+const hasCost = rows.some((r) => typeof r.cost === 'number');
+
 let md = judgeFlag
   ? '| scenario | layer | with-skill (code/judge) | baseline (code/judge) | delta (code/judge) |\n|---|---|---|---|---|\n'
   : '| scenario | layer | with-skill | baseline | delta |\n|---|---|---|---|---|\n';
@@ -166,6 +171,21 @@ for (const id of [...new Set(rows.map((r) => r.id))]) {
     md += `| ${id} | ${rows.find((r) => r.id === id)?.layer ?? '-'} | ${f(wRate)} / ${f(wJudge)} | ${f(bRate)} / ${f(bJudge)} | ${fPp(wRate, bRate)} / ${fPp(wJudge, bJudge)} |\n`;
   } else {
     md += `| ${id} | ${rows.find((r) => r.id === id)?.layer ?? '-'} | ${f(wRate)} | ${f(bRate)} | ${fPp(wRate, bRate)} |\n`;
+  }
+}
+
+if (hasTokens || hasCost) {
+  md += '\n## Telemetry (Tokens & Cost)\n\n';
+  md += '| scenario | with-skill tokens (avg) | baseline tokens (avg) | with-skill cost (avg) | baseline cost (avg) |\n|---|---|---|---|---|\n';
+  for (const id of [...new Set(rows.map((r) => r.id))]) {
+    const wTok = avg(rows.filter((r) => r.id === id && r.mode === 'with-skill' && r.tokens?.total).map((r) => r.tokens.total));
+    const bTok = avg(rows.filter((r) => r.id === id && r.mode === 'baseline' && r.tokens?.total).map((r) => r.tokens.total));
+    const wCost = avg(rows.filter((r) => r.id === id && r.mode === 'with-skill' && typeof r.cost === 'number').map((r) => r.cost));
+    const bCost = avg(rows.filter((r) => r.id === id && r.mode === 'baseline' && typeof r.cost === 'number').map((r) => r.cost));
+
+    const fTok = (x) => (Number.isNaN(x) ? '-' : `${Math.round(x).toLocaleString()}`);
+    const fCost = (x) => (Number.isNaN(x) ? '-' : `$${x.toFixed(4)}`);
+    md += `| ${id} | ${fTok(wTok)} | ${fTok(bTok)} | ${fCost(wCost)} | ${fCost(bCost)} |\n`;
   }
 }
 mkdirSync(outRoot, { recursive: true });

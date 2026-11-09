@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/lee-to/ai-factory/2.x/schemas/extension.schema.json",
   "name": "yii3-skills",
   "version": "0.3.0",
-  "description": "AI Factory extension with the yii3 agent skill: a stage-based Yii3 development workflow (bootstrap, bottom-up stages, production readiness gate) backed by 80+ specialized topic guides and thin workflow injections for plan/improve/implement/verify/fix/review/roadmap/architecture.",
+  "description": "AI Factory extension with the yii3 agent skill: stage-based Yii 3 development workflow (Patch/Feature/Enterprise modes, bottom-up stages, production readiness gate) grounded in official package sources with specialized topic guides and workflow injections.",
   "injections": [
     {
       "target": "aif-plan",

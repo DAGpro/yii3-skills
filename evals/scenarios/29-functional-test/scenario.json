@@ -14,7 +14,8 @@
     "codeception-config",
     "test-extends-functional-case",
     "test-exercises-api-status",
-    "no-raw-http"
+    "no-raw-http",
+    "functional-suite-config"
   ],
   "layer": "unit",
   "guides": [

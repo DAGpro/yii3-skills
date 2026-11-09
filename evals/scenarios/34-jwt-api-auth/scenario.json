@@ -15,7 +15,8 @@
     "jwt-method-wired",
     "authenticator-wired",
     "auth-on-api-routes",
-    "no-manual-token-parsing"
+    "no-manual-token-parsing",
+    "jwt-params-secret"
   ],
   "layer": "unit",
   "guides": [

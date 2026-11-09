@@ -18,7 +18,8 @@
     "action-thin",
     "event-after-commit",
     "no-yii2",
-    "report-present"
+    "report-present",
+    "strict-types"
   ],
   "layer": "composite",
   "guides": [

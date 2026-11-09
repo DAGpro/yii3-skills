@@ -14,7 +14,8 @@
   "negativeMustFail": [
     "if-none-match-compared",
     "not-modified-returned",
-    "version-used-as-tag-source"
+    "version-used-as-tag-source",
+    "transcript-mentions-conditional-get"
   ],
   "layer": "unit",
   "guides": [

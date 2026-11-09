@@ -1,0 +1,28 @@
+{
+  "id": "57-mutation-testing-infection",
+  "title": "Unit: Mutation testing setup with Infection (infection/infection + roave/infection-static-analysis-plugin) and canonical infection.json.dist configuration",
+  "mode": "full",
+  "tags": [
+    "full",
+    "testing",
+    "mutation-testing",
+    "infection",
+    "quality-gates"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "infection-package-required",
+    "plugin-package-required",
+    "no-dev-in-require",
+    "allow-plugins-configured",
+    "infection-config-exists",
+    "source-directories-configured",
+    "mutators-configured",
+    "min-msi-configured"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/testing-infection.md",
+    "references/testing-core.md"
+  ]
+}

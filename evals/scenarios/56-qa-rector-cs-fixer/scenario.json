@@ -1,0 +1,29 @@
+{
+  "id": "56-qa-rector-cs-fixer",
+  "title": "Unit: Code quality and automated refactoring setup (yiisoft/code-style + rector/rector + php-cs-fixer) with Yii3 conventions (SetList::YII_CORE, ConfigBuilder)",
+  "mode": "full",
+  "tags": [
+    "full",
+    "qa",
+    "rector",
+    "code-style",
+    "php-cs-fixer",
+    "quality-gates"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "code-style-package-required",
+    "no-dev-in-require",
+    "rector-config-exists",
+    "rector-yii-set-configured",
+    "cs-fixer-config-exists",
+    "cs-fixer-yiisoft-rules",
+    "composer-scripts-registered"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-definition-of-done.md",
+    "references/core-dependency-protocol.md",
+    "references/core-version-notes.md"
+  ]
+}

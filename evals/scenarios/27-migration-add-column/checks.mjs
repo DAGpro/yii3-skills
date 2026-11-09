@@ -1,24 +1,10 @@
-import { check, ok, fail, read } from '../../lib/checks.mjs';
-import { matchParen } from '../../lib/checks.mjs';
+import { check, ok, fail, read, matchParen, methodBody } from '../../lib/checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const migrationChanges = (changed) => php(changed).filter((c) => /^migrations\/.*\.php$/.test(c.path));
 const newMigrations = (changed) => changed.filter((c) => c.added && /^migrations\/M\d{12}\w*\.php$/.test(c.path));
 
 const EXISTING_MIGRATION = 'migrations/M260101010101CreateUsersTable.php';
-
-/** Body of `function <name>(...) { ... }` (brace-counting heuristic), or null. */
-function methodBody(t, name) {
-  const m = new RegExp(`function\\s+${name}\\s*\\([^)]*\\)[^{]*\\{`).exec(t);
-  if (!m) return null;
-  const open = t.indexOf('{', m.index);
-  let depth = 0;
-  for (let i = open; i < t.length; i++) {
-    if (t[i] === '{') depth++;
-    else if (t[i] === '}' && --depth === 0) return t.slice(open, i + 1);
-  }
-  return null;
-}
 
 /** Argument substring of the call at the given match index. */
 const callArgs = (t, nameIdx) => {

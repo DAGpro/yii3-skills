@@ -12,6 +12,7 @@ Load this guide at the Finale when the task is a **new feature**, or when it tou
 - [1. Architecture & Code-to-Reference Compliance Checks](#1-architecture--code-to-reference-compliance-checks)
 - [2. Multi-Dimensional Quality Evaluation Matrix](#2-multi-dimensional-quality-evaluation-matrix)
 - [3. Production Readiness Gate](#3-production-readiness-gate)
+  - [3.1. Code Quality & Formatting Toolchain (`yiisoft/code-style`)](#31-code-quality--formatting-toolchain-yiisoftcode-style)
 - [4. Verification Report Format](#4-verification-report-format)
 
 ---
@@ -60,6 +61,70 @@ The difference between "milestone closed" and "product ready". Every item is gro
 - unit + HTTP tests and static analysis green (`references/testing-core.md`).
 
 Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see SKILL.md "AI Factory Adapter").
+
+### 3.1. Code Quality & Formatting Toolchain (`yiisoft/code-style`)
+
+When setting up automated code quality, linting, and refactoring, use `yiisoft/code-style` (dev dependency only):
+
+```bash
+composer require --dev yiisoft/code-style rector/rector
+```
+
+#### 1. PHP-CS-Fixer (`.php-cs-fixer.dist.php`)
+Use `Yiisoft\CodeStyle\ConfigBuilder::build()` to register `@Yiisoft/Core` and `@Yiisoft/Core:risky` rule sets:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use PhpCsFixer\Finder;
+use Yiisoft\CodeStyle\ConfigBuilder;
+
+$finder = (new Finder())->in([
+    __DIR__ . '/src',
+    __DIR__ . '/tests',
+]);
+
+return ConfigBuilder::build()
+    ->setRiskyAllowed(true)
+    ->setRules([
+        '@Yiisoft/Core' => true,
+        '@Yiisoft/Core:risky' => true,
+    ])
+    ->setFinder($finder);
+```
+
+#### 2. Rector (`rector.php`)
+Use `Yiisoft\CodeStyle\Rector\SetList::YII_CORE` (enforces Yii conventions, including removing `#[Override]` attributes):
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Rector\Config\RectorConfig;
+use Yiisoft\CodeStyle\Rector\SetList;
+
+return RectorConfig::configure()
+    ->withPaths([
+        __DIR__ . '/src',
+        __DIR__ . '/tests',
+    ])
+    ->withSets([
+        SetList::YII_CORE,
+    ]);
+```
+
+#### 3. Composer Helper Scripts
+Register shortcuts in `composer.json`:
+```json
+"scripts": {
+    "cs-check": "php-cs-fixer fix --dry-run",
+    "cs-fix": "php-cs-fixer fix",
+    "rector": "rector"
+}
+```
 
 ## 4. Verification Report Format
 

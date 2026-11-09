@@ -14,7 +14,10 @@
     "domain-interface-created",
     "infrastructure-implements-domain-interface",
     "no-infrastructure-imports-in-domain",
-    "di-binding-added"
+    "di-binding-added",
+    "interface-declares-consumed-method",
+    "no-new-gateway-in-domain",
+    "domain-free-of-presentation-tokens"
   ],
   "layer": "unit",
   "guides": [

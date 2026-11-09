@@ -14,7 +14,8 @@
     "revertible-contract",
     "up-addcolumn",
     "down-drops-column",
-    "existing-migration-untouched"
+    "existing-migration-untouched",
+    "discoverable-namespace"
   ],
   "layer": "unit",
   "guides": [

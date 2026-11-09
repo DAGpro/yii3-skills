@@ -14,7 +14,9 @@
     "command-tester-used",
     "success-path-asserted",
     "failure-path-asserted",
-    "no-shell-out"
+    "no-shell-out",
+    "display-normalized",
+    "transcript-mentions-tester"
   ],
   "layer": "unit",
   "guides": [

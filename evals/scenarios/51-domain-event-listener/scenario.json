@@ -12,7 +12,9 @@
   "timeoutSec": 1200,
   "negativeMustFail": [
     "no-direct-mail-in-service",
-    "listener-registered"
+    "listener-registered",
+    "listener-sends-mail",
+    "events-group-wired"
   ],
   "layer": "unit",
   "guides": [

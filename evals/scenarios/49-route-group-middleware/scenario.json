@@ -14,7 +14,8 @@
     "group-created",
     "group-middleware-attached",
     "all-admin-routes-grouped",
-    "no-deprecated-group-create"
+    "no-deprecated-group-create",
+    "routes-named-action"
   ],
   "layer": "unit",
   "guides": [

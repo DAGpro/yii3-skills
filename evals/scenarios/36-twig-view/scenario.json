@@ -16,7 +16,8 @@
     "render-targets-twig",
     "twig-renderer-configured",
     "no-manual-escaping",
-    "no-raw-filter"
+    "no-raw-filter",
+    "old-view-unreferenced"
   ],
   "layer": "unit",
   "guides": [

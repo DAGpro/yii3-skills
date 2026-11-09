@@ -1,4 +1,4 @@
-import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { check, ok, fail, read, filesMatching, methodBody } from '../../lib/checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
@@ -63,7 +63,10 @@ export default [
   check('migration-reversible', 'New migration in migrations/ with a non-empty down()', ({ changed }) => {
     const m = added(changed, /^migrations\/.*\.php$/);
     if (!m.length) return fail('no new migration');
-    const bad = m.filter((f) => !/function\s+down\s*\([^)]*\)[^{]*\{[^}]*\b(drop|delete)\w*\(/i.test(read(f.abs)));
+    const bad = m.filter((f) => {
+      const body = methodBody(read(f.abs), 'down');
+      return !body || !/\b(drop|delete)\w*\(/i.test(body);
+    });
     return bad.length ? fail(`down() empty or missing: ${bad.map((b) => b.path)}`) : ok(m.map((x) => x.path).join(', '));
   }),
 

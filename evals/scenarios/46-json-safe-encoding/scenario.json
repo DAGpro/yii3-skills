@@ -12,7 +12,10 @@
   "negativeMustFail": [
     "json-helper-used",
     "no-raw-json-functions",
-    "htmlencode-in-script-context"
+    "htmlencode-in-script-context",
+    "json-decode-helper-used",
+    "no-handrolled-escaping",
+    "transcript-mentions-safe-json"
   ],
   "layer": "unit",
   "guides": [

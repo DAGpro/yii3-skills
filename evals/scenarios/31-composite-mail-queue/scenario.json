@@ -17,7 +17,9 @@
     "enqueue-from-action",
     "no-direct-send-in-action",
     "dto-shape",
-    "message-referenced-by-action"
+    "message-referenced-by-action",
+    "dto-validates-payload",
+    "queue-registration-wired"
   ],
   "layer": "composite",
   "guides": [

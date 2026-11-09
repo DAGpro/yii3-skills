@@ -11,7 +11,8 @@ export function walk(dir) {
   for (const name of readdirSync(dir)) {
     // Dot-entries are tooling/agent state (.git, skill install dirs, ...) — never task work.
     // Exception: .ai-factory is the operational control center of AI Factory projects.
-    if ((name.startsWith('.') && name !== '.ai-factory') || SKIP.includes(name)) continue;
+    // Exception: .php-cs-fixer* are code style configuration files.
+    if ((name.startsWith('.') && name !== '.ai-factory' && !name.startsWith('.php-cs-fixer')) || SKIP.includes(name)) continue;
     const p = join(dir, name);
     if (statSync(p).isDirectory()) out.push(...walk(p));
     else out.push(p);
@@ -45,6 +46,25 @@ export function matchParen(text, openIdx) {
     else if (text[i] === ')' && --depth === 0) return i;
   }
   return -1;
+}
+
+/** Index of the closing brace for an opening one at openIdx (depth-counting heuristic). */
+export function matchBrace(text, openIdx) {
+  let depth = 0;
+  for (let i = openIdx; i < text.length; i++) {
+    if (text[i] === '{') depth++;
+    else if (text[i] === '}' && --depth === 0) return i;
+  }
+  return -1;
+}
+
+/** Body of `function <name>(...) { ... }` (brace-counting heuristic), or null. */
+export function methodBody(text, methodName) {
+  const m = new RegExp(`function\\s+${methodName}\\s*\\([^)]*\\)[^{]*\\{`, 'i').exec(text);
+  if (!m) return null;
+  const open = text.indexOf('{', m.index);
+  const close = matchBrace(text, open);
+  return close === -1 ? null : text.slice(open, close + 1);
 }
 
 export const check = (id, description, run, { required = true } = {}) => ({ id, description, required, run });

@@ -13,7 +13,10 @@
     "listener-implements-shape",
     "listener-registered",
     "logger-injected",
-    "dispatcher-reaches-errorcatcher"
+    "dispatcher-reaches-errorcatcher",
+    "events-group-wired",
+    "throwable-context-logged",
+    "transcript-mentions-event-logging"
   ],
   "layer": "unit",
   "guides": [

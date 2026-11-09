@@ -14,7 +14,8 @@
     "url-generator-injected",
     "generate-called-with-route-name",
     "no-hardcoded-urls",
-    "redirect-uses-generated"
+    "redirect-uses-generated",
+    "transcript-mentions-named-routes"
   ],
   "layer": "unit",
   "guides": [

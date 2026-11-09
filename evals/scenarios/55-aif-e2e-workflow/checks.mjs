@@ -1,4 +1,4 @@
-import { check, ok, fail, read, filesMatching, matchParen } from '../../lib/checks.mjs';
+import { check, ok, fail, read, filesMatching, matchParen, methodBody } from '../../lib/checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
@@ -25,7 +25,10 @@ export default [
   check('migration-reversible', 'New migration in migrations/ with reversible down()', ({ changed }) => {
     const m = added(changed, /^migrations\/.*\.php$/);
     if (!m.length) return fail('no new migration found');
-    const bad = m.filter((f) => !/function\s+down\s*\([^)]*\)[^{]*\{[^}]*\b(drop|delete)\w*\(/i.test(read(f.abs)));
+    const bad = m.filter((f) => {
+      const body = methodBody(read(f.abs), 'down');
+      return !body || !/\b(drop|delete)\w*\(/i.test(body);
+    });
     return bad.length ? fail(`down() empty or missing: ${bad.map((b) => b.path)}`) : ok(m.map((x) => x.path).join(', '));
   }),
 
@@ -53,17 +56,25 @@ export default [
   }),
 
   check('event-after-commit', 'Event dispatch() is called outside/after transaction returns', ({ changed }) => {
-    const handlers = php(changed).filter((c) => /->transaction\(/.test(read(c.abs)));
-    if (!handlers.length) return fail('no use case with transaction() found');
-    for (const h of handlers) {
-      const t = read(h.abs);
-      const open = t.indexOf('->transaction(') + '->transaction'.length;
-      const close = matchParen(t, open);
-      const d = t.search(/->dispatch\(/);
-      if (d === -1) return fail(`${h.path}: dispatch() not found`);
-      if (d < close) return fail(`${h.path}: dispatch() inside transaction()`);
+    const changedPhp = php(changed);
+    const hasDispatch = changedPhp.some((c) => /->dispatch\s*\(/.test(read(c.abs)));
+    if (!hasDispatch) return fail('no event dispatch() call found in changed files');
+    const offenders = [];
+    for (const c of changedPhp) {
+      const t = read(c.abs);
+      if (!/->dispatch\s*\(/.test(t)) continue;
+      const txRe = /->transaction\s*\(/g;
+      let m;
+      while ((m = txRe.exec(t)) !== null) {
+        const open = t.indexOf('(', m.index);
+        const close = matchParen(t, open);
+        if (close === -1) continue;
+        if (/->dispatch\s*\(/.test(t.slice(open, close))) {
+          offenders.push(`${c.path}: dispatch inside the transaction() closure`);
+        }
+      }
     }
-    return ok();
+    return offenders.length ? fail(offenders.join('; ')) : ok();
   }),
 
   check('aif-gate-result-emitted', 'Valid aif-gate-result JSON emitted with status: pass and empty blockers', ({ transcript }) => {

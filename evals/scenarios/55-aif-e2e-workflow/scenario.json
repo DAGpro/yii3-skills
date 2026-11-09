@@ -18,7 +18,10 @@
     "migration-reversible",
     "interface-bound",
     "route-mounted",
-    "aif-gate-result-emitted"
+    "aif-gate-result-emitted",
+    "plan-resolved",
+    "mission-state-tracker",
+    "event-after-commit"
   ],
   "layer": "composite",
   "guides": [
@@ -34,4 +37,3 @@
     "references/testing-core.md"
   ]
 }
-

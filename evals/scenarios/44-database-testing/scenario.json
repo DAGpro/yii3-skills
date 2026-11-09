@@ -14,7 +14,10 @@
   "negativeMustFail": [
     "sqlite-test-db-wired",
     "transactional-base-class",
-    "migrations-run-in-setup"
+    "migrations-run-in-setup",
+    "repository-test-extends-base",
+    "no-dev-db-in-tests",
+    "transcript-mentions-isolation"
   ],
   "layer": "unit",
   "guides": [

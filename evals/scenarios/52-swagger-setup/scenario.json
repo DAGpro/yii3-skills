@@ -16,7 +16,10 @@
     "source-paths-configured",
     "docs-routes-added",
     "actions-annotated",
-    "no-static-spec-file"
+    "no-static-spec-file",
+    "openapi-info-block",
+    "json-middleware-wired",
+    "assets-aliases-declared"
   ],
   "layer": "unit",
   "guides": [

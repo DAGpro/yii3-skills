@@ -14,7 +14,9 @@
     "rule-implements-interface",
     "handler-implements-interface",
     "rule-wired-in-form-model",
-    "no-inline-validation-in-action"
+    "no-inline-validation-in-action",
+    "rule-return-handler",
+    "transcript-mentions-rule-handler"
   ],
   "layer": "unit",
   "guides": [

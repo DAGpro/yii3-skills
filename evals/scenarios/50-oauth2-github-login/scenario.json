@@ -14,7 +14,10 @@
     "oauth-clients-params",
     "collection-used",
     "oauth-route-added",
-    "no-hand-rolled-oauth"
+    "no-hand-rolled-oauth",
+    "authclient-route-argument",
+    "auth-action-urls-configured",
+    "transcript-mentions-flow"
   ],
   "layer": "unit",
   "guides": [

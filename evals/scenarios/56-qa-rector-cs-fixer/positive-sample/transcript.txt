@@ -1,0 +1,5 @@
+Configured code quality and automated refactoring toolchain:
+- Installed yiisoft/code-style and rector/rector in require-dev.
+- Configured rector.php with SetList::YII_CORE targeting src/ and tests/.
+- Configured .php-cs-fixer.dist.php with Yiisoft\CodeStyle\ConfigBuilder and @Yiisoft/Core rule sets.
+- Registered composer scripts: rector, cs-fix, cs-check.

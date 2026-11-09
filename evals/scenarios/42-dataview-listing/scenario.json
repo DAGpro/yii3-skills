@@ -15,7 +15,8 @@
     "widget-config-present",
     "data-reader-wired",
     "data-source-paginated",
-    "no-manual-table-loop"
+    "no-manual-table-loop",
+    "transcript-mentions"
   ],
   "layer": "unit",
   "guides": [

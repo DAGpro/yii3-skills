@@ -13,7 +13,10 @@
   "negativeMustFail": [
     "friendly-interface-implemented",
     "solution-provided",
-    "no-internals-leak"
+    "no-internals-leak",
+    "friendly-name-provided",
+    "friendly-exception-thrown",
+    "transcript-mentions-friendly"
   ],
   "layer": "unit",
   "guides": [

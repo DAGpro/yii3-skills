@@ -1,0 +1,5 @@
+Configured Infection mutation testing:
+- Installed infection/infection and roave/infection-static-analysis-plugin in require-dev.
+- Configured config.allow-plugins with "infection/extension-installer": true.
+- Created canonical infection.json.dist targeting src/ with @default mutators and stderr text logging.
+- Configured min-msi threshold of 80% and added infection composer script.

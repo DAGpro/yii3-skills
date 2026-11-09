@@ -18,7 +18,10 @@
     "di-injected-not-newed",
     "login-via-service",
     "validation-before-verify",
-    "redirect-on-success"
+    "redirect-on-success",
+    "form-hydration-used",
+    "failure-422",
+    "transcript-mentions-flow"
   ],
   "layer": "composite",
   "guides": [

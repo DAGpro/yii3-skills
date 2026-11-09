@@ -13,7 +13,8 @@
   "negativeMustFail": [
     "conditional-rule-used",
     "coupon-requirement-conditional",
-    "no-inline-validation-in-action"
+    "no-inline-validation-in-action",
+    "transcript-mentions-conditional"
   ],
   "layer": "unit",
   "guides": [

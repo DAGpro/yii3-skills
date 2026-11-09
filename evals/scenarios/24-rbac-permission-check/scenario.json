@@ -13,7 +13,8 @@
   "negativeMustFail": [
     "can-called",
     "guard-before-delete",
-    "denied-403"
+    "denied-403",
+    "transcript-mentions-guard"
   ],
   "layer": "unit",
   "guides": [

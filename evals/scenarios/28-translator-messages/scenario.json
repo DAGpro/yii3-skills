@@ -16,7 +16,8 @@
     "translate-calls",
     "no-hardcoded-literals",
     "dictionary-ru",
-    "config-message-source"
+    "config-message-source",
+    "no-yii2"
   ],
   "layer": "unit",
   "guides": [

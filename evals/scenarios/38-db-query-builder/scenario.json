@@ -13,7 +13,9 @@
   "negativeMustFail": [
     "query-builder-used",
     "no-sql-concat",
-    "param-bound"
+    "param-bound",
+    "no-raw-query-concat",
+    "transcript-mentions-binding"
   ],
   "layer": "unit",
   "guides": [

@@ -3,8 +3,11 @@
 // runs syntax linting (php -l), composer validate, and test suites (phpunit).
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { existsSync, readdirSync, statSync, cpSync, symlinkSync } from 'node:fs';
+import { join, relative, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const evalsRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 let cachedToolchain = null;
 
@@ -307,7 +310,51 @@ export function validateComposerJson(workDir, toolchain = detectPhpToolchain()) 
   return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'composer.json validation failed').trim() };
 }
 
+/**
+ * Ensures a pre-warmed vendor directory is attached to the ephemeral work dir.
+ * Supports:
+ *   1. EVAL_PREWARMED_VENDOR / EVAL_VENDOR_DIR environment variable
+ *   2. evals/cache/vendor local repository cache
+ *   3. EVAL_AUTO_COMPOSER_INSTALL=1 (runs composer install if composer is detected)
+ */
+export function ensurePrewarmedVendor(workDir, toolchain = detectPhpToolchain()) {
+  const targetVendor = join(workDir, 'vendor');
+  if (existsSync(targetVendor)) {
+    return { vendorPresent: true, source: 'workDir/vendor' };
+  }
+
+  const envVendor = process.env.EVAL_PREWARMED_VENDOR || process.env.EVAL_VENDOR_DIR || null;
+  const defaultVendor = join(evalsRoot, 'cache', 'vendor');
+  const candidateVendor = (envVendor && existsSync(envVendor)) ? envVendor : (existsSync(defaultVendor) ? defaultVendor : null);
+
+  if (candidateVendor) {
+    try {
+      cpSync(candidateVendor, targetVendor, { recursive: true });
+      return { vendorPresent: true, source: candidateVendor };
+    } catch {
+      // Fallback: try symlink (or directory junction on Windows)
+      try {
+        symlinkSync(candidateVendor, targetVendor, 'junction');
+        return { vendorPresent: true, source: `${candidateVendor} (symlinked)` };
+      } catch {}
+    }
+  }
+
+  if (process.env.EVAL_AUTO_COMPOSER_INSTALL === '1' && toolchain.hasComposer) {
+    if (existsSync(join(workDir, 'composer.json'))) {
+      const res = execComposer(['install', '--prefer-dist', '--no-progress', '--no-interaction', '--quiet'], workDir, toolchain);
+      if (res && res.status === 0 && existsSync(targetVendor)) {
+        return { vendorPresent: true, source: 'composer install' };
+      }
+    }
+  }
+
+  return { vendorPresent: false, source: null };
+}
+
 export function runPhpUnit(workDir, options = {}, toolchain = detectPhpToolchain()) {
+  ensurePrewarmedVendor(workDir, toolchain);
+
   const hasConfig =
     existsSync(join(workDir, 'phpunit.xml')) ||
     existsSync(join(workDir, 'phpunit.dist.xml'));
@@ -400,6 +447,18 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
       required: compRequired,
       pass: comp.pass,
       evidence: comp.evidence,
+    });
+  }
+
+  // L5: Pre-warmed vendor layer
+  const vendorStatus = ensurePrewarmedVendor(workDir, toolchain);
+  if (vendorStatus.vendorPresent) {
+    results.push({
+      id: 'runtime-vendor-prewarmed',
+      description: 'Pre-warmed vendor runtime layer attachment',
+      required: false,
+      pass: true,
+      evidence: `Pre-warmed vendor layer attached (${vendorStatus.source})`,
     });
   }
 

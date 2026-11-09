@@ -1,0 +1,26 @@
+Mode: Feature
+
+Created migration, bound DI, and registered routes.
+
+```aif-gate-result
+{
+  "schema_version": 1,
+  "gate": "verify",
+  "status": "fail",
+  "blocking": true,
+  "blockers": [
+    {
+      "id": "DUP-001",
+      "severity": "error",
+      "summary": "Duplicate migration and route created"
+    }
+  ],
+  "affected_files": [
+    "src/Migration/M20261109130000_DuplicateOrderTable.php"
+  ],
+  "suggested_next": {
+    "command": "/aif-fix",
+    "reason": "Duplicates detected"
+  }
+}
+```

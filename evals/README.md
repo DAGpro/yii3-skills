@@ -132,6 +132,7 @@ export EVAL_ENABLE_RUNTIME=1
 - **Checks executed:**
   - `runtime-php-lint`: Verifies valid PHP 8.2+ syntax (`php -l`) on all generated or touched `.php` files.
   - `runtime-composer-validate`: Verifies `composer.json` syntax and schema.
+  - `runtime-vendor-prewarmed`: Automatically attaches a pre-warmed vendor layer from `EVAL_PREWARMED_VENDOR`, `evals/cache/vendor`, or automatic Composer install (`EVAL_AUTO_COMPOSER_INSTALL=1`) to enable offline `phpunit` execution.
   - `runtime-phpunit`: Executes PHPUnit tests when tests and configuration exist.
 
 ## Semantic LLM Judge Layer (`rubric.md`)
@@ -176,5 +177,4 @@ Rule: every agent failure found on a real project becomes a new scenario.
 
 ## Not implemented (TODO)
 
-- Automatic `composer install` inside ephemeral test sandboxes (syntax check, composer validate, and phpunit are implemented in `evals/lib/runtime.mjs`, but full package installation currently requires network or pre-warmed vendor).
 - Tokens/cost in `result.json` (depends on the agent adapter).

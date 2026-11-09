@@ -1,0 +1,30 @@
+{
+  "id": "66-aif-idempotent-recovery",
+  "title": "Idempotent workflow resumption and failure recovery without duplicating migrations, routes, or DI bindings",
+  "mode": "feature",
+  "tags": [
+    "idempotency",
+    "recovery",
+    "ai-factory",
+    "di",
+    "routes",
+    "migration",
+    "thin-action"
+  ],
+  "timeoutSec": 1500,
+  "negativeMustFail": [
+    "no-duplicate-migrations",
+    "no-duplicate-di-bindings",
+    "no-duplicate-routes"
+  ],
+  "layer": "composite",
+  "guides": [
+    "SKILL.md",
+    "references/aif-adapter.md",
+    "references/core-feature-recipes.md",
+    "references/core-di-and-config.md",
+    "references/http-routes-definition.md",
+    "references/http-actions-core.md",
+    "references/persistence-migrations-schema.md"
+  ]
+}

@@ -348,6 +348,11 @@ final class Card extends Widget
 **Invoking the Container Widget in a View Template:**
 ```php
 <?php
+
+declare(strict_types=1);
+
+use Yiisoft\Html\Html;
+
 Card::widget()->header('User Profile')->begin();
 ?>
     <p>This markup is buffered between begin() and end().</p>
@@ -390,6 +395,8 @@ Renders navigation breadcrumbs with Schema.org JSON-LD support:
 Caches template fragments in a PSR-16 cache:
 ```php
 <?php
+
+declare(strict_types=1);
 
 use Yiisoft\View\Cache\DynamicContent;
 use Yiisoft\Yii\Widgets\FragmentCache;

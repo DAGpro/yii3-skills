@@ -90,6 +90,8 @@ The repository is strictly divided into **Distributable Deliverables** and **Int
 
 | **Operational Nervous System** | `.ai-factory/` | Internal dev config & plans for *this* repo | **Working control center** of the target app (architecture, rules, plans) |
 
+| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (57 test cases), ground-truth symbol and arity verification, workflow contract tests | Not distributed to target applications |
+
 | **Authoring References** | `references/` *(130 repos)*, `PACKAGES.md` (package navigation index) | Offline source of truth for APIs and doc examples; the index telling agents which packages to study per task | `references/` does not exist; `PACKAGES.md` is not used by target agents |
 
 | **Internal Workflows & Rules** | `.agent/`, `.agents/`, `AGENTS.md`, `.docs/` (local spec references) | AI Factory workflow engines, constitution, and spec references for developing *this* repo | Target uses its own installed AI Factory skills/workflows |
@@ -116,9 +118,11 @@ yii3-skills/ (Current baseline structure — subject to evolution)
 
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
 
+├── evals/                # [Internal Quality Tooling] 57 benchmark test scenarios, runner, and baseline metrics
+
 ├── references/           # [Authoring Only] Offline clones of yiisoft/* packages
 
-├── scripts/              # [Internal Dev Tooling] Extension quality gate (validate.mjs, per quality_gates.validate_command)
+├── scripts/              # [Internal Dev Tooling] Quality gates (validate.mjs, check-symbols.mjs, test-aif-workflow.mjs)
 
 ├── AGENTS.md             # [Internal Dev Tooling, tracked] This constitution
 
@@ -174,6 +178,8 @@ Agents **MUST NOT** rely on pre-trained parametric memory, assumptions, or gener
 
 - **Zero Hallucination Policy:** Never invent method names, guess configuration keys, or assume Yii 2 constructs (`Yii::$app`, static facades). If an API or feature cannot be confirmed directly within `references/`, it MUST NOT be written into the documentation.
 
+- **Automated Grounding Gate (`scripts/check-symbols.mjs`):** All `Yiisoft\...` FQCNs, method signatures, parameter types, and call arities quoted across reference guides are statically verified against `references/` (or `evals/data/api-symbols-manifest.json` in CI). Unconfirmed symbols or argument arity mismatches fail the quality gate unless explicitly allowlisted with a documented reason.
+
 ### 4.3. References Directory Safety & Search Discipline
 
 - **Strictly Read-Only:** The `references/` directory (130 cloned packages) is strictly read-only authoring reference material. Agents must **NEVER** edit, delete, move, or stage (`git add`) any files within `references/`.
@@ -213,4 +219,19 @@ The Yii3 skill and the AI Factory workflows exchange results through explicit ar
 2. **Unverified API flag.** Any `yiisoft/*` API used without a verified installed signature (no `vendor/`, offline environment) is listed in the final report as "not verified against sources" and enters `aif-gate-result` as a warning, not a blocker — unless static analysis also fails on it.
 3. **Blocked tasks.** When the skill cannot proceed safely (unknown activation state, high-impact dependency decision without a user, mandatory offline install), it reports the task `blocked` with an explicit reason instead of silently choosing; the workflow surfaces the `blocked` status as-is.
 4. **Plan artifacts.** The workflow owns the plan location (`paths.plans` from the target `.ai-factory/config.yaml`); the skill never invents one in AI Factory mode. Plans follow the 6-phase contract, and the SKILL.md phase → stage table is the only mapping.
+
+### 4.8. Task Execution Modes Contract (Patch, Feature, Enterprise)
+
+Agents and workflows must strictly classify tasks into one of the three canonical execution modes (or respect `--mode=<patch|feature|enterprise>`):
+
+1. **Patch Mode (`Mode: Patch`):**
+   - **Scope:** Targeted surgical micro-tasks (isolated 1–3 files), single route addition, typo/config/DI adjustments, docs updates.
+   - **Discipline:** Executes touched stages only; bypasses domain layer overhead and schema migrations; skips extended Definition of Done.
+2. **Feature Mode (`Mode: Feature`) — Canonical Default:**
+   - **Scope:** Standard business features, CRUD endpoints, queries, data listings, and Active Record / Cycle flows (~80% of daily tasks).
+   - **Discipline:** Executes the full 7-stage Mission Workflow bottom-up (Migration → Domain/Interface → Repository → Use Case Handler → DTO & Thin Action → Wiring → Tests) and standard Definition of Done.
+   - **Anti-Collapsing Invariant:** Agents must **NEVER** collapse this bottom-up graph into 1–2 generic monolithic controller actions. Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero SQL, direct persistence, or transaction management in presentation.
+3. **Enterprise Mode (`Mode: Enterprise`):**
+   - **Scope:** Mission-critical, high-throughput systems, multi-step transactions, event-driven pipelines, auth/security cores, or modular architecture slices.
+   - **Discipline:** Full DDD graph: pure Aggregate Entities, Value Objects, Repository Interfaces + implementations, dedicated single-responsibility Use Case Handlers, domain events, and complete Production Readiness Gate.
 

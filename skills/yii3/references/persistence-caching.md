@@ -623,6 +623,9 @@ Template file `views/widgets/sidebar.php`:
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 /** @var array<string> $categories */
 /** @var string $userGreetingPlaceholder */
 ?>

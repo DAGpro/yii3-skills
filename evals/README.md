@@ -148,11 +148,12 @@ Rule: every agent failure found on a real project becomes a new scenario.
 
 - Judge over `rubric.md` (a model call; the judge must not know the with-skill/baseline mode).
 - Automatic `composer install` inside ephemeral test sandboxes (syntax check, composer validate, and phpunit are implemented in `evals/lib/runtime.mjs`, but full package installation currently requires network or pre-warmed vendor).
-- Guide coverage: 62+ of 80+ `skills/yii3/references/` guides have scenarios
-  (55 scenarios: unit, composite anchors 01/13/23/25/31, and AI Factory E2E workflow in `evals/scenarios/55-aif-e2e-workflow/`;
-  the light / drift / convention-conflict / no-vendor / negative-trigger scenarios
+- Guide coverage: 65+ of 80+ `skills/yii3/references/` guides have scenarios
+  (57 scenarios: unit, composite anchors 01/13/23/25/31, AI Factory E2E workflow in `evals/scenarios/55-aif-e2e-workflow/`,
+  QA Rector/CS-Fixer in `56-qa-rector-cs-fixer`, and mutation testing in `57-mutation-testing-infection`;
+  the patch / drift / convention-conflict / no-vendor / negative-trigger scenarios
   are implemented as 02/05/06/08/12; see `references/INDEX.md`). Still unbound: openapi index/views-twig/
   bootstrap5/bulma, runners & runtime variants (roadrunner/frankenphp),
-  state-resetter, package-catalog, alternative test runners (testo/codeception/
-  infection); continue per-guide coverage in batches on request.
+  state-resetter, package-catalog, alternative test runners (testo/codeception);
+  continue per-guide coverage in batches on request.
 - Tokens/cost in `result.json` (depends on the agent adapter).

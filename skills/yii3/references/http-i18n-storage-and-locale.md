@@ -44,6 +44,9 @@ array, immediately above each entry**):
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 return [
     /* Comment for message 1 */
     'test.id1' => 'Nachricht 1',

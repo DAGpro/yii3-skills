@@ -204,8 +204,10 @@ console.log('\n4. Validating Execution Bottom-Up & Mission State Tracker Contrac
 
 function validateMissionState(transcript) {
   const hasMissionStateHeading = /###\s*Mission State/i.test(transcript);
-  const hasMode = /Mode:?\*{0,2}\s*(Light|Full)/i.test(transcript);
-  const hasDecomposition = /Decomposition:?\*{0,2}\s*(Lightweight|Standard|Full)/i.test(transcript);
+  const hasMode = /Mode:?\*{0,2}\s*(Patch|Feature|Enterprise|Light|Full)/i.test(transcript);
+  const hasDecomposition = !/Mode:?\*{0,2}\s*(Patch|Feature|Enterprise)/i.test(transcript)
+    ? /Decomposition:?\*{0,2}\s*(Lightweight|Standard|Full)/i.test(transcript)
+    : true;
   const hasArchitecture = /Architecture:?\*{0,2}\s*[^\n\r]+/i.test(transcript);
   const hasStageProgress = /Stage\s*1.*Migration/i.test(transcript) && /Stage\s*6.*Config/i.test(transcript);
 

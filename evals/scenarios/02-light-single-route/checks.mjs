@@ -14,8 +14,8 @@ const routesText = (dir) =>
   filesMatching(dir, /^config\/.*routes.*\.php$/).map(read).join('\n');
 
 export default [
-  check('mode-light', 'The mode is printed as Light (single route = Light, not Full)', ({ transcript }) =>
-    /Mode:\s*Light/i.test(transcript) ? ok() : fail('no "Mode: Light" in the transcript')),
+  check('mode-light', 'The mode is printed as Patch or Light (single route = Patch/Light, not Feature/Enterprise)', ({ transcript }) =>
+    /Mode:\s*(Patch|Light)/i.test(transcript) ? ok() : fail('no "Mode: Patch" (or Light) in the transcript')),
 
   check('no-full-decomposition', 'No Full-mode machinery (migrations, repositories, use cases, DTOs) for a static single-route payload', ({ changed }) => {
     const overkill = changed.filter((c) =>

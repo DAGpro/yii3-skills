@@ -4,7 +4,7 @@
 > **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 Finale extension for the `yii3` skill: the checks that run only when they earn their cost.
-Load this guide at the Finale when the task is a **new feature**, or when it touches **runtime, auth, queues, or infrastructure** (runners, workers, error handling, logging, caching). Small Light-mode tasks (single route, config/DI edit, one-file refactor) stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.
+Load this guide at the Finale when the task is a **new feature**, or when it touches **runtime, auth, queues, or infrastructure** (runners, workers, error handling, logging, caching). Small Patch-mode tasks (single route, config/DI edit, one-file refactor) stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.
 
 ---
 
@@ -40,7 +40,7 @@ In addition to technical compilation and DI wiring, every delivered feature is e
 | Dimension | Scope & Verification Invariants | Grounding / Source |
 |---|---|---|
 | **1. Functional Correctness** | All requested business invariants and user flows are implemented. Proper HTTP status codes (`200`, `201`, `400`, `404`, `422`) or console `ExitCode` (`OK`, `UNSPECIFIED_ERROR`) returned. Validation errors surfaced cleanly in response bodies. | Feature specification, `references/http-actions-core.md`, `references/infra-commands.md` |
-| **2. Architectural Correctness** | Single-Action controllers implement `__invoke()` returning `ResponseInterface`; actions strictly remain thin (zero SQL or direct persistence in actions). Domain isolation aligns with the project's `/aif-architecture` pattern: **Explicit Architecture (Strict)** mandates pure domain aggregates isolated from persistence and explicit repository interfaces; **Structured Modules (Balanced)** organizes code by domain modules, allows Active Record or concrete repositories, and introduces interfaces at module boundaries or for swappable components; **Layered Architecture (Pragmatic)** allows application services directly consuming concrete repositories or Active Record models. Across all three patterns: Presentation remains decoupled from persistence (zero direct SQL or persistence in actions). Decomposition tier adheres to task scope (`Lightweight` / `Standard` / `Full`). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
+| **2. Architectural Correctness** | Single-Action controllers implement `__invoke()` returning `ResponseInterface`; actions strictly remain thin (zero SQL or direct persistence in actions). Domain isolation aligns with the project's `/aif-architecture` pattern: **Explicit Architecture (Strict)** mandates pure domain aggregates isolated from persistence and explicit repository interfaces; **Structured Modules (Balanced)** organizes code by domain modules, allows Active Record or concrete repositories, and introduces interfaces at module boundaries or for swappable components; **Layered Architecture (Pragmatic)** allows application services directly consuming concrete repositories or Active Record models. Across all three patterns: Presentation remains decoupled from persistence (zero direct SQL or persistence in actions). Execution mode adheres to task scope (`Patch` / `Feature` / `Enterprise`). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
 | **3. API & Signature Correctness** | Every invoked method, constructor, and parameter type verified against installed package sources in `vendor/yiisoft/*/src/`. Zero deprecated Yii2 facades or static helpers (`Yii::$app`, `ActiveRecord::find()`). Version-gated syntax respected. | `references/core-version-notes.md`, Mandatory Signature Lookup Protocol |
 | **4. Integration & Wiring Correctness** | Every new interface is DI-bound in `config/**/di/*.php`. Actions mapped in `config/**/routes.php`. Commands registered in `config/console/params.php`. Domain events subscribed in `config/**/events.php`. All packages declared in `composer.json`. | SKILL.md per-step wiring gates, `references/core-di-and-config.md` |
 | **5. Security & Safety** | Typed input DTOs validate all untrusted user data. Mutating HTML routes protected by `CsrfTokenMiddleware` preceded by `SessionMiddleware`. Route-level authentication and RBAC permissions (`CurrentUser::can()`) verified before execution. Views escape dynamic data via `Html::encode()`. | `references/http-validation-rules.md`, `references/http-state.md`, `references/infra-auth-and-rbac.md`, `references/http-views.md` |
@@ -131,8 +131,7 @@ Register shortcuts in `composer.json`:
 Bind the verification report to the Finale and extend it with added packages, changed config files, and the Production Readiness Gate status:
 
 ```
-Mode: <Light | Full>
-Decomposition: <Lightweight | Standard | Full>
+Mode: <Patch | Feature | Enterprise>
 Architecture: <source>
 fixes applied: <list | none>
 tests: pass | fail | not run | blocked (<reason>) | n/a
@@ -152,4 +151,4 @@ All automated gates and check lines strictly adhere to one unified 5-state vocab
 | **`fail`** / `FAIL` | Check was executed and detected concrete failures or defects. |
 | **`not run`** / `NOT RUN` | Check was not executed (e.g. offline environment, test runner or `vendor/` not present). Never conflate with `fail` or `blocked`. |
 | **`blocked (<reason>)`** / `BLOCKED` | Check could not run due to an environmental or external dependency blocker (e.g. missing database container, network boundary). |
-| **`n/a`** / `N/A` | Check is not applicable to the current task scope (e.g. Production Readiness Gate on Light-mode tasks). |
+| **`n/a`** / `N/A` | Check is not applicable to the current task scope (e.g. Production Readiness Gate on Patch- or Feature-mode tasks). |

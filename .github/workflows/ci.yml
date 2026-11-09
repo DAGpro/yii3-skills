@@ -25,7 +25,5 @@ jobs:
       - name: AI Factory workflow end-to-end contract test
         run: node scripts/test-aif-workflow.mjs
 
-      # scripts/check-symbols.mjs is intentionally NOT run here: it validates
-      # guide symbols against the offline reference clones under references/
-      # (68 MB, gitignored — local-only authoring material, see .gitignore).
-      # Run it locally before pushing guide changes: node scripts/check-symbols.mjs
+      - name: API symbols grounding check (manifest mode on CI, package clones locally)
+        run: node scripts/check-symbols.mjs

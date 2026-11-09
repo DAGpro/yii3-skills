@@ -12,7 +12,7 @@
 ---
 
 > **TL;DR:** Feature archetypes with complete artifact graphs (§1); authorization protocol (§3); persistence strategy selection (§4); layering & placement rules (§5); the Chain Integrity Checklist (§6); verified pitfalls & deprecations (§7).
-> **Read in full when:** decomposing a new business feature (Full mode) — §1 and §6 are the decomposition contract referenced by SKILL.md Mission Workflow.
+> **Read in full when:** decomposing a new business feature (Feature or Enterprise mode) — §1 and §6 are the decomposition contract referenced by SKILL.md Mission Workflow.
 
 ## Table of Contents
 - [1. Feature Archetypes](#1-feature-archetypes)
@@ -649,13 +649,13 @@ src/
 
 Every feature implementation must satisfy these architectural tiers and integrity invariants:
 
-### 6.1. Three-Tier Decomposition Intensity
+### 6.1. Three-Tier Mode Intensity
 
-| Tier | Applicable Scope | Graph Shape & Permitted Collapses | Mandatory Invariants |
+| Mode | Applicable Scope | Graph Shape & Architecture | Mandatory Invariants |
 |---|---|---|---|
-| **Lightweight** | Single route, config/DI edit, single bugfix, helper lookup. | Touched stages only. Domain layers and extended DoD skipped. | Per-step wiring gate for any touched interface/route/command. |
-| **Standard** | Standard business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). | Actions strictly thin (zero direct SQL/persistence). Domain abstractions collapse: Application Service / Use Case directly interacts with concrete repository without separate Domain Entity or Repository Interface pair (if project architecture permits). | Thin Actions, Input DTOs with validation rules, DB transactions in handlers, per-step wiring gates, unit/functional tests. |
-| **Full** | State-changing business processes, state machines, multi-step transactions, async queues/events, auth/security, infrastructure slices. | Complete bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Implementation, Use Case Command & Handler, Domain Events, Input DTOs, Actions, Tests. | All per-step wiring gates, post-commit event dispatch, full Production Readiness Gate. |
+| **Patch** | Single route, config/DI edit, single bugfix, helper lookup. | Touched stages only. Domain layers and extended DoD skipped. | Per-step wiring gate for any touched interface/route/command. |
+| **Feature** (Default) | Standard business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). | Actions strictly thin (zero direct SQL/persistence). Domain abstractions collapse: Application Service / Use Case directly interacts with concrete repository without separate Domain Entity or Repository Interface pair (if project architecture permits). | Thin Actions, Input DTOs with validation rules, DB transactions in handlers, per-step wiring gates, unit/functional tests. |
+| **Enterprise** | State-changing business processes, state machines, multi-step transactions, async queues/events, auth/security, infrastructure slices. | Complete bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Implementation, Use Case Command & Handler, Domain Events, Input DTOs, Actions, Tests. | All per-step wiring gates, post-commit event dispatch, full Production Readiness Gate. |
 
 ### 6.2. Mission State Tracker Schema
 
@@ -663,8 +663,7 @@ Before writing code, establish and print the explicit Mission State:
 
 ```markdown
 ### Mission State
-- **Mode:** <Light | Full>
-- **Decomposition:** <Lightweight | Standard (collapsed — reason) | Full>
+- **Mode:** <Patch | Feature | Enterprise>
 - **Architecture:** <project source | convention fallback>
 - **Guides:** <primary guides to load>
 - **Stage Progress:**

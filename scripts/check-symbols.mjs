@@ -12,13 +12,15 @@
 // Short-name pairs (`Result::isPropertyValid(`) are resolved via the FQCNs
 // mentioned in the same guide; ambiguous or unknown short names are skipped.
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const guidesDir = join(root, 'skills', 'yii3', 'references');
 const referencesDir = join(root, 'references');
+const manifestPath = join(root, 'evals', 'data', 'api-symbols-manifest.json');
+const shouldExportManifest = process.argv.includes('--export-manifest') || process.env.UPDATE_MANIFEST === '1';
 
 // Allowlist of known-good non-confirmable symbols. Each entry: { match, reason }.
 // `match` is a substring tested against "<FQCN or Class::method>@<guide-filename>".
@@ -164,19 +166,91 @@ function collectAncestors(src) {
   return out;
 }
 
-function classHasMethod(fqcn, method, classMap, depth = 0, visited = new Set()) {
-  if (visited.has(fqcn) || depth > 4) return false;
+// --- Method signature extraction & deep verification -----------------------
+
+function extractMethodSignature(src, methodName) {
+  // Matches function declaration, capturing visibility, static, name, params, and return type
+  const re = new RegExp(
+    `(?:(public|protected|private)\\s+)?(?:(static)\\s+)?function\\s+(?:(static)\\s+)?&?\\s*${methodName.replace(/\\$/g, '\\$')}\\s*\\(([^)]*)\\)(?:\\s*:\\s*([\\w\\\\|&?]+))?`,
+    'i'
+  );
+  const m = re.exec(src);
+  if (!m) return null;
+
+  const visibility = m[1] || 'public';
+  const isStatic = Boolean(m[2] || m[3]);
+  const rawParams = (m[4] || '').trim();
+  const returnType = m[5] || null;
+
+  const params = [];
+  if (rawParams.length > 0) {
+    let depth = 0;
+    let current = '';
+    for (const ch of rawParams) {
+      if (ch === '[' || ch === '(') depth++;
+      else if (ch === ']' || ch === ')') depth--;
+      else if (ch === ',' && depth === 0) {
+        if (current.trim()) params.push(current.trim());
+        current = '';
+        continue;
+      }
+      current += ch;
+    }
+    if (current.trim()) params.push(current.trim());
+  }
+
+  const parsedParams = params.map((p) => {
+    const isVariadic = p.includes('...');
+    const hasDefault = p.includes('=');
+    const isRequired = !hasDefault && !isVariadic;
+    const typeMatch = p.match(/^([\\w\\\\|&?]+)\s+(?:&)?(?:\.\.\.)?\$(\w+)/);
+    const type = typeMatch ? typeMatch[1] : null;
+    const nameMatch = p.match(/(?:\.\.\.)?\$(\w+)/);
+    const name = nameMatch ? nameMatch[1] : '';
+    return { name, type, isRequired, hasDefault, isVariadic };
+  });
+
+  const requiredCount = parsedParams.filter((p) => p.isRequired).length;
+  const isVariadic = parsedParams.some((p) => p.isVariadic);
+  const totalCount = isVariadic ? Infinity : parsedParams.length;
+
+  return {
+    visibility,
+    isStatic,
+    params: parsedParams,
+    requiredCount,
+    totalCount,
+    isVariadic,
+    returnType
+  };
+}
+
+function findMethodInfo(fqcn, method, classMap, depth = 0, visited = new Set()) {
+  if (visited.has(fqcn) || depth > 4) return null;
   visited.add(fqcn);
   const resolved = resolveFqcn(fqcn, classMap);
-  if (resolved.kind !== 'class') return false;
+  if (resolved.kind !== 'class') return null;
   const src = readText(resolved.path);
-  if (new RegExp(`function\\s+${method.replace(/\$/g, '\\$')}\\s*\\(`).test(src)) return true;
+
+  const sig = extractMethodSignature(src, method);
+  if (sig) return { ...sig, definedIn: fqcn, isConstOrCase: false };
+
   // constants and enum cases are also valid on the right side of `::`
-  if (new RegExp(`(const|case)\\s+${method}\\b`).test(src)) return true;
-  for (const parent of collectAncestors(src)) {
-    if (parent.startsWith('Yiisoft\\') && classHasMethod(parent, method, classMap, depth + 1, visited)) return true;
+  if (new RegExp(`(const|case)\\s+${method}\\b`).test(src)) {
+    return { isStatic: true, isConstOrCase: true, definedIn: fqcn, requiredCount: 0, totalCount: 0 };
   }
-  return false;
+
+  for (const parent of collectAncestors(src)) {
+    if (parent.startsWith('Yiisoft\\')) {
+      const parentInfo = findMethodInfo(parent, method, classMap, depth + 1, visited);
+      if (parentInfo) return parentInfo;
+    }
+  }
+  return null;
+}
+
+function classHasMethod(fqcn, method, classMap, depth = 0, visited = new Set()) {
+  return findMethodInfo(fqcn, method, classMap, depth, visited) !== null;
 }
 
 // --- Extraction -------------------------------------------------------------
@@ -201,6 +275,87 @@ function extractSymbols(text) {
   return { fqcnts, pairs };
 }
 
+function matchCallParen(text, openIdx) {
+  let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  for (let i = openIdx; i < text.length; i++) {
+    const ch = text[i];
+    const prev = i > 0 ? text[i - 1] : '';
+    if (inSingleQuote) {
+      if (ch === '\'' && prev !== '\\') inSingleQuote = false;
+      continue;
+    }
+    if (inDoubleQuote) {
+      if (ch === '"' && prev !== '\\') inDoubleQuote = false;
+      continue;
+    }
+    if (ch === '\'') { inSingleQuote = true; continue; }
+    if (ch === '"') { inDoubleQuote = true; continue; }
+    if (ch === '(') depth++;
+    else if (ch === ')' && --depth === 0) return i;
+  }
+  return -1;
+}
+
+function countCallArguments(callArgsText) {
+  let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let argCount = 0;
+  let hasChars = false;
+
+  for (let i = 0; i < callArgsText.length; i++) {
+    const ch = callArgsText[i];
+    const prev = i > 0 ? callArgsText[i - 1] : '';
+
+    if (inSingleQuote) {
+      if (ch === '\'' && prev !== '\\') inSingleQuote = false;
+      hasChars = true;
+      continue;
+    }
+    if (inDoubleQuote) {
+      if (ch === '"' && prev !== '\\') inDoubleQuote = false;
+      hasChars = true;
+      continue;
+    }
+    if (ch === '\'') {
+      inSingleQuote = true;
+      hasChars = true;
+      continue;
+    }
+    if (ch === '"') {
+      inDoubleQuote = true;
+      hasChars = true;
+      continue;
+    }
+
+    if (ch === '(' || ch === '[' || ch === '{') {
+      depth++;
+      hasChars = true;
+      continue;
+    }
+    if (ch === ')' || ch === ']' || ch === '}') {
+      depth--;
+      hasChars = true;
+      continue;
+    }
+
+    if (ch === ',' && depth === 0) {
+      if (hasChars) argCount++;
+      hasChars = false;
+      continue;
+    }
+
+    if (!/\s/.test(ch)) {
+      hasChars = true;
+    }
+  }
+
+  if (hasChars) argCount++;
+  return argCount;
+}
+
 // --- Main -------------------------------------------------------------------
 
 const classMap = buildClassMap();
@@ -211,9 +366,64 @@ let checkedPairs = 0;
 let skippedShortPairs = 0;
 let allowlisted = 0;
 
+let checkedSignatures = 0;
+const confirmedManifest = { fqcns: [], methods: {} };
+
 if (classMap.packages === 0) {
-  console.log('WARN [check-symbols] no package clones found under references/ — nothing to verify against.');
-  console.log('check-symbols: skipped (populate references/ per references/README.md)');
+  if (existsSync(manifestPath)) {
+    console.log('NOTE [check-symbols] running in manifest verification mode (CI environment without references/ clones).');
+    const manifest = JSON.parse(readText(manifestPath));
+    const knownFqcns = new Set(manifest.fqcns || []);
+    const knownMethods = manifest.methods || {};
+
+    for (const file of guideFiles) {
+      const text = readText(join(guidesDir, file));
+      const { fqcnts, pairs } = extractSymbols(text);
+      const imports = new Map();
+      const ambiguous = new Set();
+      for (const fq of fqcnts) {
+        const short = fq.split('\\').pop();
+        if (imports.has(short) && imports.get(short) !== fq) ambiguous.add(short);
+        else imports.set(short, fq);
+      }
+
+      for (const fq of fqcnts) {
+        const tag = `${fq}@${file}`;
+        if (ALLOWLIST.some((a) => tag.includes(a.match))) { allowlisted++; continue; }
+        if (!knownFqcns.has(fq) && !fq.endsWith('\\*')) {
+          const line = lineOf(text, text.indexOf(fq));
+          unconfirmed.push(`${file}:${line} — class not found in manifest — ${fq}`);
+        } else {
+          checkedClasses++;
+        }
+      }
+
+      for (const pair of pairs) {
+        let fqcn = null;
+        if (pair.fq) fqcn = pair.cls;
+        else if (imports.has(pair.cls) && !ambiguous.has(pair.cls)) fqcn = imports.get(pair.cls);
+        else { skippedShortPairs++; continue; }
+
+        const tag = `${fqcn}::${pair.method}()@${file}`;
+        if (ALLOWLIST.some((a) => tag.includes(a.match))) { allowlisted++; continue; }
+        checkedPairs++;
+        const methodKey = `${fqcn}::${pair.method}`;
+        if (!knownMethods[methodKey]) {
+          const line = lineOf(text, pair.index);
+          unconfirmed.push(`${file}:${line} — method not found in manifest — ${fqcn}::${pair.method}()`);
+        } else {
+          checkedSignatures++;
+        }
+      }
+    }
+
+    for (const line of unconfirmed) console.log(line);
+    console.log(`check-symbols (manifest mode): ${checkedClasses} FQCNs confirmed, ${checkedPairs} methods confirmed (${checkedSignatures} signatures verified), ${skippedShortPairs} short pairs skipped, ${allowlisted} allowlisted, ${unconfirmed.length} unconfirmed.`);
+    process.exit(unconfirmed.length > 0 ? 1 : 0);
+  }
+
+  console.log('WARN [check-symbols] no package clones found under references/ and no manifest found — nothing to verify against.');
+  console.log('check-symbols: skipped (populate references/ per references/README.md or generate manifest)');
   process.exit(0);
 }
 
@@ -242,6 +452,7 @@ for (const file of guideFiles) {
       unconfirmed.push(`${file}:${line} — class not found in references/*/src — ${fq}`);
     } else {
       checkedClasses++;
+      if (!confirmedManifest.fqcns.includes(fq)) confirmedManifest.fqcns.push(fq);
     }
     // kind === 'namespace' → namespace mention (e.g. `Yiisoft\Validator\Rule\*`), not a class
   }
@@ -259,13 +470,46 @@ for (const file of guideFiles) {
     const tag = `${fqcn}::${pair.method}()@${file}`;
     if (ALLOWLIST.some((a) => tag.includes(a.match))) { allowlisted++; continue; }
     checkedPairs++;
-    if (!classHasMethod(fqcn, pair.method, classMap)) {
+    const methodInfo = findMethodInfo(fqcn, pair.method, classMap);
+    if (!methodInfo) {
       const line = lineOf(text, pair.index);
       unconfirmed.push(`${file}:${line} — method not found (class or its Yiisoft ancestors) — ${fqcn}::${pair.method}()`);
+    } else {
+      checkedSignatures++;
+      confirmedManifest.methods[`${fqcn}::${pair.method}`] = {
+        isStatic: methodInfo.isStatic,
+        requiredCount: methodInfo.requiredCount,
+        totalCount: methodInfo.totalCount,
+        returnType: methodInfo.returnType,
+      };
+
+      // Deep verification: arity check if arguments are explicitly passed in call (and not a const/case)
+      if (!methodInfo.isConstOrCase) {
+        const openParen = text.indexOf('(', pair.index);
+        if (openParen !== -1) {
+          const closeParen = matchCallParen(text, openParen);
+          if (closeParen !== -1 && closeParen > openParen) {
+            const callArgs = text.slice(openParen + 1, closeParen).trim();
+            if (callArgs.length > 0 && !callArgs.includes('...')) {
+              const argCount = countCallArguments(callArgs);
+              if (argCount > methodInfo.totalCount && !methodInfo.isVariadic) {
+                const line = lineOf(text, pair.index);
+                unconfirmed.push(`${file}:${line} — arity mismatch: ${fqcn}::${pair.method}() accepts at most ${methodInfo.totalCount} arguments, but call provides ${argCount}`);
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
 
+if (shouldExportManifest && unconfirmed.length === 0) {
+  mkdirSync(dirname(manifestPath), { recursive: true });
+  writeFileSync(manifestPath, JSON.stringify(confirmedManifest, null, 2));
+  console.log(`[check-symbols] exported API symbols manifest with ${confirmedManifest.fqcns.length} classes and ${Object.keys(confirmedManifest.methods).length} signatures to ${manifestPath}`);
+}
+
 for (const line of unconfirmed) console.log(line);
-console.log(`check-symbols: ${classMap.packages} packages indexed, ${checkedClasses} FQCNs confirmed, ${checkedPairs} method pairs confirmed, ${skippedShortPairs} short pairs skipped (no unambiguous FQCN), ${allowlisted} allowlisted, ${unconfirmed.length} unconfirmed.`);
+console.log(`check-symbols: ${classMap.packages} packages indexed, ${checkedClasses} FQCNs confirmed, ${checkedPairs} method pairs confirmed (${checkedSignatures} signatures verified), ${skippedShortPairs} short pairs skipped (no unambiguous FQCN), ${allowlisted} allowlisted, ${unconfirmed.length} unconfirmed.`);
 process.exit(unconfirmed.length > 0 ? 1 : 0);

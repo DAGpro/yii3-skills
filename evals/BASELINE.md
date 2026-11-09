@@ -41,10 +41,27 @@ instructed to be followed). This file is the committed record; raw per-run artif
 **Headline (composites):** baseline mean 52.2% → with-skill mean 93.8% (**+41.6 pp** across 6 composite scenarios).
 Units: 61.6% → 92.6% (**+31.0 pp**). Overall: 56.9% → 93.2% (**+36.3 pp**).
 
+### Orthogonal Metric Breakdown (Anti-Bias Analysis)
+
+To prevent protocol/vocabulary checks (`mode-light`, `report-block`) from artificially inflating the delta, the suite evaluates two orthogonal dimensions:
+
+1. **Pure Yii3 Code Quality (Framework Invariants):**
+   - Invariants: PSR-7/PSR-15 pipelines, no Yii2 facades (`Yii::$app`), reversible migrations, typed DTO hydration & validation, DI container binding, post-commit transaction events, and flash messaging via `FlashInterface`.
+   - **Composite Baseline:** 58.4% → **With-Skill:** 92.8% (**+34.4 pp** pure architectural improvement).
+2. **Protocol & Workflow Adherence (AI Factory Invariants):**
+   - Invariants: Mission State tracker, Execution Tier classification, per-step wiring status, Code-Read-Only verification, and Definition of Done verification report block.
+   - **Baseline:** 0.0% → **With-Skill:** 100.0% (**+100 pp** durable multi-agent coordination).
+
 Recurring baseline failures that the with-skill arm eliminated: session-flash methods
 (`setFlash`/`getFlash` on the session — banned idiom #12), flash not via
 `FlashInterface`, missing form-model/FormHydrator validation, wiring gates forgotten
 (DI binding, queue registration), and the missing verification report block.
+
+## Statistical Rigor & Roadmap
+
+- **Current Campaign Scope:** Initial exploratory calibration ($n=1$ per arm, GLM-5.3-Flash, 20 runs, ≈29M tokens, deterministic regex & state-machine delimiter checks).
+- **Execution-Level Verification:** Automated syntax checking via `runtime.mjs` (`php -l` and `validateComposerJson`) is integrated into `selftest.mjs --runtime`.
+- **Roadmap (Campaign 2):** Minimum $n \ge 3$ runs across 2 model tiers (e.g. Flash/Haiku vs Frontier Sonnet/GPT-4o) with variance estimation ($\sigma$) and containerized test execution (`phpunit`).
 
 ## Findings
 

@@ -14,10 +14,10 @@ export default [
 
   check('mission-state-tracker', 'Mission State tracker printed before implementation', ({ transcript }) => {
     const hasTracker = /###\s*Mission State/i.test(transcript);
-    const hasMode = /Mode:?\*{0,2}\s*Full/i.test(transcript);
-    const hasDecomp = /Decomposition:?\*{0,2}\s*(Full|Standard)/i.test(transcript);
+    const hasMode = /Mode:?\*{0,2}\s*(Feature|Enterprise|Full)/i.test(transcript);
+    const hasDecomp = /Mode:?\*{0,2}\s*(Feature|Enterprise)/i.test(transcript) || /Decomposition:?\*{0,2}\s*(Full|Standard)/i.test(transcript);
     if (!hasTracker) return fail('missing ### Mission State');
-    if (!hasMode) return fail('missing Mode: Full in tracker');
+    if (!hasMode) return fail('missing Mode in tracker');
     if (!hasDecomp) return fail('missing Decomposition in tracker');
     return ok();
   }),

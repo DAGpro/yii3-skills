@@ -38,24 +38,87 @@ export function changedFiles(dir, base) {
 /** All files in the tree whose relative path matches the regex. */
 export const filesMatching = (dir, re) => walk(dir).filter((p) => re.test(rel(dir, p)));
 
-/** Index of the closing paren for an opening one at openIdx (ignores strings/comments: heuristic). */
-export function matchParen(text, openIdx) {
+/** State-machine based delimiter matcher ignoring PHP comments and string literals. */
+function matchDelimiter(text, openIdx, openChar, closeChar) {
   let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
   for (let i = openIdx; i < text.length; i++) {
-    if (text[i] === '(') depth++;
-    else if (text[i] === ')' && --depth === 0) return i;
+    const ch = text[i];
+    const prev = i > 0 ? text[i - 1] : '';
+    const next = i + 1 < text.length ? text[i + 1] : '';
+
+    if (inLineComment) {
+      if (ch === '\n') inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === '*' && next === '/') {
+        inBlockComment = false;
+        i++; // skip /
+      }
+      continue;
+    }
+
+    if (inSingleQuote) {
+      if (ch === '\'' && prev !== '\\') inSingleQuote = false;
+      continue;
+    }
+
+    if (inDoubleQuote) {
+      if (ch === '"' && prev !== '\\') inDoubleQuote = false;
+      continue;
+    }
+
+    // Check for comment starts
+    if (ch === '/' && next === '/') {
+      inLineComment = true;
+      i++;
+      continue;
+    }
+    if (ch === '#') {
+      inLineComment = true;
+      continue;
+    }
+    if (ch === '/' && next === '*') {
+      inBlockComment = true;
+      i++;
+      continue;
+    }
+
+    // Check for string starts
+    if (ch === '\'') {
+      inSingleQuote = true;
+      continue;
+    }
+    if (ch === '"') {
+      inDoubleQuote = true;
+      continue;
+    }
+
+    // Count delimiters
+    if (ch === openChar) {
+      depth++;
+    } else if (ch === closeChar) {
+      depth--;
+      if (depth === 0) return i;
+    }
   }
   return -1;
 }
 
-/** Index of the closing brace for an opening one at openIdx (depth-counting heuristic). */
+/** Index of the closing paren for an opening one at openIdx (respects PHP strings & comments). */
+export function matchParen(text, openIdx) {
+  return matchDelimiter(text, openIdx, '(', ')');
+}
+
+/** Index of the closing brace for an opening one at openIdx (respects PHP strings & comments). */
 export function matchBrace(text, openIdx) {
-  let depth = 0;
-  for (let i = openIdx; i < text.length; i++) {
-    if (text[i] === '{') depth++;
-    else if (text[i] === '}' && --depth === 0) return i;
-  }
-  return -1;
+  return matchDelimiter(text, openIdx, '{', '}');
 }
 
 /** Body of `function <name>(...) { ... }` (brace-counting heuristic), or null. */

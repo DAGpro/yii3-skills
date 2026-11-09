@@ -11,33 +11,32 @@ description: >-
   (yiisoft/hydrator) and validation (yiisoft/validator), forms and file uploads, OpenAPI
   docs (yiisoft/swagger), views and widgets (yiisoft/view, GridView), console commands
   (yiisoft/yii-console), queue jobs (yiisoft/queue), caching, events, error handling,
-  RBAC and auth (yiisoft/rbac, yiisoft/auth).
+  RBAC and auth (yiisoft/rbac, yiisoft/auth). Accepts --mode=patch|feature|enterprise.
 ---
 
 # Yii3 development
 
 End-to-end Yii 3 workflow: bootstrap the mission, implement bottom-up, verify to done.
 
-## Mode & Decomposition Selection
+## Mode Selection & User Override
 
-Pick and print the execution scope mode and architectural decomposition tier at Stage 0 before writing code.
-The 3 architectural decomposition tiers govern domain code depth, and directly determine the execution scope mode:
+Pick and print the execution mode at Stage 0 before writing code:
 
-- **1. Lightweight Tier (paired with `Mode: Light`):**
-  - **Scope & Use:** Targeted change (single route, config/DI edit, single bugfix, docs/guide lookup). Touched stages only; skips pure domain abstraction layers and skips extended Definition of Done (`references/core-definition-of-done.md`). Flow: Stage 0 → touched stages → touched Chain Integrity lines.
-- **2. Standard Tier (paired with `Mode: Full`):**
-  - **Scope & Use:** Regular business features or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). Runs full Mission Workflow and Finale with `references/core-definition-of-done.md`.
-  - **Collapsed Abstractions:** Actions strictly remain thin (HTTP validation, request hydration, response building only). Domain abstractions may collapse: an Application Service or single Use Case handler directly interacts with a concrete repository class without separate pure domain aggregate entities or repository interfaces — only when project architecture permits (Core rule 3). Actions never absorb direct SQL, persistence, or transactions. Mandatory invariants: thin Actions, Input DTOs + validation, DB transactions in handlers, per-step wiring gates, tests. The plan marks folded domain artifacts `collapsed — <reason>`. Print any collapse in the Stage 0 mission plan (`Decomposition: Standard (collapsed — <reason>)`).
-- **3. Full Tier (Domain-Driven, paired with `Mode: Full`):**
-  - **Scope & Use:** Complex domain processes, state machines, multi-step transactions, async jobs/events, auth/security, or infrastructure slices. Full DDD bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Impl, Use Case Handler, Events, Input DTOs, Actions, Tests, and Production Readiness Gate.
-- **Execution Scope Summary:**
-  - `Mode: Light` answers *how much workflow ceremony to run* for Lightweight tasks (touched stages only, no extended DoD).
-  - `Mode: Full` runs complete 7-stage workflow discipline and extended DoD for both Standard and Full decomposition tiers.
-- **Architectural Patterns** (maps 1:1 to `/aif-architecture` types, detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):
-  - **Explicit Architecture (`explicit*`, Strict Tier):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers.
-  - **Structured Modules (`structured*`, Balanced Tier):** feature modules, rich models with Active Record / Cycle permitted, interfaces at module boundaries.
-  - **Layered Architecture (`layers`, Pragmatic Tier):** horizontal technical layers, downward dependency flow, services directly consuming concrete repositories or Active Record models.
-  *Universal Invariant:* In all three patterns, Actions remain thin HTTP transport adapters; zero SQL, persistence, or transaction management in presentation.
+- **User Mode Override:** The user can explicitly select the mode via command flag `--mode=<patch|feature|enterprise>`, prompt flags (`+patch`, `+feature`, `+enterprise`), or natural language (e.g. "in patch mode", "enterprise mode"). When specified, the requested mode strictly takes precedence.
+- **Automatic Classification (Default: `Feature`):**
+  - **1. Patch Mode (`Mode: Patch`):**
+    - **Scope & Use:** Targeted micro-tasks (single route, isolated 1-file bugfix, pure config/DI edit, docs/guide lookup). Touched stages only; bypasses domain layer overhead and skips extended Definition of Done (`references/core-definition-of-done.md`). Flow: Stage 0 → touched stages → touched wiring lines.
+  - **2. Feature Mode (`Mode: Feature`) — Canonical Default:**
+    - **Scope & Use:** Regular business features, CRUD endpoints, data listings, and Active Record / Cycle flows (~80% of daily tasks). Runs full 7-stage Mission Workflow and standard Definition of Done.
+    - **Pragmatic Architecture:** Actions strictly remain thin HTTP transport adapters (hydration, validation, response building only). Business features follow standard layered idioms: Application Service, Action Handler, or Repository/ActiveRecord model without forced decoupled domain aggregate entities or interface indirection unless project architecture mandates them. Zero SQL, persistence, or transactions in presentation. Invariants: thin Actions, Input DTOs with Validator attributes, transactions in services/handlers, per-step wiring gates, tests.
+  - **3. Enterprise Mode (`Mode: Enterprise`):**
+    - **Scope & Use:** Complex business domains, multi-step transactions, state machines, async event pipelines, auth/security cores, or reusable infrastructure slices. Full DDD bottom-up graph: pure Aggregate Entities, Value Objects, Repository Interfaces + implementations, dedicated single-responsibility Use Case Handlers, domain events, and complete Production Readiness Gate.
+
+**Architectural Alignment (maps 1:1 to `/aif-architecture` types, detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):**
+- **Layered Architecture (`layers`, Pragmatic Tier):** standard horizontal layers, services/actions consuming repositories or Active Record models directly (Feature Mode).
+- **Structured Modules (`structured*`, Balanced Tier):** feature modules, rich models with Active Record / Cycle permitted, interfaces at module boundaries (Feature / Enterprise Mode).
+- **Explicit Architecture (`explicit*`, Strict Tier):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers (Enterprise Mode).
+*Universal Invariant:* In all three modes and architectures, Actions remain thin HTTP transport adapters; zero direct SQL, persistence, or transaction management in presentation.
 
 ## AI Factory Adapter (Workflow Integration)
 
@@ -61,13 +60,12 @@ Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 a
    - **(a) Plan task:** a plan artifact exists → execute the task per its phases (6-phase contract, see Mission Workflow). Resolution order, first match wins — print the chosen path: (1) a plan file explicitly passed by the user or the invoking command (argument, path, or link); (2) `PLAN.md` at the project root; (3) the most recently modified `*.md` under `docs/plans/` or `docs/plan/`. Nothing matched → treat as (b). An external workflow overrides this with its own plan location (see AI Factory Adapter).
    - **(b) Standalone feature** → full Mission Workflow route.
    - **(c) Bug / diagnostics:** root-cause checklist, in order: DI & configuration → input hydration & validation → routing & middleware → API signatures in `vendor/yiisoft/<pkg>/src`. No Yii2 facade workarounds.
-4. **Archetype, Mode & Decomposition:** classify the task via the Task & Intent Routing Matrix; print `Mode: Light` or `Mode: Full`, and `Decomposition: Lightweight`, `Standard`, or `Full`.
+4. **Mode Selection:** check for explicit user override (`--mode=patch|feature|enterprise`, `+patch`, `+feature`, `+enterprise`, or prompt instruction). If not specified, classify automatically via the Task & Intent Routing Matrix (default: `Feature`; 1-route/fix: `Patch`; complex domain core: `Enterprise`). Print `Mode: Feature` (or `Patch`, `Enterprise`).
 5. **Mission plan & state tracker** — print before implementing to establish the explicit mission state:
-   - For **Full / Standard** tasks:
+   - For **Feature (default) / Enterprise** tasks:
      ```markdown
      ### Mission State
-     - **Mode:** <Light | Full>
-     - **Decomposition:** <Lightweight | Standard (collapsed — reason) | Full>
+     - **Mode:** <Feature (default) | Enterprise>
      - **Architecture:** <project source | convention fallback>
      - **Guides to load:** <primary guides>
      - **Stage Progress:**
@@ -79,11 +77,10 @@ Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 a
        - Stage 6 [Config Audit & Wiring Gate]: pending
        - Stage 7 [Tests & Quality Gate]: pending
      ```
-   - For **Lightweight** tasks (single route, one-file fix, docs lookup):
+   - For **Patch** tasks (single route, one-file fix, docs lookup):
      ```markdown
      ### Mission State
-     - **Mode:** Light
-     - **Decomposition:** Lightweight
+     - **Mode:** Patch
      - **Architecture:** <project source | convention fallback>
      - **Touched Stages:** <e.g. Stage 5 (Action) | Stage 6 (Routes)>
      - **Wiring Gate:** pending
@@ -102,7 +99,7 @@ For business features execute the stages strictly bottom-up, wiring each artifac
 | 5 Input DTO & Single-Action Handler | Stage 5 |
 | 6 Wiring & Tests | Stages 6–7 |
 
-Never implement an Action or Controller before its Input DTO, Repository Interface, and Use Case exist — unless the decomposition-intensity rule above collapses the layers for a Standard-tier pass-through feature. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
+Never implement an Action or Controller before its Input DTO and service/repository dependencies exist. In Feature mode (canonical default), Actions depend directly on the application service, handler, or repository/model; in Enterprise mode, on repository interfaces and dedicated use case handlers. Actions never absorb persistence logic, SQL, or transaction boundaries. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
 
 **Mission State execution discipline:**
 1. Progress through active stages sequentially bottom-up.
@@ -133,11 +130,11 @@ Run after the last stage, in every mode.
 2. **Chain Integrity & Code-to-Reference Compliance Audit** (blocking):
    - **Chain Integrity:** all active stages in the Mission State tracker completed; every new `*Interface` bound in `config/**/di/*.php`; every Action has an active route in `config/**/routes.php`; every console command registered in `config/console/params.php`; every custom RBAC rule registered under `'yiisoft/rbac-rules-container'`; migrations exist for every new table / altered column with a reversible `down()`; side-effects wired in `config/**/events.php` and dispatched outside/after the DB transaction; nothing edited in `vendor/` or `config/.merge-plan.php`.
    - **Code-to-Reference Guide Compliance (per `references/core-definition-of-done.md` §1):** for every generated or modified file (Action, Middleware, Command, Migration, Job, Listener, Service, Repository, DTO, Config, View, or Test), resolve its governing guide in `references/` and audit the code directly against that guide's Anti-Pattern Matrix and idiomatic recipes. Zero forbidden anti-patterns permitted (e.g. actions: thin, no SQL/transactions; use cases: transactions, post-commit events; repositories: isolated SQL, typed returns; middlewares: PSR-15 pipeline order; queue jobs: message DTOs; DI: constructor injection without ContainerInterface; DTOs: validator attributes).
-3. **Runtime smoke** (optional, Full mode, `vendor/` present):
+3. **Runtime smoke** (optional, Feature or Enterprise mode, `vendor/` present):
    - Console (`yiisoft/yii-console` installed): `./yii list` must exit 0 and list newly registered commands (`references/infra-runners-and-runtimes.md`).
    - HTTP (adapt to project's installed runner): SAPI (`yiisoft/yii-runner-http`) boots without config errors and ping route responds; RoadRunner (`yiisoft/yii-runner-roadrunner`) or FrankenPHP (`yiisoft/yii-runner-frankenphp`) worker scripts initialize cleanly.
-4. **Load `references/core-definition-of-done.md`** for Full-mode tasks: Full decomposition tasks (stateful domain features, runtime, auth, queues, infrastructure slices) run all sections including the Production Readiness Gate (§3); Standard decomposition tasks (pass-through features, dictionaries) run Architecture & Quality Matrix checks (§1–§2) and report `production readiness gate: n/a`. Light mode stops here.
-5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §4, one line each: `Mode: <Light|Full>`, `Decomposition: <Lightweight|Standard|Full>`, `Architecture: <source>`, fixes applied, tests (`pass | fail | not run | blocked (<reason>) | n/a`), static analysis (`pass | fail | not run | blocked (<reason>) | n/a`), packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Light mode prints `n/a`. This block is part of the deliverable: a code summary without it is an incomplete task.
+4. **Load `references/core-definition-of-done.md`** for Feature & Enterprise tasks: Enterprise tasks (stateful domain features, runtime, auth, queues, infrastructure slices) run all sections including the Production Readiness Gate (§3); Feature tasks (business features, CRUD, dictionaries) run Architecture & Quality Matrix checks (§1–§2) and report `production readiness gate: n/a`. Patch mode stops here.
+5. **Final report** — the closing answer must end with the verification report block from `references/core-definition-of-done.md` §4, one line each: `Mode: <Patch|Feature|Enterprise>`, `Architecture: <source>`, fixes applied, tests (`pass | fail | not run | blocked (<reason>) | n/a`), static analysis (`pass | fail | not run | blocked (<reason>) | n/a`), packages added, config files changed, and `production readiness gate: pass | fail (<items>)` — Patch and Feature modes print `n/a` for production readiness gate. This block is part of the deliverable: a code summary without it is an incomplete task.
 
 ## Core rules
 

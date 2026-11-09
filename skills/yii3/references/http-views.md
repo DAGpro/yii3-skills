@@ -651,6 +651,8 @@ Blocks allow child views to inject markup into designated slots in the layout:
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Yiisoft\Yii\Widgets\Block;
 
 Block::widget()->id('sidebar')->begin();

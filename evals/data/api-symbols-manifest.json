@@ -1,0 +1,2817 @@
+{
+  "fqcns": [
+    "Yiisoft\\ActiveRecord\\ActiveRecord",
+    "Yiisoft\\Config\\Config",
+    "Yiisoft\\Yii\\Runner\\Http\\HttpApplicationRunner",
+    "Yiisoft\\Yii\\Runner\\Console\\ConsoleApplicationRunner",
+    "Yiisoft\\Yii\\Runner\\ApplicationRunner",
+    "Yiisoft\\Config\\ConfigPaths",
+    "Yiisoft\\Config\\Modifier\\RecursiveMerge",
+    "Yiisoft\\Config\\Modifier\\ReverseMerge",
+    "Yiisoft\\DataResponse\\Formatter\\HtmlDataResponseFormatter",
+    "Yiisoft\\DataResponse\\Formatter\\JsonDataResponseFormatter",
+    "Yiisoft\\DataResponse\\Formatter\\XmlDataResponseFormatter",
+    "Yiisoft\\DataResponse\\Formatter",
+    "Yiisoft\\DataResponse\\Middleware\\ContentNegotiator",
+    "Yiisoft\\DataResponse\\Formatter\\HtmlFormatter",
+    "Yiisoft\\Log\\Logger",
+    "Yiisoft\\Di\\StateResetter",
+    "Yiisoft\\CodeStyle\\ConfigBuilder",
+    "Yiisoft\\CodeStyle\\Rector\\SetList",
+    "Yiisoft\\Definitions\\ReferencesArray",
+    "Yiisoft\\Aliases\\AliasReference",
+    "Yiisoft\\Aliases\\Aliases",
+    "Yiisoft\\Di\\Container",
+    "Yiisoft\\Factory\\Factory",
+    "Yiisoft\\Definitions\\Exception\\CircularReferenceException",
+    "Yiisoft\\Di\\Reference\\TagReference",
+    "Yiisoft\\Definitions\\Reference",
+    "Yiisoft\\Di\\ServiceProviderInterface",
+    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareDispatcher",
+    "Yiisoft\\Di\\ContainerConfig",
+    "Yiisoft\\Di\\BuildingException",
+    "Yiisoft\\Injector\\Injector",
+    "Yiisoft\\Injector\\InvalidArgumentException",
+    "Yiisoft\\Factory\\NotFoundException",
+    "Yiisoft\\Factory\\StrictFactory",
+    "Yiisoft\\Definitions",
+    "Yiisoft\\Definitions\\DynamicReference",
+    "Yiisoft\\Definitions\\ValueDefinition",
+    "Yiisoft\\Injector\\MissingRequiredArgumentException",
+    "Yiisoft\\Di\\NotFoundException",
+    "Yiisoft\\Definitions\\Exception",
+    "Yiisoft\\Cache\\ArrayCache",
+    "Yiisoft\\Cache\\Cache",
+    "Yiisoft\\Cache\\CacheInterface",
+    "Yiisoft\\DataResponse\\Middleware\\ContentNegotiatorDataResponseMiddleware",
+    "Yiisoft\\Definitions\\CallableDefinition",
+    "Yiisoft\\Db\\Mysql\\Dsn",
+    "Yiisoft\\Db\\Connection\\ConnectionInterface",
+    "Yiisoft\\Db\\Mysql\\Connection",
+    "Yiisoft\\Db\\Mysql\\Driver",
+    "Yiisoft\\ActiveRecord\\Trait\\EventsTrait",
+    "Yiisoft\\ActiveRecord\\Event\\BeforeSave",
+    "Yiisoft\\ActiveRecord\\Event\\AbstractEvent",
+    "Yiisoft\\View\\Event\\View\\ViewEvent",
+    "Yiisoft\\View\\Event\\WebView\\WebViewEvent",
+    "Yiisoft\\User\\Event\\BeforeLogin",
+    "Yiisoft\\Mailer\\MailerInterface",
+    "Yiisoft\\Mailer\\Message",
+    "Yiisoft\\EventDispatcher\\Provider\\ListenerCollection",
+    "Yiisoft\\Yii\\Event\\ListenerConfigurationChecker",
+    "Yiisoft\\Config\\ConfigInterface",
+    "Yiisoft\\Yii\\Event\\InvalidEventConfigurationFormatException",
+    "Yiisoft\\Yii\\Event\\InvalidListenerConfigurationException",
+    "Yiisoft\\Yii\\Http\\Event\\ApplicationStartup",
+    "Yiisoft\\Yii\\Http\\Event\\BeforeRequest",
+    "Yiisoft\\Yii\\Http\\Event\\AfterRequest",
+    "Yiisoft\\Yii\\Http\\Event\\AfterEmit",
+    "Yiisoft\\Yii\\Http\\Event\\ApplicationShutdown",
+    "Yiisoft\\Yii\\Console\\Event\\ApplicationStartup",
+    "Yiisoft\\Yii\\Console\\Event\\ApplicationShutdown",
+    "Yiisoft\\Yii\\Console\\Application",
+    "Yiisoft\\Yii\\Console\\SymfonyEventDispatcher",
+    "Yiisoft\\User\\Event\\AfterLogin",
+    "Yiisoft\\User\\Event\\BeforeLogout",
+    "Yiisoft\\User\\Event\\AfterLogout",
+    "Yiisoft\\User\\CurrentUser",
+    "Yiisoft\\Auth\\IdentityInterface",
+    "Yiisoft\\Auth",
+    "Yiisoft\\User",
+    "Yiisoft\\Middleware\\Dispatcher\\Event\\BeforeMiddleware",
+    "Yiisoft\\Middleware\\Dispatcher\\Event\\AfterMiddleware",
+    "Yiisoft\\Mailer\\Event\\BeforeSend",
+    "Yiisoft\\Mailer\\Event\\AfterSend",
+    "Yiisoft\\ActiveRecord\\Event",
+    "Yiisoft\\ActiveRecord\\Event\\Handler\\AttributeHandlerProvider",
+    "Yiisoft\\ActiveRecord\\Event\\AfterSave",
+    "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider",
+    "Yiisoft\\EventDispatcher\\Dispatcher\\Dispatcher",
+    "Yiisoft\\EventDispatcher\\Provider\\Provider",
+    "Yiisoft\\View\\Event\\View\\BeforeRender",
+    "Yiisoft\\View\\Event\\View\\AfterRender",
+    "Yiisoft\\View\\Event\\View\\PageBegin",
+    "Yiisoft\\View\\Event\\View\\PageEnd",
+    "Yiisoft\\View\\WebView",
+    "Yiisoft\\View\\Event\\WebView",
+    "Yiisoft\\View\\Event\\View",
+    "Yiisoft\\View\\Event\\WebView\\BeforeRender",
+    "Yiisoft\\View\\Event\\WebView\\AfterRender",
+    "Yiisoft\\View\\Event\\WebView\\PageBegin",
+    "Yiisoft\\View\\Event\\WebView\\PageEnd",
+    "Yiisoft\\View\\Event\\WebView\\Head",
+    "Yiisoft\\View\\Event\\WebView\\BodyBegin",
+    "Yiisoft\\View\\Event\\WebView\\BodyEnd",
+    "Yiisoft\\EventDispatcher\\Dispatcher\\CompositeDispatcher",
+    "Yiisoft\\EventDispatcher\\Provider\\CompositeProvider",
+    "Yiisoft\\Yii\\Event\\CallableFactory",
+    "Yiisoft\\Yii\\Event\\ListenerCollectionFactory",
+    "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher",
+    "Yiisoft\\Test\\Support\\Container\\SimpleContainer",
+    "Yiisoft\\Validator\\Rule",
+    "Yiisoft\\Validator\\Rule\\Image\\Image",
+    "Yiisoft\\DataResponse\\ResponseFactory\\DataResponseFactoryInterface",
+    "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer",
+    "Yiisoft\\Yii\\DataView\\GridView\\GridView",
+    "Yiisoft\\Data\\Paginator\\OffsetPaginator",
+    "Yiisoft\\Data\\Reader\\DataReaderInterface",
+    "Yiisoft\\Data\\Reader\\Iterable\\IterableDataReader",
+    "Yiisoft\\Http\\Status",
+    "Yiisoft\\Queue\\QueueProducerInterface",
+    "Yiisoft\\Queue\\Message\\Handler\\HandlerInterface",
+    "Yiisoft\\Queue\\Message\\MessageInterface",
+    "Yiisoft\\Form\\Field",
+    "Yiisoft\\Html",
+    "Yiisoft\\Assets\\AssetBundle",
+    "Yiisoft\\Session\\SessionMiddleware",
+    "Yiisoft\\Csrf\\CsrfTokenMiddleware",
+    "Yiisoft\\Validator\\Label",
+    "Yiisoft\\FormModel\\FormModel",
+    "Yiisoft\\Validator\\Rule\\Length",
+    "Yiisoft\\Validator\\Rule\\Required",
+    "Yiisoft\\FormModel\\FormHydrator",
+    "Yiisoft\\FormModel\\Field",
+    "Yiisoft\\Html\\Html",
+    "Yiisoft\\Yii\\Console\\ExitCode",
+    "Yiisoft\\Input\\Http\\Attribute\\Data\\FromQuery",
+    "Yiisoft\\Input\\Http\\Attribute\\Data\\FromBody",
+    "Yiisoft\\Http\\Header",
+    "Yiisoft\\Router\\Group",
+    "Yiisoft\\Router\\Route\\Delete",
+    "Yiisoft\\Router\\Route\\Get",
+    "Yiisoft\\Router\\Route\\Post",
+    "Yiisoft\\Router\\Route\\Put",
+    "Yiisoft\\Validator\\Rule\\File",
+    "Yiisoft\\Security\\Random",
+    "Yiisoft\\Input\\Http\\Attribute\\Parameter\\UploadedFiles",
+    "Yiisoft\\Rbac\\RuleInterface",
+    "Yiisoft\\Rbac\\Item",
+    "Yiisoft\\Rbac\\RuleContext",
+    "Yiisoft\\Rbac",
+    "Yiisoft\\Db\\Query\\Query",
+    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer",
+    "Yiisoft\\DataResponse\\ResponseFactory",
+    "Yiisoft\\Csrf\\CsrfMiddleware",
+    "Yiisoft\\Input\\Http\\Attribute\\Data",
+    "Yiisoft\\Hydrator",
+    "Yiisoft\\Strings\\Inflector",
+    "Yiisoft\\Yii\\Console\\Command",
+    "Yiisoft\\FriendlyException\\FriendlyExceptionInterface",
+    "Yiisoft\\FriendlyException",
+    "Yiisoft\\Yii\\Console\\ErrorListener",
+    "Yiisoft\\VarDumper\\VarDumper",
+    "Yiisoft\\VarDumper\\Handler\\CompositeHandler",
+    "Yiisoft\\VarDumper\\Handler\\EchoHandler",
+    "Yiisoft\\VarDumper\\Handler\\StreamHandler",
+    "Yiisoft\\Classifier\\Classifier",
+    "Yiisoft\\NetworkUtilities\\IpHelper",
+    "Yiisoft\\NetworkUtilities\\DnsHelper",
+    "Yiisoft\\NetworkUtilities\\IpRanges",
+    "Yiisoft\\Requirements\\RequirementsChecker",
+    "Yiisoft\\Arrays\\ArrayHelper",
+    "Yiisoft\\Arrays\\ArraySorter",
+    "Yiisoft\\Arrays\\ArrayAccessTrait",
+    "Yiisoft\\Strings\\StringHelper",
+    "Yiisoft\\Strings\\NumericHelper",
+    "Yiisoft\\Strings\\CombinedRegexp",
+    "Yiisoft\\Strings\\MemoizedCombinedRegexp",
+    "Yiisoft\\Strings\\WildcardPattern",
+    "Yiisoft\\Json\\Json",
+    "Yiisoft\\Yii\\Middleware\\CorsAllowAll",
+    "Yiisoft\\HttpMiddleware\\CorsAllowAllMiddleware",
+    "Yiisoft\\HttpMiddleware\\ForceSecureConnection\\ForceSecureConnectionMiddleware",
+    "Yiisoft\\HttpMiddleware\\HttpCache\\HttpCacheMiddleware",
+    "Yiisoft\\HttpMiddleware\\TagRequest\\TagRequestMiddleware",
+    "Yiisoft\\ErrorHandler\\ThrowableResponseFactory",
+    "Yiisoft\\Cache\\Ttl",
+    "Yiisoft\\DataResponse\\DataResponseFactoryInterface",
+    "Yiisoft\\Router\\CurrentRoute",
+    "Yiisoft\\Request\\Body\\RequestBodyParser",
+    "Yiisoft\\ResponseDownload\\DownloadResponseFactory",
+    "Yiisoft\\Http\\ContentDispositionHeader",
+    "Yiisoft\\Data\\Paginator\\PageNotFoundException",
+    "Yiisoft\\Data\\Reader\\Sort",
+    "Yiisoft\\Data\\Paginator\\KeysetPaginator",
+    "Yiisoft\\Data\\Reader\\FilterInterface",
+    "Yiisoft\\Data\\Reader\\Filter",
+    "Yiisoft\\Access\\AccessCheckerInterface",
+    "Yiisoft\\Auth\\Jwt\\TokenFactoryInterface",
+    "Yiisoft\\Csrf\\CsrfTokenInterface",
+    "Yiisoft\\Cookies\\Cookie",
+    "Yiisoft\\Session\\Flash\\FlashInterface",
+    "Yiisoft\\Session\\SessionInterface",
+    "Yiisoft\\Translator\\TranslatorInterface",
+    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareFactory",
+    "Yiisoft\\Router\\Route",
+    "Yiisoft\\Router\\HydratorAttribute\\RouteArgument",
+    "Yiisoft\\Router\\RouteNotFoundException",
+    "Yiisoft\\Middleware\\Dispatcher\\CompositeParametersResolver",
+    "Yiisoft\\Middleware\\Dispatcher\\InvalidMiddlewareDefinitionException",
+    "Yiisoft\\ErrorHandler\\Middleware\\ErrorCatcher",
+    "Yiisoft\\Http\\Method",
+    "Yiisoft\\Router\\UrlGeneratorInterface",
+    "Yiisoft\\Hydrator\\HydratorInterface",
+    "Yiisoft\\Input\\Http\\AbstractInput",
+    "Yiisoft\\Validator\\ValidatorInterface",
+    "Yiisoft\\Validator\\Result",
+    "Yiisoft\\RequestProvider\\RequestProviderInterface",
+    "Yiisoft\\Validator\\Rule\\StringValue",
+    "Yiisoft\\Input\\Http\\RequestInputInterface",
+    "Yiisoft\\Input\\Http\\Attribute\\Parameter",
+    "Yiisoft\\Middleware\\Dispatcher\\ParametersResolverInterface",
+    "Yiisoft\\Input\\Http\\Attribute\\Parameter\\Query",
+    "Yiisoft\\Input\\Http\\InputValidationException",
+    "Yiisoft\\HttpMiddleware\\HttpCache\\ETag",
+    "Yiisoft\\HttpMiddleware\\HttpCache\\ETagProvider\\ETagProviderInterface",
+    "Yiisoft\\HttpMiddleware\\HttpCache\\LastModifiedProvider\\LastModifiedProviderInterface",
+    "Yiisoft\\HttpMiddleware\\HttpCache\\CacheControlProvider\\ConstantCacheControlProvider",
+    "Yiisoft\\HttpMiddleware\\HttpCache\\ETagValueNormalizer\\SuffixETagValueNormalizer",
+    "Yiisoft\\Yii\\DataView\\ListView\\ListView",
+    "Yiisoft\\Yii\\DataView\\DetailView\\DetailView",
+    "Yiisoft\\Yii\\DataView\\GridView\\Column\\ActionButton",
+    "Yiisoft\\Yii\\DataView\\GridView\\Column\\ActionColumn",
+    "Yiisoft\\Yii\\DataView\\GridView\\Column\\Base\\DataContext",
+    "Yiisoft\\Yii\\DataView\\GridView\\Column\\DataColumn",
+    "Yiisoft\\Yii\\DataView\\GridView\\Column\\SerialColumn",
+    "Yiisoft\\Yii\\DataView\\Filter\\Widget\\DropdownFilter",
+    "Yiisoft\\Yii\\DataView\\Filter\\Widget\\TextInputFilter",
+    "Yiisoft\\Yii\\DataView\\ListView\\ListItemContext",
+    "Yiisoft\\Yii\\DataView\\DetailView\\DataField",
+    "Yiisoft\\Yii\\DataView\\DetailView\\GetValueContext",
+    "Yiisoft\\Yii\\DataView\\Pagination\\OffsetPagination",
+    "Yiisoft\\Yii\\DataView\\PageSize\\SelectPageSize",
+    "Yiisoft\\Files\\FileHelper",
+    "Yiisoft\\Files\\PathMatcher\\PathPattern",
+    "Yiisoft\\Files\\PathMatcher",
+    "Yiisoft\\Files\\PathMatcher\\CompositeMatcher",
+    "Yiisoft\\Files\\PathMatcher\\PathMatcher",
+    "Yiisoft\\Validator\\Rule\\Each",
+    "Yiisoft\\FormModel\\Attribute\\Hint",
+    "Yiisoft\\FormModel\\Attribute\\Placeholder",
+    "Yiisoft\\FormModel\\Attribute\\Safe",
+    "Yiisoft\\Hydrator\\TypeCaster\\NullTypeCaster",
+    "Yiisoft\\Hydrator\\TypeCaster\\PhpNativeTypeCaster",
+    "Yiisoft\\FormModel\\NonArrayTypeCaster",
+    "Yiisoft\\Hydrator\\TypeCaster\\HydratorTypeCaster",
+    "Yiisoft\\Validator\\Rule\\Email",
+    "Yiisoft\\FormModel\\ValidationRulesEnricher",
+    "Yiisoft\\Hydrator\\TypeCaster\\EnumTypeCaster",
+    "Yiisoft\\Hydrator\\Hydrator",
+    "Yiisoft\\Hydrator\\TypeCaster\\CompositeTypeCaster",
+    "Yiisoft\\Hydrator\\Validator\\Attribute\\Validate",
+    "Yiisoft\\Validator\\Rule\\InEnum",
+    "Yiisoft\\Hydrator\\Validator\\ValidatingHydrator",
+    "Yiisoft\\Hydrator\\Attribute\\Parameter\\Collection",
+    "Yiisoft\\Hydrator\\Attribute\\Parameter\\Data",
+    "Yiisoft\\Hydrator\\Attribute\\Parameter\\ToDateTime",
+    "Yiisoft\\Hydrator\\Attribute\\Parameter\\Trim",
+    "Yiisoft\\Hydrator\\Validator\\ValidatedInputInterface",
+    "Yiisoft\\Hydrator\\Validator\\ValidatedInputTrait",
+    "Yiisoft\\Validator\\Rule\\Count",
+    "Yiisoft\\Validator\\Rule\\Integer",
+    "Yiisoft\\Validator\\Rule\\Number",
+    "Yiisoft\\Hydrator\\Attribute\\Parameter",
+    "Yiisoft\\Hydrator\\Attribute\\SkipHydration",
+    "Yiisoft\\Hydrator\\TypeCaster\\TypeCasterInterface",
+    "Yiisoft\\Hydrator\\Result",
+    "Yiisoft\\Hydrator\\TypeCaster\\TypeCastContext",
+    "Yiisoft\\Translator\\Message\\Php\\MessageSource",
+    "Yiisoft\\Translator\\Message\\Db\\MessageSource",
+    "Yiisoft\\Cache\\File\\FileCache",
+    "Yiisoft\\Translator\\Message\\Db\\DbSchemaManager",
+    "Yiisoft\\Db\\Constant\\ReferentialAction",
+    "Yiisoft\\Db\\Migration\\MigrationBuilder",
+    "Yiisoft\\Db\\Migration\\RevertibleMigrationInterface",
+    "Yiisoft\\Translator\\Message\\Gettext\\MessageSource",
+    "Yiisoft\\TranslatorExtractor\\CategorySource",
+    "Yiisoft\\Translator\\CategorySource",
+    "Yiisoft\\TranslatorExtractor\\Extractor",
+    "Yiisoft\\Translator\\Extractor",
+    "Yiisoft\\I18n\\Locale",
+    "Yiisoft\\I18n\\LocaleProvider",
+    "Yiisoft\\Yii\\Middleware\\Locale",
+    "Yiisoft\\Yii\\Middleware\\Event\\SetLocaleEvent",
+    "Yiisoft\\Translator\\Event\\MissingTranslationEvent",
+    "Yiisoft\\Translator\\Event\\MissingTranslationCategoryEvent",
+    "Yiisoft\\ErrorHandler\\Exception\\UserException",
+    "Yiisoft\\Translator\\InMemoryMessageSource",
+    "Yiisoft\\Translator\\SimpleMessageFormatter",
+    "Yiisoft\\Translator\\Translator",
+    "Yiisoft\\Translator\\IdMessageReader",
+    "Yiisoft\\Translator\\NullMessageFormatter",
+    "Yiisoft\\Translator\\IntlMessageFormatter",
+    "Yiisoft\\Translator\\MessageFormatterInterface",
+    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareStack",
+    "Yiisoft\\Auth\\Middleware\\Authentication",
+    "Yiisoft\\ErrorHandler\\Middleware\\ExceptionResponder",
+    "Yiisoft\\User\\Login\\LoginMiddleware",
+    "Yiisoft\\Session",
+    "Yiisoft\\Csrf\\CsrfTokenCookieMiddleware",
+    "Yiisoft\\Csrf\\CsrfHeaderMiddleware",
+    "Yiisoft\\RequestProvider\\RequestCatcherMiddleware",
+    "Yiisoft\\Router\\Middleware\\Router",
+    "Yiisoft\\DataResponse\\Middleware\\JsonDataResponseMiddleware",
+    "Yiisoft\\DataResponse\\Middleware\\XmlDataResponseMiddleware",
+    "Yiisoft\\Yii\\RateLimiter\\LimitRequestsMiddleware",
+    "Yiisoft\\HttpMiddleware\\ContentLengthMiddleware",
+    "Yiisoft\\Yii\\Middleware\\ForceSecureConnection",
+    "Yiisoft\\Yii\\Middleware\\HttpCache",
+    "Yiisoft\\HttpMiddleware\\HeadRequestMiddleware",
+    "Yiisoft\\HttpMiddleware\\RedirectMiddleware",
+    "Yiisoft\\Yii\\Middleware\\TagRequest",
+    "Yiisoft\\Cookies\\CookieMiddleware",
+    "Yiisoft\\Yii\\Middleware\\IpFilter",
+    "Yiisoft\\Yii\\Middleware\\Subfolder",
+    "Yiisoft\\ProxyMiddleware\\TrustedHostsNetworkResolver",
+    "Yiisoft\\Session\\SessionException",
+    "Yiisoft\\Yii\\Http\\Application",
+    "Yiisoft\\DataResponse\\Formatter\\JsonFormatter",
+    "Yiisoft\\DataResponse\\Formatter\\XmlFormatter",
+    "Yiisoft\\Yii\\RateLimiter\\Counter",
+    "Yiisoft\\Yii\\RateLimiter\\CounterInterface",
+    "Yiisoft\\Yii\\RateLimiter\\Policy\\LimitPerIp",
+    "Yiisoft\\Yii\\RateLimiter\\Policy\\LimitPolicyInterface",
+    "Yiisoft\\Yii\\RateLimiter\\Storage\\SimpleCacheStorage",
+    "Yiisoft\\Yii\\RateLimiter\\Storage\\StorageInterface",
+    "Yiisoft\\Yii\\RateLimiter\\Policy\\LimitCallback",
+    "Yiisoft\\Definitions\\ArrayDefinition",
+    "Yiisoft\\Validator\\Rule\\Regex",
+    "Yiisoft\\Yii\\Swagger\\Action\\SwaggerJson",
+    "Yiisoft\\Yii\\Swagger\\Action\\SwaggerUi",
+    "Yiisoft\\Yii\\Swagger\\Service\\SwaggerService",
+    "Yiisoft\\Yii\\Swagger\\Asset\\SwaggerUiAsset",
+    "Yiisoft\\Yii\\Swagger\\Formatter\\ParamsFormatter",
+    "Yiisoft\\Assets\\AssetPublisher",
+    "Yiisoft\\DataResponse\\Middleware\\FormatDataResponseAsJson",
+    "Yiisoft\\View\\Theme",
+    "Yiisoft\\Assets\\AssetManager",
+    "Yiisoft\\Router\\RouteCollectorInterface",
+    "Yiisoft\\Router\\Route\\Patch",
+    "Yiisoft\\Router\\Route\\Head",
+    "Yiisoft\\Router\\Route\\Options",
+    "Yiisoft\\Router\\ComposerAttributeCollector\\AttributeRoutesProvider",
+    "Yiisoft\\Router\\FastRoute\\UrlMatcher",
+    "Yiisoft\\Router\\UrlMatcherInterface",
+    "Yiisoft\\DataResponse\\Middleware\\DataResponseMiddleware",
+    "Yiisoft\\FileRouter\\FileRouter",
+    "Yiisoft\\Router\\FastRoute\\UrlGenerator",
+    "Yiisoft\\Yii\\Middleware\\Redirect",
+    "Yiisoft\\Router\\RouteCollector",
+    "Yiisoft\\DataResponse\\Middleware\\FormatDataResponse",
+    "Yiisoft\\Security\\Mac",
+    "Yiisoft\\Session\\Session",
+    "Yiisoft\\Session\\NullSession",
+    "Yiisoft\\Session\\Flash\\Flash",
+    "Yiisoft\\Cookies\\CookieCollection",
+    "Yiisoft\\Cookies\\CookieSigner",
+    "Yiisoft\\Cookies\\CookieEncryptor",
+    "Yiisoft\\Security\\Crypt",
+    "Yiisoft\\Csrf\\MaskedCsrfToken",
+    "Yiisoft\\Security\\TokenMask",
+    "Yiisoft\\Csrf\\Synchronizer\\SynchronizerCsrfToken",
+    "Yiisoft\\Csrf\\Hmac\\HmacCsrfToken",
+    "Yiisoft\\Csrf\\StubCsrfToken",
+    "Yiisoft\\Validator\\Rule\\Image",
+    "Yiisoft\\Validator\\Rule\\Image\\ImageAspectRatio",
+    "Yiisoft\\Validator\\Rule\\AbstractCompare",
+    "Yiisoft\\Validator\\Rule\\Equal",
+    "Yiisoft\\Validator\\Rule\\FilledAtLeast",
+    "Yiisoft\\Validator\\Rule\\FilledOnlyOneOf",
+    "Yiisoft\\Validator\\Validator",
+    "Yiisoft\\Validator\\PropertyTranslator\\NullPropertyTranslator",
+    "Yiisoft\\Validator\\PropertyTranslator\\ArrayPropertyTranslator",
+    "Yiisoft\\Validator\\PropertyTranslator\\TranslatorPropertyTranslator",
+    "Yiisoft\\Validator\\RuleInterface",
+    "Yiisoft\\Validator\\RuleHandlerInterface",
+    "Yiisoft\\Validator\\SkipOnEmptyInterface",
+    "Yiisoft\\Validator\\Rule\\Trait\\SkipOnEmptyTrait",
+    "Yiisoft\\Validator\\SkipOnErrorInterface",
+    "Yiisoft\\Validator\\Rule\\Trait\\SkipOnErrorTrait",
+    "Yiisoft\\Validator\\WhenInterface",
+    "Yiisoft\\Validator\\Rule\\Trait\\WhenTrait",
+    "Yiisoft\\Validator\\DumpedRuleInterface",
+    "Yiisoft\\Validator\\Exception\\UnexpectedRuleException",
+    "Yiisoft\\Validator\\ValidationContext",
+    "Yiisoft\\Validator\\RuleHandlerResolver\\SimpleRuleHandlerContainer",
+    "Yiisoft\\Validator\\RuleHandlerResolver\\RuleHandlerContainer",
+    "Yiisoft\\Validator\\RuleHandlerResolverInterface",
+    "Yiisoft\\Validator\\Rule\\Callback",
+    "Yiisoft\\Validator\\Rule\\Composite",
+    "Yiisoft\\Validator\\DataSet\\ArrayDataSet",
+    "Yiisoft\\Form\\PureField\\Field",
+    "Yiisoft\\Validator",
+    "Yiisoft\\Validator\\Helper\\DataSetNormalizer",
+    "Yiisoft\\Validator\\RulesProviderInterface",
+    "Yiisoft\\Validator\\PostValidationHookInterface",
+    "Yiisoft\\Validator\\Error",
+    "Yiisoft\\Validator\\Rule\\BooleanValue",
+    "Yiisoft\\Validator\\Rule\\TrueValue",
+    "Yiisoft\\Validator\\Rule\\Type\\StringType",
+    "Yiisoft\\Validator\\Rule\\Type\\IntegerType",
+    "Yiisoft\\Validator\\Rule\\Type\\FloatType",
+    "Yiisoft\\Validator\\Rule\\Type\\BooleanType",
+    "Yiisoft\\Validator\\Rule\\Url",
+    "Yiisoft\\Validator\\Rule\\Uuid",
+    "Yiisoft\\Validator\\Rule\\Ip",
+    "Yiisoft\\Validator\\Rule\\Json",
+    "Yiisoft\\Validator\\Rule\\Compare",
+    "Yiisoft\\Validator\\Rule\\NotEqual",
+    "Yiisoft\\Validator\\Rule\\GreaterThan",
+    "Yiisoft\\Validator\\Rule\\GreaterThanOrEqual",
+    "Yiisoft\\Validator\\Rule\\LessThan",
+    "Yiisoft\\Validator\\Rule\\LessThanOrEqual",
+    "Yiisoft\\Validator\\Rule\\In",
+    "Yiisoft\\Validator\\Rule\\Subset",
+    "Yiisoft\\Validator\\Rule\\UniqueIterable",
+    "Yiisoft\\Validator\\Rule\\Nested",
+    "Yiisoft\\Validator\\Rule\\StopOnError",
+    "Yiisoft\\Validator\\Rule\\AnyRule",
+    "Yiisoft\\Validator\\Rule\\Date\\Date",
+    "Yiisoft\\Validator\\Rule\\Date\\DateTime",
+    "Yiisoft\\Validator\\Rule\\Date\\Time",
+    "Yiisoft\\Validator\\RulesProvider\\AttributesRulesProvider",
+    "Yiisoft\\Validator\\Helper\\RulesNormalizer",
+    "Yiisoft\\Validator\\Rule\\Trait",
+    "Yiisoft\\Validator\\EmptyCondition",
+    "Yiisoft\\Bootstrap5\\Alert",
+    "Yiisoft\\Bootstrap5\\AlertVariant",
+    "Yiisoft\\Bootstrap5\\Nav",
+    "Yiisoft\\Bootstrap5\\NavLink",
+    "Yiisoft\\Bootstrap5\\NavStyle",
+    "Yiisoft\\Bootstrap5",
+    "Yiisoft\\Bootstrap5\\Assets",
+    "Yiisoft\\Bootstrap5\\Assets\\BootstrapAsset",
+    "Yiisoft\\Bootstrap5\\Assets\\BootstrapCdnAsset",
+    "Yiisoft\\Form\\Theme\\ThemePath",
+    "Yiisoft\\Yii\\Bulma\\ProgressBar",
+    "Yiisoft\\Yii\\Bulma\\Tabs",
+    "Yiisoft\\Yii\\Bulma",
+    "Yiisoft\\Yii\\Bulma\\Asset\\DropdownAsset",
+    "Yiisoft\\Yii\\Bulma\\Asset\\NavBarAsset",
+    "Yiisoft\\View\\TemplateRendererInterface",
+    "Yiisoft\\View\\Twig\\TwigTemplateRenderer",
+    "Yiisoft\\Yii\\Twig\\Extension\\WebViewExtension",
+    "Yiisoft\\Yii\\View\\Renderer\\ViewResponse",
+    "Yiisoft\\Html\\Tag\\A",
+    "Yiisoft\\Html\\Tag\\Link",
+    "Yiisoft\\Html\\Tag\\Base\\Tag",
+    "Yiisoft\\Html\\NoEncode",
+    "Yiisoft\\Html\\Tag\\Img",
+    "Yiisoft\\Html\\Tag\\Div",
+    "Yiisoft\\Html\\Tag\\Span",
+    "Yiisoft\\Html\\Tag\\P",
+    "Yiisoft\\Html\\Tag\\CustomTag",
+    "Yiisoft\\Html\\Tag\\Ul",
+    "Yiisoft\\Html\\Tag\\Ol",
+    "Yiisoft\\Html\\Tag\\Li",
+    "Yiisoft\\Html\\Tag\\Form",
+    "Yiisoft\\Html\\IdGenerator",
+    "Yiisoft\\Yii\\View\\Renderer\\Csrf",
+    "Yiisoft\\Yii\\Widgets\\Alert",
+    "Yiisoft\\Yii\\View\\Renderer",
+    "Yiisoft\\Html\\Tag\\Meta",
+    "Yiisoft\\Yii\\View\\Renderer\\CommonParametersInjectionInterface",
+    "Yiisoft\\Yii\\View\\Renderer\\LayoutParametersInjectionInterface",
+    "Yiisoft\\Yii\\View\\Renderer\\LinkTagsInjectionInterface",
+    "Yiisoft\\Yii\\View\\Renderer\\MetaTagsInjectionInterface",
+    "Yiisoft\\Yii\\View\\Renderer\\CsrfViewInjection",
+    "Yiisoft\\Yii\\View\\Renderer\\LayoutSpecificInjections",
+    "Yiisoft\\Yii\\Widgets\\Block",
+    "Yiisoft\\Yii\\Widgets\\ContentDecorator",
+    "Yiisoft\\Assets",
+    "Yiisoft\\Assets\\AssetConverter",
+    "Yiisoft\\Widget\\Widget",
+    "Yiisoft\\Widget\\WidgetFactory",
+    "Yiisoft\\Widget\\NotInstantiableException",
+    "Yiisoft\\Yii\\Widgets\\Breadcrumbs",
+    "Yiisoft\\View\\Cache\\DynamicContent",
+    "Yiisoft\\Yii\\Widgets\\FragmentCache",
+    "Yiisoft\\Yii\\Widgets\\Menu",
+    "Yiisoft\\Yii\\Widgets\\Dropdown",
+    "Yiisoft\\User\\Method\\WebAuth",
+    "Yiisoft\\User\\Login\\Cookie\\CookieLogin",
+    "Yiisoft\\Auth\\IdentityRepositoryInterface",
+    "Yiisoft\\Auth\\IdentityWithTokenRepositoryInterface",
+    "Yiisoft\\Auth\\AuthenticatorInterface",
+    "Yiisoft\\Auth\\AuthenticatorWithChallengeInterface",
+    "Yiisoft\\Auth\\Method\\HttpBearer",
+    "Yiisoft\\Auth\\Jwt\\JwtMethod",
+    "Yiisoft\\Auth\\Jwt\\TokenRepositoryInterface",
+    "Yiisoft\\Yii\\AuthClient\\Collection",
+    "Yiisoft\\Yii\\AuthClient\\AuthAction",
+    "Yiisoft\\Yii\\AuthClient\\Client\\OpenIdConnect",
+    "Yiisoft\\Yii\\AuthClient\\Widget\\AuthChoice",
+    "Yiisoft\\Security\\PasswordHasher",
+    "Yiisoft\\Rbac\\ManagerInterface",
+    "Yiisoft\\Rbac\\Role",
+    "Yiisoft\\Rbac\\Permission",
+    "Yiisoft\\Rbac\\CompositeRule",
+    "Yiisoft\\Rbac\\Db\\ItemsStorage",
+    "Yiisoft\\Rbac\\Db\\AssignmentsStorage",
+    "Yiisoft\\Rbac\\Db\\TransactionalManagerDecorator",
+    "Yiisoft\\Rbac\\Php\\ItemsStorage",
+    "Yiisoft\\Rbac\\Php\\AssignmentsStorage",
+    "Yiisoft\\Rbac\\Php\\ConcurrentItemsStorageDecorator",
+    "Yiisoft\\Rbac\\Php\\ConcurrentAssignmentsStorageDecorator",
+    "Yiisoft\\Rbac\\Cycle\\ItemsStorage",
+    "Yiisoft\\Rbac\\Cycle\\AssignmentsStorage",
+    "Yiisoft\\Rbac\\Cycle\\TransactionalManagerDecorator",
+    "Yiisoft\\Rbac\\Rules\\Container\\RulesContainer",
+    "Yiisoft\\User\\Login\\Cookie\\CookieLoginIdentityInterface",
+    "Yiisoft\\User\\UserAuth",
+    "Yiisoft\\Rbac\\Manager",
+    "Yiisoft\\Rbac\\RuleFactoryInterface",
+    "Yiisoft\\Yii\\AuthClient\\Client",
+    "Yiisoft\\Yii\\AuthClient\\OAuth2",
+    "Yiisoft\\Yii\\AuthClient\\AuthClientInterface",
+    "Yiisoft\\Yii\\AuthClient\\Client\\Google",
+    "Yiisoft\\Yii\\AuthClient\\Client\\GitHub",
+    "Yiisoft\\Yii\\Console\\CommandLoader",
+    "Yiisoft\\Yii\\Console\\Command\\Serve",
+    "Yiisoft\\Yii\\Console\\Command\\Game",
+    "Yiisoft\\ErrorHandler\\Event\\ApplicationError",
+    "Yiisoft\\ErrorHandler\\CompositeException",
+    "Yiisoft\\Yii\\Sentry\\SentryMiddleware",
+    "Yiisoft\\ErrorHandler\\Exception\\ErrorException",
+    "Yiisoft\\Yii\\Sentry\\SentryConsoleHandler",
+    "Yiisoft\\ErrorHandler\\ErrorHandler",
+    "Yiisoft\\ErrorHandler\\ThrowableRendererInterface",
+    "Yiisoft\\ErrorHandler\\Renderer\\HtmlRenderer",
+    "Yiisoft\\ErrorHandler\\ThrowableResponseFactoryInterface",
+    "Yiisoft\\ErrorHandler\\ErrorData",
+    "Yiisoft\\ErrorHandler\\HeadersProvider",
+    "Yiisoft\\ErrorHandler\\RendererProvider\\ContentTypeRendererProvider",
+    "Yiisoft\\Yii\\Http\\Handler\\ThrowableHandler",
+    "Yiisoft\\Yii\\Http\\Handler\\NotFoundHandler",
+    "Yiisoft\\Yii\\Http\\Handler\\UnhandledRequestHandler",
+    "Yiisoft\\Http\\HeaderValueHelper",
+    "Yiisoft\\ErrorHandler\\Renderer\\HeaderRenderer",
+    "Yiisoft\\ErrorHandler\\RendererProvider\\RendererProviderInterface",
+    "Yiisoft\\ErrorHandler\\Renderer\\JsonRenderer",
+    "Yiisoft\\ErrorHandler\\Renderer\\XmlRenderer",
+    "Yiisoft\\ErrorHandler\\Renderer\\PlainTextRenderer",
+    "Yiisoft\\ErrorHandler\\RendererProvider\\CompositeRendererProvider",
+    "Yiisoft\\ErrorHandler\\RendererProvider\\HeadRendererProvider",
+    "Yiisoft\\Log\\Target",
+    "Yiisoft\\Log\\Message",
+    "Yiisoft\\Log\\ContextProvider",
+    "Yiisoft\\Log\\StreamTarget",
+    "Yiisoft\\Log\\PsrTarget",
+    "Yiisoft\\Log\\Target\\File\\FileTarget",
+    "Yiisoft\\Db",
+    "Yiisoft\\VarDumper",
+    "Yiisoft\\Log\\Target\\File\\FileRotator",
+    "Yiisoft\\Log\\Target\\Db\\DbTarget",
+    "Yiisoft\\Log\\Target\\Db\\DbSchemaManager",
+    "Yiisoft\\Log\\ContextProvider\\SystemContextProvider",
+    "Yiisoft\\Log\\ContextProvider\\CommonContextProvider",
+    "Yiisoft\\Log\\ContextProvider\\CompositeContextProvider",
+    "Yiisoft\\Log\\ContextProvider\\ContextProviderInterface",
+    "Yiisoft\\Test\\Support\\Log\\SimpleLogger",
+    "Yiisoft\\Queue\\Message\\Message",
+    "Yiisoft\\Queue\\Adapter\\AdapterInterface",
+    "Yiisoft\\Queue\\AsyncQueueProducer",
+    "Yiisoft\\Queue\\QueueConsumer",
+    "Yiisoft\\Queue\\SyncQueueProducer",
+    "Yiisoft\\Queue\\Exception\\MessageFailureException",
+    "Yiisoft\\Queue\\Middleware\\FailureHandling\\FailureMiddlewareDispatcher",
+    "Yiisoft\\Queue\\Middleware\\FailureHandling\\Implementation\\ExponentialDelayMiddleware",
+    "Yiisoft\\Queue\\Middleware\\FailureHandling\\Implementation\\SendAgainMiddleware",
+    "Yiisoft\\Queue\\Message\\IdEnvelope",
+    "Yiisoft\\Queue\\Message\\DelayEnvelope",
+    "Yiisoft\\Mailer\\BaseMailer",
+    "Yiisoft\\Mailer\\Symfony\\Mailer",
+    "Yiisoft\\Mailer\\MessageSettings",
+    "Yiisoft\\Mailer\\HtmlToTextBodyConverter",
+    "Yiisoft\\Mailer\\MessageInterface",
+    "Yiisoft\\Mailer\\File",
+    "Yiisoft\\Mailer\\SendResults",
+    "Yiisoft\\Mailer\\Priority",
+    "Yiisoft\\Mailer\\FileMailer",
+    "Yiisoft\\Mailer\\StubMailer",
+    "Yiisoft\\Mailer\\NullMailer",
+    "Yiisoft\\View\\ViewInterface",
+    "Yiisoft\\DataResponse\\DataResponse",
+    "Yiisoft\\Queue\\DefaultQueue",
+    "Yiisoft\\Queue\\Provider\\QueueConsumerProviderInterface",
+    "Yiisoft\\Queue\\Provider\\QueueFactoryProvider",
+    "Yiisoft\\Queue\\Provider\\QueueProducerProviderInterface",
+    "Yiisoft\\Queue\\QueueConsumerInterface",
+    "Yiisoft\\Queue\\Db\\Adapter",
+    "Yiisoft\\Db\\Driver\\Pdo\\PdoConnectionInterface",
+    "Yiisoft\\Mutex\\MutexFactoryInterface",
+    "Yiisoft\\Mutex\\Pgsql\\PgsqlMutexFactory",
+    "Yiisoft\\Queue\\Redis\\Adapter",
+    "Yiisoft\\Queue\\Redis\\QueueProvider",
+    "Yiisoft\\Queue\\Redis\\QueueProviderInterface",
+    "Yiisoft\\Queue\\Amqp\\Adapter",
+    "Yiisoft\\Queue\\Amqp\\QueueProvider",
+    "Yiisoft\\Queue\\Amqp\\QueueProviderInterface",
+    "Yiisoft\\Queue\\Amqp\\Settings\\Exchange",
+    "Yiisoft\\Queue\\Amqp\\Settings\\ExchangeSettingsInterface",
+    "Yiisoft\\Queue\\Amqp\\Settings\\QosSettings",
+    "Yiisoft\\Queue\\Amqp\\Settings\\Queue",
+    "Yiisoft\\Queue\\Amqp\\Settings\\QueueSettingsInterface",
+    "Yiisoft\\Queue\\Message\\Serializer\\JsonMessageEncoder",
+    "Yiisoft\\Queue\\Message\\Serializer\\MessageSerializer",
+    "Yiisoft\\Queue\\Message\\GenericMessage",
+    "Yiisoft\\Queue\\Message\\Envelope",
+    "Yiisoft\\Queue\\Middleware\\FailureHandling\\FailureEnvelope",
+    "Yiisoft\\Queue\\MessageStatus",
+    "Yiisoft\\Queue\\Amqp\\Exception\\NotImplementedException",
+    "Yiisoft\\Queue\\Middleware\\Push\\PushMiddlewareInterface",
+    "Yiisoft\\Queue\\Middleware\\Push\\Implementation\\IdMiddleware",
+    "Yiisoft\\Queue\\Middleware\\Push\\PushHandlerInterface",
+    "Yiisoft\\Queue\\Middleware\\Consume\\ConsumeMiddlewareInterface",
+    "Yiisoft\\Queue\\Middleware\\Consume\\ConsumeHandlerInterface",
+    "Yiisoft\\Queue\\Middleware\\Consume\\ConsumeRequest",
+    "Yiisoft\\Queue\\Middleware\\FailureHandling\\FailureMiddlewareInterface",
+    "Yiisoft\\Queue\\Cli\\SignalLoop",
+    "Yiisoft\\Queue\\Cli\\SimpleLoop",
+    "Yiisoft\\Mutex\\Synchronizer",
+    "Yiisoft\\Mutex\\Exception\\MutexLockedException",
+    "Yiisoft\\Mutex\\File\\FileMutexFactory",
+    "Yiisoft\\Mutex\\File\\FileMutex",
+    "Yiisoft\\Mutex\\Redis\\RedisMutexFactory",
+    "Yiisoft\\Mutex\\Redis\\RedisMutex",
+    "Yiisoft\\Mutex\\Pgsql\\PgsqlMutex",
+    "Yiisoft\\Mutex\\Mysql\\MysqlMutexFactory",
+    "Yiisoft\\Mutex\\Mysql\\MysqlMutex",
+    "Yiisoft\\Mutex\\Oracle\\OracleMutexFactory",
+    "Yiisoft\\Mutex\\Oracle\\OracleMutex",
+    "Yiisoft\\Rbac\\AssignmentsStorageInterface",
+    "Yiisoft\\Rbac\\ItemsStorageInterface",
+    "Yiisoft\\Yii\\Runner\\RunnerInterface",
+    "Yiisoft\\Yii\\Runner",
+    "Yiisoft\\Yii\\Runner\\BootstrapRunner",
+    "Yiisoft\\PsrEmitter\\SapiEmitter",
+    "Yiisoft\\PsrEmitter\\EmitterInterface",
+    "Yiisoft\\PsrEmitter\\FakeEmitter",
+    "Yiisoft\\PsrEmitter\\HeadersHaveBeenSentException",
+    "Yiisoft\\PsrEmitter\\EmitterMiddleware",
+    "Yiisoft\\Yii\\Runner\\Http\\Exception\\HeadersHaveBeenSentException",
+    "Yiisoft\\Yii\\Console\\Output\\ConsoleBufferedOutput",
+    "Yiisoft\\Yii\\Runner\\FrankenPHP\\FrankenPHPApplicationRunner",
+    "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpApplicationRunner",
+    "Yiisoft\\Db\\Sqlite\\Connection",
+    "Yiisoft\\Profiler\\Target\\LogTarget",
+    "Yiisoft\\Yii\\Debug\\Debugger",
+    "Yiisoft\\ResponseDownload\\ByteRangeStream",
+    "Yiisoft\\ProxyMiddleware\\TrustedHeaderProtocolResolver",
+    "Yiisoft\\ProxyMiddleware\\IpValidator",
+    "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpWorker",
+    "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerGrpcApplicationRunner",
+    "Yiisoft\\Yii\\Runner\\FrankenPHP\\RequestFactory",
+    "Yiisoft\\Profiler\\Profiler",
+    "Yiisoft\\Profiler\\ProfilerInterface",
+    "Yiisoft\\Profiler\\Target\\TargetInterface",
+    "Yiisoft\\Profiler\\Target\\FileTarget",
+    "Yiisoft\\VarDumper\\ClosureExporter",
+    "Yiisoft\\ActiveRecord\\ActiveQuery",
+    "Yiisoft\\Db\\Connection\\ConnectionProvider",
+    "Yiisoft\\ActiveRecord\\ActiveRecordInterface",
+    "Yiisoft\\ActiveRecord\\ActiveQueryInterface",
+    "Yiisoft\\ActiveRecord\\Trait\\LazyLoadGuardTrait",
+    "Yiisoft\\ActiveRecord\\Trait\\RepositoryTrait",
+    "Yiisoft\\ActiveRecord\\NotFoundException",
+    "Yiisoft\\ActiveRecord\\Trait\\CustomConnectionTrait",
+    "Yiisoft\\Db\\Cache\\SchemaCache",
+    "Yiisoft\\Db\\Exception\\Exception",
+    "Yiisoft\\Db\\Exception\\IntegrityException",
+    "Yiisoft\\ActiveRecord\\Event\\Handler\\DefaultDateTimeOnInsert",
+    "Yiisoft\\ActiveRecord\\Event\\Handler\\SetDateTimeOnUpdate",
+    "Yiisoft\\ActiveRecord\\Event\\Handler\\SoftDelete",
+    "Yiisoft\\ActiveRecord\\OptimisticLockInterface",
+    "Yiisoft\\ActiveRecord\\OptimisticLockException",
+    "Yiisoft\\ActiveRecord\\Trait\\MagicRelationsTrait",
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard",
+    "Yiisoft\\ActiveRecord\\LazyLoadGuardMode",
+    "Yiisoft\\Data\\Db\\QueryDataReader",
+    "Yiisoft\\Cache\\Redis\\RedisCache",
+    "Yiisoft\\Cache\\Db\\DbCache",
+    "Yiisoft\\Cache\\Db\\DbSchemaManager",
+    "Yiisoft\\Cache\\Apcu\\ApcuCache",
+    "Yiisoft\\Cache\\Memcached\\Memcached",
+    "Yiisoft\\Cache\\WinCache\\WinCache",
+    "Yiisoft\\Cache\\Dependency\\TagDependency",
+    "Yiisoft\\Cache\\CacheKeyNormalizer",
+    "Yiisoft\\Cache\\NullCache",
+    "Yiisoft\\Cache\\PrefixedCache",
+    "Yiisoft\\Cache",
+    "Yiisoft\\Cache\\Dependency\\Dependency",
+    "Yiisoft\\Cache\\Metadata\\CacheItem",
+    "Yiisoft\\Cache\\Exception\\InvalidArgumentException",
+    "Yiisoft\\Cache\\Dependency\\CallbackDependency",
+    "Yiisoft\\Cache\\Dependency\\FileDependency",
+    "Yiisoft\\Cache\\Dependency\\AnyDependency",
+    "Yiisoft\\Cache\\Dependency\\AllDependencies",
+    "Yiisoft\\View\\Cache\\CachedContent",
+    "Yiisoft\\Test\\Support\\SimpleCache\\MemorySimpleCache",
+    "Yiisoft\\Test\\Support\\SimpleCache\\SimpleCacheActionLogger",
+    "Yiisoft\\Data\\Cycle\\Reader\\EntityReader",
+    "Yiisoft\\Data\\Reader\\Filter\\Equals",
+    "Yiisoft\\Yii\\Cycle\\Schema\\Provider\\FromConveyorSchemaProvider",
+    "Yiisoft\\Yii\\Cycle\\Command\\Schema\\SchemaCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Schema\\SchemaPhpCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Schema\\SchemaClearCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Schema\\SchemaRebuildCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Migration\\ListCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Migration\\CreateCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Migration\\GenerateCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Migration\\UpCommand",
+    "Yiisoft\\Yii\\Cycle\\Command\\Migration\\DownCommand",
+    "Yiisoft\\Data\\Reader\\Filter\\AndX",
+    "Yiisoft\\Data\\Reader\\Filter\\Like",
+    "Yiisoft\\Data\\Cycle\\Writer\\EntityWriter",
+    "Yiisoft\\Hydrator\\ArrayData",
+    "Yiisoft\\Db\\Expression\\Expression",
+    "Yiisoft\\Db\\Transaction\\TransactionInterface",
+    "Yiisoft\\Db\\Exception\\SerializationFailureException",
+    "Yiisoft\\Data\\Reader\\FilterableDataInterface",
+    "Yiisoft\\Data\\Reader\\Filter\\Between",
+    "Yiisoft\\Data\\Reader\\Filter\\LikeMode",
+    "Yiisoft\\Data\\Paginator\\PageToken",
+    "Yiisoft\\Db\\Mysql\\Quoter",
+    "Yiisoft\\Db\\Pgsql\\Quoter",
+    "Yiisoft\\Db\\Mssql\\Quoter",
+    "Yiisoft\\Db\\Oracle\\Quoter",
+    "Yiisoft\\Db\\Mysql\\DsnSocket",
+    "Yiisoft\\Db\\Pgsql\\Dsn",
+    "Yiisoft\\Db\\Sqlite\\Dsn",
+    "Yiisoft\\Db\\Mssql\\Dsn",
+    "Yiisoft\\Db\\Oracle\\Dsn",
+    "Yiisoft\\Db\\Schema\\Quoter",
+    "Yiisoft\\Db\\Migration\\Migrator",
+    "Yiisoft\\Db\\Migration\\Service\\Generate\\CreateService",
+    "Yiisoft\\Db\\Migration\\DatabaseConfig",
+    "Yiisoft\\Db\\Migration\\DatabaseRegistry",
+    "Yiisoft\\Db\\Sqlite\\DDLQueryBuilder",
+    "Yiisoft\\Db\\Migration\\MigrationInterface",
+    "Yiisoft\\Db\\Migration\\TransactionalMigrationInterface",
+    "Yiisoft\\Db\\Migration\\Service\\MigrationService",
+    "Yiisoft\\Db\\Migration\\Runner\\DownRunner",
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+    "Yiisoft\\Db\\Pgsql\\Column\\ColumnBuilder",
+    "Yiisoft\\Db\\Mysql\\Column\\ColumnBuilder",
+    "Yiisoft\\Db\\Constant\\IndexType",
+    "Yiisoft\\Db\\Schema\\Column\\AbstractColumn",
+    "Yiisoft\\Db\\Exception\\NotSupportedException",
+    "Yiisoft\\Test\\Support\\SimpleCache\\Action",
+    "Yiisoft\\Test\\Support\\Clock\\StaticClock",
+    "Yiisoft\\Test\\Support\\Container\\Exception\\NotFoundException",
+    "Yiisoft\\Test\\Support\\HttpMessage\\StringStream",
+    "Yiisoft\\Db\\Sqlite\\Driver",
+    "Yiisoft\\Db\\Migration\\Informer\\NullMigrationInformer",
+    "Yiisoft\\Db\\Command\\CommandInterface",
+    "Yiisoft\\Yii\\Testing\\FunctionalTestCase",
+    "Yiisoft\\Yii\\Testing\\ResponseAccessor",
+    "Yiisoft\\Yii\\Testing\\FunctionalTester"
+  ],
+  "methods": {
+    "Yiisoft\\Yii\\Runner\\ApplicationRunner::createDefaultConfig": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "Config"
+    },
+    "Yiisoft\\Config\\Modifier\\ReverseMerge::groups": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Config\\Modifier\\RecursiveMerge::groups": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Config\\Modifier\\RecursiveMerge::groupsWithDepth": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "self"
+    },
+    "Yiisoft\\Config\\ConfigPaths::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": null
+    },
+    "Yiisoft\\CodeStyle\\ConfigBuilder::build": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "Config"
+    },
+    "Yiisoft\\Definitions\\ReferencesArray::from": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "array"
+    },
+    "Yiisoft\\Aliases\\AliasReference::to": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Factory\\Factory::__construct": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": null
+    },
+    "Yiisoft\\Di\\Reference\\TagReference::to": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "Reference"
+    },
+    "Yiisoft\\Di\\Reference\\TagReference::id": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Definitions\\Reference::to": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Di\\ContainerConfig::create": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "self"
+    },
+    "Yiisoft\\Di\\StateResetter::reset": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareDispatcher::withMiddlewares": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Injector\\Injector::__construct": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": null
+    },
+    "Yiisoft\\Di\\Container::get": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": null
+    },
+    "Yiisoft\\Injector\\Injector::make": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "object"
+    },
+    "Yiisoft\\Factory\\Factory::create": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Factory\\StrictFactory::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": null
+    },
+    "Yiisoft\\Di\\Container::validateMeta": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Definitions\\Reference::optional": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Definitions\\DynamicReference::to": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Definitions\\ValueDefinition::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": null
+    },
+    "Yiisoft\\Injector\\Injector::invoke": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": null
+    },
+    "Yiisoft\\Factory\\StrictFactory::create": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\EventDispatcher\\Provider\\ListenerCollection::add": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionInterface::transaction": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider::get": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "EventDispatcherInterface"
+    },
+    "Yiisoft\\Yii\\Console\\Application::start": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Console\\Application::shutdown": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\User\\CurrentUser::login": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider::set": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider::reset": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Event\\ListenerCollectionFactory::create": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "ListenerCollection"
+    },
+    "Yiisoft\\Yii\\DataView\\GridView\\GridView::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Db\\Query\\Query::each": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "DataReaderInterface"
+    },
+    "Yiisoft\\Db\\Query\\Query::batch": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "BatchQueryResultInterface"
+    },
+    "Yiisoft\\Security\\Random::string": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\User\\CurrentUser::withAccessChecker": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Rbac\\RuleContext::getParameterValue": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Rbac\\Item::withRuleName": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::render": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "DataResponse"
+    },
+    "Yiisoft\\User\\CurrentUser::can": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Yii\\Console\\Application::renderThrowable": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\VarDumper\\VarDumper::create": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\VarDumper\\VarDumper::dump": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\VarDumper\\VarDumper::setDefaultHandler": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\VarDumper\\VarDumper::export": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Classifier\\Classifier::find": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "iterable"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::isIp": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::isIpv4": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::isIpv6": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::getIpVersion": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "int"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::inRange": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::expandIPv6": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::ip2bin": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\NetworkUtilities\\IpHelper::getCidrBits": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "int"
+    },
+    "Yiisoft\\NetworkUtilities\\DnsHelper::existsMx": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\DnsHelper::existsA": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\DnsHelper::acceptsEmails": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\NetworkUtilities\\IpRanges::isAllowed": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::getValue": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::getValueByPath": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::setValueByPath": {
+      "isStatic": true,
+      "requiredCount": 3,
+      "totalCount": 4,
+      "returnType": "void"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::addValueByPath": {
+      "isStatic": true,
+      "requiredCount": 3,
+      "totalCount": 4,
+      "returnType": "void"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::removeByPath": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::pathExists": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Strings\\StringHelper::parsePath": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 4,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::index": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::group": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::getColumn": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::map": {
+      "isStatic": true,
+      "requiredCount": 3,
+      "totalCount": 4,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::filter": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::isAssociative": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::isIndexed": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::isIn": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::isSubset": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::htmlEncode": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArraySorter::multisort": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "void"
+    },
+    "Yiisoft\\Strings\\StringHelper::byteLength": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "int"
+    },
+    "Yiisoft\\Strings\\StringHelper::substring": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::replaceSubstring": {
+      "isStatic": true,
+      "requiredCount": 3,
+      "totalCount": 5,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::baseName": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::directoryName": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::startsWith": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Strings\\StringHelper::endsWithIgnoringCase": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Strings\\StringHelper::truncateBegin": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::truncateMiddle": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::truncateEnd": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::truncateWords": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::truncateWordsByLength": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::trim": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string|array"
+    },
+    "Yiisoft\\Strings\\StringHelper::findBetween": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "?string"
+    },
+    "Yiisoft\\Strings\\NumericHelper::toOrdinal": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\NumericHelper::normalize": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\NumericHelper::isInteger": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Strings\\NumericHelper::trimDecimalZeros": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "?string"
+    },
+    "Yiisoft\\Strings\\NumericHelper::convertHumanReadableSizeToBytes": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "int"
+    },
+    "Yiisoft\\Strings\\WildcardPattern::isDynamic": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Strings\\WildcardPattern::quote": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Json\\Json::encode": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Json\\Json::decode": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 4,
+      "returnType": null
+    },
+    "Yiisoft\\Json\\Json::htmlEncode": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::toArray": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "array"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::remove": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Arrays\\ArrayHelper::setValue": {
+      "isStatic": true,
+      "requiredCount": 3,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\Strings\\StringHelper::lowercase": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Strings\\StringHelper::uppercase": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Router\\Group::create": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\User\\CurrentUser::getIdentity": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "IdentityInterface"
+    },
+    "Yiisoft\\User\\CurrentUser::isGuest": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Cache\\Ttl::seconds": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\Ttl::minutes": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\Ttl::hours": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\Ttl::days": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\Ttl::forever": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\Ttl::create": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 4,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\Ttl::from": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Data\\Reader\\Sort::only": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Csrf\\CsrfTokenInterface::getValue": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Router\\Route::get": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\Route::post": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\Route::put": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\Route::delete": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\CurrentRoute::getArgument": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "?string"
+    },
+    "Yiisoft\\Http\\Status::FOUND": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0
+    },
+    "Yiisoft\\Router\\UrlGeneratorInterface::generate": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Router\\UrlGeneratorInterface::generateAbsolute": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 6,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::a": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "A"
+    },
+    "Yiisoft\\Html\\Html::mailto": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "A"
+    },
+    "Yiisoft\\Html\\Html::encode": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\DataView\\Filter\\Widget\\DropdownFilter::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\DataView\\ListView\\ListView::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\DataView\\DetailView\\DetailView::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\DataView\\DetailView\\DetailView::getValue": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Yii\\DataView\\Pagination\\OffsetPagination::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\DataView\\PageSize\\SelectPageSize::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Aliases\\Aliases::get": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\DataResponse\\ResponseFactory\\DataResponseFactoryInterface::createResponse": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Files\\FileHelper::copyDirectory": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\Files\\PathMatcher\\CompositeMatcher::any": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Files\\FileHelper::findFiles": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "array"
+    },
+    "Yiisoft\\Files\\PathMatcher\\PathPattern::match": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "?bool"
+    },
+    "Yiisoft\\Files\\PathMatcher\\CompositeMatcher::match": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "?bool"
+    },
+    "Yiisoft\\Files\\PathMatcher\\PathPattern::onlyFiles": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "self"
+    },
+    "Yiisoft\\Files\\PathMatcher\\CompositeMatcher::all": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Files\\FileHelper::ensureDirectory": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Files\\FileHelper::normalizePath": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Files\\FileHelper::clearDirectory": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\FormModel\\FormModel::addError": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "static"
+    },
+    "Yiisoft\\Hydrator\\Result::success": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Hydrator\\Result::fail": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cache\\CacheInterface::getOrSet": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 5,
+      "returnType": null
+    },
+    "Yiisoft\\Translator\\Message\\Db\\DbSchemaManager::ensureTables": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Translator\\TranslatorInterface::setLocale": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "static"
+    },
+    "Yiisoft\\ErrorHandler\\Exception\\UserException::isUserException": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Translator\\InMemoryMessageSource::write": {
+      "isStatic": false,
+      "requiredCount": 3,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\I18n\\Locale::fallbackLocale": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "self"
+    },
+    "Yiisoft\\Translator\\MessageFormatterInterface::format": {
+      "isStatic": false,
+      "requiredCount": 3,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Session::getCookieParameters": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "array"
+    },
+    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareFactory::create": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "MiddlewareInterface"
+    },
+    "Yiisoft\\Router\\Group::withCors": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\Swagger\\Action\\SwaggerJson::withPaths": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\Swagger\\Action\\SwaggerUi::withJsonUrl": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\Swagger\\Service\\SwaggerService::withOptions": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\Swagger\\Service\\SwaggerService::fetch": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "OpenApi"
+    },
+    "Yiisoft\\Yii\\Swagger\\Service\\SwaggerService::createGenerator": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "Generator"
+    },
+    "Yiisoft\\Yii\\Swagger\\Action\\SwaggerJson::handle": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Yii\\Swagger\\Action\\SwaggerUi::handle": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer::renderPartial": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Router\\FastRoute\\UrlMatcher::injectRoutes": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Router\\Route::name": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\Route::defaults": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\Middleware\\Router::process": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Router\\Route::middleware": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Router\\CurrentRoute::getUri": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "?UriInterface"
+    },
+    "Yiisoft\\Router\\FastRoute\\UrlGenerator::generateAbsolute": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 6,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\Middleware\\Redirect::process": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Router\\FastRoute\\UrlGenerator::generate": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Router\\FastRoute\\UrlGenerator::setDefaultArgument": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Session\\Session::getCookieParameters": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "array"
+    },
+    "Yiisoft\\Cookies\\CookieCollection::fromArray": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Cookies\\Cookie::addToResponse": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Cookies\\CookieCollection::setToResponse": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Validator\\ValidationContext::setDataSet": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Validator\\ValidatorInterface::validate": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "Result"
+    },
+    "Yiisoft\\Html\\Html::form": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "Form"
+    },
+    "Yiisoft\\FormModel\\Field::text": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "Text"
+    },
+    "Yiisoft\\FormModel\\Field::submitButton": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "SubmitButton"
+    },
+    "Yiisoft\\FormModel\\Field::radioList": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "RadioList"
+    },
+    "Yiisoft\\FormModel\\Field::resetButton": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "ResetButton"
+    },
+    "Yiisoft\\FormModel\\Field::telephone": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 4,
+      "returnType": "Telephone"
+    },
+    "Yiisoft\\Bootstrap5\\Alert::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Bootstrap5\\NavLink::tab": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 10,
+      "returnType": "self"
+    },
+    "Yiisoft\\Bootstrap5\\Nav::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Bootstrap5\\NavLink::to": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 8,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\Bulma\\ProgressBar::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Bulma\\Tabs::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\View\\Twig\\TwigTemplateRenderer::render": {
+      "isStatic": false,
+      "requiredCount": 3,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer::render": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Html\\Html::meta": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "Meta"
+    },
+    "Yiisoft\\Html\\Tag\\Link::toCssFile": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\View\\Theme::applyTo": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\View\\Theme::__construct": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": null
+    },
+    "Yiisoft\\Html\\Html::encodeAttribute": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::encodeUnquotedAttribute": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::escapeJavaScriptStringValue": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::div": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "Div"
+    },
+    "Yiisoft\\Html\\Html::span": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "Span"
+    },
+    "Yiisoft\\Html\\Html::tag": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "CustomTag"
+    },
+    "Yiisoft\\Html\\NoEncode::string": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Html\\Html::img": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "Img"
+    },
+    "Yiisoft\\Html\\Html::p": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "P"
+    },
+    "Yiisoft\\Html\\Html::ul": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "Ul"
+    },
+    "Yiisoft\\Html\\Html::ol": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "Ol"
+    },
+    "Yiisoft\\Html\\Html::li": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "Li"
+    },
+    "Yiisoft\\Html\\Html::addCssClass": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Html\\Html::removeCssClass": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Html\\Html::addCssStyle": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\Html\\Html::renderTagAttributes": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::generateId": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer::withInjections": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\LayoutSpecificInjections::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": null,
+      "returnType": null
+    },
+    "Yiisoft\\Yii\\Widgets\\Block::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Widgets\\Block::end": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\Widgets\\ContentDecorator::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Widgets\\ContentDecorator::end": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Widget\\Widget::render": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::openTag": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Html\\Html::closeTag": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Widget\\Widget::end": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Widget\\Widget::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Widget\\WidgetFactory::initialize": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 6,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Widgets\\Breadcrumbs::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Widgets\\FragmentCache::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Widgets\\FragmentCache::end": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\Widgets\\Menu::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Widgets\\Alert::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Widgets\\Dropdown::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Auth\\Jwt\\TokenFactoryInterface::create": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "string"
+    },
+    "Yiisoft\\Rbac\\RuleInterface::execute": {
+      "isStatic": false,
+      "requiredCount": 3,
+      "totalCount": 3,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Router\\Route::methods": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\AuthClient\\Widget\\AuthChoice::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Yii\\Console\\Application::addOptions": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Console\\ExitCode::getReason": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\ErrorHandler\\ErrorHandler::renderThrowableAndTerminate": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Event\\ListenerConfigurationChecker::check": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Runner\\Console\\ConsoleApplicationRunner::run": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Console\\ErrorListener::onError": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\ErrorHandler\\Exception\\ErrorException::isFatalError": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "bool"
+    },
+    "Yiisoft\\ErrorHandler\\ErrorHandler::register": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Http\\Application::handle": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\ErrorHandler\\Middleware\\ErrorCatcher::process": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\ErrorHandler\\RendererProvider\\ContentTypeRendererProvider::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": null
+    },
+    "Yiisoft\\Http\\HeaderValueHelper::getSortedAcceptTypes": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "array"
+    },
+    "Yiisoft\\ErrorHandler\\RendererProvider\\RendererProviderInterface::get": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "?ThrowableRendererInterface"
+    },
+    "Yiisoft\\ErrorHandler\\RendererProvider\\CompositeRendererProvider::__construct": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": null,
+      "returnType": null
+    },
+    "Yiisoft\\ErrorHandler\\Renderer\\HtmlRenderer::renderTemplate": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\ErrorHandler\\Renderer\\PlainTextRenderer::throwableToString": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Log\\ContextProvider\\ContextProviderInterface::getContext": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "array"
+    },
+    "Yiisoft\\Log\\Logger::setTraceLevel": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Log\\Target\\Db\\DbSchemaManager::ensureTable": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Log\\StreamTarget::setLevels": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Log\\Logger::log": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\Log\\Logger::setFlushInterval": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Log\\Logger::flush": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Queue\\QueueProducerInterface::push": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "MessageInterface"
+    },
+    "Yiisoft\\Queue\\Middleware\\FailureHandling\\FailureMiddlewareDispatcher::__construct": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": null
+    },
+    "Yiisoft\\Mailer\\BaseMailer::send": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Mailer\\MessageSettings::applyTo": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "MessageInterface"
+    },
+    "Yiisoft\\Mailer\\Message::__toString": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\Mailer\\MailerInterface::sendMultiple": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "SendResults"
+    },
+    "Yiisoft\\View\\ViewInterface::render": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Translator\\TranslatorInterface::translate": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 4,
+      "returnType": "string"
+    },
+    "Yiisoft\\Mailer\\File::fromPath": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "self"
+    },
+    "Yiisoft\\Mailer\\File::fromContent": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "self"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::renderPartial": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "DataResponse"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer::renderPartialAsString": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Db\\Driver\\Pdo\\PdoConnectionInterface::getActivePdo": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "PDO"
+    },
+    "Yiisoft\\Queue\\Amqp\\Adapter::status": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "MessageStatus"
+    },
+    "Yiisoft\\Queue\\Message\\Handler\\HandlerInterface::handle": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Queue\\Message\\Serializer\\MessageSerializer::unserialize": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "MessageInterface"
+    },
+    "Yiisoft\\Queue\\Message\\Envelope::fromMessage": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "static"
+    },
+    "Yiisoft\\Queue\\Message\\IdEnvelope::fromMessage": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "static"
+    },
+    "Yiisoft\\Mutex\\Synchronizer::execute": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": null
+    },
+    "Yiisoft\\Yii\\Runner\\ApplicationRunner::runBootstrap": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\PsrEmitter\\SapiEmitter::__construct": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": null
+    },
+    "Yiisoft\\PsrEmitter\\EmitterMiddleware::process": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Yii\\Runner\\Http\\HttpApplicationRunner::runInternal": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\PsrEmitter\\SapiEmitter::emitHeaders": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Runner\\Http\\HttpApplicationRunner::emit": {
+      "isStatic": false,
+      "requiredCount": 3,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Console\\Application::extractNamespace": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\Console\\Output\\ConsoleBufferedOutput::fetch": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\Runner\\Http\\HttpApplicationRunner::runAndGetResponse": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "ResponseInterface"
+    },
+    "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpApplicationRunner::runRoadRunner": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpApplicationRunner::createTemporaryErrorHandler": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "ErrorHandler"
+    },
+    "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpApplicationRunner::run": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Di\\Container::prepareStateResetter": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "StateResetter"
+    },
+    "Yiisoft\\Di\\StateResetter::setResetters": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Db\\Query\\Query::where": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "static"
+    },
+    "Yiisoft\\Hydrator\\HydratorInterface::create": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "object"
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionProvider::get": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "ConnectionInterface"
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionProvider::set": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\ActiveRecord\\ActiveRecordInterface::tableName": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    },
+    "Yiisoft\\ActiveRecord\\Trait\\RepositoryTrait::findOne": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "ActiveRecordInterface|array|null"
+    },
+    "Yiisoft\\ActiveRecord\\ActiveQuery::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": null
+    },
+    "Yiisoft\\ActiveRecord\\ActiveQuery::each": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "DataReaderInterface"
+    },
+    "Yiisoft\\ActiveRecord\\ActiveQuery::batch": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "BatchQueryResultInterface"
+    },
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::set": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::resetCounters": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\ActiveRecord\\ActiveQuery::index": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "array"
+    },
+    "Yiisoft\\Db\\Query\\Query::index": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "array"
+    },
+    "Yiisoft\\Data\\Db\\QueryDataReader::read": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "Generator"
+    },
+    "Yiisoft\\ActiveRecord\\ActiveRecord::save": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Cache\\Db\\DbSchemaManager::ensureTable": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "void"
+    },
+    "Yiisoft\\Cache\\Dependency\\TagDependency::invalidate": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Cache\\CacheKeyNormalizer::normalize": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "string"
+    },
+    "Yiisoft\\Cache\\Cache::__construct": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": null
+    },
+    "Yiisoft\\Cache\\Metadata\\CacheItem::expired": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "bool"
+    },
+    "Yiisoft\\Cache\\Dependency\\Dependency::resetReusableData": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::renderPartialAsString": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::renderAsString": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "string"
+    },
+    "Yiisoft\\Cache\\Dependency\\CallbackDependency::generateDependencyData": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "mixed"
+    },
+    "Yiisoft\\Db\\Query\\Query::one": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "array|object|null"
+    },
+    "Yiisoft\\Data\\Reader\\Sort::any": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Data\\Paginator\\PageToken::next": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
+    "Yiisoft\\Db\\Sqlite\\Connection::__clone": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": null
+    },
+    "Yiisoft\\Db\\Migration\\Service\\MigrationService::makeRevertibleMigration": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "RevertibleMigrationInterface"
+    },
+    "Yiisoft\\Db\\Migration\\Runner\\DownRunner::run": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\Db\\Migration\\Service\\MigrationService::makeMigrationInstance": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "object"
+    },
+    "Yiisoft\\Db\\Migration\\Service\\MigrationService::loadMigrationClasses": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "array"
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::addForeignKey": {
+      "isStatic": false,
+      "requiredCount": 5,
+      "totalCount": 7,
+      "returnType": "void"
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::insertBatch": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "void"
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::primaryKey": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "ColumnInterface"
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::string": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "ColumnInterface"
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::integer": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "ColumnInterface"
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::__construct": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": null
+    },
+    "Yiisoft\\Yii\\Testing\\FunctionalTestCase::doRequest": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "ResponseAccessor"
+    },
+    "Yiisoft\\Yii\\Testing\\FunctionalTester::doRequest": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 6,
+      "returnType": "ResponseAccessor"
+    },
+    "Yiisoft\\Yii\\Testing\\ResponseAccessor::getContent": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "string"
+    }
+  }
+}

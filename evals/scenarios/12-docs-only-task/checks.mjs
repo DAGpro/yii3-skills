@@ -1,8 +1,8 @@
 import { check, ok, fail, read } from '../../lib/checks.mjs';
 
 export default [
-  check('mode-light', 'The task is classified Light (docs-only, no feature stages)', ({ transcript }) =>
-    /Mode:\s*Light/i.test(transcript) ? ok() : fail('no "Mode: Light" in the transcript')),
+  check('mode-light', 'The task is classified Patch or Light (docs-only, no feature stages)', ({ transcript }) =>
+    /Mode:\s*(Patch|Light)/i.test(transcript) ? ok() : fail('no "Mode: Patch" (or Light) in the transcript')),
 
   check('docs-only-changes', 'Only documentation files changed (no PHP, config, or migration machinery for a docs task)', ({ changed }) => {
     const bad = changed.filter((c) => !/\.(md|txt)$/.test(c.path));

@@ -2,7 +2,7 @@
 
 Load the `yii3` skill (`SKILL.md`) and plan against its "Mission Workflow (Stages 1–7)" section — the skill is the single source of stage contracts, wiring gates, and the phase → stage mapping table.
 
-Operating context: this `aif-*` workflow runs the skill in its default AI Factory extension mode (contract: `references/aif-adapter.md`); the standalone fallback contract (`references/standalone-adapter.md`) is out of scope here.
+Operating context: this `aif-*` workflow runs the skill in its default AI Factory extension mode (contract: `references/core-aif-adapter.md`); the standalone fallback contract (`references/core-standalone-adapter.md`) is out of scope here.
 
 Plan-specific duties (the rules themselves live in the skill; all `references/*.md` paths resolve relative to the `yii3` skill directory):
 
@@ -11,5 +11,5 @@ Plan-specific duties (the rules themselves live in the skill; all `references/*.
 - Check `composer.json` against the skill's `references/package-catalog.md`. For each missing capability add an early task "Install `yiisoft/<pkg>` and wire config" (composer require + params/DI/bootstrap) BEFORE the tasks whose code uses it, per `references/core-dependency-protocol.md`; pick exactly one driver per family per catalog §3.
 - Put config tasks (routes, DI, params, migrations, console/event registration) before the code that depends on them; every planned `*Interface` gets a DI-binding task in `config/**/di/*.php`, every Action a route task in `config/**/routes.php`. At execution the wiring happens per step (the skill's per-step wiring gates), so the Stage 6 config task is the final audit — never deferred wiring.
 - Do not plan a new folder structure or a second mechanism (ORM, router, DI style) next to the existing one — SKILL.md Stage 0 item 2.
-- Zero-ambiguity handoff: initialize the complete `### Execution State` block template (Stage 1 pending, all wiring gates `PENDING`) at the end of the plan artifact per the AI Factory Adapter contract (`references/aif-adapter.md` §3) so `aif-implement` has zero missing context.
+- Zero-ambiguity handoff: initialize the complete `### Execution State` block template (Stage 1 pending, all wiring gates `PENDING`) at the end of the plan artifact per the AI Factory Adapter contract (`references/core-aif-adapter.md` §3) so `aif-implement` has zero missing context.
 - Existing-code refactoring goes only to "💡 Out of scope".

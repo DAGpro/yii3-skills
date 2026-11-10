@@ -20,7 +20,7 @@
 |---|---|---|---|---|---|---|
 | `SKILL.md` (Core Entry Point) | [01](scenarios/01-full-add-comment), [02](scenarios/02-light-single-route), [04](scenarios/04-not-yii3-project), [05](scenarios/05-legacy-drift), [06](scenarios/06-convention-conflict), [08](scenarios/08-no-vendor-flag), [10](scenarios/10-yii2-trap), [12](scenarios/12-docs-only-task), [54](scenarios/54-yiisoft-library), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [68](scenarios/68-new-project-bootstrap) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/INDEX.md` | — | — | — | — | — | Catalog Index |
-| `references/aif-adapter.md` | [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery) | composite | Yes | Yes | php-lint, composer | **Covered** |
+| `references/core-aif-adapter.md` | [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/core-architecture-alignment.md` | [48](scenarios/48-architecture-layering), [55](scenarios/55-aif-e2e-workflow) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/core-config-tree.md` | [55](scenarios/55-aif-e2e-workflow) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/core-definition-of-done.md` | [01](scenarios/01-full-add-comment), [55](scenarios/55-aif-e2e-workflow), [56](scenarios/56-qa-rector-cs-fixer) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
@@ -122,7 +122,7 @@ All **86** evaluated topic guides (across **88** reference files) have **100.0% 
 | 6 | [63-bulma-widgets](scenarios/63-bulma-widgets) | unit | `references/http-views-bulma.md` | **Covered** |
 | 7 | [64-codeception-tests](scenarios/64-codeception-tests) | unit | `references/testing-codeception.md` | **Covered** |
 | 8 | [65-testo-runner](scenarios/65-testo-runner) | unit | `references/testing-testo.md` | **Covered** |
-| 9 | [66-aif-idempotent-recovery](scenarios/66-aif-idempotent-recovery) | composite | `SKILL.md`, `references/aif-adapter.md`, `references/core-feature-recipes.md`, `references/core-di-and-config.md`, `references/http-routes-definition.md`, `references/http-actions-core.md`, `references/persistence-migrations-schema.md` | **Covered** |
+| 9 | [66-aif-idempotent-recovery](scenarios/66-aif-idempotent-recovery) | composite | `SKILL.md`, `references/core-aif-adapter.md`, `references/core-feature-recipes.md`, `references/core-di-and-config.md`, `references/http-routes-definition.md`, `references/http-actions-core.md`, `references/persistence-migrations-schema.md` | **Covered** |
 | 10 | [67-transactional-outbox](scenarios/67-transactional-outbox) | composite | `references/infra-transactional-outbox.md`, `references/core-events-design.md`, `references/infra-queue-jobs.md`, `references/infra-queue-mutex.md` | **Covered** |
 | 11 | [68-new-project-bootstrap](scenarios/68-new-project-bootstrap) | unit | `SKILL.md`, `references/core-dependency-protocol.md` | **Covered** |
 

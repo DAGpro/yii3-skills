@@ -33,20 +33,20 @@ Pick and print the execution mode at Stage 0 before writing code:
 
 At Stage 0, detect the operating context first and route to the matching adapter — each adapter defines the complete contract for its mode (path resolution, durable state, interaction protocol, verification, and output handoff):
 
-- **AI Factory extension (default):** an `aif-*` workflow invokes the skill, or the project contains a `.ai-factory/` directory → follow [`references/aif-adapter.md`](references/aif-adapter.md).
-- **Standalone fallback:** no `.ai-factory/` directory AND no `aif-*` invocation → follow [`references/standalone-adapter.md`](references/standalone-adapter.md).
+- **AI Factory extension (default):** an `aif-*` workflow invokes the skill, or the project contains a `.ai-factory/` directory → follow [`references/core-aif-adapter.md`](references/core-aif-adapter.md).
+- **Standalone fallback:** no `.ai-factory/` directory AND no `aif-*` invocation → follow [`references/core-standalone-adapter.md`](references/core-standalone-adapter.md).
 
 ## Stage 0 — Mission Bootstrap
 
 Run first, in every mode. **Scope:** apply the skill to the extent the user's task touches Yii 3 / `yiisoft/*` packages (topic guides, vendor signature lookup in `vendor/yiisoft/<pkg>/src`, `references/package-catalog.md`); no project-environment classification is performed. **Operating context:** detect first and route per "Operating Context Routing" above (default: AI Factory extension).
 
 1. **Bootstrap checklist** (skip items the caller already resolved):
-   - Architecture source — AI Factory extension mode (default): `paths.architecture` in `.ai-factory/config.yaml`, else `.ai-factory/ARCHITECTURE.md`; standalone fallback: `docs/architecture/`; then dominant layout of 2–3 existing features in `src/` (tier self-derivation: `references/standalone-adapter.md` §4); fallback to Pragmatic tier (`layers`) if ambiguous or new (Core rule 3).
-   - Rules: configured rules file(s), else existing project conventions.
+   - Architecture source: the operating context's architecture artifact per the active adapter (§4) — an existing artifact is the supreme structural authority; absent artifact → dominant layout of 2–3 existing features in `src/` (tier self-derivation: `references/core-standalone-adapter.md` §4) → Pragmatic tier (`layers`) if ambiguous or new (Core rule 3).
+   - Rules: the operating context's rules artifact per the active adapter (§4), else existing project conventions.
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages checked against `references/package-catalog.md`.
 2. **Cross-milestone consistency:** past milestones fixed the stack — strictly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
 3. **Lifecycle position** — detect and print one of:
-   - **(a) Plan task:** resolve first matching plan and execute its 6 phases. AI Factory extension mode (default): the plan artifact handed by the invoking `aif-*` workflow, else the newest active plan under `paths.plans` from `.ai-factory/config.yaml` (the skill never invents a plan location in AI Factory mode); standalone fallback: explicit argument/link → root `PLAN.md` → newest `*.md` in `docs/plans/` or `docs/plan/`.
+   - **(a) Plan task:** resolve first matching plan and execute its 6 phases; the plan location is owned by the operating context's adapter (§4) — AI Factory extension: the invoking workflow's artifact or `paths.plans`, never invented; standalone: explicit argument/link → root `PLAN.md` → newest `*.md` in `docs/plans/` or `docs/plan/`.
    - **(b) Standalone feature** → full Mission Workflow route.
    - **(c) Bug / diagnostics:** root-cause order: DI & config → input hydration & validation → routing & middleware → signatures in `vendor/yiisoft/<pkg>/src`. No Yii2 workarounds.
 4. **Mode Selection:** honor user override, else classify from Task & Intent Routing Matrix (default: `Feature`). Print `Mode: <Patch|Feature|Enterprise>`.

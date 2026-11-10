@@ -37,7 +37,7 @@ On blockers: diagnose in the Stage 0 item 3(c) root-cause order (DI & config →
 ## 3. Durable State Contract (`### Mission State` & resolved plans)
 
 - **Primary state carrier:** the `### Mission State` tracker printed at Stage 0 (SKILL.md Stage 0 item 5, with `Context: Standalone`) and updated as stages complete.
-- **Resolved plan artifacts:** when the task resolves to an existing plan (root `PLAN.md` or `docs/plans/*.md`), keep its task checkboxes `- [x]` reconciled; if the plan contains a `### Execution State` block, maintain it in the same format as the AI Factory contract (`aif-adapter.md` §3) so a later session — or a later AI Factory adoption — can resume without re-deriving state.
+- **Resolved plan artifacts:** when the task resolves to an existing plan (root `PLAN.md` or `docs/plans/*.md`), keep its task checkboxes `- [x]` reconciled; if the plan contains a `### Execution State` block, maintain it in the same format as the AI Factory contract (`core-aif-adapter.md` §3) so a later session — or a later AI Factory adoption — can resume without re-deriving state.
 - **Never invent plan artifacts.** Create a plan file only when the user explicitly asks to persist the mission (suggested location: `docs/plans/`).
 
 ### Resume Protocol for Subsequent Sessions
@@ -95,5 +95,5 @@ The task concludes at the Finale with the `references/core-definition-of-done.md
 
 ## 7. Mode Boundary & Switching Rule
 
-- **Standalone → AI Factory:** if `.ai-factory/` appears in the project mid-task, or the user invokes any `aif-*` workflow, switch to the AI Factory extension contract (`aif-adapter.md`): plans resolve via `paths.plans`, gates emit `aif-gate-result`, durable state moves to the active plan artifact.
+- **Standalone → AI Factory:** if `.ai-factory/` appears in the project mid-task, or the user invokes any `aif-*` workflow, switch to the AI Factory extension contract (`core-aif-adapter.md`): plans resolve via `paths.plans`, gates emit `aif-gate-result`, durable state moves to the active plan artifact.
 - **AI Factory → Standalone:** the reverse holds per SKILL.md — an AI Factory signal (invoking workflow or `.ai-factory/` directory) is required for extension mode; without it the skill runs standalone.

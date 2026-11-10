@@ -2,7 +2,7 @@
 
 Load the `yii3` skill and generate or update ARCHITECTURE.md per its `references/core-architecture-alignment.md`:
 
-Operating context: this `aif-*` workflow runs the skill in its default AI Factory extension mode (contract: `references/aif-adapter.md`); the standalone fallback contract (`references/standalone-adapter.md`) is out of scope here.
+Operating context: this `aif-*` workflow runs the skill in its default AI Factory extension mode (contract: `references/core-aif-adapter.md`); the standalone fallback contract (`references/core-standalone-adapter.md`) is out of scope here.
 
 Architecture-specific duties (the rules themselves live in the skill; all `references/*.md` paths resolve relative to the `yii3` skill directory):
 - Pattern & tier alignment: map the chosen `/aif-architecture` pattern (`explicit`, `structured`, `layers`) to the corresponding Yii 3 isolation tier (Strict, Balanced, Pragmatic) per `references/core-architecture-alignment.md` §1–§2.

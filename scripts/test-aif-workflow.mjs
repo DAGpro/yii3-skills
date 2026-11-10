@@ -802,18 +802,18 @@ assert(
 
 const skillMdText = readFileSync(join(root, 'skills', 'yii3', 'SKILL.md'), 'utf8');
 assert(
-  skillMdText.includes('references/aif-adapter.md'),
-  'SKILL.md links to references/aif-adapter.md for progressive disclosure'
+  skillMdText.includes('references/core-aif-adapter.md'),
+  'SKILL.md links to references/core-aif-adapter.md for progressive disclosure'
 );
 
-const aifAdapterText = readFileSync(join(root, 'skills', 'yii3', 'references', 'aif-adapter.md'), 'utf8');
+const aifAdapterText = readFileSync(join(root, 'skills', 'yii3', 'references', 'core-aif-adapter.md'), 'utf8');
 assert(
   /### Execution State/i.test(aifAdapterText),
-  'references/aif-adapter.md documents the durable ### Execution State format'
+  'references/core-aif-adapter.md documents the durable ### Execution State format'
 );
 assert(
   /Code-Read-Only/i.test(aifAdapterText),
-  'references/aif-adapter.md details the aif-verify Code-Read-Only invariant'
+  'references/core-aif-adapter.md details the aif-verify Code-Read-Only invariant'
 );
 
 console.log(`\nAll AI Factory Workflow contract tests passed! (${testsPassed} passed, ${testsFailed} failed)\n`);

@@ -61,7 +61,7 @@ The difference between "milestone closed" and "product ready". Every item is gro
 - cache on hot paths (`references/persistence-caching.md`) + pagination limits (`references/persistence-db.md`);
 - unit + HTTP tests and static analysis green (`references/testing-core.md`).
 
-Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see `references/aif-adapter.md`).
+Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see `references/core-aif-adapter.md`).
 
 ### 3.1. Code Quality & Formatting Toolchain (`yiisoft/code-style`)
 

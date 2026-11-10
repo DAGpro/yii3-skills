@@ -21,7 +21,7 @@
   "layer": "composite",
   "guides": [
     "SKILL.md",
-    "references/aif-adapter.md",
+    "references/core-aif-adapter.md",
     "references/core-feature-recipes.md",
     "references/core-di-and-config.md",
     "references/http-routes-definition.md",

@@ -97,7 +97,7 @@ The three persistence architectures in Yii 3 are mutually distinct and cannot be
 
 ### 2.2. Autonomous Mode Invariants (non-interactive runs)
 
-When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see `references/aif-adapter.md` §5):
+When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see `references/core-aif-adapter.md` §5):
 
 1. **Never Prompt:** Do not emit interactive clarification prompts.
 2. **Follow Existing Stack:** Adopt whatever architecture is already present in `composer.json` and `config/`.
@@ -282,7 +282,7 @@ To guarantee zero hallucination and complete fidelity to the installed codebase,
 
 ## 6. Verify the Result
 
-After dependencies are installed and wired, run the target project's own quality gates — tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured — and confirm the wiring per [SKILL.md → Finale](../SKILL.md); the blocking gate in AI Factory workflows is defined in [references/aif-adapter.md](aif-adapter.md).
+After dependencies are installed and wired, run the target project's own quality gates — tests, `composer cs-fix`, Psalm/PHPStan, Rector where configured — and confirm the wiring per [SKILL.md → Finale](../SKILL.md); the blocking gate in AI Factory workflows is defined in [references/core-aif-adapter.md](core-aif-adapter.md).
 
 ---
 

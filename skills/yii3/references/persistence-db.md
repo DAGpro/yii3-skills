@@ -45,5 +45,5 @@ Read this file for the anti-pattern matrix (§8) and related guides (§9).
 - [Database Migrations Guide](persistence-migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands.
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
-- [Caching Guide](persistence-caching.md) — Query caching and cache invalidation strategies for repositories.
+- [Caching Guide](persistence-caching.md) — Application-level PSR-16 caching (`getOrSet()`), stampede prevention, and tag-based invalidation.
 - [Events & Listeners Guide](core-events-and-listeners.md) — Domain events, the aggregate event-recording pattern, and the post-commit dispatch rule.

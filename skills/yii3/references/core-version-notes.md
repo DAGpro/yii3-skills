@@ -9,7 +9,7 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 
 1. **Preferred — `composer.lock`** at the project root: find the package under `packages` (or `packages-dev`); read `version` (strip an optional leading `v`). This is the version actually installed, unlike `composer.json` constraints.
 2. **Fallback — vendor sources:** when `vendor/` exists but no lock is available, the behavior discriminators below (file/method existence checks) are authoritative.
-3. **No `vendor/` at all:** follow the Signature Lookup Protocol in `SKILL.md` — request `composer install` first; otherwise flag every API used as "not verified against sources" in the report.
+3. **No `vendor/` at all:** follow the Mandatory Signature Lookup Protocol in `SKILL.md` — request `composer install` first; otherwise flag every API used as "not verified against sources" in the report.
 
 ## Catalog
 
@@ -35,7 +35,7 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 - **Changed in:** `yiisoft/middleware-dispatcher` **5.5.0**.
 - **Replacement:** pass `middlewareDefinitions` to the constructor in the DI definition (`DynamicReference::to([...])`).
 - **Verify:** `composer.lock` → `yiisoft/middleware-dispatcher` `version`; vendor discriminator: the `@deprecated since 5.5.0` docblock on `withMiddlewares()` in `vendor/yiisoft/middleware-dispatcher/src/MiddlewareDispatcher.php`.
-- **Grounding:** cloned sources — `src/MiddlewareDispatcher.php` line 78. See [Middlewares Guide](http-middlewares.md) and the DI & Config Guide note.
+- **Grounding:** cloned sources — `src/MiddlewareDispatcher.php` line 78. See [Middlewares Guide](http-middlewares.md).
 
 ### R4 Legacy data-response classes & middlewares deprecated (data-response 2.2.0)
 
@@ -67,7 +67,7 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 - **Condition:** any current `yiisoft/user` (guest-identity fallback is part of the current contract, not a recent change — check the installed sources if the project pins an old version).
 - **Replacement for null checks:** `CurrentUser::isGuest(): bool`.
 - **Verify:** vendor discriminator: `vendor/yiisoft/user/src/CurrentUser.php` — `public function getIdentity(): IdentityInterface` and the `$identity ??= $this->guestIdentityFactory->create();` fallback.
-- **Grounding:** cloned sources — `src/CurrentUser.php` lines 105–121; `isGuest()` at line 142. Referenced by the SKILL.md Core rules ban table (row 13).
+- **Grounding:** cloned sources — `src/CurrentUser.php` lines 105–121; `isGuest()` at line 142.
 
 ### R8 Console migration commands use colon names (db-migration)
 
@@ -75,7 +75,7 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 - **Condition:** any current `yiisoft/db-migration` — commands declare `#[AsCommand('migrate:up', ...)]` (Symfony Console attribute).
 - **Replacement:** `./yii migrate:up` etc. — see [Migrations Operations Guide, §8](persistence-migrations-operations.md).
 - **Verify:** vendor discriminator: `vendor/yiisoft/db-migration/src/Command/UpdateCommand.php` carries `#[AsCommand('migrate:up', 'Applies new migrations.')]`.
-- **Grounding:** cloned sources — `src/Command/UpdateCommand.php` line 43, `src/Command/DownCommand.php` line 44. Referenced by the SKILL.md Core rules ban table (row 8).
+- **Grounding:** cloned sources — `src/Command/UpdateCommand.php` line 43, `src/Command/DownCommand.php` line 44.
 
 ### R9 yii-middleware legacy classes deprecated (→ http-middleware)
 
@@ -92,7 +92,6 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 - **Status:** grounded in cloned sources — `yiisoft/code-style` ships `RemoveOverrideAttributeRector` in the `yii-core` set (`SetList::YII_CORE`).
 - **Verify:** in the target project — `composer.lock` → is `rector/rector` installed, and does the project's `rector.php` (or the adopted Yiisoft Rector preset) enable `RemoveOverrideAttributeRector`? If the preset is absent, do not flag `#[Override]` as an error; report it as a convention suggestion only.
 - **Grounding:** cloned sources — `src/Rector/Rules/RemoveOverrideAttributeRector.php` (rule class), `src/Rector/sets/yii-core.php` (registered in the set's rules), `README.md` Rector section ("removes the `#[Override]` attribute from methods. Yii convention is not to use this attribute"), `CHANGELOG.md` §1.1.0.
-- **Referenced by:** SKILL.md Core rules ban table (row 15).
 
 ### R11 Symfony console commands must declare #[AsCommand] (external symfony/console 6.1+)
 
@@ -107,14 +106,14 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 - **Behavior/API:** `Yiisoft\Di\Reference\TagReference::id()` — `public static function id(string $tag): string` returns the tag alias `'tag@' . $tag`, the literal container ID under which tagged definitions are registered and by which they are resolved.
 - **Changed in:** `yiisoft/di` **1.4.0** (New #380).
 - **Verify:** `composer.lock` → `yiisoft/di` `version`; vendor discriminator: `public static function id(string $tag): string` in `vendor/yiisoft/di/src/Reference/TagReference.php`.
-- **Grounding:** cloned sources — `src/Reference/TagReference.php`; `CHANGELOG.md` §1.4.0. See [DI & Config Guide, §5.1](core-di-container.md#51-service-tagging-tagreference).
+- **Grounding:** cloned sources — `src/Reference/TagReference.php`; `CHANGELOG.md` §1.4.0. See [DI Container Guide, §5.1](core-di-container.md#51-service-tagging-tagreference).
 
 ### R13 `StrictFactory` (factory 1.3.0)
 
 - **Behavior/API:** `Yiisoft\Factory\StrictFactory` — creates objects only from pre-registered definitions; constructor signature `__construct(array $definitions, ?ContainerInterface $container = null, bool $validate = true)` (definitions come first), plus `create(string $id): mixed` and `has(string $id): bool`.
 - **Changed in:** `yiisoft/factory` **1.3.0** (New #214).
 - **Verify:** `composer.lock` → `yiisoft/factory` `version`; vendor discriminator: `vendor/yiisoft/factory/src/StrictFactory.php` exists.
-- **Grounding:** cloned sources — `src/StrictFactory.php`; `CHANGELOG.md` §1.3.0. See [DI & Config Guide, §6.2](core-di-container.md#62-yiisoftfactoryfactory--strictfactory).
+- **Grounding:** cloned sources — `src/StrictFactory.php`; `CHANGELOG.md` §1.3.0. See [DI Container Guide, §6.2](core-di-container.md#62-yiisoftfactoryfactory--strictfactory).
 
 ### R14 `CsrfMiddleware` deprecated in favor of `CsrfTokenMiddleware` (csrf 2.2.0)
 

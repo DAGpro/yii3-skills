@@ -57,7 +57,7 @@ Every active plan must maintain an explicit execution state block at the end of 
 ```markdown
 ### Execution State
 - **Stage:** Stage <N> — <Stage Name>
-- **Status:** <IN PROGRESS | COMPLETE | BLOCKED>
+- **Status:** <IN PROGRESS | COMPLETE | BLOCKED | PENDING_VERIFICATION>
 - **Artifacts:**
   - `<path/to/File.php>` (<Role / Architectural Layer>)
 - **Wiring Gates:**
@@ -93,12 +93,12 @@ paths:
   rules_file: .ai-factory/rules/yii3.md      # Project-specific AI rules
 ```
 
-- If `.ai-factory/config.yaml` is absent (standalone fallback — the project does not use AI Factory), use standard locations: `PLAN.md` or `docs/plans/` for plans, and guide-placement rules for architecture.
+- If `.ai-factory/config.yaml` is absent while the operating context is still AI Factory (an invoking `aif-*` workflow or a present `.ai-factory/` directory — see §1), resolve paths by their defaults: the invoking workflow's artifact or `paths.plans` fallback locations `PLAN.md` / `docs/plans/` for plans, and guide-placement rules for architecture. The standalone fallback does **not** apply here — it triggers only when there is no `aif-*` invocation AND no `.ai-factory/` directory (SKILL.md "Operating Context Routing").
 - When an architecture artifact exists, it is the supreme structural authority for file placement and naming conventions (Core rule 2, Project conventions).
 
 ### Architecture Artifact Authority (`/aif-architecture`)
 
-The architecture artifact produced by `/aif-architecture` (`paths.architecture` from `.ai-factory/config.yaml`, else `.ai-factory/ARCHITECTURE.md`) is the supreme structural authority: it fixes the Architectural Tier (`Pragmatic | Balanced | Strict`), the architecture pattern, module boundaries, and naming conventions; the skill never re-derives them. Execution Mode (`Patch | Feature | Enterprise`) and Architectural Tier are orthogonal — all 9 combinations are valid (`references/core-architecture-alignment.md` §1; per-tier recipes: `references/core-feature-recipes.md`).
+The architecture artifact produced by `/aif-architecture` (`paths.architecture` from `.ai-factory/config.yaml`, else `.ai-factory/ARCHITECTURE.md`) is the supreme structural authority: it fixes the Architectural Tier (`Pragmatic | Balanced | Strict`), the architecture pattern, module boundaries, and naming conventions; the skill never re-derives them. Execution Mode (`Patch | Feature | Enterprise`) and Architectural Tier are orthogonal — all 9 combinations are valid (mode × tier matrix: `references/core-feature-recipes.md` §1).
 
 ---
 
@@ -117,7 +117,7 @@ Across AI Factory workflows, independent agents run in separate conversational c
 
 ### 6.1. Handoff: `aif-plan` → `aif-implement` (Unambiguous Plan Specification)
 - **Concrete Target Paths:** Every task must specify the exact target file path (in ultra plans: in the phase's `Files to Change`) and architectural layer/role. Generic tasks without paths (e.g. "create controller and service") are strictly prohibited.
-- **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/<topic>.md`. Tasks lacking an assigned guide are prohibited.
+- **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task & Intent Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/<topic>.md`. Tasks lacking an assigned guide are prohibited.
 - **Prior Dependency Installation:** Every missing capability from `references/package-catalog.md` must be planned as an explicit `composer require` task scheduled *before* any implementation tasks that import its namespace.
 - **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task in `config/**/di/*.php`, and every Action an explicit route task in `config/**/routes.php`.
 - **Initialized Execution State:** The plan must conclude with an initialized `### Execution State` block template setting `Stage 1` as pending and all wiring gates as `PENDING`.

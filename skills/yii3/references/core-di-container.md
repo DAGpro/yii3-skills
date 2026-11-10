@@ -367,6 +367,8 @@ Signature: `StrictFactory::__construct(array $definitions, ?ContainerInterface $
 ---
 
 
+## 7. Common Pitfalls
+
 ### 7.1. Array Definition Property Syntax Error
 - **Pitfall:** Writing `'timeout' => 30` or `'apiKey' => 'xyz'` directly in an array definition.
 - **Consequence:** In the DI container flow, unknown keys are treated as metadata and rejected by `Yiisoft\Di\Container::validateMeta()` with `InvalidConfigException`:

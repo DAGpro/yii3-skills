@@ -48,7 +48,7 @@ private function addDefinitionToStorage(string $id, mixed $definition): void
 }
 ```
 
-Notice line 525: if an application defines `StateResetter::class` in `config/di.php` or `config/di-web.php`, the container flag `$this->useResettersFromMeta` is flipped to `false`.
+Notice line 525: if an application defines `StateResetter::class` in its DI definitions (`config/common/di/*.php` or `config/web/di/*.php`), the container flag `$this->useResettersFromMeta` is flipped to `false`.
 
 Now examine how `Container::prepareStateResetter()` constructs the resetter instance:
 
@@ -90,7 +90,7 @@ return $mainResetter;
 
 ## 3. Idiomatic Service Resetter Declaration
 
-To register state cleanup for custom stateful application services, declare the `'reset'` key directly on the service definition in `config/di-web.php` or `config/di.php`:
+To register state cleanup for custom stateful application services, declare the `'reset'` key directly on the service definition in `config/web/di/*.php` or `config/common/di/*.php`:
 
 ```php
 <?php

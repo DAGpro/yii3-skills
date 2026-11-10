@@ -171,7 +171,7 @@ In CLI commands, cron jobs, or background queue jobs, there is no active incomin
 
 When calling `generateAbsolute()` in CLI:
 - If neither the route nor the call specifies `$host`, and no default host is configured, `UrlGenerator::generateAbsolute()` falls back to returning a **relative URL** (`/posts/42`)!
-- **Solution:** Configure default CLI host and scheme in `config/params-console.php` (or `config/params.php`):
+- **Solution:** Configure default CLI host and scheme in `config/console/params.php` (or `config/params.php`):
 
 ```php
 declare(strict_types=1);
@@ -301,7 +301,7 @@ return [
 2. **SEO Canonicalization (302 Redirect):**
    If a client requests the default locale with an explicit prefix (e.g. `GET /en/about` when `'en'` is the default), `Locale` strips the prefix and issues a **302 redirect** (`Status::FOUND`) to `/about`.
 3. **URL Generator Coupling (`_language`):**
-   For non-default locales, `Locale` calls `$urlGenerator->setDefaultArgument('_language', $locale)`. You do **not** need to manually pass `['_language' => $locale]` in actions or views. For the default locale, it resets the default argument to `null`.
+   For non-default locales, `Locale` calls `$urlGenerator->setDefaultArgument('_language', <locale key>)` — the key from the locale map (e.g. `'ru'`), not the locale value (`'ru-RU'`). You do **not** need to manually pass `['_language' => $locale]` in actions or views. For the default locale, it resets the default argument to `null`.
 
 > [!IMPORTANT]
 > **Pipeline Ordering Invariant:**

@@ -11,7 +11,7 @@
 
 ## Table of Contents
 - [1. Configuring Named Queues in `config/params.php`](#1-configuring-named-queues-in-configparamsphp)
-- [2. DI Container Wiring for Queue Providers (`config/di.php`)](#2-di-container-wiring-for-queue-providers-configdiphp)
+- [2. DI Container Wiring for Queue Providers (`config/common/di/*.php`)](#2-di-container-wiring-for-queue-providers-configcommondiphp)
 - [3. Broker Adapter 1: `yiisoft/queue-db` (Relational Database)](#3-broker-adapter-1-yiisoftqueue-db-relational-database)
 - [4. Broker Adapter 2: `yiisoft/queue-redis` (In-Memory Redis)](#4-broker-adapter-2-yiisoftqueue-redis-in-memory-redis)
 - [5. Broker Adapter 3: `yiisoft/queue-amqp` (RabbitMQ / AMQP 0-9-1)](#5-broker-adapter-3-yiisoftqueue-amqp-rabbitmq--amqp-0-9-1)
@@ -74,7 +74,7 @@ return [
 ];
 ```
 
-## 2. DI Container Wiring for Queue Providers (`config/di.php`)
+## 2. DI Container Wiring for Queue Providers (`config/common/di/*.php`)
 
 ```php
 declare(strict_types=1);
@@ -126,7 +126,7 @@ Uses relational tables via `yiisoft/db`. Ideal for projects with zero external i
 > ],
 > ```
 
-### 2. DI & Mutex Configuration (`config/di.php`)
+### 2. DI & Mutex Configuration (`config/common/di/*.php`)
 
 > [!IMPORTANT]
 > `Yiisoft\Queue\Db\Adapter` explicitly requires `MutexFactoryInterface` in its constructor to prevent concurrent workers from reserving the same row.

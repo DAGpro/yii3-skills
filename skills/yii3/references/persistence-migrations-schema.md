@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
-> Part of the [Database Migrations Guide](persistence-migrations.md) split — the index and the configuration/console-commands guide live there.
+> Part of the [Database Migrations Guide](persistence-migrations.md) split — the index hosts the module-wide Anti-Pattern Matrix.
 
 ## 1. Migration Architecture & Interface Contracts
 
@@ -12,7 +12,7 @@ In Yii3, database migrations are plain PHP classes. They do **not** extend any m
 All migration classes interact with the database via `Yiisoft\Db\Migration\MigrationBuilder`, which is passed as an explicit argument to migration methods (`up()`, `down()`).
 
 > [!TIP]
-> Migrations establish and maintain the database schema consumed by `yiisoft/db`, `yiisoft/active-record`, and `yiisoft/yii-cycle` repositories. For query builders, Data Mapper patterns, and transaction management in the application layer, see [Database Persistence Guide](persistence-db.md), [Active Record Persistence Guide](persistence-active-record.md), and [Cycle ORM Persistence Guide](persistence-cycle-orm.md).
+> Migrations establish and maintain the database schema consumed by `yiisoft/db` and `yiisoft/active-record` repositories. **Cycle ORM is excluded:** Cycle projects manage their schema through the Cycle schema compilation pipeline and its own migration tooling — do not mix `yiisoft/db-migration` with Cycle ORM (see the [Cycle ORM Guide](persistence-cycle-orm.md) and the [Cycle Schema & CLI Guide](persistence-cycle-schema-and-cli.md)). For query builders, Data Mapper patterns, and transaction management in the application layer, see [Database Persistence Guide](persistence-db.md), [Active Record Persistence Guide](persistence-active-record.md), and [Cycle ORM Persistence Guide](persistence-cycle-orm.md).
 
 ### 1.1. Core Interface Contracts
 

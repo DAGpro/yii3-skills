@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
-> Reference guide for distributed locking with `yiisoft/mutex`: the `MutexInterface::acquire()` invariant, explicit named locks via `MutexFactoryInterface` (Approach A), callback execution with guaranteed release via `Synchronizer` (Approach B), and the mutex driver packages (`mutex-file`, `mutex-redis`, `mutex-pdo-pgsql`, `mutex-pdo-mysql`, `mutex-pdo-oracle`) with their `config/di.php` wiring recipes.
+> Reference guide for distributed locking with `yiisoft/mutex`: the `MutexInterface::acquire()` invariant, explicit named locks via `MutexFactoryInterface` (Approach A), callback execution with guaranteed release via `Synchronizer` (Approach B), and the mutex driver packages (`mutex-file`, `mutex-redis`, `mutex-pdo-pgsql`, `mutex-pdo-mysql`, `mutex-pdo-oracle`) with their `config/common/di/*.php` wiring recipes.
 
 **Scope & Ownership:** This guide is the single source of truth for distributed mutex locking and mutex DI configuration; it was extracted from the [Queue & Asynchronous Jobs Guide, §6](infra-queue-jobs.md#6-distributed-concurrency--mutex-locks-yiisoftmutex). `yiisoft/mutex` is an **independent package** that is usable outside the queue subsystem as well — cron overlapping-run guards, one-off migration scripts, or any critical section on a shared resource. The queue guide relies on it for concurrent consumer safety (e.g. the `yiisoft/queue-db` adapter requires a `MutexFactoryInterface` to stop concurrent workers from reserving the same row — see the [Queue Broker Adapters Guide, §3](infra-queue-brokers.md#3-broker-adapter-1-yiisoftqueue-db-relational-database)). The mutex driver package is a pick-exactly-one family: resolve which `mutex-*` driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family).
 
@@ -13,7 +13,7 @@
 - [1. The `MutexInterface::acquire()` Invariant](#1-the-mutexinterfaceacquire-invariant)
 - [2. Approach A: Explicit Mutex with `MutexFactoryInterface`](#2-approach-a-explicit-mutex-with-mutexfactoryinterface)
 - [3. Approach B: Callback Execution with `Synchronizer`](#3-approach-b-callback-execution-with-synchronizer)
-- [4. Mutex Driver Packages & DI Configuration Recipes (`config/di.php`)](#4-mutex-driver-packages--di-configuration-recipes-configdiphp)
+- [4. Mutex Driver Packages & DI Configuration Recipes (`config/common/di/*.php`)](#4-mutex-driver-packages--di-configuration-recipes-configcommondiphp)
 - [5. Mutex Anti-Patterns](#5-mutex-anti-patterns)
 - [Related Topic Guides](#related-topic-guides)
 
@@ -132,9 +132,9 @@ final readonly class ProcessSubscriptionRenewalHandler implements HandlerInterfa
 }
 ```
 
-## 4. Mutex Driver Packages & DI Configuration Recipes (`config/di.php`)
+## 4. Mutex Driver Packages & DI Configuration Recipes (`config/common/di/*.php`)
 
-None of the mutex packages provide auto-configuration. `MutexFactoryInterface` must be explicitly wired in `config/di.php`:
+None of the mutex packages provide auto-configuration. `MutexFactoryInterface` must be explicitly wired in `config/common/di/*.php`:
 
 | Package | Factory FQCN | Mutex FQCN | Driver Backend | Recommended Use Case |
 |---|---|---|---|---|

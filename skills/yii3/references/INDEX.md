@@ -13,7 +13,7 @@
 - `references/core-dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
 - `references/core-utilities.md` — ArrayHelper, StringHelper, Inflector, Json
-- `references/core-utilities-niche.md` — VarDumper, Classifier, network utilities
+- `references/core-utilities-niche.md` — VarDumper, Classifier, network utilities, requirements
 - `references/core-friendly-exceptions.md` — FriendlyException contract, web & console rendering
 - `references/core-di-and-config.md` — split index: DI & config anti-pattern matrix, related guides
 - `references/core-di-definitions.md` — definition syntax recipes: bindings, array definitions, references, aliases, closures, db wiring
@@ -65,7 +65,7 @@
 - `references/persistence-active-record-relations.md` — relationQuery, hasOne/hasMany, viaTable, eager loading, LazyLoadGuard
 - `references/persistence-cycle-orm.md` — Cycle ORM data mapper, entities, relations, behaviors, unit of work
 - `references/persistence-cycle-schema-and-cli.md` — DBAL configuration, schema compilation pipeline, Cycle migrations & CLI commands
-- `references/persistence-migrations.md` — split index: schema vs operations guides
+- `references/persistence-migrations.md` — split index: module-wide anti-pattern matrix, schema vs operations guides
 - `references/persistence-migrations-schema.md` — migration contracts, naming, ColumnBuilder, FKs, DDL, seeding
 - `references/persistence-migrations-operations.md` — params config, console command catalog, CI automation
 - `references/persistence-caching.md` — PSR-16 caching, getOrSet, TagDependency

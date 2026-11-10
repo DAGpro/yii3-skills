@@ -60,7 +60,7 @@ On blockers: diagnose in the Stage 0 item 3(c) root-cause order (DI & config →
 
 When an architecture artifact is found in `docs/architecture/`, it is the supreme structural authority for file placement and naming conventions (Core rule 2, project conventions) — the same authority `ARCHITECTURE.md` holds in AI Factory mode.
 
-Execution Mode (`Patch | Feature | Enterprise`) and Architectural Tier (`Pragmatic | Balanced | Strict`) are orthogonal — all 9 combinations are valid (`references/core-architecture-alignment.md` §1; per-tier recipes: `references/core-feature-recipes.md`).
+Execution Mode (`Patch | Feature | Enterprise`) and Architectural Tier (`Pragmatic | Balanced | Strict`) are orthogonal — all 9 combinations are valid (mode × tier matrix: `references/core-feature-recipes.md` §1).
 
 ### Architecture Tier Self-Derivation (Fallback)
 
@@ -70,7 +70,7 @@ When no architecture artifact exists (`docs/architecture/` absent), derive the A
 - **Structured Modules (`structured*`, Balanced):** Feature modules; AR/Cycle permitted; module-boundary interfaces.
 - **Explicit (`explicit*`, Strict):** Pure POPO domain aggregates/VOs, explicit repository ports, dedicated `*Command`/`*Handler` use cases.
 
-Ambiguous or new projects: fall back to the Pragmatic tier (`layers`) (Core rule 3). Never re-derive the tier when an architecture artifact exists — an artifact from `/aif-architecture` (`.ai-factory/ARCHITECTURE.md`) is the supreme authority in AI Factory mode (SKILL.md "Architectural Alignment"); a `docs/architecture/` artifact holds the same authority here.
+Ambiguous or new projects: fall back to the Pragmatic tier (`layers`) (Core rule 3). Never re-derive the tier when an architecture artifact exists — an artifact from `/aif-architecture` (`.ai-factory/ARCHITECTURE.md`) is the supreme authority in AI Factory mode (SKILL.md Core rule 3); a `docs/architecture/` artifact holds the same authority here.
 
 ---
 

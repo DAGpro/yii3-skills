@@ -691,7 +691,7 @@ Workers run via console commands registered by `yiisoft/queue` under `'yiisoft/y
 ```php
 declare(strict_types=1);
 
-// config/di-console.php or config/di.php
+// config/common/di/*.php — the shared DI glob serves both web and console containers
 use Yiisoft\Queue\Cli\SignalLoop;
 use Yiisoft\Queue\Cli\SimpleLoop;
 

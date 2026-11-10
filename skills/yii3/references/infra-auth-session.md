@@ -17,7 +17,7 @@
   - [2.2. Login Action Implementation (`LoginAction.php`)](#22-login-action-implementation-loginactionphp)
 - [3. Canonical Web Login Authenticator (`WebAuth`) & Identity Bridge](#3-canonical-web-login-authenticator-webauth--identity-bridge)
   - [3.1. `Yiisoft\User\Method\WebAuth`](#31-yiisoftusermethodwebauth)
-  - [3.2. `Yiisoft\User\Login\LoginMiddleware`](#32-yiisoftuserloginloginmiddleware)
+  - [3.2. `Yiisoft\User\Login\LoginMiddleware` (The Identity Bridge)](#32-yiisoftuserloginloginmiddleware-the-identity-bridge)
 - [4. Full Logout Lifecycle & State Reset](#4-full-logout-lifecycle--state-reset)
   - [4.1. Logout Action Implementation (`LogoutAction.php`)](#41-logout-action-implementation-logoutactionphp)
   - [4.2. Long-Running Worker Reset (`StateResetter`)](#42-long-running-worker-reset-stateresetter)
@@ -28,9 +28,8 @@
   - [6.1. CSRF Protection with `CsrfTokenMiddleware`](#61-csrf-protection-with-csrftokenmiddleware)
   - [6.2. Brute-Force Rate Limiting (`LimitRequestsMiddleware`)](#62-brute-force-rate-limiting-limitrequestsmiddleware)
 - [7. PSR-14 User Authentication Events](#7-psr-14-user-authentication-events)
-  - [7.1. Event Dispatch Sequence](#71-event-dispatch-sequence)
-  - [7.2. Registering Event Listeners (`config/common/events.php`)](#72-registering-event-listeners-configcommoneventsphp)
-  - [7.3. Listener Implementation Example](#73-listener-implementation-example)
+  - [7.1. Registering Event Listeners (`config/common/events.php`)](#71-registering-event-listeners-configcommoneventsphp)
+  - [7.2. Listener Implementation Example](#72-listener-implementation-example)
 - [8. Anti-Patterns & Common Traps](#8-anti-patterns--common-traps)
 - [9. Related Guides](#9-related-guides)
 
@@ -366,7 +365,7 @@ Auth-specific use cases:
 
 ### 7.1. Registering Event Listeners (`config/common/events.php`)
 
-Map the file into the shared `events` group in `config/configuration.php` (`'events' => 'common/events.php'`); the base runner reverse-merges it into `events-web` — see [Events Guide, §4.1](core-events-and-listeners.md):
+Map the file into the shared `events` group in `config/configuration.php` (`'events' => 'common/events.php'`); the base runner reverse-merges it into `events-web` — see [Events Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes):
 
 ```php
 declare(strict_types=1);

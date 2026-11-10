@@ -4,7 +4,7 @@
 > **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
 
 Finale extension for the `yii3` skill: the checks that run only when they earn their cost.
-Load this guide at the Finale when the task is a **new feature**, or when it touches **runtime, auth, queues, or infrastructure** (runners, workers, error handling, logging, caching). Small Patch-mode tasks (single route, config/DI edit, one-file refactor) stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.
+Load this guide at the Finale for **Feature and Enterprise** tasks (Feature: §1–§2, `production readiness gate: n/a`; Enterprise: all sections including the Production Readiness Gate, §3). Patch-mode tasks stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.
 
 ---
 
@@ -21,7 +21,7 @@ Load this guide at the Finale when the task is a **new feature**, or when it tou
 
 Before sign-off, every newly created or modified artifact MUST be audited against its governing topic guide in `references/`:
 
-1. **Resolve Governing Guide:** Identify the specific topic guide (`references/<topic>.md`) governing the artifact via the active plan, the Task Routing Matrix in `SKILL.md`, or `references/INDEX.md` (e.g. actions → `http-actions-core.md`, middlewares → `http-middlewares.md`, DI → `core-di-and-config.md`, queue → `infra-queue-jobs.md`, events → `core-events-and-listeners.md`, migrations → `persistence-migrations-operations.md`).
+1. **Resolve Governing Guide:** Identify the specific topic guide (`references/<topic>.md`) governing the artifact via the active plan, the Task & Intent Routing Matrix in `SKILL.md`, or `references/INDEX.md` (e.g. actions → `http-actions-core.md`, middlewares → `http-middlewares.md`, DI → `core-di-and-config.md`, queue → `infra-queue-jobs.md`, events → `core-events-and-listeners.md`, migrations → `persistence-migrations-operations.md`).
 2. **Anti-Pattern Audit [BLOCKER]:** Inspect the `## Anti-Pattern Matrix` (or `## Anti-Patterns & Common Traps`) in that governing guide. Every forbidden pattern is a hard failure (`[BLOCKER]`). If the code reproduces any forbidden pattern from that guide's matrix, verification fails.
 3. **Core Invariants [BLOCKER]:**
    - **Thin Actions:** zero direct SQL, persistence, `$db->transaction()`, hashing, or notifications; strictly return `Psr\Http\Message\ResponseInterface`; input via typed DTO + validator.

@@ -325,6 +325,6 @@ public static function reset(): void;
 ## 11. Related Topic Guides
 
 - [Active Record Core Models & Mutations](persistence-active-record.md) — Base models, repository contracts, mutations, and ActiveQuery
-- [Database Connection & Queries](persistence-db-connection-and-queries.md) — Connection pooling, raw queries, transactions
+- [Database Connection & Queries](persistence-db-connection-and-queries.md) — Raw queries, transactions, driver & DSN configuration
 - [Database Migrations: Schema](persistence-migrations-schema.md) — Creating tables, columns, indexes, foreign keys
 - [Long-Running Worker Safety & StateResetter](infra-state-resetter.md) — Resetting state in RoadRunner/Swoole/FrankenPHP workers

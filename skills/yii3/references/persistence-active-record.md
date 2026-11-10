@@ -9,7 +9,7 @@
 
 ---
 
-> **TL;DR:** Model definition with typed properties (§2); `ActiveQuery` engine (§3); lifecycle, mutations & concurrency (§4); relations (§5); eager loading & N+1 prevention with `LazyLoadGuard` (§6).
+> **TL;DR:** Model definition with typed properties (§2); `ActiveQuery` engine (§3); lifecycle, mutations & concurrency (§4); relations, eager loading & N+1 prevention with `LazyLoadGuard` (§5); grid pagination & sorting with `QueryDataReader`/`OffsetPaginator` (§6).
 > **Read in full when:** implementing Active Record models end-to-end, or deciding AR vs plain DB vs Cycle (see also §1 and the persistence strategy rules in core-feature-recipes.md §4).
 
 ## Table of Contents
@@ -866,7 +866,7 @@ Active Record relations in Yii 3 are decoupled from magic getters and require ex
 
 ## 6. Grid Pagination & Sorting (`QueryDataReader` & `OffsetPaginator`)
 
-### 7.1. Hydrated Data Reader Pipeline (`QueryDataReader`)
+### 6.1. Hydrated Data Reader Pipeline (`QueryDataReader`)
 
 `Yiisoft\Data\Db\QueryDataReader` natively accepts any `ActiveQuery` instance. Under the hood, `ActiveQuery::index()` overrides `Query::index()` to invoke `$this->populate($rows)` $\rightarrow$ `$this->createModels($rows)`.
 Therefore, `QueryDataReader::read()` yields **fully hydrated Active Record model instances** with relations preloaded via `with()`:
@@ -919,7 +919,7 @@ final readonly class UserGridProvider
 }
 ```
 
-### 7.2. Whitelist Sorting with `Sort::only()`
+### 6.2. Whitelist Sorting with `Sort::only()`
 
 `Sort::only()` prevents SQL injection and column name enumeration by strictly discarding sort parameters that are not explicitly whitelisted:
 

@@ -487,7 +487,7 @@ public function run(): void
 7. **Shutdown Dispatch & Exit:** In `finally`, calls `$application->shutdown($exitCode)` (dispatching `Yiisoft\Yii\Console\Event\ApplicationShutdown`) and invokes `exit($exitCode)`.
 
 > [!IMPORTANT]
-> Because `ConsoleApplicationRunner::run()` manages process termination in its `finally` block, `Application::setAutoExit(false)` is mandatory in container configuration (`config/di-console.php`).
+> Because `ConsoleApplicationRunner::run()` manages process termination in its `finally` block, `Application::setAutoExit(false)` is mandatory in the console `Application` DI definition (`config/common/di/*.php`).
 
 ---
 
@@ -495,7 +495,7 @@ public function run(): void
 
 To prevent DI container overhead when executing commands or running `./yii list`, commands should be registered via `Yiisoft\Yii\Console\CommandLoader`.
 
-#### Configuration in `config/params-console.php`:
+#### Configuration in `config/console/params.php`:
 
 ```php
 return [
@@ -619,7 +619,7 @@ When an unhandled exception implements `Yiisoft\FriendlyException\FriendlyExcept
 | **Storing state in static class properties** | Static properties persist across worker requests, bleeding data between users and causing unbounded memory leaks. | Use request attributes or services managed with `'reset' => function ()`. |
 | **Caching `ServerRequestInterface` in singleton services without `RequestProviderInterface`** | In persistent workers, the cached request remains that of the first user, serving stale data or authorization tokens to subsequent users. | Inject `Yiisoft\RequestProvider\RequestProviderInterface` to obtain the scoped active request. |
 | **Forgetting to unregister or clean open DB transactions on error** | An unhandled exception during a database operation leaves the transaction open on the connection, locking tables for all subsequent requests on that worker. | Add a `'reset'` closure to `ConnectionInterface` that checks `$this->getTransaction() !== null` and calls `rollBack()`. |
-| **Using `autoExit = true` with `ConsoleApplicationRunner`** | Symfony Console terminates the process inside `Application::run()`, bypassing `ConsoleApplicationRunner`'s `finally` block and `ApplicationShutdown` event. | Set `'autoExit' => false` in `params-console.php`. The runner manages process exit explicitly. |
+| **Using `autoExit = true` with `ConsoleApplicationRunner`** | Symfony Console terminates the process inside `Application::run()`, bypassing `ConsoleApplicationRunner`'s `finally` block and `ApplicationShutdown` event. | Set `'autoExit' => false` in `config/console/params.php`. The runner manages process exit explicitly. |
 
 ---
 

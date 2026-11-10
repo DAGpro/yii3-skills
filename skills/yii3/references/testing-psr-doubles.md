@@ -402,18 +402,18 @@ public function clearEvents(): void;
 public function getMessages(): array;
 
 // MemorySimpleCache
-public function __construct(array $data = [], ?int $defaultTtl = null);
+public function __construct(array $cacheData = []);
 public function getValues(): array;
 
 // StaticClock
-public function __construct(?\DateTimeImmutable $now = null);
+public function __construct(\DateTimeImmutable $now);
 public function now(): \DateTimeImmutable;
 
 // SimpleContainer
 public function __construct(array $definitions = [], ?\Closure $factory = null, ?\Closure $hasCallback = null);
 
 // StringStream
-public function __construct(string $content = '', bool $readable = true, bool $writable = true, bool $seekable = true);
+public function __construct(string $content = '', int $position = 0, bool $readable = true, bool $writable = true, bool $seekable = true, \Closure|array|null $metadata = null);
 ```
 
 ---

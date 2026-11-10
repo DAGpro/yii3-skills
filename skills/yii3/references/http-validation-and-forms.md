@@ -19,7 +19,7 @@ Read this file for the cross-cutting decision matrix, the anti-pattern matrix, a
 | Scenario | Recommended Approach | Key Packages & Classes | Rationale |
 |---|---|---|---|
 | **JSON REST API Endpoint** | Typed DTO with `#[FromBody]` extending `AbstractInput` | `yiisoft/input-http`, `yiisoft/hydrator-validator`, `ValidatingHydrator` | Decoupled from HTML; maps directly into controller action signature; two-stage pre/post validation. |
-| **Server-Rendered HTML Web Form** | `FormModel` + `FormHydrator::populateFromPostAndValidate()` | `yiisoft/form-model`, `yiisoft/form`, `yiisoft/csrf` | Scoped inputs (`Form[field]`), automatic HTML5 attribute enrichment, labels/hints metadata, CSRF support. |
+| **Server-Rendered HTML Web Form** | `FormModel` + `FormHydrator::populateFromPostAndValidate()` | `yiisoft/form-model`, `yiisoft/form`, `yiisoft/csrf` | Scoped inputs (`Form[field]`), opt-in HTML5 attribute enrichment, labels/hints metadata, CSRF support. |
 | **Search / Filter Form (HTTP GET)** | `FormModel` + `FormHydrator::populateFromGetAndValidate(..., scope: '')` | `yiisoft/form-model`, `yiisoft/data` | Retains filter parameters in URL; flat query scoping prevents nested key mismatches. |
 | **Complex Domain DTO / Value Object** | Constructor-promoted typed DTO + `#[Validate]` | `yiisoft/hydrator-validator`, `#[Validate]`, custom `TypeCasterInterface` | Ensures raw strings cannot trigger fatal `TypeError`s during instantiation; deep collection mapping. |
 | **Ad-Hoc One-Off Validation** | `$validator->validate($data, $rules)` with plain array map | `yiisoft/validator`, `ValidatorInterface`, `Rule\*` | Fast, lightweight validation of decoded arrays without defining single-use classes. |

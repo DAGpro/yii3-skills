@@ -40,7 +40,7 @@ $route = (new Get('/users'))
 
 In persistent worker environments (RoadRunner, FrankenPHP, Swoole, Workerman), services in the DI container survive across requests.
 
-`Yiisoft\Router\CurrentRoute` and `Yiisoft\Router\FastRoute\UrlGenerator` maintain request-scoped state. In `config/di.php`, both are configured with automated worker reset callbacks:
+`Yiisoft\Router\CurrentRoute` and `Yiisoft\Router\FastRoute\UrlGenerator` maintain request-scoped state. In their DI definitions (`config/common/di/*.php`), both are configured with automated worker reset callbacks:
 
 ```php
 declare(strict_types=1);

@@ -15,7 +15,7 @@
 - [2. Cache Drivers & DI Configuration](#2-cache-drivers--di-configuration)
   - [2.1. File Cache (yiisoft/cache-file)](#21-file-cache-yiisoftcache-file)
   - [2.2. External Cache Driver Adapters (Redis / DB / APCu / Memcached / WinCache)](#22-external-cache-driver-adapters-redis--db--apcu--memcached--wincache) — full reference in the [Cache Driver Adapters Guide](persistence-cache-drivers.md)
-  - [2.7. Development & Namespacing Helpers](#27-development--namespacing-helpers)
+  - [2.3. Development & Namespacing Helpers](#23-development--namespacing-helpers)
 - [3. The getOrSet Pattern & Stampede Prevention](#3-the-getorset-pattern--stampede-prevention)
   - [3.1. Method Signatures & Basic Read-Through](#31-method-signatures--basic-read-through)
   - [3.2. Probabilistic Early Expiration (XFetch)](#32-probabilistic-early-expiration-xfetch)
@@ -184,7 +184,7 @@ return [
 >
 > **For the complete reference on external cache driver adapters** — `RedisCache` + Predis client wiring and cluster mode, `DbCache` schema initialization, `ApcuCache` per-SAPI shared memory, Memcached persistent connections and TTL semantics, and WinCache — **see the** [Cache Driver Adapters Guide](persistence-cache-drivers.md).
 
-### 2.7. Development & Namespacing Helpers
+### 2.3. Development & Namespacing Helpers
 
 The core `yiisoft/cache` package includes two built-in PSR-16 decorators:
 
@@ -701,5 +701,5 @@ public function testGetFeaturedProductsIsCached(): void
 
 - [Cache Driver Adapters Guide](persistence-cache-drivers.md) — External PSR-16 driver adapters (`cache-redis`, `cache-db`, `cache-apcu`, `cache-memcached`, `cache-wincache`): Predis wiring, `DbCache` schema initialization, per-SAPI shared-memory traps, and driver anti-patterns.
 - [HTTP Response Caching (ETag) Guide](http-cache-etag.md) — RFC 7232 conditional requests, the `HttpCacheMiddleware` PSR-15 recipe, and action-level conditional GET.
-- [Persistence: Plain DB Guide](persistence-db.md) — Query caching and cache invalidation strategies for repositories.
+- [Persistence: Plain DB Guide](persistence-db.md) — Database connection, `ConnectionInterface::transaction()`, and the cache-adjacent DB drivers (`DbCache` schema) required by cache adapters.
 - [Testing Core Guide](testing-core.md) — `MemorySimpleCache` fault-injection flags and `SimpleCacheActionLogger` semantics (§7 references its PSR-16 section).

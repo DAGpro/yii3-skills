@@ -734,7 +734,7 @@ $writer->delete(items: [$oldUser]);
 - [Database Migrations Guide](persistence-migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands for `yiisoft/db`.
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
 - [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
-- [Caching Guide](persistence-caching.md) — Query caching and cache invalidation strategies for repositories.
+- [Caching Guide](persistence-caching.md) — Application-level PSR-16 caching (`getOrSet()`), stampede prevention, and tag-based invalidation.
 - [Auth & RBAC Guide](infra-auth-and-rbac.md) — RBAC manager, permission checks, and `yiisoft/rbac-cycle-db` integration.
 - [Runners & Runtimes Guide](infra-runners-and-runtimes.md) — Runner architecture, standard HTTP/console runners, and the runtime selection matrix.
 - [RoadRunner Worker Runtime Guide](infra-runtime-roadrunner.md) and [FrankenPHP Worker Runtime Guide](infra-runtime-frankenphp.md) — mutually exclusive persistent worker runtimes.

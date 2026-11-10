@@ -263,13 +263,14 @@ Registration and the empty-config trap:
   the command fails with `NoCategorySourceConfigException` until the application overrides the `Extractor`
   definition (`vendor/yiisoft/translator-extractor/src/Extractor.php:36-40`).
 
-Override example (application console DI; the extractor's `CategorySource` is its own class —
+Override example (application DI — console commands resolve their definitions from the shared
+`config/common/di/*.php` group, the same glob the `di` group scans; the extractor's `CategorySource` is its own class —
 `Yiisoft\TranslatorExtractor\CategorySource`, constructor
 `(string $name, MessageReaderInterface $reader, MessageWriterInterface $writer)`, writer required, no formatter
 — distinct from `Yiisoft\Translator\CategorySource`):
 
 ```php
-// config/console/di/extractor.php
+// config/common/di/extractor.php
 declare(strict_types=1);
 
 use Yiisoft\Definitions\DynamicReference;

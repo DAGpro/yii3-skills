@@ -9,7 +9,7 @@
 
 For full-page web applications, inject `Yiisoft\Yii\View\Renderer\WebViewRenderer` — the current renderer (the older `ViewRenderer` is `@deprecated`, see the note at the end of this section) — for template rendering, and `FormHydrator` for populating and validating HTML forms.
 
-**The Form Model** (compact skeleton; the full lifecycle example — hydration → validation → redirect — lives in the [Forms & Typed DTO Hydration Guide, §8.3](http-forms-and-hydration.md)):
+**The Form Model** (compact skeleton; the full hydration → validation → redirect lifecycle appears in the Action Handler recipe later in this section, with the `populateFromPostAndValidate()` semantics in the [Forms & Typed DTO Hydration Guide, §8.2](http-forms-and-hydration.md)):
 
 ```php
 final class ContactForm extends FormModel

@@ -524,7 +524,7 @@ final readonly class OutboxRelayService
 ```
 
 > [!NOTE]
-> Prefer `Yiisoft\Mutex\Pgsql\PgsqlMutexFactory` (`yiisoft/mutex-pdo-pgsql`), `Yiisoft\Mutex\Mysql\MysqlMutexFactory` (`yiisoft/mutex-pdo-mysql`), or `Yiisoft\Mutex\Redis\RedisMutexFactory` (`yiisoft/mutex-redis`) when multiple container replicas run relays concurrently. Use `Yiisoft\Mutex\File\FileMutexFactory` (`yiisoft/mutex-file`) strictly on single-host deployments or integration tests. See [Queue Mutex Guide §4](infra-queue-mutex.md#4-mutex-driver-packages--di-configuration-recipes-configdiphp).
+> Prefer `Yiisoft\Mutex\Pgsql\PgsqlMutexFactory` (`yiisoft/mutex-pdo-pgsql`), `Yiisoft\Mutex\Mysql\MysqlMutexFactory` (`yiisoft/mutex-pdo-mysql`), or `Yiisoft\Mutex\Redis\RedisMutexFactory` (`yiisoft/mutex-redis`) when multiple container replicas run relays concurrently. Use `Yiisoft\Mutex\File\FileMutexFactory` (`yiisoft/mutex-file`) strictly on single-host deployments or integration tests. See [Queue Mutex Guide §4](infra-queue-mutex.md#4-mutex-driver-packages--di-configuration-recipes-configcommondiphp).
 
 ---
 

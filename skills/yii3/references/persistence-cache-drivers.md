@@ -192,6 +192,6 @@ return [
 
 ## Related Topic Guides
 
-- [Caching & Performance Guide](persistence-caching.md) — Cache architecture (PSR-16 vs `CacheInterface`), the File cache default (§2.1), dev/namespace helpers (§2.7), `getOrSet()` stampede prevention, tag invalidation, and view fragment caching.
+- [Caching & Performance Guide](persistence-caching.md) — Cache architecture (PSR-16 vs `CacheInterface`), the File cache default (§2.1), dev/namespace helpers (§2.3), `getOrSet()` stampede prevention, tag invalidation, and view fragment caching.
 - [Persistence: Plain DB Guide](persistence-db.md) — Database connection and driver configuration required by `DbCache`.
 - [DI & Configuration Guide](core-di-and-config.md) — Config groups, definitions, modifiers, and container compilation.

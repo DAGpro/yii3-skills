@@ -122,7 +122,7 @@ final class SecurityDoc
 }
 ```
 
-### 5.3. Endpoint Actions & CRUD Operations (Get, Post, Put, Patch, Delete)
+### 5.3. Endpoint Actions & CRUD Operations (Get, Delete)
 
 Yii 3 strongly recommends single-action invokable controllers (`__invoke`).
 
@@ -562,6 +562,7 @@ declare(strict_types=1);
 
 namespace App\Presentation\Action\Product;
 
+use App\Infrastructure\FileStorage\ProductImageStorage;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -577,6 +578,7 @@ final readonly class UploadProductImageAction
     public function __construct(
         private ValidatorInterface $validator,
         private DataResponseFactoryInterface $responseFactory,
+        private ProductImageStorage $storage,
     ) {}
 
     #[OA\Post(
@@ -657,13 +659,14 @@ final readonly class UploadProductImageAction
             ], Status::UNPROCESSABLE_ENTITY);
         }
 
-        // Storage step — persist with `$file->moveTo($targetPath)`. Building the safe destination
-        // (random server-side name, sanitized client extension, alias resolved via the injected
-        // `Aliases` service — `$aliases->get(...)`, an instance method, not a static call,
-        // directory creation) is the filesystem slice owned by the File Handling Guide — see the
-        // bridge below.
-        $targetPath = /* destination per File Handling Guide §4/§5: alias-resolved path + random server-side name */;
-        $file->moveTo($targetPath);
+        // Storage step — delegated to the infrastructure file-storage service (File Handling
+        // Guide, §5: "Filesystem manipulation (moving, copying, cleanup) belongs in
+        // infrastructure/services, not in actions — an action validates and calls a use case").
+        // The service builds the safe destination (random server-side name, sanitized client
+        // extension, alias resolution via the injected `Aliases` service — `$aliases->get(...)`,
+        // an instance method, not a static call, directory creation) and runs
+        // `$file->moveTo($targetPath)` — see the bridge below.
+        $targetPath = $this->storage->save($file);
 
         return $this->responseFactory->createResponse([
             'imageUrl' => $targetPath,
@@ -676,7 +679,8 @@ final readonly class UploadProductImageAction
 > **File Handling Reference:**
 > For the complete reference on the filesystem-level storage step (random file names via
 > `bin2hex(random_bytes(16))`, path-traversal sanitization with `basename()`/`pathinfo()`,
-> `FileHelper::ensureDirectory()`, and alias resolution before `moveTo()`), see the
+> `FileHelper::ensureDirectory()`, alias resolution before `moveTo()`, and the infrastructure
+> file-storage service recipe (`DocumentStorage`) that owns the filesystem slice), see the
 > [File Handling Guide, §4 — File Uploads (PSR-7 + Validator)](http-file-handling.md#4-file-uploads-psr-7--validator) and [§5 — Placement & Wiring](http-file-handling.md#5-placement--wiring).
 
 ### 5.8. Standardized Error Models: RFC 7807 / RFC 9457 Problem Details

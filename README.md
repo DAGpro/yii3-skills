@@ -30,9 +30,9 @@ The skill automatically selects an execution mode based on task scope, or respec
 
 | Mode | Trigger & Scope | Architectural Workflow | CLI Flag |
 |---|---|---|---|
-| **Patch** | Bug fixes, isolated changes (1–3 files), docs, typo/config fixes | Direct surgical edit + project checks; skips aggregate design and schema migrations | `--mode=patch` |
-| **Feature** *(default)* | Standard business features, endpoints, console commands, domain logic | Bottom-up stages: Schema/Migration → Domain/Interface → Handler → DTO & Thin Action → Wiring → Tests | `--mode=feature` |
-| **Enterprise** | High-throughput systems, event-driven flows, modular CQRS, audit requirements | Full CQRS decomposition, transactional outbox/event-sourcing, explicit SLA/metrics, stress & audit checklists | `--mode=enterprise` |
+| **Patch** | Bug fixes, isolated changes (1–3 files), docs, typo/config fixes | Direct surgical edit + project checks; skips aggregate design and schema migrations (unless schema changes required) | `--mode=patch` |
+| **Feature** *(default)* | Standard business features, endpoints, console commands, domain logic (~80% of tasks) | Bottom-up stages: Schema/Migration → Domain/Interface → Use Case Handler → DTO & Thin Action → Wiring → Tests | `--mode=feature` |
+| **Enterprise** | High-throughput systems, event-driven pipelines, auth/security cores, multi-step transactions | Full DDD graph: pure aggregates, value objects, repository contracts + implementations, dedicated use case handlers, domain events, complete Production Readiness Gate | `--mode=enterprise` |
 
 ## Integration Contexts
 
@@ -44,14 +44,14 @@ The skill automatically selects an execution mode based on task scope, or respec
 - **`skills/yii3/SKILL.md`** — Canonical skill entry point: Stage 0 bootstrap, Mission Workflow (Stages 1–7), Finale checklist, core rules, Yii 2 ban list, and the task routing matrix.
 - **`skills/yii3/references/`** — 80+ specialized guides (DI, HTTP, persistence, auth & RBAC, queue, mailer, testing), runtime package catalog, and version-gated behavior notes.
 - **`injections/*.md`** — AI Factory workflow hooks anchoring workflow stages to the skill as the single source of truth.
-- **`evals/`** — Evaluation harness with 57 behavioral test scenarios across unit and composite Yii 3 tasks.
-- **`scripts/`** — Automated quality gates: `validate.mjs` (manifest, frontmatter, and link integrity) and `check-symbols.mjs` (ground-truth symbol and arity verification against 130 offline packages).
+- **`evals/`** — Evaluation harness with 66 behavioral test scenarios across unit and composite Yii 3 tasks.
+- **`scripts/`** — Automated quality gates: `validate.mjs` (manifest, frontmatter, and link integrity), `check-symbols.mjs` (ground-truth symbol verification), and `check-ast.mjs` (structural call and signature analysis).
 
 ## Quality Gates & Verification
 
 The skill's recommendations are backed by deterministic verification:
 
-- **Empirical Baseline (+36.3 pp gain)**: Evaluated across paired test scenarios — with-skill agents improved from a 56.9% baseline to a 93.2% pass rate (+41.6 pp on complex composite tasks). See [`evals/BASELINE.md`](evals/BASELINE.md).
+- **Empirical Baseline (+36.3 pp overall, +34.4 pp on pure-code composites)**: Evaluated across paired test scenarios (single-run campaign, $n=1$, GLM-5.3-Flash) — with-skill agents improved from a 56.9% baseline to a 93.2% pass rate (+34.4 pp on complex code tasks; +100 pp on multi-agent protocol adherence). See [`evals/BASELINE.md`](evals/BASELINE.md).
 - **Symbol & Arity Grounding**: `node scripts/check-symbols.mjs` verifies 1,400+ FQCNs and 460 method signatures and argument arities against official package sources.
 - **Automated Validation**: `node scripts/validate.mjs` enforces frontmatter spec compliance, link integrity, and activation guard synchronization.
 

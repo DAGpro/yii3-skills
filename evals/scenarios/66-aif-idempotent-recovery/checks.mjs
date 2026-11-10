@@ -20,16 +20,17 @@ export default [
   check('no-duplicate-di-bindings', 'Does not add redundant/duplicate DI bindings for OrderRepositoryInterface', ({ dir }) => {
     const diFiles = filesMatching(dir, /config\/.*\/di\/.*\.php$/);
     let occurrences = 0;
-    const foundFiles = [];
+    const foundLocations = [];
     for (const file of diFiles) {
       const content = read(file);
-      if (/OrderRepositoryInterface::class/i.test(content)) {
-        occurrences++;
-        foundFiles.push(file);
+      const matches = [...content.matchAll(/OrderRepositoryInterface::class/gi)];
+      if (matches.length > 0) {
+        occurrences += matches.length;
+        foundLocations.push(`${file} (${matches.length}x)`);
       }
     }
     if (occurrences > 1) {
-      return fail(`OrderRepositoryInterface bound redundantly in ${occurrences} places: ${foundFiles.join(', ')}`);
+      return fail(`OrderRepositoryInterface bound redundantly in ${occurrences} places: ${foundLocations.join(', ')}`);
     }
     if (occurrences === 0) {
       return fail('OrderRepositoryInterface binding disappeared from config');

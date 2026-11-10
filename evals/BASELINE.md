@@ -60,7 +60,7 @@ Recurring baseline failures that the with-skill arm eliminated: session-flash me
 ## Statistical Rigor & Roadmap
 
 - **Current Campaign Scope:** Initial exploratory calibration ($n=1$ per arm, GLM-5.3-Flash, 20 runs, ≈29M tokens, deterministic regex & state-machine delimiter checks).
-- **Execution-Level Verification:** Automated syntax checking via `runtime.mjs` (`php -l` and `validateComposerJson`) is integrated into `selftest.mjs --runtime`. Live guide coverage mapping is tracked in [COVERAGE.md](COVERAGE.md) (100.0% covered across 65 scenarios).
+- **Execution-Level Verification:** Automated syntax checking via `runtime.mjs` (`php -l` and `validateComposerJson`) is integrated into `selftest.mjs --runtime`. Live guide coverage mapping is tracked in [COVERAGE.md](COVERAGE.md) (100.0% mapped guide coverage across 66 scenarios).
 - **Roadmap (Campaign 2):** Minimum $n \ge 3$ runs across 2 model tiers (e.g. Flash/Haiku vs Frontier Sonnet/GPT-4o) with variance estimation ($\sigma$) and containerized test execution (`phpunit`).
 
 ## Findings

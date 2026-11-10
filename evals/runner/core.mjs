@@ -33,7 +33,23 @@ export const passRate = (results) =>
 export const requiredFailed = (results) => results.filter((r) => r.required && !r.pass);
 
 /**
- * Normalizes token usage into { prompt, completion, total } or { total }.
+ * Merges two token objects, preserving existing defined values and computing total if possible.
+ */
+export function mergeTokens(target, source) {
+  if (!source) return target ?? null;
+  if (!target) return { ...source };
+  const res = { ...target };
+  if (res.prompt === undefined && source.prompt !== undefined) res.prompt = source.prompt;
+  if (res.completion === undefined && source.completion !== undefined) res.completion = source.completion;
+  if (res.total === undefined && source.total !== undefined) res.total = source.total;
+  if (res.total === undefined && res.prompt !== undefined && res.completion !== undefined) {
+    res.total = res.prompt + res.completion;
+  }
+  return res;
+}
+
+/**
+ * Normalizes token usage into { prompt, completion, total }, { total }, or partial token usage.
  */
 export function normalizeTokens(val) {
   if (val === null || val === undefined) return null;
@@ -68,13 +84,10 @@ export function normalizeTokens(val) {
       res.total = Math.round(explicitTotal);
     } else if (res.prompt !== undefined && res.completion !== undefined) {
       res.total = res.prompt + res.completion;
-    } else if (res.prompt !== undefined) {
-      res.total = res.prompt;
-    } else if (res.completion !== undefined) {
-      res.total = res.completion;
     }
+    // Partial usage (prompt only or completion only) preserves partial fields without faking total
 
-    return Object.keys(res).length > 0 && typeof res.total === 'number' ? res : null;
+    return Object.keys(res).length > 0 ? res : null;
   }
   return null;
 }
@@ -99,30 +112,64 @@ export function normalizeCost(val) {
 
 /**
  * Extracts token usage and cost from transcript text using regex heuristics.
+ * Aggregates multiple usage/cost occurrences across tool calls or sub-steps.
  */
 export function extractTranscriptTelemetry(transcript) {
   if (!transcript || typeof transcript !== 'string') return {};
   const out = {};
 
-  const usageMatch = transcript.match(/"usage"\s*:\s*\{([^}]+)\}/i);
-  if (usageMatch) {
-    try {
-      const parsed = JSON.parse(`{${usageMatch[1]}}`);
-      const tok = normalizeTokens(parsed);
-      if (tok) out.tokens = tok;
-    } catch {
-      // ignore partial regex JSON error
+  // 1. JSON usage blocks (match all blocks to aggregate multi-step runs)
+  const usageMatches = [...transcript.matchAll(/"usage"\s*:\s*\{([^}]+)\}/gi)];
+  if (usageMatches.length > 0) {
+    let aggTokens = null;
+    let aggCost = null;
+
+    for (const match of usageMatches) {
+      try {
+        const parsed = JSON.parse(`{${match[1]}}`);
+        const tok = normalizeTokens(parsed);
+        if (tok) {
+          if (!aggTokens) {
+            aggTokens = { ...tok };
+          } else {
+            if (tok.prompt !== undefined) aggTokens.prompt = (aggTokens.prompt ?? 0) + tok.prompt;
+            if (tok.completion !== undefined) aggTokens.completion = (aggTokens.completion ?? 0) + tok.completion;
+            if (tok.total !== undefined) {
+              aggTokens.total = (aggTokens.total ?? 0) + tok.total;
+            } else if (tok.prompt !== undefined && tok.completion !== undefined) {
+              aggTokens.total = (aggTokens.total ?? 0) + tok.prompt + tok.completion;
+            }
+          }
+        }
+        const blockCost = normalizeCost(parsed.cost ?? parsed.total_cost);
+        if (blockCost !== null) {
+          aggCost = (aggCost ?? 0) + blockCost;
+        }
+      } catch {
+        // ignore partial regex JSON error
+      }
+    }
+
+    if (aggTokens) {
+      if (aggTokens.total === undefined && aggTokens.prompt !== undefined && aggTokens.completion !== undefined) {
+        aggTokens.total = aggTokens.prompt + aggTokens.completion;
+      }
+      out.tokens = aggTokens;
+    }
+    if (aggCost !== null) {
+      out.cost = Number(aggCost.toFixed(6));
     }
   }
 
+  // 2. Text-based token patterns if not already extracted from JSON usage
   if (!out.tokens) {
-    const promptMatch = transcript.match(/(?:prompt[_-]?tokens|input[_-]?tokens)\s*[:=]\s*(\d+)/i);
-    const compMatch = transcript.match(/(?:completion[_-]?tokens|output[_-]?tokens)\s*[:=]\s*(\d+)/i);
-    const totalMatch = transcript.match(/(?:total[_-]?tokens|total\s+tokens)\s*[:=]\s*(\d+)/i);
+    const promptMatches = [...transcript.matchAll(/(?:prompt[_-]?tokens|input[_-]?tokens)\s*[:=]\s*(\d+)/gi)];
+    const compMatches = [...transcript.matchAll(/(?:completion[_-]?tokens|output[_-]?tokens)\s*[:=]\s*(\d+)/gi)];
+    const totalMatches = [...transcript.matchAll(/(?:total[_-]?tokens|total\s+tokens)\s*[:=]\s*(\d+)/gi)];
 
-    const p = promptMatch ? Number(promptMatch[1]) : undefined;
-    const c = compMatch ? Number(compMatch[1]) : undefined;
-    const t = totalMatch ? Number(totalMatch[1]) : undefined;
+    const p = promptMatches.length > 0 ? promptMatches.reduce((acc, m) => acc + Number(m[1]), 0) : undefined;
+    const c = compMatches.length > 0 ? compMatches.reduce((acc, m) => acc + Number(m[1]), 0) : undefined;
+    const t = totalMatches.length > 0 ? totalMatches.reduce((acc, m) => acc + Number(m[1]), 0) : undefined;
 
     if (t !== undefined || p !== undefined || c !== undefined) {
       const tok = normalizeTokens({ prompt: p, completion: c, total: t });
@@ -130,10 +177,19 @@ export function extractTranscriptTelemetry(transcript) {
     }
   }
 
-  const costMatch = transcript.match(/(?:total[_-]?cost|cost)\s*[:=]\s*\$?([0-9]+(?:\.[0-9]+)?)/i);
-  if (costMatch) {
-    const parsedCost = normalizeCost(costMatch[1]);
-    if (parsedCost !== null) out.cost = parsedCost;
+  // 3. Cost from text if not extracted from JSON usage blocks
+  if (out.cost === undefined) {
+    const totalCostMatch = transcript.match(/(?:total[_-]?cost|total\s+cost)\s*[:=]\s*\$?([0-9]+(?:\.[0-9]+)?)/i);
+    if (totalCostMatch) {
+      const parsedCost = normalizeCost(totalCostMatch[1]);
+      if (parsedCost !== null) out.cost = parsedCost;
+    } else {
+      const costMatches = [...transcript.matchAll(/(?:^|[^\w])cost\s*[:=]\s*\$?([0-9]+(?:\.[0-9]+)?)/gi)];
+      if (costMatches.length > 0) {
+        const sumCost = costMatches.reduce((acc, m) => acc + (normalizeCost(m[1]) ?? 0), 0);
+        out.cost = Number(sumCost.toFixed(6));
+      }
+    }
   }
 
   return out;
@@ -141,34 +197,45 @@ export function extractTranscriptTelemetry(transcript) {
 
 /**
  * Extracts telemetry from files inside the work directory (tokens.json, usage.json, telemetry.json).
+ * Merges token counts and cost across candidate files without losing metrics.
  */
 export function extractFileTelemetry(dir) {
   if (!dir || !existsSync(dir)) return {};
   const candidates = ['tokens.json', 'usage.json', 'telemetry.json'];
+  const out = {};
+
   for (const f of candidates) {
     const full = join(dir, f);
     if (existsSync(full)) {
       try {
         const raw = JSON.parse(readFileSync(full, 'utf8'));
-        const out = {};
-        if (raw.tokens || raw.usage) {
-          const tok = normalizeTokens(raw.tokens ?? raw.usage);
-          if (tok) out.tokens = tok;
-        } else {
-          const tok = normalizeTokens(raw);
-          if (tok) out.tokens = tok;
+        if (!out.tokens || out.tokens.total === undefined) {
+          let fileTok = null;
+          if (raw.tokens || raw.usage) {
+            fileTok = normalizeTokens(raw.tokens ?? raw.usage);
+          } else {
+            fileTok = normalizeTokens(raw);
+          }
+          if (fileTok) {
+            out.tokens = mergeTokens(out.tokens, fileTok);
+          }
         }
-        if (raw.cost !== undefined) {
-          const cost = normalizeCost(raw.cost);
-          if (cost !== null) out.cost = cost;
+        if (out.cost === undefined) {
+          const rawCost = raw.cost ?? raw.total_cost ?? raw.usage?.cost ?? raw.tokens?.cost;
+          if (rawCost !== undefined) {
+            const cost = normalizeCost(rawCost);
+            if (cost !== null) out.cost = cost;
+          }
         }
-        if (out.tokens || out.cost !== undefined) return out;
+        if (out.tokens?.total !== undefined && out.cost !== undefined) {
+          break;
+        }
       } catch {
         // ignore malformed JSON file
       }
     }
   }
-  return {};
+  return out;
 }
 
 /**
@@ -189,12 +256,14 @@ export function extractTelemetry({ dir = null, transcript = '', extra = {} } = {
   if ((!result.tokens || result.cost === undefined) && dir) {
     const fileTelem = extractFileTelemetry(dir);
     if (!result.tokens && fileTelem.tokens) result.tokens = fileTelem.tokens;
+    else if (result.tokens && fileTelem.tokens) result.tokens = mergeTokens(result.tokens, fileTelem.tokens);
     if (result.cost === undefined && fileTelem.cost !== undefined) result.cost = fileTelem.cost;
   }
 
-  if (!result.tokens && process.env.EVAL_AGENT_TOKENS) {
+  if ((!result.tokens || result.cost === undefined) && process.env.EVAL_AGENT_TOKENS) {
     const envTok = normalizeTokens(process.env.EVAL_AGENT_TOKENS);
-    if (envTok) result.tokens = envTok;
+    if (!result.tokens && envTok) result.tokens = envTok;
+    else if (result.tokens && envTok) result.tokens = mergeTokens(result.tokens, envTok);
   }
   if (result.cost === undefined && process.env.EVAL_AGENT_COST) {
     const envCost = normalizeCost(process.env.EVAL_AGENT_COST);
@@ -204,6 +273,7 @@ export function extractTelemetry({ dir = null, transcript = '', extra = {} } = {
   if ((!result.tokens || result.cost === undefined) && transcript) {
     const tTelem = extractTranscriptTelemetry(transcript);
     if (!result.tokens && tTelem.tokens) result.tokens = tTelem.tokens;
+    else if (result.tokens && tTelem.tokens) result.tokens = mergeTokens(result.tokens, tTelem.tokens);
     if (result.cost === undefined && tTelem.cost !== undefined) result.cost = tTelem.cost;
   }
 

@@ -78,15 +78,23 @@ export default [
   }),
 
   check('aif-gate-result-emitted', 'Valid aif-gate-result JSON emitted per AI Factory 2.x schema', ({ transcript }) => {
-    // Strictly require the official AI Factory 2.x fenced code block
-    const regex = /```aif-gate-result[^\r\n]*\r?\n([\s\S]*?)\r?\n```/g;
+    // Strictly require the official AI Factory 2.x fenced code block with exact language tag
+    const regex = /```aif-gate-result\s*\r?\n([\s\S]*?)\r?\n```/g;
     let match;
+    let lastMatch = null;
     let lastJson = null;
     while ((match = regex.exec(transcript)) !== null) {
+      lastMatch = match;
       lastJson = match[1].trim();
     }
-    if (!lastJson) {
+    if (!lastJson || !lastMatch) {
       return fail('no valid ```aif-gate-result fenced code block found in transcript');
+    }
+
+    // Verify the block is terminal (final block in transcript)
+    const trailingContent = transcript.slice(lastMatch.index + lastMatch[0].length).trim();
+    if (trailingContent.length > 0) {
+      return fail(`aif-gate-result must be the final block; found trailing content: "${trailingContent.slice(0, 50)}..."`);
     }
 
     try {
@@ -98,20 +106,32 @@ export default [
       if (!Array.isArray(parsed.blockers)) return fail('blockers must be an array');
       if (!Array.isArray(parsed.affected_files)) return fail('affected_files must be an array');
 
-      // Validate blockers structure
+      // Validate blockers structure and reject unsupported keys (e.g. line)
+      const ALLOWED_BLOCKER_KEYS = new Set(['id', 'severity', 'file', 'summary']);
       for (const b of parsed.blockers) {
         if (!b.id || typeof b.id !== 'string') return fail(`blocker missing string id: ${JSON.stringify(b)}`);
         if (!['error', 'warning'].includes(b.severity)) return fail(`blocker invalid severity: ${b.severity}`);
         if (!b.summary || typeof b.summary !== 'string') return fail(`blocker missing string summary: ${JSON.stringify(b)}`);
+        for (const k of Object.keys(b)) {
+          if (!ALLOWED_BLOCKER_KEYS.has(k)) {
+            return fail(`blocker contains unsupported key "${k}": ${JSON.stringify(b)}`);
+          }
+        }
       }
 
-      // Validate suggested_next allowlist
+      // Validate suggested_next allowlist and reason requirement
       const ALLOWED_COMMANDS = ['/aif-fix', '/aif-rules', '/aif-architecture', '/aif-roadmap', '/aif-commit', null];
       if (!parsed.suggested_next || typeof parsed.suggested_next !== 'object') {
         return fail('suggested_next must be an object');
       }
       if (!ALLOWED_COMMANDS.includes(parsed.suggested_next.command)) {
         return fail(`suggested_next.command "${parsed.suggested_next.command}" not in allowlist: ${ALLOWED_COMMANDS.join(', ')}`);
+      }
+      if (parsed.suggested_next.reason === undefined) {
+        return fail('suggested_next missing required "reason" property');
+      }
+      if (typeof parsed.suggested_next.reason !== 'string' && parsed.suggested_next.reason !== null) {
+        return fail('suggested_next.reason must be a string or null');
       }
 
       // For positive verification run (pass status expected)

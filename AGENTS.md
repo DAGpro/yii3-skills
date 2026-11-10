@@ -90,7 +90,7 @@ The repository is strictly divided into **Distributable Deliverables** and **Int
 
 | **Operational Nervous System** | `.ai-factory/` | Internal dev config & plans for *this* repo | **Working control center** of the target app (architecture, rules, plans) |
 
-| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (65 test cases), ground-truth symbol and arity verification, workflow contract tests | Not distributed to target applications |
+| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (66 test cases), ground-truth symbol and arity verification, workflow contract tests | Not distributed to target applications |
 
 | **Authoring References** | `references/` *(130 repos)*, `PACKAGES.md` (package navigation index) | Offline source of truth for APIs and doc examples; the index telling agents which packages to study per task | `references/` does not exist; `PACKAGES.md` is not used by target agents |
 
@@ -118,7 +118,7 @@ yii3-skills/ (Current baseline structure — subject to evolution)
 
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
 
-├── evals/                # [Internal Quality Tooling] 65 benchmark test scenarios, runner, and baseline metrics
+├── evals/                # [Internal Quality Tooling] 66 benchmark test scenarios, runner, and baseline metrics
 
 ├── references/           # [Authoring Only] Offline clones of yiisoft/* packages
 
@@ -178,7 +178,7 @@ Agents **MUST NOT** rely on pre-trained parametric memory, assumptions, or gener
 
 - **Zero Hallucination Policy:** Never invent method names, guess configuration keys, or assume Yii 2 constructs (`Yii::$app`, static facades). If an API or feature cannot be confirmed directly within `references/`, it MUST NOT be written into the documentation.
 
-- **Automated Grounding & AST Quality Gates (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`):** All `Yiisoft\...` FQCNs, method signatures, parameter types, and call arities quoted across reference guides are statically verified against `references/` (or `evals/data/api-symbols-manifest.json` and `evals/data/ast-signatures-manifest.json` in CI). In addition, `scripts/check-ast.mjs` performs AST-level verification of all PHP code blocks: validating instance calls on typed variables, static calls, fluent call chains, visibility, calling conventions, call arities, and named parameter names against declared signatures. Unconfirmed symbols or signature mismatches fail the quality gate unless explicitly allowlisted with a documented reason.
+- **Automated Grounding & Static Analysis Quality Gates (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`):** All `Yiisoft\...` FQCNs, method signatures, parameter types, and call arities quoted across reference guides are statically verified against `references/` (or `evals/data/api-symbols-manifest.json` and `evals/data/ast-signatures-manifest.json` in CI). In addition, `scripts/check-ast.mjs` performs structural signature and call analysis across all PHP code blocks: validating instance calls on typed variables, static calls, fluent call chains, visibility, calling conventions, call arities, and named parameter names against declared signatures. Unconfirmed symbols or signature mismatches fail the quality gate unless explicitly allowlisted with a documented reason.
 
 ### 4.3. References Directory Safety & Search Discipline
 

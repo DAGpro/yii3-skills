@@ -2,16 +2,14 @@
 name: yii3
 description: >-
   Architect, develop, test, and verify applications using modern Yii 3 (PHP 8.2+,
-  yiisoft/* packages). Enforces bottom-up implementation stages, mandatory signature
-  inspection in vendor sources, per-step wiring gates, and production readiness checks.
+  yiisoft/* packages). Enforces bottom-up stages, mandatory signature lookup in
+  vendor sources, per-step wiring gates, and production readiness checks.
   Use when user says "Yii3", "Yii 3", "yiisoft", or asks to build, refactor, or test
-  daily Yii 3 features: REST API endpoints, CRUD operations, thin actions, PSR-7/PSR-15
-  routes and middleware, DI container wiring (yiisoft/di, config), database queries,
-  transactions and migrations (yiisoft/db, Active Record, Cycle), input DTO hydration
-  (yiisoft/hydrator) and validation (yiisoft/validator), forms and file uploads, OpenAPI
-  docs (yiisoft/swagger), views and widgets (yiisoft/view, GridView), console commands
-  (yiisoft/yii-console), queue jobs (yiisoft/queue), caching, events, error handling,
-  RBAC and auth (yiisoft/rbac, yiisoft/auth). Accepts --mode=patch|feature|enterprise.
+  Yii 3 features: REST API endpoints, CRUD, thin actions, PSR-7/PSR-15 routes,
+  middleware, DI wiring, database migrations, queries, Active Record, Cycle ORM,
+  input DTOs, hydrator, validator, forms, views, widgets, console commands,
+  queue jobs, cache, events, logging, error handling, auth, and RBAC.
+  Accepts --mode=patch|feature|enterprise.
 ---
 
 # Yii3 development
@@ -25,18 +23,19 @@ Pick and print the execution mode at Stage 0 before writing code:
 - **User Mode Override:** The user can explicitly select the mode via command flag `--mode=<patch|feature|enterprise>`, prompt flags (`+patch`, `+feature`, `+enterprise`), or natural language (e.g. "in patch mode", "enterprise mode"). When specified, the requested mode strictly takes precedence.
 - **Automatic Classification (Default: `Feature`):**
   - **1. Patch Mode (`Mode: Patch`):**
-    - **Scope & Use:** Targeted micro-tasks (single route, isolated 1-file bugfix, pure config/DI edit, docs/guide lookup). Touched stages only; bypasses domain layer overhead and skips extended Definition of Done (`references/core-definition-of-done.md`). Flow: Stage 0 → touched stages → touched wiring lines.
+    - **Scope & Use:** Targeted surgical micro-tasks (isolated 1–3 files, single route addition, bugfix, pure config/DI edit, docs/guide lookup). Touched stages only; bypasses domain layer overhead; skips schema migrations ONLY when the patch does not require schema changes; skips extended Definition of Done (`references/core-definition-of-done.md`). Flow: Stage 0 → touched stages → touched wiring lines.
   - **2. Feature Mode (`Mode: Feature`) — Canonical Default:**
     - **Scope & Use:** Regular business features, CRUD endpoints, data listings, and Active Record / Cycle flows (~80% of daily tasks). Runs full 7-stage Mission Workflow and standard Definition of Done.
-    - **Pragmatic Architecture:** Actions strictly remain thin HTTP transport adapters (hydration, validation, response building only). Business features follow standard layered idioms: Application Service, Action Handler, or Repository/ActiveRecord model without forced decoupled domain aggregate entities or interface indirection unless project architecture mandates them. Zero SQL, persistence, or transactions in presentation. Invariants: thin Actions, Input DTOs with Validator attributes, transactions in services/handlers, per-step wiring gates, tests.
+    - **Pragmatic Architecture:** Actions strictly remain thin HTTP transport adapters (hydration, validation, response building only). Business features follow standard layered idioms: Application Service, Use Case Handler, or direct Repository/ActiveRecord model without forced decoupled domain aggregate entities or interface indirection unless project architecture mandates them. Zero SQL, persistence, or transactions in presentation. Invariants: thin Actions, Input DTOs with Validator attributes, transactions in services/handlers, per-step wiring gates, tests.
   - **3. Enterprise Mode (`Mode: Enterprise`):**
     - **Scope & Use:** Complex business domains, multi-step transactions, state machines, async event pipelines, auth/security cores, or reusable infrastructure slices. Full DDD bottom-up graph: pure Aggregate Entities, Value Objects, Repository Interfaces + implementations, dedicated single-responsibility Use Case Handlers, domain events, and complete Production Readiness Gate.
 
-**Architectural Alignment (maps 1:1 to `/aif-architecture` types, detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):**
-- **Layered Architecture (`layers`, Pragmatic Tier):** standard horizontal layers, services/actions consuming repositories or Active Record models directly (Feature Mode).
-- **Structured Modules (`structured*`, Balanced Tier):** feature modules, rich models with Active Record / Cycle permitted, interfaces at module boundaries (Feature / Enterprise Mode).
-- **Explicit Architecture (`explicit*`, Strict Tier):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers (Enterprise Mode).
-*Universal Invariant:* In all three modes and architectures, Actions remain thin HTTP transport adapters; zero direct SQL, persistence, or transaction management in presentation.
+**Architectural Alignment (independent axis from execution mode, maps 1:1 to `/aif-architecture` types, detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):**
+Execution mode (Patch / Feature / Enterprise) and architectural tier (Pragmatic / Balanced / Strict) are two independent orthogonal axes (all 9 combinations valid). The project's architecture tier dictates file placement and layer boundaries without restricting execution mode:
+- **Layered Architecture (`layers`, Pragmatic Tier):** standard horizontal layers, actions consuming Application Services or repositories/Active Record models directly.
+- **Structured Modules (`structured*`, Balanced Tier):** feature modules, rich models with Active Record / Cycle permitted, interfaces at module boundaries.
+- **Explicit Architecture (`explicit*`, Strict Tier):** pure domain aggregates, decoupled ports, dedicated single-responsibility Use Case Handlers.
+*Universal Invariant:* In all three modes and across all architectural tiers, Actions strictly remain thin HTTP transport adapters; zero direct SQL, persistence, or transaction management in presentation.
 
 ## AI Factory Adapter (Workflow Integration)
 

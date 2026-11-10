@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry } from './core.mjs';
+import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens } from './core.mjs';
 import { changedFiles } from '../lib/checks.mjs';
 import { runRuntimeEvaluation } from '../lib/runtime.mjs';
 
@@ -23,14 +23,55 @@ try {
     throw new Error(`t2 mismatch: ${JSON.stringify(t2)}`);
   }
 
+  // 1. Partial tokens: prompt only or completion only should not fake total
+  const partPrompt = normalizeTokens({ prompt: 500 });
+  if (!partPrompt || partPrompt.prompt !== 500 || partPrompt.total !== undefined) {
+    throw new Error(`partPrompt mismatch: ${JSON.stringify(partPrompt)}`);
+  }
+  const partComp = normalizeTokens({ completion: 250 });
+  if (!partComp || partComp.completion !== 250 || partComp.total !== undefined) {
+    throw new Error(`partComp mismatch: ${JSON.stringify(partComp)}`);
+  }
+
   const transcript = 'Result summary: total_tokens: 2500\nCost: $0.0125\nCompleted successfully.';
   const t3 = extractTelemetry({ transcript });
   if (t3.tokens?.total !== 2500 || t3.cost !== 0.0125) throw new Error(`t3 mismatch: ${JSON.stringify(t3)}`);
 
+  // 2. Multi-file telemetry: tokens in tokens.json, cost in usage.json (cost must not be dropped)
   const tmpTelemDir = mkdtempSync(join(tmpdir(), 'telem-test-'));
-  writeFileSync(join(tmpTelemDir, 'tokens.json'), JSON.stringify({ prompt: 800, completion: 200, cost: 0.003 }));
+  writeFileSync(join(tmpTelemDir, 'tokens.json'), JSON.stringify({ prompt: 800, completion: 200 }));
+  writeFileSync(join(tmpTelemDir, 'usage.json'), JSON.stringify({ cost: 0.0035 }));
   const t4 = extractTelemetry({ dir: tmpTelemDir });
-  if (t4.tokens?.total !== 1000 || t4.cost !== 0.003) throw new Error(`t4 mismatch: ${JSON.stringify(t4)}`);
+  if (t4.tokens?.total !== 1000 || t4.cost !== 0.0035) throw new Error(`t4 multi-file mismatch: ${JSON.stringify(t4)}`);
+
+  // 3. Multi-block transcript usage aggregation across tool calls
+  const multiTranscript = `
+    Step 1: {"usage": {"prompt_tokens": 100, "completion_tokens": 50, "cost": 0.001}}
+    Step 2: {"usage": {"prompt_tokens": 200, "completion_tokens": 75, "cost": 0.002}}
+  `;
+  const t5 = extractTelemetry({ transcript: multiTranscript });
+  if (t5.tokens?.prompt !== 300 || t5.tokens?.completion !== 125 || t5.tokens?.total !== 425 || t5.cost !== 0.003) {
+    throw new Error(`t5 multi-block transcript mismatch: ${JSON.stringify(t5)}`);
+  }
+
+  // 4. Multi-step text regex telemetry aggregation
+  const regexTranscript = `
+    Step 1: prompt_tokens: 150 completion_tokens: 50
+    Step 2: prompt_tokens: 250 completion_tokens: 100
+    Step 1 cost: $0.0012
+    Step 2 cost: $0.0018
+  `;
+  const t6 = extractTelemetry({ transcript: regexTranscript });
+  if (t6.tokens?.prompt !== 400 || t6.tokens?.completion !== 150 || t6.tokens?.total !== 550 || t6.cost !== 0.003) {
+    throw new Error(`t6 regex transcript mismatch: ${JSON.stringify(t6)}`);
+  }
+
+  // 5. Explicit total_cost takes precedence over per-step cost lines
+  const totalCostTranscript = 'Step 1 cost: $0.001\nTotal Cost: $0.0075';
+  const t7 = extractTelemetry({ transcript: totalCostTranscript });
+  if (t7.cost !== 0.0075) {
+    throw new Error(`t7 explicit total_cost mismatch: ${JSON.stringify(t7)}`);
+  }
 } catch (e) {
   console.error(`FAIL telemetry-validation: ${e.message}`);
   bad++;

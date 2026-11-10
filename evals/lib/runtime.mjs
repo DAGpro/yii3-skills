@@ -3,7 +3,8 @@
 // runs syntax linting (php -l), composer validate, and test suites (phpunit).
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, statSync, cpSync, symlinkSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, cpSync, symlinkSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -328,6 +329,20 @@ export function ensurePrewarmedVendor(workDir, toolchain = detectPhpToolchain())
   const candidateVendor = (envVendor && existsSync(envVendor)) ? envVendor : (existsSync(defaultVendor) ? defaultVendor : null);
 
   if (candidateVendor) {
+    // Verify dependency lock compatibility when composer.lock is present
+    const workLock = join(workDir, 'composer.lock');
+    if (existsSync(workLock) && process.env.EVAL_VENDOR_IGNORE_LOCK !== '1') {
+      const cacheLockCandidate = join(dirname(candidateVendor), 'composer.lock');
+      if (existsSync(cacheLockCandidate)) {
+        const hWork = createHash('sha256').update(readFileSync(workLock)).digest('hex');
+        const hCache = createHash('sha256').update(readFileSync(cacheLockCandidate)).digest('hex');
+        if (hWork !== hCache) {
+          // Prewarmed vendor was built for a different dependency lock - skip attaching
+          return { vendorPresent: false, source: null, lockMismatch: true };
+        }
+      }
+    }
+
     try {
       cpSync(candidateVendor, targetVendor, { recursive: true });
       return { vendorPresent: true, source: candidateVendor };

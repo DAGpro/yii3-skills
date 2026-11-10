@@ -16,7 +16,9 @@ Created migration, bound DI, and registered routes.
     }
   ],
   "affected_files": [
-    "src/Migration/M20261109130000_DuplicateOrderTable.php"
+    "src/Migration/M20261109130000_DuplicateOrderTable.php",
+    "config/routes.php",
+    "config/web/di/order.php"
   ],
   "suggested_next": {
     "command": "/aif-fix",

@@ -10,17 +10,17 @@
 | **Total Reference Files** | 83 | All reference documents in `skills/yii3/references/` |
 | **Catalogs & Navigation Indexes** | 2 | `INDEX.md`, `package-catalog.md` |
 | **Evaluated Topic Guides** | 81 | Concrete architectural and implementation reference guides |
-| **Covered Topic Guides** | 81 (100.0%) | Verified by >= 1 dedicated eval scenario with positive & negative samples |
+| **Covered Topic Guides** | 81 (100.0%) | 100% mapped guide coverage (all 81 topic guides mapped to >= 1 dedicated eval scenario) |
 | **Unbound Topic Guides** | 0 (0.0%) | Full coverage achieved across all evaluated reference guides |
-| **Total Eval Scenarios** | 65 | Deterministic test fixtures with full check-suites and mutation canaries |
+| **Total Eval Scenarios** | 66 | Deterministic test fixtures with full check-suites and mutation canaries |
 
 ## 2. Complete Verification Matrix
 
 | Topic Guide | Governing Scenario(s) | Layer | Positive Sample | Negative Sample | Runtime Verification | Status |
 |---|---|---|---|---|---|---|
-| `SKILL.md` (Core Entry Point) | [01](scenarios/01-full-add-comment), [04](scenarios/04-not-yii3-project), [05](scenarios/05-legacy-drift), [06](scenarios/06-convention-conflict), [08](scenarios/08-no-vendor-flag), [10](scenarios/10-yii2-trap), [12](scenarios/12-docs-only-task), [55](scenarios/55-aif-e2e-workflow) | Composite & Unit | Yes | Yes | php-lint, composer | **Covered** |
+| `SKILL.md` (Core Entry Point) | [01](scenarios/01-full-add-comment), [04](scenarios/04-not-yii3-project), [05](scenarios/05-legacy-drift), [06](scenarios/06-convention-conflict), [08](scenarios/08-no-vendor-flag), [10](scenarios/10-yii2-trap), [12](scenarios/12-docs-only-task), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery) | Composite & Unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/INDEX.md` | — | — | — | — | — | Catalog Index |
-| `references/aif-adapter.md` | [55](scenarios/55-aif-e2e-workflow) | composite | Yes | Yes | php-lint, composer | **Covered** |
+| `references/aif-adapter.md` | [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/core-architecture-alignment.md` | [48](scenarios/48-architecture-layering), [55](scenarios/55-aif-e2e-workflow) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/core-config-tree.md` | [55](scenarios/55-aif-e2e-workflow) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/core-definition-of-done.md` | [01](scenarios/01-full-add-comment), [55](scenarios/55-aif-e2e-workflow), [56](scenarios/56-qa-rector-cs-fixer) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |

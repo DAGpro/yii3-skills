@@ -135,7 +135,6 @@ Across AI Factory workflows, independent agents run in separate conversational c
         "id": "verify-001",
         "severity": "error",
         "file": "src/Blog/CreateCommentAction.php",
-        "line": 42,
         "summary": "SQL query found inside Action; actions must remain thin HTTP transport adapters."
       }
     ],

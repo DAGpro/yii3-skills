@@ -33,8 +33,8 @@ Pick and print the execution mode at Stage 0 before writing code:
 
 At Stage 0, detect the operating context first and route to the matching adapter — each adapter defines the complete contract for its mode (path resolution, durable state, interaction protocol, verification, and output handoff):
 
-- **AI Factory extension (default):** an `aif-*` workflow invokes the skill, or the project contains a `.ai-factory/` directory → follow [`references/core-aif-adapter.md`](references/core-aif-adapter.md).
-- **Standalone fallback:** no `.ai-factory/` directory AND no `aif-*` invocation → follow [`references/core-standalone-adapter.md`](references/core-standalone-adapter.md).
+- **AI Factory extension (default):** an `aif-*` workflow invokes the skill, or the project contains a `.ai-factory/` directory → follow [`references/core-aif-adapter.md`](references/core-aif-adapter.md). The skill executes **exactly the role of the invoking workflow** — plan, implement, verify, fix, review, improve, roadmap, architecture — detected from the invoking `aif-*` command or the loaded workflow injection. Role scope: the adapter §2 Responsibility & Boundary Matrix; per-role duties: the matching workflow injection. Only the `aif-implement` role runs the full Mission Workflow (Stages 1–7) implementation path; every other role executes its scoped duties and hands off per the adapter.
+- **Standalone fallback:** no `.ai-factory/` directory AND no `aif-*` invocation (no workflow injection loaded) → follow [`references/core-standalone-adapter.md`](references/core-standalone-adapter.md) — the skill runs the full self-directed pipeline (Stages 1–7 → self-verification → report).
 
 ## Stage 0 — Mission Bootstrap
 
@@ -55,7 +55,7 @@ Run first, in every mode. **Scope:** apply the skill to the extent the user's ta
      ```markdown
      ### Mission State
      - **Mode:** <Feature (default) | Enterprise>
-     - **Context:** <AI Factory extension (default) | Standalone>
+     - **Context:** <AI Factory extension — <workflow role> (default) | Standalone>
      - **Architecture:** <project source | convention fallback>
      - **Guides to load:** <primary guides>
      - **Stage Progress:**
@@ -71,7 +71,7 @@ Run first, in every mode. **Scope:** apply the skill to the extent the user's ta
      ```markdown
      ### Mission State
      - **Mode:** Patch
-     - **Context:** <AI Factory extension (default) | Standalone>
+     - **Context:** <AI Factory extension — <workflow role> (default) | Standalone>
      - **Architecture:** <project source | convention fallback>
      - **Touched Stages:** <e.g. Stage 5 (Action) | Stage 6 (Routes)>
      - **Wiring Gate:** pending

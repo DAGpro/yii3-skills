@@ -21,6 +21,10 @@ The standard feature lifecycle follows a strict state-machine protocol:
 
 `plan` → `implement` → `verify` ⇄ (blockers / fixes) → `fix` → `verify` → `complete`
 
+### Role Binding (One Role per Invocation)
+
+Each skill invocation inside the automation loop executes **exactly the role of the calling `aif-*` workflow** — plan, implement, verify, fix, review, improve, roadmap, architecture. The role is detected from the invoking `aif-*` command or the loaded workflow injection. The matrix below is the authority for what that role may modify and must output; per-role duties are anchored in the matching workflow injection. Only the `aif-implement` role runs the full Mission Workflow (Stages 1–7) implementation path; `aif-plan`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, and `aif-architecture` execute only their scoped duties and hand off per the matrix. Invocations without an `aif-*` role signal do not enter this protocol — they follow the standalone fallback (`core-standalone-adapter.md`).
+
 ### Workflow Responsibility & Boundary Matrix
 
 | Workflow | Role & Phase | Input Artifacts | Allowed Modifications | Output Artifacts | Next Handoff |

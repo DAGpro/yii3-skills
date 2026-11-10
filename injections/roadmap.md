@@ -2,7 +2,7 @@
 
 Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (application/runtime stack, e.g. `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, without application runtime stack), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): do not auto-activate — ask the user or report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions). Otherwise load the `yii3` skill and shape milestones per it — the skill is the single source of rules:
 
-Roadmap-specific duties:
+Roadmap-specific duties (the rules themselves live in the skill; all `references/*.md` paths resolve relative to the `yii3` skill directory):
 - Stack invariants: shape milestones per SKILL.md Stage 0 item 2 — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`.
 - Driver selection rules: resolve driver selections per the skill's `references/package-catalog.md` §3 ("Pick Exactly ONE per Family").
 - Architecture sequencing: add an early milestone "Run the architecture workflow before the first plan" so every subsequent plan places code against a resolved architecture.

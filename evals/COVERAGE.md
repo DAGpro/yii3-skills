@@ -7,10 +7,10 @@
 
 | Metric | Value | Scope |
 |---|---|---|
-| **Total Reference Files** | 85 | All reference documents in `skills/yii3/references/` |
+| **Total Reference Files** | 87 | All reference documents in `skills/yii3/references/` |
 | **Catalogs & Navigation Indexes** | 2 | `INDEX.md`, `package-catalog.md` |
-| **Evaluated Topic Guides** | 83 | Concrete architectural and implementation reference guides |
-| **Covered Topic Guides** | 83 (100.0%) | 100% mapped guide coverage (all 83 topic guides mapped to >= 1 dedicated eval scenario) |
+| **Evaluated Topic Guides** | 85 | Concrete architectural and implementation reference guides |
+| **Covered Topic Guides** | 85 (100.0%) | 100% mapped guide coverage (all 85 topic guides mapped to >= 1 dedicated eval scenario) |
 | **Unbound Topic Guides** | 0 (0.0%) | Full coverage achieved across all evaluated reference guides |
 | **Total Eval Scenarios** | 66 | Deterministic test fixtures with full check-suites and mutation canaries |
 
@@ -68,6 +68,7 @@
 | `references/infra-auth-and-rbac.md` | [24](scenarios/24-rbac-permission-check), [25](scenarios/25-composite-auth-login) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-auth-jwt.md` | [34](scenarios/34-jwt-api-auth) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-auth-oauth2.md` | [50](scenarios/50-oauth2-github-login) | unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/infra-auth-session.md` | [25](scenarios/25-composite-auth-login) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-commands.md` | [08](scenarios/08-no-vendor-flag), [11](scenarios/11-console-command) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-error-handling-ops.md` | [47](scenarios/47-error-log-listener) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-error-handling-web.md` | [19](scenarios/19-error-mapping) | unit | Yes | Yes | php-lint, composer | **Covered** |
@@ -90,6 +91,7 @@
 | `references/persistence-cache-drivers.md` | [18](scenarios/18-cache-hot-path) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-caching.md` | [18](scenarios/18-cache-hot-path) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-cycle-orm.md` | [30](scenarios/30-cycle-entity-persist) | unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/persistence-cycle-schema-and-cli.md` | [30](scenarios/30-cycle-entity-persist) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-db-connection-and-queries.md` | [03](scenarios/03-forgotten-di-binding) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-db-readers-and-drivers.md` | [22](scenarios/22-action-pagination) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-db.md` | [38](scenarios/38-db-query-builder) | unit | Yes | Yes | php-lint, composer | **Covered** |
@@ -107,7 +109,7 @@
 
 ## 3. Unbound Guides Gap Analysis (Roadmap P3 Completed)
 
-All 8 former Roadmap P3 guides have been implemented as dedicated eval scenarios (58–65), achieving **100.0% coverage** across all 83 topic guides:
+All 8 former Roadmap P3 guides have been implemented as dedicated eval scenarios (58–65), achieving **100.0% coverage** across all 85 topic guides:
 
 | # | Topic Guide | Primary Package | Governing Scenario | Status |
 |---|---|---|---|---|

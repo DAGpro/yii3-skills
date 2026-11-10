@@ -26,6 +26,7 @@
   "layer": "composite",
   "guides": [
     "references/infra-auth-and-rbac.md",
+    "references/infra-auth-session.md",
     "references/http-forms-and-hydration.md",
     "references/http-state.md"
   ]

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// AI Factory Workflow End-to-End Contract Test (Node >= 18, ESM, node:* stdlib only).
+// AI Factory Workflow Contract Test Suite (Node >= 18, ESM, node:* stdlib only).
 // Validates the integration between yii3-skills and AI Factory workflows:
 // 1. Injections Canonical Guard & Structure Contract (AGENTS.md §4.6)
 // 2. Stage 0 AI Factory Config & Path Resolution Contract (.ai-factory/config.yaml)
@@ -28,7 +28,7 @@ function assert(condition, message) {
   testsPassed++;
 }
 
-console.log('=== AI Factory Workflow End-to-End Contract Test ===\n');
+console.log('=== AI Factory Workflow Contract Test Suite ===\n');
 
 // ---------------------------------------------------------------------------
 // 1. Injections Canonical Guard & Structure Contract

@@ -24,7 +24,7 @@ Requiring `yiisoft/yii-runner-console` alone is sufficient — it pulls in `yiis
 - [5. Interactive Terminal UX with SymfonyStyle](#5-interactive-terminal-ux-with-symfonystyle)
 - [6. Standard Exit Codes (Yiisoft\Yii\Console\ExitCode)](#6-standard-exit-codes-yiisoftyiiconsoleexitcode)
 - [7. Friendly Exceptions & Global Error Handling](#7-friendly-exceptions--global-error-handling) — full reference in the [Friendly Exceptions Guide](core-friendly-exceptions.md)
-- [8. Testing Console Commands (CommandTester)](#8-testing-console-commands-commandtester)
+- [8. Testing Console Commands (CommandTester)](#8-testing-console-commands-commandtester) — full reference in the [Console Testing Guide](testing-console.md)
 - [9. Built-in Ecosystem Commands](#9-built-in-ecosystem-commands)
 - [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
 - [11. Related Topic Guides](#11-related-topic-guides)
@@ -765,41 +765,11 @@ An unknown code yields `"Unknown exit code"`.
 
 ## 8. Testing Console Commands (`CommandTester`)
 
-Console commands are covered by lightweight integration tests using `Symfony\Component\Console\Tester\CommandTester`: construct the command with a mocked use-case handler, execute it with input arguments, and assert the exit code and display output.
-
-### 8.1. Zero-Shot Compilable Command Test
-
-```php
-// App\Tests\Presentation\Console\Command\CreateUserCommandTest
-public function testExecuteSuccessful(): void
-{
-    $handler = $this->createMock(CreateUserHandler::class);
-    $handler->expects(self::once())->method('handle')
-        ->willReturn(new CreateUserResult(id: 'usr_mock_123', name: 'Super Admin'));
-
-    $tester = new CommandTester(new CreateUserCommand($handler));
-
-    $exitCode = $tester->execute(['email' => 'admin@example.com', 'name' => 'Super Admin']);
-
-    self::assertSame(ExitCode::OK, $exitCode);
-    self::assertStringContainsString('User "Super Admin" created successfully', $tester->getDisplay(true));
-}
-```
-
-Failure paths follow the same shape: feed invalid input (e.g. a malformed email) or throw from the mocked handler, then assert `ExitCode::DATAERR` and the friendly message returned by `getDisplay(true)`.
-
-### 8.2. Assembling a Real `Application` Instance in Tests
-
-Tests that need the full `Yiisoft\Yii\Console\Application` pipeline — `find()` lookup through `CommandLoader`, event bridging, default application options — assemble the application manually with test doubles from `yiisoft/test-support` (`SimpleContainer`, `SimpleEventDispatcher`). That assembly recipe, along with all `CommandTester` mechanics, is owned by the testing guide:
+Console commands are covered by lightweight integration tests using `Symfony\Component\Console\Tester\CommandTester`: construct the command with a mocked use-case handler, execute it with input arguments, and assert exit codes and display output.
 
 > [!TIP]
 > **Console Command Testing Reference:**
 > For the complete reference on `CommandTester` usage — exit codes (§2), output assertion with `getDisplay(true)` (§3), failure scenarios such as `ExitCode::DATAERR` (§4), interactive prompt simulation via `setInputs()` (§5), autocompletion testing via `CommandCompletionTester` (§6), and container-aware resolution via the `CommandHelper` pattern (§7) — see the [Console Testing Guide](testing-console.md).
-
-Testing traps:
-
-- `setInputs(['yes', ...])` pre-fills simulated answers for interactive prompts — use it only when the command under test actually prompts; to suppress prompts entirely, pass `['interactive' => false]` as the second argument of `CommandTester::execute()` (mirrors the production `--no-interaction` flag).
-- When assembling a real `Application` in a test, call `setAutoExit(false)` — otherwise the test process terminates on the first non-zero command exit code.
 
 ---
 

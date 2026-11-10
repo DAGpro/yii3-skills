@@ -17,6 +17,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/persistence-cycle-orm.md"
+    "references/persistence-cycle-orm.md",
+    "references/persistence-cycle-schema-and-cli.md"
   ]
 }

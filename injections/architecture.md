@@ -2,7 +2,7 @@
 
 Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (application/runtime stack, e.g. `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, without application runtime stack), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): do not auto-activate — ask the user or report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions). Otherwise load the `yii3` skill and generate or update ARCHITECTURE.md per its `references/core-architecture-alignment.md`:
 
-Architecture-specific duties:
+Architecture-specific duties (the rules themselves live in the skill; all `references/*.md` paths resolve relative to the `yii3` skill directory):
 - Pattern & tier alignment: map the chosen `/aif-architecture` pattern (`explicit`, `structured`, `layers`) to the corresponding Yii 3 isolation tier (Strict, Balanced, Pragmatic) per `references/core-architecture-alignment.md` §1–§2.
 - Universal presentation invariant: enforce presentation isolation from persistence (thin actions, zero direct SQL/transactions) and composition root in `config/` per `core-architecture-alignment.md` §3.1–§3.3.
 - Stack invariants: record exactly one DB driver, one persistence path, one queue/cache/mutex driver, and one test runner per SKILL.md Stage 0 item 2.

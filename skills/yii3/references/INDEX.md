@@ -60,7 +60,8 @@
 - `references/persistence-db-readers-and-drivers.md` — pagination & data readers, drivers & DSN, signatures
 - `references/persistence-active-record.md` — Active Record models, repositories, ActiveQuery, mutations
 - `references/persistence-active-record-relations.md` — relationQuery, hasOne/hasMany, viaTable, eager loading, LazyLoadGuard
-- `references/persistence-cycle-orm.md` — Cycle ORM data mapper
+- `references/persistence-cycle-orm.md` — Cycle ORM data mapper, entities, relations, behaviors, unit of work
+- `references/persistence-cycle-schema-and-cli.md` — DBAL configuration, schema compilation pipeline, Cycle migrations & CLI commands
 - `references/persistence-migrations.md` — split index: schema vs operations guides
 - `references/persistence-migrations-schema.md` — migration contracts, naming, ColumnBuilder, FKs, DDL, seeding
 - `references/persistence-migrations-operations.md` — params config, console command catalog, CI automation
@@ -76,7 +77,8 @@
 - `references/infra-queue-jobs.md` — queue jobs, message DTOs, workers, failure pipelines
 - `references/infra-queue-brokers.md` — broker adapters (queue-db/redis/amqp, SyncQueue)
 - `references/infra-queue-mutex.md` — distributed mutex locks
-- `references/infra-auth-and-rbac.md` — identity, session lifecycle, RBAC rules, route protection
+- `references/infra-auth-and-rbac.md` — identity, password hashing, RBAC rules, route protection
+- `references/infra-auth-session.md` — stateful session authentication, CurrentUser, login/logout lifecycles, CookieLogin, web events
 - `references/infra-auth-jwt.md` — JWT authentication
 - `references/infra-auth-oauth2.md` — OAuth2/OIDC clients
 - `references/infra-rbac-storage.md` — rbac-db, rbac-php, rbac-cycle-db drivers

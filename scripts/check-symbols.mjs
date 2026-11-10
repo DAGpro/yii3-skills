@@ -21,6 +21,7 @@ const guidesDir = join(root, 'skills', 'yii3', 'references');
 const referencesDir = join(root, 'references');
 const manifestPath = join(root, 'evals', 'data', 'api-symbols-manifest.json');
 const shouldExportManifest = process.argv.includes('--export-manifest') || process.env.UPDATE_MANIFEST === '1';
+const forceManifestMode = process.argv.includes('--manifest-mode');
 
 // Allowlist of known-good non-confirmable symbols. Each entry: { match, reason }.
 // `match` is a substring tested against "<FQCN or Class::method>@<guide-filename>".
@@ -369,7 +370,7 @@ let allowlisted = 0;
 let checkedSignatures = 0;
 const confirmedManifest = { fqcns: [], methods: {} };
 
-if (classMap.packages === 0) {
+if (forceManifestMode || classMap.packages === 0) {
   if (existsSync(manifestPath)) {
     console.log('NOTE [check-symbols] running in manifest verification mode (CI environment without references/ clones).');
     const manifest = JSON.parse(readText(manifestPath));

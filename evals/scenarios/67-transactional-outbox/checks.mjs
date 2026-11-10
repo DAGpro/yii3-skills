@@ -17,6 +17,31 @@ export default [
     return ok(outboxMig);
   }),
 
+  check('outbox-unique-idempotency-index', 'Outbox migration declares a unique index on idempotency_key and implements TransactionalMigrationInterface', ({ dir }) => {
+    const migrations = filesMatching(dir, /M\d+.*\.php$/);
+    const outboxMig = migrations.find((f) => /createTable\s*\([^)]*outbox_messages/i.test(read(f)));
+    if (!outboxMig) return fail('no outbox_messages migration to inspect for the unique idempotency_key index');
+    const src = read(outboxMig);
+    if (!/TransactionalMigrationInterface/.test(src)) return fail('outbox migration does not implement TransactionalMigrationInterface');
+    if (!/IndexType::UNIQUE/.test(src) || !/idempotency_key/.test(src)) {
+      return fail('outbox migration lacks a unique index on idempotency_key');
+    }
+    return ok(outboxMig);
+  }),
+
+  check('processed-messages-migration-exists', 'Revertible migration creates processed_messages with a unique (consumer_name, idempotency_key) index', ({ dir }) => {
+    const migrations = filesMatching(dir, /M\d+.*\.php$/);
+    const mig = migrations.find((f) => /createTable\s*\([^)]*processed_messages/i.test(read(f)));
+    if (!mig) return fail('no migration calling createTable for processed_messages');
+    const src = read(mig);
+    if (!/RevertibleMigrationInterface/.test(src)) return fail('processed_messages migration does not implement RevertibleMigrationInterface');
+    if (!/TransactionalMigrationInterface/.test(src)) return fail('processed_messages migration does not implement TransactionalMigrationInterface');
+    if (!/IndexType::UNIQUE/.test(src) || !/consumer_name/.test(src) || !/idempotency_key/.test(src)) {
+      return fail('processed_messages migration lacks the unique (consumer_name, idempotency_key) index');
+    }
+    return ok(mig);
+  }),
+
   check('atomic-transaction-outbox-write', 'Use case/service writes domain order and outbox row inside the same ConnectionInterface::transaction() closure', ({ dir }) => {
     const candidates = allPhp(dir).filter((f) => {
       const s = read(f);

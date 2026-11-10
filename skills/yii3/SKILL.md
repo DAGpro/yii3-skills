@@ -55,7 +55,7 @@ Run first, in every mode. **Scope:** apply the skill to the extent the user's ta
      ```markdown
      ### Mission State
      - **Mode:** <Feature (default) | Enterprise>
-     - **Context:** <AI Factory extension — <workflow role> (default) | Standalone>
+     - **Context:** <AI Factory extension (default) — workflow role: <aif-* command> | Standalone>
      - **Architecture:** <project source | convention fallback>
      - **Guides to load:** <primary guides>
      - **Stage Progress:**
@@ -71,7 +71,7 @@ Run first, in every mode. **Scope:** apply the skill to the extent the user's ta
      ```markdown
      ### Mission State
      - **Mode:** Patch
-     - **Context:** <AI Factory extension — <workflow role> (default) | Standalone>
+     - **Context:** <AI Factory extension (default) — workflow role: <aif-* command> | Standalone>
      - **Architecture:** <project source | convention fallback>
      - **Touched Stages:** <e.g. Stage 5 (Action) | Stage 6 (Routes)>
      - **Wiring Gate:** pending

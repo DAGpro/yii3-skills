@@ -70,9 +70,13 @@ if (unbound.length > 0) {
   md += '\n';
 } else {
   const milestones = scenarios.filter((s) => Number.parseInt(s.slice(0, 2), 10) >= 58);
+  const expansion = milestones.filter((s) => Number.parseInt(s.slice(0, 2), 10) >= 66);
+  const expansionClause = expansion.length
+    ? ` and post-audit expansion scenarios (\`66–${expansion[expansion.length - 1].slice(0, 2)}\`)`
+    : '';
   md += '\n## 3. Unbound Guides Gap Analysis (100% Coverage Achieved)\n\n';
   md += `All **${topicGuides.length}** evaluated topic guides (across **${guides.length}** reference files) have **100.0% coverage** across **${scenarios.length}** eval scenarios (\`0\` unbound guides). `;
-  md += 'Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–68`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:\n\n';
+  md += `Roadmap P3 scenarios (\`58–65\`)${expansionClause} close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:\n\n`;
   md += '| # | Scenario | Layer | Bound Guides | Status |\n';
   md += '|---|---|---|---|---|\n';
   milestones.forEach((s, idx) => {

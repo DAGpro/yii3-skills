@@ -1,5 +1,7 @@
 { "_comment": "STUB для evals: версии, достаточные для version-gated проверок скилла",
   "packages": [
+    { "name": "yiisoft/cache", "version": "3.0.0" },
+    { "name": "yiisoft/cache-file", "version": "3.0.0" },
     { "name": "yiisoft/router", "version": "4.0.3" },
     { "name": "yiisoft/di", "version": "1.4.0" },
     { "name": "yiisoft/db", "version": "2.0.0" }

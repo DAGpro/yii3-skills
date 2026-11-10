@@ -39,7 +39,7 @@ A change to a topic guide is **not complete** until dependent registries are in 
 Run the local quality gates:
 
 ```bash
-# 1. Extension integrity, manifest, frontmatter, guard sync, and link consistency
+# 1. Extension integrity, manifest, frontmatter, injection structure, purity, and link consistency
 node scripts/validate.mjs
 
 # 2. AI Factory workflow integration contracts (88 contract tests)
@@ -57,7 +57,7 @@ node scripts/check-ast.mjs
 # 6. Manifest provenance & cross-manifest parity check (use --upstream for remote drift checks)
 node scripts/check-manifest-freshness.mjs --strict --max-age-days 30
 
-# 7. Behavioral evaluation checks (all 68 scenario checks; add --runtime when PHP 8.2+ is installed)
+# 7. Behavioral evaluation checks (all 69 scenario checks; add --runtime when PHP 8.2+ is installed)
 node evals/runner/selftest.mjs
 
 # 8. Judge unit self-test & L5 Yii 3 PHPUnit runtime harness (skips locally without PHP; strict in CI)
@@ -67,15 +67,15 @@ node scripts/test-php-runtime.mjs
 
 ### 1. Extension validation (`scripts/validate.mjs`)
 
-The gate checks manifest integrity, `SKILL.md` frontmatter (including the description length limit), reference links, the References inventory (every guide listed exactly once, one file per bullet), anchor existence for all relative `.md#anchor` links, activation guard byte-identity (`AGENTS.md` §4.6), deliverable purity, and per-guide package-catalog consistency. It must pass with **0 errors**; resolve warnings or justify them explicitly in the PR description.
+The gate checks manifest integrity, `SKILL.md` frontmatter (including the description length limit), reference links, the References inventory (every guide listed exactly once, one file per bullet), anchor existence for all relative `.md#anchor` links, SKILL.md cross-reference resolution for README and injections (`AGENTS.md` §4.6), deliverable purity, and per-guide package-catalog consistency. It must pass with **0 errors**; resolve warnings or justify them explicitly in the PR description.
 
 ### 2. Workflow contract tests (`scripts/test-aif-workflow.mjs`)
 
-Validates all 96 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): activation guards, path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
+Validates all 88 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
 
 ### 3. Topic guide coverage (`scripts/check-eval-coverage.mjs` & `scripts/generate-coverage-matrix.mjs`)
 
-Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (`100.0%` coverage across 86 topic guides / 68 scenarios) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
+Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (`100.0%` coverage across 87 topic guides / 69 scenarios) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
 
 ### 4. Symbol & AST signature checks (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`, `scripts/check-manifest-freshness.mjs`)
 
@@ -92,7 +92,7 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 
 ### 5. Eval harness & L5 PHPUnit runtime (`evals/runner/selftest.mjs`, `scripts/test-php-runtime.mjs`)
 
-`evals/runner/selftest.mjs` validates all 68 behavioral test scenarios: confirms scenario JSON schemas, guide bindings, positive/negative sample checks, and delimiter state machines (`--runtime` adds `php -l` and `composer validate` checks when PHP is available).
+`evals/runner/selftest.mjs` validates all 69 behavioral test scenarios: confirms scenario JSON schemas, guide bindings, positive/negative sample checks, and delimiter state machines (`--runtime` adds `php -l` and `composer validate` checks when PHP is available).
 
 `evals/runtime-harness/` provides a real L5 Yii 3 + SQLite + PHPUnit 11 integration suite (DI container, FastRoute routing, `ValidatingHydrator`, DB migrations, transactional outbox + mutex relay, sync queue, and `StateResetter`). Run `node scripts/test-php-runtime.mjs` locally (skips cleanly if PHP/Composer/`pdo_sqlite` is absent) or `node scripts/test-php-runtime.mjs --strict` in PHP 8.2+ environments (enforced in CI `php-runtime-gates`).
 
@@ -116,11 +116,11 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 ## PR checklist
 
 - [ ] `node scripts/validate.mjs` — 0 errors, 0 warnings (or justified in the PR description).
-- [ ] `node scripts/test-aif-workflow.mjs` — 96 passed, 0 failed.
-- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (86/86 topic guides, 68 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
+- [ ] `node scripts/test-aif-workflow.mjs` — 88 passed, 0 failed.
+- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (87/87 topic guides, 69 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
 - [ ] `node scripts/check-symbols.mjs` and `node scripts/check-ast.mjs` — 0 unconfirmed symbols, arities, or AST defects (run with `--manifest-mode` if `references/` is not populated).
 - [ ] `node scripts/check-manifest-freshness.mjs` — manifest provenance and parity check passes (`--strict` if `references/` is populated).
-- [ ] `node evals/runner/selftest.mjs` — 68/68 OK (`--runtime` and `node scripts/test-php-runtime.mjs --strict` pass on PHP 8.2+ / CI `php-runtime-gates`).
+- [ ] `node evals/runner/selftest.mjs` — 69/69 OK (`--runtime` and `node scripts/test-php-runtime.mjs --strict` pass on PHP 8.2+ / CI `php-runtime-gates`).
 - [ ] `node evals/runner/judge.mjs --selftest` — PASS.
 - [ ] Every new/quoted API claim was inspected in `references/<pkg>/src/` or `vendor/yiisoft/<pkg>/src/`.
 - [ ] Synchronization cascade touched: SKILL.md routing/inventory, package-catalog, injections, coverage matrix, and manifests (when applicable).

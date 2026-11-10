@@ -239,11 +239,16 @@ function runInDocker(image, argv0, args, cwd, timeout = 60000) {
   const containerArgs = args.map((a) => {
     if (typeof a !== 'string' || !isAbsolute(a) || !existsSync(a)) return a;
     const relToCwd = relative(cwd, a);
-    if (relToCwd !== '' && !relToCwd.startsWith('..') && !isAbsolute(relToCwd)) {
+    if (relToCwd === '') {
+      // The argument is the mounted cwd itself — already reachable at /app.
+      return '/app/' + basename(a);
+    }
+    if (relToCwd.split(sep)[0] !== '..' && !isAbsolute(relToCwd)) {
       return '/app/' + relToCwd.split(sep).join('/');
     }
     const hostDir = dirname(a);
-    let idx = extraMounts.findIndex((m) => m.host === hostDir);
+    const sameHostDir = (x, y) => (process.platform === 'win32' ? x.toLowerCase() === y.toLowerCase() : x === y);
+    let idx = extraMounts.findIndex((m) => sameHostDir(m.host, hostDir));
     if (idx === -1) {
       idx = extraMounts.length;
       extraMounts.push({ host: hostDir, container: `/mnt${idx}` });

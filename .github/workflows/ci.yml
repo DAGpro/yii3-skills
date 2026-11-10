@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Extension validator (extension.json, SKILL.md frontmatter, guard sync, purity)
+      - name: Extension validator (extension.json, SKILL.md frontmatter, injection structure, purity)
         run: node scripts/validate.mjs
 
       - name: Eval selftest (positive/negative samples, guide bindings)

@@ -6,12 +6,15 @@ const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
 
 export default [
-  check('plan-resolved-newest', 'The open task of the newest docs/plans/*.md is executed: its checkbox is completed in place', ({ dir, changed }) => {
+  check('plan-resolved-newest', 'The open task of the newest docs/plans/*.md is executed: no unchecked checkbox remains in the resolved plan', ({ dir, changed }) => {
     if (!changed.some((c) => c.path === NEWEST)) {
       return fail(`${NEWEST} untouched — standalone plan resolution is: explicit argument → root PLAN.md → newest *.md in docs/plans/|docs/plan/`);
     }
     const t = read(join(dir, NEWEST));
-    return /-\s\[x\]/i.test(t) ? ok() : fail('no checkbox completed in the resolved plan');
+    if (!/-\s\[x\]/i.test(t)) return fail('no checkbox completed in the resolved plan');
+    return /-\s\[\s\]/.test(t)
+      ? fail('open checkbox remains in the resolved plan — completing an already-done task does not execute the open one')
+      : ok();
   }),
 
   check('execution-state-updated', "The resolved plan's ### Execution State block is reconciled (Status advanced to COMPLETE)", ({ dir }) => {
@@ -66,7 +69,7 @@ export default [
     return missing.length ? fail(`report fields missing: ${missing.join(', ')}`) : ok();
   }),
 
-  check('no-yii2', 'No Yii2 constructs in changed PHP files', ({ changed }) => {
+  check('no-yii2', 'No Yii2 constructs or #[Override] in changed PHP files', ({ changed }) => {
     const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]|->getFlash\(/;
     const bad = php(changed).filter((c) => re.test(read(c.abs)));
     return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();

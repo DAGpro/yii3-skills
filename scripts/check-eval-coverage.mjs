@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Validates and reports reference guide coverage across eval scenarios.
-// Usage: node scripts/check-eval-coverage.mjs [--markdown]
+// Exits 1 when unbound topic guides remain, unless --allow-unbound is passed.
+// Usage: node scripts/check-eval-coverage.mjs [--allow-unbound] [--markdown]
 
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -42,7 +43,7 @@ for (const [sId, sMeta] of scenarioData) {
   }
 }
 
-const totalGuides = allGuides.length; // 83
+const totalGuides = allGuides.length;
 const specialCatalogs = ['references/INDEX.md', 'references/package-catalog.md'];
 const topicGuides = allGuides.filter((g) => !specialCatalogs.includes('references/' + g));
 const coveredTopicGuides = topicGuides.filter((g) => (guideMap.get('references/' + g) || []).length > 0);
@@ -57,6 +58,12 @@ console.log(`Topic Guides Evaluated: ${topicGuides.length}`);
 console.log(`Covered Guides: ${coveredTopicGuides.length} (${coveragePercent}%)`);
 console.log(`Unbound Guides (Roadmap P3): ${unboundTopicGuides.length}`);
 console.log(`Total Eval Scenarios: ${scenarios.length}`);
+
+if (unboundTopicGuides.length > 0 && !process.argv.includes('--allow-unbound')) {
+  console.error(`FAIL: ${unboundTopicGuides.length} unbound topic guide(s) — each needs a dedicated eval scenario (use --allow-unbound for report-only mode):`);
+  for (const u of unboundTopicGuides) console.error(`  - references/${u}`);
+  process.exitCode = 1;
+}
 
 if (process.argv.includes('--markdown')) {
   console.log('\n## Unbound Guides (Roadmap P3):');

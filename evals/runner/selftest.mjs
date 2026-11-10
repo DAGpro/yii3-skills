@@ -209,9 +209,11 @@ try {
 }
 
 // Validate composer.lock detection & validation (validateComposerLock & isStubComposerLock)
+let tmpNoLockDir = null;
+let validLockDir = null;
 try {
   // Case 1: Workdir without composer.lock -> skipped: true
-  const tmpNoLockDir = mkdtempSync(join(tmpdir(), 'no-lock-test-'));
+  tmpNoLockDir = mkdtempSync(join(tmpdir(), 'no-lock-test-'));
   writeFileSync(join(tmpNoLockDir, 'composer.json'), JSON.stringify({ name: 'test/no-lock', type: 'project' }));
   const resNoLock = validateComposerLock(tmpNoLockDir);
   if (!resNoLock.skipped || !resNoLock.pass) {
@@ -245,7 +247,7 @@ try {
   // Case 4: Real Composer runtime validation (positive & negative lock file tests)
   const toolchain = detectPhpToolchain();
   if (toolchain.hasComposer) {
-    const validLockDir = mkdtempSync(join(tmpdir(), 'valid-lock-test-'));
+    validLockDir = mkdtempSync(join(tmpdir(), 'valid-lock-test-'));
     writeFileSync(join(validLockDir, 'composer.json'), JSON.stringify({
       name: 'test/valid-lock',
       description: 'Valid composer lock test',
@@ -291,15 +293,18 @@ try {
     if (!lockGateFail || lockGateFail.pass || !lockGateFail.required) {
       throw new Error(`runRuntimeEvaluation should fail runtime-composer-lock-validate when lock is out of sync: ${JSON.stringify(lockGateFail)}`);
     }
-    rmSync(validLockDir, { recursive: true, force: true });
   }
-  rmSync(tmpNoLockDir, { recursive: true, force: true });
 } catch (e) {
   console.error(`FAIL composer-lock-validation: ${e.message}`);
   bad++;
+} finally {
+  if (validLockDir) rmSync(validLockDir, { recursive: true, force: true });
+  if (tmpNoLockDir) rmSync(tmpNoLockDir, { recursive: true, force: true });
 }
 
 // Validate PHPUnit harness integration helpers (config detection, binary resolution, strict mode, summary parser)
+let tmpPhpunitDir = null;
+let tmpMissingDir = null;
 try {
   const sOk = parsePhpUnitSummary('PHPUnit 11.4.0\n\nOK (6 tests, 24 assertions)\n');
   if (!sOk || sOk.tests !== 6 || sOk.assertions !== 24 || sOk.failures !== 0) {
@@ -310,7 +315,7 @@ try {
     throw new Error(`parsePhpUnitSummary summary mismatch: ${JSON.stringify(sFail)}`);
   }
 
-  const tmpPhpunitDir = mkdtempSync(join(tmpdir(), 'phpunit-test-'));
+  tmpPhpunitDir = mkdtempSync(join(tmpdir(), 'phpunit-test-'));
   writeFileSync(join(tmpPhpunitDir, 'phpunit.xml.dist'), '<phpunit/>');
   if (!hasPhpUnitConfig(tmpPhpunitDir)) {
     throw new Error('hasPhpUnitConfig failed to detect phpunit.xml.dist');
@@ -331,7 +336,7 @@ try {
   }
 
   // Missing vendor/binary or missing PHP CLI: skip by default, fail under requirePhpunit: true
-  const tmpMissingDir = mkdtempSync(join(tmpdir(), 'phpunit-missing-'));
+  tmpMissingDir = mkdtempSync(join(tmpdir(), 'phpunit-missing-'));
   writeFileSync(join(tmpMissingDir, 'phpunit.xml.dist'), '<phpunit/>');
   const fakeNoPhp = { isAvailable: false, hasComposer: false };
   const skipMissingBin = runPhpUnit(tmpMissingDir, { attachPrewarmedVendor: false }, fakeNoPhp);
@@ -349,11 +354,12 @@ try {
     throw new Error(`runRuntimeEvaluation should emit failing required runtime-phpunit under requirePhpunit: ${JSON.stringify(rtPhpunitGate)}`);
   }
 
-  rmSync(tmpPhpunitDir, { recursive: true, force: true });
-  rmSync(tmpMissingDir, { recursive: true, force: true });
 } catch (e) {
   console.error(`FAIL phpunit-runtime-validation: ${e.message}`);
   bad++;
+} finally {
+  if (tmpPhpunitDir) rmSync(tmpPhpunitDir, { recursive: true, force: true });
+  if (tmpMissingDir) rmSync(tmpMissingDir, { recursive: true, force: true });
 }
 
 async function evalSample(id, sDir, kind) {

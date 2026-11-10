@@ -111,7 +111,7 @@
 
 ## 3. Unbound Guides Gap Analysis (100% Coverage Achieved)
 
-All **87** evaluated topic guides (across **89** reference files) have **100.0% coverage** across **69** eval scenarios (`0` unbound guides). Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–68`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:
+All **87** evaluated topic guides (across **89** reference files) have **100.0% coverage** across **69** eval scenarios (`0` unbound guides). Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–69`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:
 
 | # | Scenario | Layer | Bound Guides | Status |
 |---|---|---|---|---|

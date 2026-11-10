@@ -308,10 +308,12 @@ export function validateComposerJson(workDir, toolchain = detectPhpToolchain(), 
     if (!res) {
       return { pass: true, skipped: true, evidence: 'failed to spawn composer executable' };
     }
-    if (res.status === 0) {
+    const output = `${res.stderr || ''}\n${res.stdout || ''}`.trim();
+    const lockOutdated = /lock file is not up to date|lock file could not be|not up to date with the latest changes/i.test(output);
+    if (res.status === 0 && !lockOutdated) {
       return { pass: true, skipped: false, evidence: 'composer.json and composer.lock are valid' };
     }
-    return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'composer.json/lock validation failed').trim() };
+    return { pass: false, skipped: false, evidence: output || 'composer.json/lock validation failed' };
   }
 
   // Isolate composer.json in a clean ephemeral directory so Composer does not parse any synthetic/fixture composer.lock

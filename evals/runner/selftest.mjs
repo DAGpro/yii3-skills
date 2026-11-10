@@ -251,9 +251,10 @@ try {
       description: 'Valid composer lock test',
       type: 'project',
       license: 'MIT',
+      repositories: [{ 'packagist.org': false }],
       require: { php: '>=8.2' },
     }));
-    const genRes = execComposer(['update', '--lock', '--no-install', '--no-interaction', '--no-plugins', '--no-scripts'], validLockDir, toolchain);
+    const genRes = execComposer(['update', '--no-install', '--ignore-platform-reqs', '--no-interaction', '--no-plugins', '--no-scripts'], validLockDir, toolchain);
     if (!genRes || genRes.status !== 0) {
       throw new Error(`failed to generate real composer.lock for positive test: ${genRes?.stderr || genRes?.stdout}`);
     }
@@ -271,13 +272,15 @@ try {
       throw new Error(`runRuntimeEvaluation missing passing runtime-composer-lock-validate check: ${JSON.stringify(lockGatePass)}`);
     }
 
-    // Negative: out-of-sync composer.json vs composer.lock must fail
+    // Negative: out-of-sync composer.json vs composer.lock must fail (mutate content-hash inputs: require + extra)
     writeFileSync(join(validLockDir, 'composer.json'), JSON.stringify({
       name: 'test/valid-lock',
       description: 'Out-of-sync composer.json modification',
       type: 'project',
       license: 'MIT',
-      require: { php: '>=8.2' },
+      repositories: [{ 'packagist.org': false }],
+      require: { php: '>=8.3', 'ext-json': '*' },
+      extra: { 'out-of-sync': true },
     }));
     const resOutOfSync = validateComposerLock(validLockDir, toolchain);
     if (resOutOfSync.pass || resOutOfSync.skipped) {

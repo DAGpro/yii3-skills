@@ -1,0 +1,28 @@
+{
+  "id": "69-standalone-plan-execution",
+  "title": "Standalone fallback: resolve the newest docs/plans task, execute it, self-verify",
+  "mode": "light",
+  "tags": [
+    "standalone",
+    "plan-resolution",
+    "di",
+    "wiring-gate",
+    "self-verification"
+  ],
+  "timeoutSec": 900,
+  "negativeMustFail": [
+    "plan-resolved-newest",
+    "execution-state-updated",
+    "no-aif-artifacts",
+    "mission-state-standalone",
+    "di-binding-landed"
+  ],
+  "layer": "unit",
+  "guides": [
+    "references/core-standalone-adapter.md",
+    "SKILL.md",
+    "references/core-di-and-config.md",
+    "references/core-di-definitions.md",
+    "references/core-definition-of-done.md"
+  ]
+}

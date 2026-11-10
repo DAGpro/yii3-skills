@@ -42,7 +42,9 @@ Exit code 1 if any with-skill / manual run failed a required check (both runners
 
 ```
 scenarios/NN-slug/
-  scenario.json      id, mode, timeout, negativeMustFail (checks a bad sample must fail)
+  scenario.json      id, title, mode (intent metadata — the skill mode the scenario exercises;
+                     never read by the runner), tags, timeoutSec (agent spawn timeout, default 900),
+                     guides, layer, negativeMustFail (checks a bad sample must fail)
   prompt.md          verbatim user request
   fixture/           project state before the agent runs (copied to a temp dir)
   checks.mjs         deterministic checks: check(id, description, ctx => ok()/fail(evidence))
@@ -106,7 +108,7 @@ node evals/runner/run.mjs --changed main --runs 0                      # ... vs 
 node evals/runner/run.mjs --layer unit --runs 0                        # diagnostics layer only
 ```
 
-`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` enforces 100% coverage across all 86 topic guides and 68 scenarios; run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
+`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` validates the bindings across all 69 scenarios and reports live coverage — currently 87 of 87 topic guides bound (100%); run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
 
 **Calibration policy.** The true difficulty of a scenario is its baseline pass-rate. A unit
 scenario whose baseline mean stays >= 80% (delta < ~10 pp) must be hardened (indirect prompt,
@@ -124,7 +126,7 @@ node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-0
 # Require PHPUnit execution to pass (fail if PHP, vendor/, phpunit binary, or config is missing)
 EVAL_REQUIRE_PHPUNIT=1 node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --runtime
 
-# Validate syntax across all scenario samples (68 scenarios)
+# Validate syntax across all scenario samples (69 scenarios)
 node evals/runner/selftest.mjs --runtime
 
 # Run the standalone L5 Yii 3 PHPUnit integration harness (skips locally without PHP; use --strict in PHP 8.2+ / CI)
@@ -136,7 +138,7 @@ node scripts/test-php-runtime.mjs --install --strict
 export EVAL_ENABLE_RUNTIME=1
 ```
 
-- **Environment Detection:** Automatically detects local PHP (`>= 8.2`) and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). By default, when PHP is absent in offline runner sandboxes, runtime checks report `skipped` (`pass: true`) without failing structural checks; pass `EVAL_REQUIRE_PHPUNIT=1` (or `--strict` in `test-php-runtime.mjs`) to fail explicitly instead of skipping.
+- **Environment Detection:** Automatically detects local PHP (`>= 8.2`) and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). Composer-in-docker supports two image styles: `composer` on the image PATH (`php:*-cli` with composer copied → `EVAL_DOCKER_IMAGE` as-is) and composer-as-ENTRYPOINT images (official `composer:2` → set `EVAL_COMPOSER_DOCKER_IMAGE="composer:2"`). By default, when PHP is absent in offline runner sandboxes, runtime checks report `skipped` (`pass: true`) without failing structural checks; pass `EVAL_REQUIRE_PHPUNIT=1` (or `--strict` in `test-php-runtime.mjs`) to fail explicitly instead of skipping.
 - **Checks executed:**
   - `runtime-php-lint`: Verifies valid PHP 8.2+ syntax (`php -l`) on all generated or touched `.php` files.
   - `runtime-composer-validate`: Verifies `composer.json` syntax and schema.

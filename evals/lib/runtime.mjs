@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync, cpSync, symlinkSync, readFileSync, mkdtempSync, copyFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { join, relative, resolve, dirname } from 'node:path';
+import { join, relative, resolve, dirname, basename, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const evalsRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -130,22 +130,40 @@ export function detectPhpToolchain() {
     }
   } catch {}
 
-  // 6. Detect Docker Composer
+  // 6. Detect Docker Composer. Two image styles are supported:
+  //    'argv'  — composer binary on PATH inside the image (php:*-cli + composer copied,
+  //              `docker run <img> composer --version`);
+  //    'entry' — composer is the image ENTRYPOINT (official composer:* image,
+  //              `docker run <img> --version`).
   let hasDockerComposer = false;
   let dockerComposerVersion = null;
+  let composerDockerStyle = null;
   if (hasDocker && composerDockerImage) {
-    try {
-      const res = spawnSync(
-        'docker',
-        ['run', '--rm', composerDockerImage, 'composer', '--version'],
-        { encoding: 'utf8', timeout: 10000 }
-      );
-      if (res.status === 0 && res.stdout && /Composer/i.test(res.stdout)) {
+    const probe = (preArgs) => {
+      try {
+        const res = spawnSync('docker', ['run', '--rm', composerDockerImage, ...preArgs, '--version'], {
+          encoding: 'utf8',
+          timeout: 10000,
+        });
+        return res.status === 0 && res.stdout && /Composer/i.test(res.stdout) ? res.stdout : null;
+      } catch {}
+      return null;
+    };
+    const argvOut = probe(['composer']);
+    if (argvOut) {
+      hasDockerComposer = true;
+      composerDockerStyle = 'argv';
+      const match = argvOut.match(/Composer\s+version\s+([^\s]+)/i);
+      dockerComposerVersion = match ? match[1] : 'docker';
+    } else {
+      const entryOut = probe([]);
+      if (entryOut) {
         hasDockerComposer = true;
-        const match = res.stdout.match(/Composer\s+version\s+([^\s]+)/i);
+        composerDockerStyle = 'entry';
+        const match = entryOut.match(/Composer\s+version\s+([^\s]+)/i);
         dockerComposerVersion = match ? match[1] : 'docker';
       }
-    } catch {}
+    }
   }
 
   // 7. Select preferred Composer runner: local has priority, Docker is fallback
@@ -174,6 +192,7 @@ export function detectPhpToolchain() {
     hasDocker,
     dockerImage,
     composerDockerImage,
+    composerDockerStyle,
     isAvailable: Boolean(preferredPhpRuntime),
   };
 
@@ -189,8 +208,7 @@ function execPhp(args, cwd, toolchain = detectPhpToolchain()) {
     return spawnSync(toolchain.phpBin, args, { cwd, encoding: 'utf8', timeout: 30000 });
   }
   if (toolchain.preferredPhpRuntime === 'docker' && toolchain.dockerImage) {
-    const dockerArgs = ['run', '--rm', '-v', `${cwd}:/app`, '-w', '/app', toolchain.dockerImage, 'php', ...args];
-    return spawnSync('docker', dockerArgs, { encoding: 'utf8', timeout: 60000 });
+    return runInDocker(toolchain.dockerImage, 'php', args, cwd, 300000);
   }
   return null;
 }
@@ -201,10 +219,41 @@ export function execComposer(args, cwd, toolchain = detectPhpToolchain()) {
   }
   if (toolchain.preferredComposerRuntime === 'docker') {
     const image = toolchain.composerDockerImage || toolchain.dockerImage;
-    const dockerArgs = ['run', '--rm', '-v', `${cwd}:/app`, '-w', '/app', image, 'composer', ...args];
-    return spawnSync('docker', dockerArgs, { encoding: 'utf8', timeout: 60000 });
+    // 'entry' images have composer as ENTRYPOINT (official composer:*), so the
+    // binary name must not be repeated as the first argument.
+    const argv0 = toolchain.composerDockerStyle === 'entry' ? null : 'composer';
+    // Composer installs (cold container, no cache) far exceed the default exec window.
+    return runInDocker(image, argv0, args, cwd, 900000);
   }
   return null;
+}
+
+/**
+ * Run a binary inside the toolchain image with `cwd` mounted at /app.
+ * Absolute host paths among the arguments are translated to container paths:
+ * paths under `cwd` resolve through the /app mount; paths outside it get their
+ * host directory mounted at a dedicated /mntN point (e.g. php -l on a temp file).
+ */
+function runInDocker(image, argv0, args, cwd, timeout = 60000) {
+  const extraMounts = [];
+  const containerArgs = args.map((a) => {
+    if (typeof a !== 'string' || !isAbsolute(a) || !existsSync(a)) return a;
+    const relToCwd = relative(cwd, a);
+    if (relToCwd !== '' && !relToCwd.startsWith('..') && !isAbsolute(relToCwd)) {
+      return '/app/' + relToCwd.split(sep).join('/');
+    }
+    const hostDir = dirname(a);
+    let idx = extraMounts.findIndex((m) => m.host === hostDir);
+    if (idx === -1) {
+      idx = extraMounts.length;
+      extraMounts.push({ host: hostDir, container: `/mnt${idx}` });
+    }
+    return `${extraMounts[idx].container}/${basename(a)}`;
+  });
+  const volArgs = extraMounts.flatMap((m) => ['-v', `${m.host}:${m.container}`]);
+  const cmd = argv0 ? [argv0, ...containerArgs] : containerArgs;
+  const dockerArgs = ['run', '--rm', ...volArgs, '-v', `${cwd}:/app`, '-w', '/app', image, ...cmd];
+  return spawnSync('docker', dockerArgs, { encoding: 'utf8', timeout });
 }
 
 function findPhpFiles(dir) {

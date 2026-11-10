@@ -15,7 +15,8 @@
   "negativeMustFail": [
     "no-duplicate-migrations",
     "no-duplicate-di-bindings",
-    "no-duplicate-routes"
+    "no-duplicate-routes",
+    "aif-gate-result-emitted"
   ],
   "layer": "composite",
   "guides": [

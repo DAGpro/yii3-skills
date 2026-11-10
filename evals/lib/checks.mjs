@@ -134,6 +134,99 @@ export const check = (id, description, run, { required = true } = {}) => ({ id, 
 export const ok = (evidence = '') => ({ pass: true, evidence });
 export const fail = (evidence = '') => ({ pass: false, evidence });
 
+/**
+ * Validates a fenced ```aif-gate-result code block according to the AI Factory 2.x schema.
+ * Options:
+ *  - expectedStatus: 'pass' | 'fail' | 'warn' | null (if null, allows any of 'pass' | 'warn' | 'fail')
+ *  - terminal: boolean (default true; requires gate block to be the terminal block)
+ */
+export function validateAifGateResult(transcript, { expectedStatus = 'pass', terminal = true } = {}) {
+  const regex = /```aif-gate-result\s*\r?\n([\s\S]*?)\r?\n```/g;
+  let match;
+  let lastMatch = null;
+  let lastJson = null;
+  while ((match = regex.exec(transcript)) !== null) {
+    lastMatch = match;
+    lastJson = match[1].trim();
+  }
+  if (!lastJson || !lastMatch) {
+    return fail('no valid ```aif-gate-result fenced code block found in transcript');
+  }
+
+  // Verify the block is terminal (final block in transcript)
+  if (terminal) {
+    const trailingContent = transcript.slice(lastMatch.index + lastMatch[0].length).trim();
+    if (trailingContent.length > 0) {
+      return fail(`aif-gate-result must be the final block; found trailing content: "${trailingContent.slice(0, 50)}..."`);
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(lastJson);
+    if (parsed.schema_version !== 1) return fail(`expected schema_version 1, got ${parsed.schema_version}`);
+    if (parsed.gate !== 'verify') return fail(`expected gate "verify", got ${parsed.gate}`);
+    if (!['pass', 'warn', 'fail'].includes(parsed.status)) return fail(`invalid status: ${parsed.status}`);
+    if (typeof parsed.blocking !== 'boolean') return fail(`expected blocking boolean, got ${typeof parsed.blocking}`);
+    if (!Array.isArray(parsed.blockers)) return fail('blockers must be an array');
+    if (!Array.isArray(parsed.affected_files)) return fail('affected_files must be an array');
+
+    // Validate blockers structure and reject unsupported keys (e.g. line)
+    const ALLOWED_BLOCKER_KEYS = new Set(['id', 'severity', 'file', 'summary']);
+    for (const b of parsed.blockers) {
+      if (!b.id || typeof b.id !== 'string') return fail(`blocker missing string id: ${JSON.stringify(b)}`);
+      if (!['error', 'warning'].includes(b.severity)) return fail(`blocker invalid severity: ${b.severity}`);
+      if (!b.summary || typeof b.summary !== 'string') return fail(`blocker missing string summary: ${JSON.stringify(b)}`);
+      for (const k of Object.keys(b)) {
+        if (!ALLOWED_BLOCKER_KEYS.has(k)) {
+          return fail(`blocker contains unsupported key "${k}": ${JSON.stringify(b)}`);
+        }
+      }
+    }
+
+    // Validate suggested_next allowlist and reason requirement
+    const ALLOWED_COMMANDS = ['/aif-fix', '/aif-rules', '/aif-architecture', '/aif-roadmap', '/aif-commit', null];
+    if (!parsed.suggested_next || typeof parsed.suggested_next !== 'object') {
+      return fail('suggested_next must be an object');
+    }
+    if (!ALLOWED_COMMANDS.includes(parsed.suggested_next.command)) {
+      return fail(`suggested_next.command "${parsed.suggested_next.command}" not in allowlist: ${ALLOWED_COMMANDS.join(', ')}`);
+    }
+    if (parsed.suggested_next.reason === undefined) {
+      return fail('suggested_next missing required "reason" property');
+    }
+    if (typeof parsed.suggested_next.reason !== 'string' && parsed.suggested_next.reason !== null) {
+      return fail('suggested_next.reason must be a string or null');
+    }
+
+    if (expectedStatus === 'pass') {
+      if (parsed.status !== 'pass') return fail(`expected status pass, got ${parsed.status}`);
+      if (parsed.blocking !== false) return fail(`expected blocking false for pass, got ${parsed.blocking}`);
+      if (parsed.blockers.length > 0) return fail(`expected empty blockers for pass, got ${JSON.stringify(parsed.blockers)}`);
+      if (parsed.affected_files.length === 0) return fail('affected_files should record evaluated files');
+      if (parsed.suggested_next.command !== '/aif-commit') {
+        return fail(`expected suggested_next.command "/aif-commit", got ${parsed.suggested_next.command}`);
+      }
+    } else if (expectedStatus === 'fail') {
+      if (parsed.status !== 'fail') return fail(`expected status fail, got ${parsed.status}`);
+      if (parsed.blocking !== true) return fail(`expected blocking true for fail, got ${parsed.blocking}`);
+      if (parsed.blockers.length === 0) return fail('expected non-empty blockers for fail');
+      if (parsed.suggested_next.command !== '/aif-fix') {
+        return fail(`expected suggested_next.command "/aif-fix", got ${parsed.suggested_next.command}`);
+      }
+    } else if (expectedStatus === 'warn') {
+      if (parsed.status !== 'warn') return fail(`expected status warn, got ${parsed.status}`);
+      if (parsed.blocking !== false) return fail(`expected blocking false for warn, got ${parsed.blocking}`);
+      if (parsed.suggested_next.command !== '/aif-commit') {
+        return fail(`expected suggested_next.command "/aif-commit", got ${parsed.suggested_next.command}`);
+      }
+    }
+
+    return ok();
+  } catch (e) {
+    return fail(`invalid aif-gate-result JSON: ${e.message}`);
+  }
+}
+
 export {
   detectPhpToolchain,
   lintPhpFile,
@@ -141,4 +234,5 @@ export {
   validateComposerJson,
   runPhpUnit,
   runRuntimeEvaluation,
+  ensurePrewarmedVendor,
 } from './runtime.mjs';

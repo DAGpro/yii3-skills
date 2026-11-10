@@ -33,7 +33,7 @@ In Yii 3 Active Record, relation discovery does **not** rely on magic getters or
 
 Key architectural rules:
 1. **Explicit over implicit:** Relations are defined explicitly by implementing `public function relationQuery(string $name): ActiveQueryInterface` or using `MagicRelationsTrait` with mandatory `Query` method suffix.
-2. **Eager loading by default on lists:** Any query retrieving multiple records MUST eager-load related models using `with(...)` to avoid N+1 database queries.
+2. **Eager loading when accessing relations on lists:** When querying multiple records with the intention of accessing their related models, always eager-load relations using `with(...)` to avoid N+1 database queries. If related models are not accessed, extra eager-loading is unnecessary and should be omitted.
 3. **Runtime N+1 enforcement:** Use `LazyLoadGuard` in tests and development environments to catch un-eager-loaded relation access at runtime.
 
 ---
@@ -204,7 +204,7 @@ $users = UserRecord::query()
 
 ### 6.1. Eager Loading Basics
 
-Always eager-load relations when querying multiple records to prevent N+1 query storms. Eager loading runs a single additional `IN (...)` query and maps related records into memory:
+Always eager-load relations when querying multiple records if their related entities will be accessed, preventing N+1 query storms. Eager loading runs a single additional `IN (...)` query and maps related records into memory:
 
 ```php
 declare(strict_types=1);

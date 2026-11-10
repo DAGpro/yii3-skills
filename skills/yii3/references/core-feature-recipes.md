@@ -68,7 +68,7 @@ Creates or modifies domain state and involves side-effects.
   2. **Application / Business Logic:** Application Service (e.g. `OrderService::createOrder()`) or Use Case Handler wrapping multi-step persistence in `ConnectionInterface::transaction()`. Events dispatched strictly after commit.
   3. **Presentation / HTTP:** Typed Input DTO with `Yiisoft\Validator\Rule\*` attributes; thin single-action controller returning `ResponseInterface`.
   4. **Wiring & Tests:** Route in `config/common/routes.php`, DI bindings in `config/common/di/*.php`, unit and HTTP integration tests.
-- **In Enterprise Mode (Full DDD Graph):**
+- **In Enterprise Mode (Decomposition adapts to Tier; Strict baseline shown below):**
   1. **Domain:** Pure Entity/Aggregate + Value Objects; PSR-14 Domain Events; pure `*RepositoryInterface`.
   2. **Infrastructure / Persistence:** DB migration; storage implementation of the repository interface (`Sql*Repository`).
   3. **Application / Use Case:** Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`); post-commit event listeners.

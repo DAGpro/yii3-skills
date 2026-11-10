@@ -1,4 +1,4 @@
-import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { check, ok, fail, read, filesMatching, validateAifGateResult } from '../../lib/checks.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -80,19 +80,6 @@ export default [
     return ok();
   }),
 
-  check('aif-gate-result-emitted', 'Valid aif-gate-result block is emitted with schema_version: 1 and suggested_next /aif-commit', ({ transcript }) => {
-    const match = transcript.match(/```aif-gate-result\s*([\s\S]*?)\s*```/);
-    if (!match) return fail('missing aif-gate-result fenced block');
-    try {
-      const json = JSON.parse(match[1]);
-      if (json.schema_version !== 1) return fail(`schema_version must be 1, got ${json.schema_version}`);
-      if (json.gate !== 'verify') return fail(`gate must be "verify", got "${json.gate}"`);
-      if (json.status !== 'pass' && json.status !== 'warn') return fail(`expected pass or warn, got "${json.status}"`);
-      if (json.blocking !== false) return fail('blocking must be false on clean feature');
-      if (json.suggested_next?.command !== '/aif-commit') return fail(`suggested_next must be "/aif-commit", got "${json.suggested_next?.command}"`);
-      return ok('aif-gate-result schema is valid');
-    } catch (e) {
-      return fail(`invalid JSON in aif-gate-result: ${e.message}`);
-    }
-  }),
+  check('aif-gate-result-emitted', 'Valid aif-gate-result JSON emitted per AI Factory 2.x schema', ({ transcript }) =>
+    validateAifGateResult(transcript, { expectedStatus: 'pass', terminal: true })),
 ];

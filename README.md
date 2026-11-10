@@ -32,7 +32,7 @@ The skill automatically selects an execution mode based on task scope, or respec
 |---|---|---|---|
 | **Patch** | Bug fixes, isolated changes (1–3 files), docs, typo/config fixes | Direct surgical edit + project checks; skips aggregate design and schema migrations (unless schema changes required) | `--mode=patch` |
 | **Feature** *(default)* | Standard business features, endpoints, console commands, domain logic (~80% of tasks) | Bottom-up stages: Schema/Migration → Domain/Interface → Use Case Handler → DTO & Thin Action → Wiring → Tests | `--mode=feature` |
-| **Enterprise** | High-throughput systems, event-driven pipelines, auth/security cores, multi-step transactions | Full DDD graph: pure aggregates, value objects, repository contracts + implementations, dedicated use case handlers, domain events, complete Production Readiness Gate | `--mode=enterprise` |
+| **Enterprise** | High-throughput systems, event-driven pipelines, auth/security cores, multi-step transactions | Production-grade rigor: atomic transactions, event publishing, idempotency, complete Production Readiness Gate; decomposition adapts to Architectural Tier (Pragmatic / Balanced / Strict) | `--mode=enterprise` |
 
 ## Integration Contexts
 
@@ -52,7 +52,8 @@ The skill automatically selects an execution mode based on task scope, or respec
 The skill's recommendations are backed by deterministic verification:
 
 - **Empirical Baseline (+36.3 pp overall, +34.4 pp on pure-code composites)**: Evaluated across paired test scenarios (single-run campaign, $n=1$, GLM-5.3-Flash) — with-skill agents improved from a 56.9% baseline to a 93.2% pass rate (+34.4 pp on complex code tasks; +100 pp on multi-agent protocol adherence). See [`evals/BASELINE.md`](evals/BASELINE.md).
-- **Symbol & Arity Grounding**: `node scripts/check-symbols.mjs` verifies 1,400+ FQCNs and 460 method signatures and argument arities against official package sources.
+- **Symbol & Arity Grounding**: `node scripts/check-symbols.mjs` verifies 1,400+ FQCN occurrences and 460 method call citations across guides against official package sources (indexing 766 unique FQCNs and 342 unique signatures in `evals/data/api-symbols-manifest.json`).
+- **AST PHP Code Grounding Analyzer**: `node scripts/check-ast.mjs` statically verifies 750+ call arities and 180+ named parameter bindings across 700+ documented PHP code blocks against package AST signatures.
 - **Automated Validation**: `node scripts/validate.mjs` enforces frontmatter spec compliance, link integrity, and activation guard synchronization.
 
 ## Supported Stack

@@ -53,7 +53,7 @@ export function mergeTokens(target, source) {
  */
 export function normalizeTokens(val) {
   if (val === null || val === undefined) return null;
-  if (typeof val === 'number' && !Number.isNaN(val) && val >= 0) {
+  if (typeof val === 'number' && Number.isFinite(val) && val >= 0) {
     return { total: Math.round(val) };
   }
   if (typeof val === 'string') {
@@ -66,7 +66,7 @@ export function normalizeTokens(val) {
       }
     }
     const num = Number(trimmed);
-    if (!Number.isNaN(num) && num >= 0) {
+    if (Number.isFinite(num) && num >= 0) {
       return { total: Math.round(num) };
     }
     return null;
@@ -77,10 +77,10 @@ export function normalizeTokens(val) {
     const explicitTotal = Number(val.total ?? val.total_tokens);
 
     const res = {};
-    if (!Number.isNaN(prompt) && prompt >= 0) res.prompt = Math.round(prompt);
-    if (!Number.isNaN(completion) && completion >= 0) res.completion = Math.round(completion);
+    if (Number.isFinite(prompt) && prompt >= 0) res.prompt = Math.round(prompt);
+    if (Number.isFinite(completion) && completion >= 0) res.completion = Math.round(completion);
 
-    if (!Number.isNaN(explicitTotal) && explicitTotal >= 0) {
+    if (Number.isFinite(explicitTotal) && explicitTotal >= 0) {
       res.total = Math.round(explicitTotal);
     } else if (res.prompt !== undefined && res.completion !== undefined) {
       res.total = res.prompt + res.completion;
@@ -97,13 +97,13 @@ export function normalizeTokens(val) {
  */
 export function normalizeCost(val) {
   if (val === null || val === undefined) return null;
-  if (typeof val === 'number' && !Number.isNaN(val) && val >= 0) {
+  if (typeof val === 'number' && Number.isFinite(val) && val >= 0) {
     return Number(val.toFixed(6));
   }
   if (typeof val === 'string') {
     const cleaned = val.replace(/^\$/, '').trim();
     const num = Number(cleaned);
-    if (!Number.isNaN(num) && num >= 0) {
+    if (Number.isFinite(num) && num >= 0) {
       return Number(num.toFixed(6));
     }
   }
@@ -123,22 +123,28 @@ export function extractTranscriptTelemetry(transcript) {
   if (usageMatches.length > 0) {
     let aggTokens = null;
     let aggCost = null;
+    let totalBlocks = 0;
+    let promptBlocks = 0;
+    let completionBlocks = 0;
+    let totalOnlySum = 0;
 
     for (const match of usageMatches) {
       try {
         const parsed = JSON.parse(`{${match[1]}}`);
         const tok = normalizeTokens(parsed);
         if (tok) {
-          if (!aggTokens) {
-            aggTokens = { ...tok };
-          } else {
-            if (tok.prompt !== undefined) aggTokens.prompt = (aggTokens.prompt ?? 0) + tok.prompt;
-            if (tok.completion !== undefined) aggTokens.completion = (aggTokens.completion ?? 0) + tok.completion;
-            if (tok.total !== undefined) {
-              aggTokens.total = (aggTokens.total ?? 0) + tok.total;
-            } else if (tok.prompt !== undefined && tok.completion !== undefined) {
-              aggTokens.total = (aggTokens.total ?? 0) + tok.prompt + tok.completion;
-            }
+          totalBlocks++;
+          if (!aggTokens) aggTokens = {};
+          if (tok.prompt !== undefined) {
+            promptBlocks++;
+            aggTokens.prompt = (aggTokens.prompt ?? 0) + tok.prompt;
+          }
+          if (tok.completion !== undefined) {
+            completionBlocks++;
+            aggTokens.completion = (aggTokens.completion ?? 0) + tok.completion;
+          }
+          if (tok.total !== undefined && tok.prompt === undefined && tok.completion === undefined) {
+            totalOnlySum += tok.total;
           }
         }
         const blockCost = normalizeCost(parsed.cost ?? parsed.total_cost);
@@ -150,11 +156,13 @@ export function extractTranscriptTelemetry(transcript) {
       }
     }
 
-    if (aggTokens) {
-      if (aggTokens.total === undefined && aggTokens.prompt !== undefined && aggTokens.completion !== undefined) {
+    if (aggTokens && totalBlocks > 0) {
+      if (promptBlocks === totalBlocks && completionBlocks === totalBlocks) {
         aggTokens.total = aggTokens.prompt + aggTokens.completion;
+      } else if (promptBlocks === 0 && completionBlocks === 0 && totalOnlySum > 0) {
+        aggTokens.total = totalOnlySum;
       }
-      out.tokens = aggTokens;
+      out.tokens = Object.keys(aggTokens).length > 0 ? aggTokens : null;
     }
     if (aggCost !== null) {
       out.cost = Number(aggCost.toFixed(6));

@@ -33,3 +33,21 @@ jobs:
 
       - name: AST PHP code grounding analyzer
         run: node scripts/check-ast.mjs
+
+  php-runtime-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Eval selftest with runtime evaluation (PHP lint & Composer validation)
+        run: node evals/runner/selftest.mjs --runtime

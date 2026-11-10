@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Validates the checks themselves: the positive sample must pass all required checks,
 // the negative sample must fail every id listed in scenario.json -> negativeMustFail.
-import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens } from './core.mjs';
-import { changedFiles } from '../lib/checks.mjs';
+import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens, normalizeCost } from './core.mjs';
+import { changedFiles, validateAifGateResult, ensurePrewarmedVendor } from '../lib/checks.mjs';
 import { runRuntimeEvaluation } from '../lib/runtime.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -72,8 +72,89 @@ try {
   if (t7.cost !== 0.0075) {
     throw new Error(`t7 explicit total_cost mismatch: ${JSON.stringify(t7)}`);
   }
+
+  // 6. Incomplete component blocks: prompt-only second block should not fake total or retain first block's total
+  const partialMultiTranscript = `
+    Step 1: {"usage": {"prompt_tokens": 100, "completion_tokens": 50}}
+    Step 2: {"usage": {"prompt_tokens": 200}}
+  `;
+  const t8 = extractTelemetry({ transcript: partialMultiTranscript });
+  if (t8.tokens?.prompt !== 300 || t8.tokens?.completion !== 50 || t8.tokens?.total !== undefined) {
+    throw new Error(`t8 partial multi-block mismatch: ${JSON.stringify(t8)}`);
+  }
+
+  // 7. Finite numbers: Infinity must be rejected
+  if (normalizeTokens(Infinity) !== null) throw new Error('normalizeTokens accepted Infinity');
+  if (normalizeTokens({ prompt: Infinity }) !== null) throw new Error('normalizeTokens accepted prompt: Infinity');
+  if (normalizeCost(Infinity) !== null) throw new Error('normalizeCost accepted Infinity');
 } catch (e) {
   console.error(`FAIL telemetry-validation: ${e.message}`);
+  bad++;
+}
+
+// Validate vendor cache lock verification
+try {
+  const tmpVendorDir = mkdtempSync(join(tmpdir(), 'vendor-test-'));
+  const candidateVendor = join(tmpVendorDir, 'cache', 'vendor');
+  const cacheLock = join(tmpVendorDir, 'cache', 'composer.lock');
+  mkdirSync(candidateVendor, { recursive: true });
+  writeFileSync(join(candidateVendor, 'autoload.php'), '<?php // autoloader\n');
+
+  const workWithLock = mkdtempSync(join(tmpdir(), 'work-lock-test-'));
+  const workLock = join(workWithLock, 'composer.lock');
+  writeFileSync(workLock, '{"packages": [{"name": "yiisoft/di"}]}');
+
+  process.env.EVAL_PREWARMED_VENDOR = candidateVendor;
+
+  // Case A: Missing sidecar composer.lock -> lockMissing: true, vendorPresent: false
+  const resA = ensurePrewarmedVendor(workWithLock);
+  if (resA.vendorPresent !== false || resA.lockMissing !== true) {
+    throw new Error(`case A (missing lock) failed: ${JSON.stringify(resA)}`);
+  }
+
+  // Case B: Mismatched sidecar composer.lock -> lockMismatch: true, vendorPresent: false
+  writeFileSync(cacheLock, '{"packages": [{"name": "yiisoft/router"}]}');
+  const resB = ensurePrewarmedVendor(workWithLock);
+  if (resB.vendorPresent !== false || resB.lockMismatch !== true) {
+    throw new Error(`case B (mismatched lock) failed: ${JSON.stringify(resB)}`);
+  }
+
+  // Case C: Matching sidecar composer.lock -> vendorPresent: true
+  writeFileSync(cacheLock, '{"packages": [{"name": "yiisoft/di"}]}');
+  const resC = ensurePrewarmedVendor(workWithLock);
+  if (resC.vendorPresent !== true) {
+    throw new Error(`case C (matching lock) failed: ${JSON.stringify(resC)}`);
+  }
+
+  // Case D: Missing lock with EVAL_VENDOR_IGNORE_LOCK=1 -> attached despite missing sidecar lock
+  rmSync(join(workWithLock, 'vendor'), { recursive: true, force: true });
+  rmSync(cacheLock);
+  process.env.EVAL_VENDOR_IGNORE_LOCK = '1';
+  const resD = ensurePrewarmedVendor(workWithLock);
+  if (resD.vendorPresent !== true) {
+    throw new Error(`case D (ignore lock flag) failed: ${JSON.stringify(resD)}`);
+  }
+  delete process.env.EVAL_VENDOR_IGNORE_LOCK;
+  delete process.env.EVAL_PREWARMED_VENDOR;
+} catch (e) {
+  console.error(`FAIL vendor-cache-lock-validation: ${e.message}`);
+  bad++;
+}
+
+// Validate validateAifGateResult function
+try {
+  const passBlock = '```aif-gate-result\n{"schema_version":1,"gate":"verify","status":"pass","blocking":false,"blockers":[],"affected_files":["src/Foo.php"],"suggested_next":{"command":"/aif-commit","reason":"ok"}}\n```';
+  const vPass = validateAifGateResult(passBlock, { expectedStatus: 'pass' });
+  if (!vPass.pass) throw new Error(`vPass failed: ${vPass.evidence}`);
+
+  const failBlock = '```aif-gate-result\n{"schema_version":1,"gate":"verify","status":"fail","blocking":true,"blockers":[{"id":"ERR","severity":"error","summary":"broken"}],"affected_files":["src/Foo.php"],"suggested_next":{"command":"/aif-fix","reason":"fix it"}}\n```';
+  const vFail = validateAifGateResult(failBlock, { expectedStatus: 'fail' });
+  if (!vFail.pass) throw new Error(`vFail failed: ${vFail.evidence}`);
+
+  const vPassOnFail = validateAifGateResult(failBlock, { expectedStatus: 'pass' });
+  if (vPassOnFail.pass) throw new Error('vPassOnFail should have failed');
+} catch (e) {
+  console.error(`FAIL gate-result-validation: ${e.message}`);
   bad++;
 }
 

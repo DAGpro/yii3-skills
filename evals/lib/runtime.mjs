@@ -340,6 +340,9 @@ export function ensurePrewarmedVendor(workDir, toolchain = detectPhpToolchain())
           // Prewarmed vendor was built for a different dependency lock - skip attaching
           return { vendorPresent: false, source: null, lockMismatch: true };
         }
+      } else {
+        // Prewarmed vendor has no sidecar composer.lock to verify compatibility against workDir lock
+        return { vendorPresent: false, source: null, lockMissing: true };
       }
     }
 

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens, normalizeCost } from './core.mjs';
-import { changedFiles, validateAifGateResult, ensurePrewarmedVendor, validateComposerJson, validateComposerLock } from '../lib/checks.mjs';
+import { changedFiles, validateAifGateResult, ensurePrewarmedVendor, validateComposerJson, validateComposerLock, isStubComposerLock, execComposer, detectPhpToolchain } from '../lib/checks.mjs';
 import { runRuntimeEvaluation } from '../lib/runtime.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -202,8 +202,97 @@ try {
   if (!resJson.skipped && !resJson.pass) {
     throw new Error(`validateComposerJson failed on isolated dir: ${resJson.evidence}`);
   }
+  rmSync(tmpCompDir, { recursive: true, force: true });
 } catch (e) {
   console.error(`FAIL composer-isolation-validation: ${e.message}`);
+  bad++;
+}
+
+// Validate composer.lock detection & validation (validateComposerLock & isStubComposerLock)
+try {
+  // Case 1: Workdir without composer.lock -> skipped: true
+  const tmpNoLockDir = mkdtempSync(join(tmpdir(), 'no-lock-test-'));
+  writeFileSync(join(tmpNoLockDir, 'composer.json'), JSON.stringify({ name: 'test/no-lock', type: 'project' }));
+  const resNoLock = validateComposerLock(tmpNoLockDir);
+  if (!resNoLock.skipped || !resNoLock.pass) {
+    throw new Error(`validateComposerLock without lock file should skip: ${JSON.stringify(resNoLock)}`);
+  }
+
+  // Case 2: Stub lock detection
+  const stubLockPath = join(tmpNoLockDir, 'composer.lock');
+  writeFileSync(stubLockPath, JSON.stringify({ _comment: 'STUB for evals', packages: [] }));
+  if (!isStubComposerLock(stubLockPath)) {
+    throw new Error('isStubComposerLock failed to detect STUB lock');
+  }
+  const mockLockPath = join(tmpNoLockDir, 'composer.mock.lock');
+  writeFileSync(mockLockPath, JSON.stringify({ _readme: ['mock lock file'], packages: [] }));
+  if (!isStubComposerLock(mockLockPath)) {
+    throw new Error('isStubComposerLock failed to detect mock lock file');
+  }
+  const realShapeLockPath = join(tmpNoLockDir, 'composer.real.lock');
+  writeFileSync(realShapeLockPath, JSON.stringify({ _readme: ['Composer lock file'], 'content-hash': 'abc123', packages: [] }));
+  if (isStubComposerLock(realShapeLockPath)) {
+    throw new Error('isStubComposerLock falsely flagged real lock file as stub');
+  }
+
+  // Case 3: Toolchain without Composer -> skipped: true
+  writeFileSync(join(tmpNoLockDir, 'composer.lock'), JSON.stringify({ _readme: ['test'], packages: [] }));
+  const resNoComp = validateComposerLock(tmpNoLockDir, { hasComposer: false });
+  if (!resNoComp.skipped || !resNoComp.pass) {
+    throw new Error(`validateComposerLock without composer CLI should skip: ${JSON.stringify(resNoComp)}`);
+  }
+
+  // Case 4: Real Composer runtime validation (positive & negative lock file tests)
+  const toolchain = detectPhpToolchain();
+  if (toolchain.hasComposer) {
+    const validLockDir = mkdtempSync(join(tmpdir(), 'valid-lock-test-'));
+    writeFileSync(join(validLockDir, 'composer.json'), JSON.stringify({
+      name: 'test/valid-lock',
+      description: 'Valid composer lock test',
+      type: 'project',
+      license: 'MIT',
+      require: { php: '>=8.2' },
+    }));
+    const genRes = execComposer(['update', '--lock', '--no-install', '--no-interaction', '--no-plugins', '--no-scripts'], validLockDir, toolchain);
+    if (!genRes || genRes.status !== 0) {
+      throw new Error(`failed to generate real composer.lock for positive test: ${genRes?.stderr || genRes?.stdout}`);
+    }
+
+    // Positive: matching composer.json and composer.lock must pass
+    const resValidLock = validateComposerLock(validLockDir, toolchain);
+    if (!resValidLock.pass || resValidLock.skipped) {
+      throw new Error(`validateComposerLock failed on genuine matching lock file: ${JSON.stringify(resValidLock)}`);
+    }
+
+    // Runtime gate integration: non-stub composer.lock triggers runtime-composer-lock-validate and passes
+    const rtPass = runRuntimeEvaluation(validLockDir, [], toolchain);
+    const lockGatePass = rtPass.find((r) => r.id === 'runtime-composer-lock-validate');
+    if (!lockGatePass || !lockGatePass.pass || !lockGatePass.required) {
+      throw new Error(`runRuntimeEvaluation missing passing runtime-composer-lock-validate check: ${JSON.stringify(lockGatePass)}`);
+    }
+
+    // Negative: out-of-sync composer.json vs composer.lock must fail
+    writeFileSync(join(validLockDir, 'composer.json'), JSON.stringify({
+      name: 'test/valid-lock',
+      description: 'Out-of-sync composer.json modification',
+      type: 'project',
+      license: 'MIT',
+      require: { php: '>=8.2' },
+    }));
+    const resOutOfSync = validateComposerLock(validLockDir, toolchain);
+    if (resOutOfSync.pass || resOutOfSync.skipped) {
+      throw new Error(`validateComposerLock should fail when composer.lock is out of sync: ${JSON.stringify(resOutOfSync)}`);
+    }
+    const rtFail = runRuntimeEvaluation(validLockDir, [], toolchain);
+    const lockGateFail = rtFail.find((r) => r.id === 'runtime-composer-lock-validate');
+    if (!lockGateFail || lockGateFail.pass || !lockGateFail.required) {
+      throw new Error(`runRuntimeEvaluation should fail runtime-composer-lock-validate when lock is out of sync: ${JSON.stringify(lockGateFail)}`);
+    }
+    rmSync(validLockDir, { recursive: true, force: true });
+  }
+  rmSync(tmpNoLockDir, { recursive: true, force: true });
+} catch (e) {
+  console.error(`FAIL composer-lock-validation: ${e.message}`);
   bad++;
 }
 

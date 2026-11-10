@@ -420,6 +420,31 @@ function checkReferencesInventory(skillDir, skillMdPath, text) {
   }
 }
 
+function checkActionLayering(absPath, text) {
+  for (const match of text.matchAll(/```php\n([\s\S]*?)\n```/g)) {
+    const code = match[1];
+    if (/❌|Anti-pattern|WRONG|FORBIDDEN/i.test(code)) continue;
+    const parts = code.split(/(?=(?:(?:final|readonly|abstract)\s+)*class\s+)/);
+    for (const part of parts) {
+      const clsMatch = part.match(/^(?:(?:final|readonly|abstract)\s+)*class\s+(\w*(?:Action|Controller))\b/);
+      if (!clsMatch) continue;
+      const className = clsMatch[1];
+      if (/^(?:Bad|Legacy|Wrong)/i.test(className)) continue;
+      const ctorMatch = part.match(/function\s+__construct\s*\(([^)]*)\)/);
+      if (ctorMatch && /\b(\w*Repository(?:Interface)?|ConnectionInterface|EntityManagerInterface)\b/.test(ctorMatch[1])) {
+        const offender = ctorMatch[1].match(/\b(\w*Repository(?:Interface)?|ConnectionInterface|EntityManagerInterface)\b/)[1];
+        const offset = match.index + code.indexOf(ctorMatch[0]);
+        err(
+          displayPath(absPath),
+          lineOf(text, offset),
+          'architecture-layering',
+          `${className} directly injects ${offender} — Actions must depend on Application Services or Use Cases (never skip layers)`
+        );
+      }
+    }
+  }
+}
+
 function checkSkill(skillEntry) {
   const skillDir = join(root, skillEntry);
   const skillMdPath = join(skillDir, 'SKILL.md');
@@ -461,6 +486,7 @@ function checkSkill(skillEntry) {
     const mdText = readText(mdPath);
     scanPurity(mdPath, mdText, `${skillEntry.replace(/\\/g, '/')}/`);
     checkAnchors(mdPath, mdText, anchorsCache);
+    checkActionLayering(mdPath, mdText);
   }
 
   checkReferencesInventory(skillDir, skillMdPath, text);

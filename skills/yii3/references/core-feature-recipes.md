@@ -424,7 +424,7 @@ Exposes complete collection and resource management with standard HTTP semantics
 **Required Artifact Graph:**
 1. **Actions (Single-Action Handlers):**
    - `ListAction`: Takes Query DTO with `#[FromQuery]` (`Yiisoft\Input\Http\Attribute\Data\FromQuery` — package `yiisoft/input-http`, class-level attribute); uses `Yiisoft\Data\Paginator\OffsetPaginator`; returns `200 OK` (`Status::OK`) with items and pagination meta (see Archetype B for the meta shape).
-   - `ViewAction`: Takes path parameter ID; fetches entity via Repository; returns `200 OK` or throws/returns `404 Not Found`.
+   - `ViewAction`: Takes path parameter ID; calls Use Case / Application Service (which retrieves entity via Repository); returns `200 OK` or throws/returns `404 Not Found`.
    - `CreateAction`: Takes Input DTO with `#[FromBody]` (`Yiisoft\Input\Http\Attribute\Data\FromBody` — package `yiisoft/input-http`, class-level attribute); validates; returns `422 Unprocessable Entity` with `$result->getErrorMessagesIndexedByProperty()` on error; on success calls Use Case and returns `201 Created` with a `Location` header (`Yiisoft\Http\Header::LOCATION`; headers are set afterwards via `->withHeader()` — the data-response factory takes no headers parameter).
    - `UpdateAction`: Takes path parameter ID and Input DTO; validates; calls Use Case; returns `200 OK` with updated resource.
    - `DeleteAction`: Takes path parameter ID; calls Use Case; returns `204 No Content`.

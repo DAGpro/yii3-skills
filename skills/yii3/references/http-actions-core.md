@@ -23,7 +23,7 @@
      - Invoke an Application Use Case, Command Handler, or Service.
      - Build and return PSR-7 responses (`DataResponseFactoryInterface`, `WebViewRenderer`, `DownloadResponseFactory`, HTTP redirects). The legacy `ViewRenderer` is `@deprecated`.
    - **Strictly Forbidden in Actions (Anti-Patterns):**
-     - ❌ Direct SQL queries, Query Builder, or ActiveRecord / Cycle persistence calls (delegate to Repositories / Use Cases).
+     - ❌ Direct SQL queries, Query Builder, or ActiveRecord / Cycle persistence calls (delegate to Application Use Cases or Application Services).
      - ❌ Database transaction management (`$db->transaction()` belongs in Use Cases / Unit of Work).
      - ❌ Business logic, domain rules, password hashing, or token cryptography.
      - ❌ Sending emails or pushing queue jobs directly (delegate to Use Cases or PSR-14 Event Listeners).

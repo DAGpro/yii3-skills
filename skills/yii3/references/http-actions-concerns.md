@@ -100,7 +100,7 @@ declare(strict_types=1);
 
 namespace App\Presentation\Action\Api\Post;
 
-use App\Domain\Post\PostRepositoryInterface;
+use App\Application\Post\Service\PostListService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
@@ -115,7 +115,7 @@ final readonly class ListPostsAction
     private const MAX_PAGE_SIZE = 100;
 
     public function __construct(
-        private PostRepositoryInterface $postRepository,
+        private PostListService $postListService,
         private DataResponseFactoryInterface $responseFactory,
     ) {}
 
@@ -128,7 +128,8 @@ final readonly class ListPostsAction
         $sort = Sort::only(['id', 'createdAt', 'title'])
             ->withOrderString((string) ($params['sort'] ?? '-createdAt'));
 
-        $dataReader = $this->postRepository->findAll()->withSort($sort);
+        // Delegate data access to Application Service; the action manages pagination and HTTP response
+        $dataReader = $this->postListService->getDataReader()->withSort($sort);
 
         $paginator = (new OffsetPaginator($dataReader))
             ->withPageSize($pageSize)

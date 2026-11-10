@@ -71,7 +71,7 @@ declare(strict_types=1);
 
 namespace App\Presentation\Web\Post;
 
-use App\Application\Post\PostRepositoryInterface;
+use App\Application\Post\PostListService;
 use App\Presentation\Web\Post\Form\PostFilterForm;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -83,7 +83,7 @@ final readonly class PostIndexAction
     public function __construct(
         private WebViewRenderer $viewRenderer,
         private FormHydrator $formHydrator,
-        private PostRepositoryInterface $postRepository,
+        private PostListService $postListService,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -95,7 +95,7 @@ final readonly class PostIndexAction
             $this->formHydrator->populateFromGetAndValidate($filterForm, $request, scope: '');
         }
 
-        $posts = $this->postRepository->findFiltered(
+        $posts = $this->postListService->findFiltered(
             search: $filterForm->search,
             status: $filterForm->status,
         );

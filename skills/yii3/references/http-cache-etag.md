@@ -133,8 +133,8 @@ declare(strict_types=1);
 
 namespace App\Blog\Action;
 
+use App\Blog\Application\GetBlogPostService;
 use App\Blog\Domain\BlogPost;
-use App\Blog\Domain\BlogPostRepositoryInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -145,7 +145,7 @@ use Yiisoft\Router\CurrentRoute;
 final readonly class ViewPostAction
 {
     public function __construct(
-        private BlogPostRepositoryInterface $repository,
+        private GetBlogPostService $postService,
         // Canonical factory from the ResponseFactory sub-namespace (wraps the payload
         // into a DataStream body). The deprecated root-namespace twin must not be used.
         private \Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface $dataResponseFactory,
@@ -156,7 +156,7 @@ final readonly class ViewPostAction
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $id = (string) $this->currentRoute->getArgument('id', '');
-        $post = $this->repository->findById($id);
+        $post = $this->postService->findById($id);
 
         if (!$post instanceof BlogPost) {
             return $this->responseFactory->createResponse(Status::NOT_FOUND);

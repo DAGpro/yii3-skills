@@ -195,7 +195,7 @@ function execPhp(args, cwd, toolchain = detectPhpToolchain()) {
   return null;
 }
 
-function execComposer(args, cwd, toolchain = detectPhpToolchain()) {
+export function execComposer(args, cwd, toolchain = detectPhpToolchain()) {
   if (toolchain.preferredComposerRuntime === 'local') {
     return spawnSync(toolchain.composerBin, args, { cwd, encoding: 'utf8', timeout: 30000 });
   }
@@ -330,6 +330,16 @@ export function validateComposerJson(workDir, toolchain = detectPhpToolchain(), 
     try {
       rmSync(isolatedDir, { recursive: true, force: true });
     } catch {}
+  }
+}
+
+export function isStubComposerLock(lockPath) {
+  try {
+    if (!existsSync(lockPath)) return false;
+    const content = readFileSync(lockPath, 'utf8');
+    return /STUB|mock lock file/i.test(content);
+  } catch {
+    return false;
   }
 }
 
@@ -503,6 +513,20 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
       required: compRequired,
       pass: comp.pass,
       evidence: comp.evidence,
+    });
+  }
+
+  // L4: Composer lock validation if a non-stub composer.lock exists
+  const composerLockPath = join(workDir, 'composer.lock');
+  if (existsSync(composerLockPath) && !isStubComposerLock(composerLockPath)) {
+    const lockRes = validateComposerLock(workDir, toolchain);
+    const lockRequired = !lockRes.skipped;
+    results.push({
+      id: 'runtime-composer-lock-validate',
+      description: 'Composer lock validation (composer validate with lock)',
+      required: lockRequired,
+      pass: lockRes.pass,
+      evidence: lockRes.evidence,
     });
   }
 

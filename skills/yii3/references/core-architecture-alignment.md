@@ -25,6 +25,7 @@ This guide is the authority for **project conventions** (layout, layer placement
   - [3.6. Pre-existing Code & Starter Scaffolding Policy](#36-pre-existing-code--starter-scaffolding-policy)
 - [4. Package Placement Matrix by Pattern](#4-package-placement-matrix-by-pattern)
 - [5. Quality Gate Checklist](#5-quality-gate-checklist)
+- [6. Stage-by-Tier Execution Matrix](#6-stage-by-tier-execution-matrix)
 
 ---
 
@@ -190,5 +191,19 @@ When reviewing code (`aif-review`) or verifying changes (`aif-verify`), apply ch
 - [ ] **Presentation is DB-free (All patterns):** Confirm controllers and view templates contain zero database queries or direct `ConnectionInterface` calls.
 - [ ] **Presentation leverages native transport (All patterns):** Ensure HTTP actions use `yiisoft/input-http`, `WebViewRenderer`, or `DataResponseFactoryInterface` directly without redundant custom wrappers.
 - [ ] **Strict Domain Purity (Explicit only):** When architecture is Explicit, verify that `Domain/` has zero `yiisoft/*` persistence or view imports.
-- [ ] **Downward Flow (Layered only):** In Layered architecture, ensure controllers do not skip the service layer to call repositories or execute queries directly.
+- [ ] **Downward Flow (Layered only):** In Layered architecture, ensure Actions and Controllers do not skip the service layer to call repositories or execute queries directly.
 - [ ] **Composition Root Confined (All patterns):** Verify that all DI bindings and container configurations live strictly under `config/`.
+
+---
+
+## 6. Stage-by-Tier Execution Matrix
+
+| Mission Stage | Pragmatic Tier (`layers`) | Balanced Tier (`structured*`) | Strict Tier (`explicit*`) |
+|---|---|---|---|
+| **Stage 1 — Migration & Schema** | `yiisoft/db-migration` with reversible `down()` | `yiisoft/db-migration` with reversible `down()` | `yiisoft/db-migration` with reversible `down()` |
+| **Stage 2 — Domain / Model & Repository Boundary** | Validated Model / Entity (POPO, Active Record, or Cycle entity); repository only when needed (no mandatory port interface) | Module Entity / Rich Model (Active Record / Cycle permitted); module-boundary interfaces | Pure Aggregate + Value Objects (zero vendor imports); PSR-14 domain events; explicit `*RepositoryInterface` |
+| **Stage 3 — Repository / Persistence Implementation** | Concrete Repository (`yiisoft/db`) or Active Record finder/query methods directly (if Active Record handles persistence directly, mark Stage 3 skipped or satisfied by model) | Module Repository or Active Record / Cycle mapper | Infrastructure adapter implementing `*RepositoryInterface` (`Sql*Repository`) |
+| **Stage 4 — Use Case Handler & Events** | Cohesive Application Service orchestrating transactions & persistence | Module Service or Use Case Handler + transaction boundary | Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`) + post-commit PSR-14 events |
+| **Stage 5 — Input DTO & Action / Command** | Typed Input DTO + thin Action delegating to Application Service | Typed Input DTO + thin Action delegating to Module Service / Use Case | Typed Input DTO + thin Action delegating to Use Case Handler |
+| **Stage 6 — Config Audit & Wiring Gate** | Root `config/` (DI, routes, console commands, events) | Root `config/` (or module config) | Root `config/` (port interface bindings, routes, commands, events) |
+| **Stage 7 — Tests** | Unit tests (Service) + functional/HTTP tests | Module unit & functional tests | Domain/Use Case unit tests + adapter integration + HTTP tests |

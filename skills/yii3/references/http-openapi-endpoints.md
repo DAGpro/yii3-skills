@@ -133,7 +133,7 @@ declare(strict_types=1);
 
 namespace App\Presentation\Action\Product;
 
-use App\Domain\Product\ProductRepositoryInterface;
+use App\Application\Product\ProductService;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
@@ -145,7 +145,7 @@ use function sprintf;
 final readonly class GetProductAction
 {
     public function __construct(
-        private ProductRepositoryInterface $productRepository,
+        private ProductService $productService,
         private DataResponseFactoryInterface $responseFactory,
     ) {}
 
@@ -191,7 +191,7 @@ final readonly class GetProductAction
             );
         }
 
-        $product = $this->productRepository->findById($id);
+        $product = $this->productService->findById($id);
         if ($product === null) {
             return $this->responseFactory->createResponse(
                 [
@@ -222,7 +222,7 @@ declare(strict_types=1);
 
 namespace App\Presentation\Action\Product;
 
-use App\Domain\Product\ProductRepositoryInterface;
+use App\Application\Product\ProductService;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface;
@@ -232,7 +232,7 @@ use Yiisoft\Router\CurrentRoute;
 final readonly class DeleteProductAction
 {
     public function __construct(
-        private ProductRepositoryInterface $productRepository,
+        private ProductService $productService,
         private DataResponseFactoryInterface $responseFactory,
     ) {}
 
@@ -264,7 +264,7 @@ final readonly class DeleteProductAction
     public function __invoke(CurrentRoute $currentRoute): ResponseInterface
     {
         $id = (string) $currentRoute->getArgument('id');
-        $this->productRepository->delete($id);
+        $this->productService->delete($id);
 
         return $this->responseFactory->createResponse(null, Status::NO_CONTENT);
     }
@@ -486,7 +486,7 @@ declare(strict_types=1);
 namespace App\Presentation\Action\Product;
 
 use App\Application\Product\DTO\CreateProductRequest;
-use App\Domain\Product\ProductRepositoryInterface;
+use App\Application\Product\ProductService;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -500,7 +500,7 @@ final readonly class CreateProductAction
     public function __construct(
         private HydratorInterface $hydrator,
         private ValidatorInterface $validator,
-        private ProductRepositoryInterface $productRepository,
+        private ProductService $productService,
         private DataResponseFactoryInterface $responseFactory,
     ) {}
 
@@ -534,7 +534,7 @@ final readonly class CreateProductAction
         // (`Result::getErrorMessagesIndexedByPath()` — see the ValidationProblemDetailsResponder, §3.2, item 5).
         $dto = /* hydrated + validated CreateProductRequest per the recipe above */;
 
-        $product = $this->productRepository->createFromDTO($dto);
+        $product = $this->productService->createFromDTO($dto);
 
         return $this->responseFactory->createResponse([
             'id' => $product->getId(),

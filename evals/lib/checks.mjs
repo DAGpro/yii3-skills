@@ -243,6 +243,8 @@ export {
   lintPhpFiles,
   validateComposerJson,
   validateComposerLock,
+  isStubComposerLock,
+  execComposer,
   runPhpUnit,
   runRuntimeEvaluation,
   ensurePrewarmedVendor,

@@ -1,6 +1,8 @@
 ## Yii3 support (from yii3-skills)
 
-Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (application/runtime stack, e.g. `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, without application runtime stack), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): do not auto-activate — ask the user or report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions). Otherwise load the `yii3` skill and shape milestones per it — the skill is the single source of rules:
+Load the `yii3` skill and shape milestones per it — the skill is the single source of rules:
+
+Operating context: this `aif-*` workflow runs the skill in its default AI Factory extension mode (contract: `references/aif-adapter.md`); the standalone fallback contract (`references/standalone-adapter.md`) is out of scope here.
 
 Roadmap-specific duties (the rules themselves live in the skill; all `references/*.md` paths resolve relative to the `yii3` skill directory):
 - Stack invariants: shape milestones per SKILL.md Stage 0 item 2 — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`.

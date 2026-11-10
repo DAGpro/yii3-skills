@@ -33,20 +33,15 @@ console.log('=== AI Factory Workflow Contract Test Suite ===\n');
 // ---------------------------------------------------------------------------
 // 1. Injections Canonical Guard & Structure Contract
 // ---------------------------------------------------------------------------
-console.log('1. Validating Injections Activation Guards (AGENTS.md §4.6)...');
+console.log('1. Validating Injection Skill Deference (AGENTS.md §4.6)...');
 const manifest = JSON.parse(readFileSync(join(root, 'extension.json'), 'utf8'));
-const CANONICAL_GUARD =
-  'Guard: activate this block only for a Yii 3 application — at least one `yiisoft/yii-*` package (application/runtime stack, e.g. `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, or `yiisoft/yii-console`; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. Yii 2 project (`yiisoft/yii2` present), Yii-ecosystem library (only base `yiisoft/*` packages like `yiisoft/di` or `yiisoft/strings`, without application runtime stack), or non-Yii project: ignore this block and do not apply Yii 3 rules. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): do not auto-activate — ask the user or report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions). Otherwise';
 
 for (const inj of manifest.injections) {
   const injPath = join(root, inj.file);
   const text = readFileSync(injPath, 'utf8').replace(/\r\n/g, '\n');
-  const lines = text.split('\n');
-  const guardLine = lines.find((l) => l.startsWith('Guard:'));
 
-  assert(guardLine !== undefined, `${inj.file} must have a Guard: line`);
-  assert(guardLine.startsWith(CANONICAL_GUARD), `${inj.file} guard must match CANONICAL_GUARD prefix byte-for-byte`);
-  assert(text.includes('SKILL.md') || text.includes('`yii3` skill'), `${inj.file} must defer to yii3 skill as SSOT`);
+  assert(text.includes('`yii3` skill'), `${inj.file} must defer to yii3 skill as SSOT`);
+  assert(!/^Guard:/m.test(text), `${inj.file} must not gate on project-environment classification (no Guard: line)`);
 }
 
 // ---------------------------------------------------------------------------
@@ -530,8 +525,40 @@ assert(reVerification.suggested_next.command === '/aif-commit', 'E2E loop: Final
 // ---------------------------------------------------------------------------
 console.log('\n6. Validating Activation Guard Discrimination...');
 
-function shouldActivateYii3Skill(composerJsonText) {
-  const json = JSON.parse(composerJsonText);
+function shouldActivateYii3Skill(input, options = {}) {
+  const {
+    composerJsonText = typeof input === 'string' ? input : input?.composerJsonText ?? null,
+    composerLockExists = typeof input === 'object' && input !== null ? Boolean(input.composerLockExists) : Boolean(options.composerLockExists),
+    prompt = typeof input === 'object' && input !== null ? String(input.prompt ?? '') : String(options.prompt ?? ''),
+    handoffMode = typeof input === 'object' && input !== null ? Boolean(input.handoffMode) : Boolean(options.handoffMode),
+    templateConfirmed = typeof input === 'object' && input !== null ? Boolean(input.templateConfirmed) : Boolean(options.templateConfirmed),
+  } = typeof input === 'string' ? { composerJsonText: input, ...options } : (input ?? {});
+
+  // Uninitialized directory (no composer.json and no composer.lock)
+  if (composerJsonText === null && !composerLockExists) {
+    const hasYii3BootstrapIntent = /\b(yiisoft\/app(?:-api|-console)?|yii\s*3|yii3)\b/i.test(prompt)
+      && /\b(create|scaffold|bootstrap|init|initialize|start|new)\b/i.test(prompt);
+    if (!hasYii3BootstrapIntent) {
+      return false; // Unknown project without explicit Yii 3 bootstrap intent must not auto-activate
+    }
+    const explicitTemplate = /\byiisoft\/(app|app-api|app-console)\b/i.test(prompt) || templateConfirmed;
+    if (!explicitTemplate && handoffMode) {
+      return 'blocked'; // Autonomous mode cannot guess template without user confirmation
+    }
+    return explicitTemplate ? true : 'blocked';
+  }
+
+  // Contradictory evidence: lock without manifest or invalid composer.json
+  if (composerJsonText === null && composerLockExists) {
+    return 'blocked';
+  }
+
+  let json;
+  try {
+    json = JSON.parse(composerJsonText);
+  } catch {
+    return 'blocked';
+  }
   const allReqs = { ...(json.require ?? {}), ...(json['require-dev'] ?? {}) };
   const keys = Object.keys(allReqs);
 
@@ -576,6 +603,31 @@ assert(
 assert(
   shouldActivateYii3Skill(JSON.stringify({ require: { 'laravel/framework': '^11.0' } })) === false,
   'Suppresses for non-Yii project'
+);
+assert(
+  shouldActivateYii3Skill({ composerJsonText: null, composerLockExists: false, prompt: 'Add a GET /health endpoint returning ok' }) === false,
+  'Suppresses on uninitialized directory without explicit Yii 3 bootstrap intent'
+);
+assert(
+  shouldActivateYii3Skill({
+    composerJsonText: null,
+    composerLockExists: false,
+    prompt: 'Create a new Yii 3 API service using yiisoft/app-api with PostgreSQL',
+  }) === true,
+  'Activates opt-in New Yii3 Project Bootstrap when explicit template and Yii 3 intent are declared'
+);
+assert(
+  shouldActivateYii3Skill({
+    composerJsonText: null,
+    composerLockExists: false,
+    prompt: 'Bootstrap a new Yii 3 application',
+    handoffMode: true,
+  }) === 'blocked',
+  'Reports blocked in HANDOFF_MODE=1 when Yii 3 template choice is ambiguous'
+);
+assert(
+  shouldActivateYii3Skill({ composerJsonText: null, composerLockExists: true, prompt: 'Add /health' }) === 'blocked',
+  'Reports blocked on contradictory project state (composer.lock without composer.json)'
 );
 
 // ---------------------------------------------------------------------------

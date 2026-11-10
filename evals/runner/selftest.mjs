@@ -7,7 +7,7 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens, normalizeCost } from './core.mjs';
 import { changedFiles, validateAifGateResult, ensurePrewarmedVendor, validateComposerJson, validateComposerLock, isStubComposerLock, execComposer, detectPhpToolchain } from '../lib/checks.mjs';
-import { runRuntimeEvaluation } from '../lib/runtime.mjs';
+import { runRuntimeEvaluation, runPhpUnit, parsePhpUnitSummary, resolvePhpUnitBinary, hasPhpUnitConfig } from '../lib/runtime.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const runtimeFlag = process.argv.includes('--runtime');
@@ -296,6 +296,63 @@ try {
   rmSync(tmpNoLockDir, { recursive: true, force: true });
 } catch (e) {
   console.error(`FAIL composer-lock-validation: ${e.message}`);
+  bad++;
+}
+
+// Validate PHPUnit harness integration helpers (config detection, binary resolution, strict mode, summary parser)
+try {
+  const sOk = parsePhpUnitSummary('PHPUnit 11.4.0\n\nOK (6 tests, 24 assertions)\n');
+  if (!sOk || sOk.tests !== 6 || sOk.assertions !== 24 || sOk.failures !== 0) {
+    throw new Error(`parsePhpUnitSummary OK mismatch: ${JSON.stringify(sOk)}`);
+  }
+  const sFail = parsePhpUnitSummary('Tests: 6, Assertions: 19, Failures: 1, Errors: 0, Skipped: 2.');
+  if (!sFail || sFail.tests !== 6 || sFail.assertions !== 19 || sFail.failures !== 1 || sFail.skipped !== 2) {
+    throw new Error(`parsePhpUnitSummary summary mismatch: ${JSON.stringify(sFail)}`);
+  }
+
+  const tmpPhpunitDir = mkdtempSync(join(tmpdir(), 'phpunit-test-'));
+  writeFileSync(join(tmpPhpunitDir, 'phpunit.xml.dist'), '<phpunit/>');
+  if (!hasPhpUnitConfig(tmpPhpunitDir)) {
+    throw new Error('hasPhpUnitConfig failed to detect phpunit.xml.dist');
+  }
+
+  // Binary precedence: vendor/phpunit/phpunit/phpunit before vendor/bin/phpunit
+  const phpunitPkgBin = join(tmpPhpunitDir, 'vendor', 'phpunit', 'phpunit', 'phpunit');
+  const vendorBin = join(tmpPhpunitDir, 'vendor', 'bin', 'phpunit');
+  mkdirSync(dirname(phpunitPkgBin), { recursive: true });
+  mkdirSync(dirname(vendorBin), { recursive: true });
+  writeFileSync(vendorBin, '#!/usr/bin/env php\n');
+  if (resolvePhpUnitBinary(tmpPhpunitDir) !== vendorBin) {
+    throw new Error('resolvePhpUnitBinary failed to resolve vendor/bin/phpunit');
+  }
+  writeFileSync(phpunitPkgBin, '<?php\n');
+  if (resolvePhpUnitBinary(tmpPhpunitDir) !== phpunitPkgBin) {
+    throw new Error('resolvePhpUnitBinary should prefer vendor/phpunit/phpunit/phpunit over vendor/bin/phpunit');
+  }
+
+  // Missing vendor/binary or missing PHP CLI: skip by default, fail under requirePhpunit: true
+  const tmpMissingDir = mkdtempSync(join(tmpdir(), 'phpunit-missing-'));
+  writeFileSync(join(tmpMissingDir, 'phpunit.xml.dist'), '<phpunit/>');
+  const fakeNoPhp = { isAvailable: false, hasComposer: false };
+  const skipMissingBin = runPhpUnit(tmpMissingDir, { attachPrewarmedVendor: false }, fakeNoPhp);
+  if (!skipMissingBin.pass || !skipMissingBin.skipped) {
+    throw new Error(`runPhpUnit should skip when binary missing in non-strict mode: ${JSON.stringify(skipMissingBin)}`);
+  }
+  const failMissingBin = runPhpUnit(tmpMissingDir, { requirePhpunit: true, attachPrewarmedVendor: false }, fakeNoPhp);
+  if (failMissingBin.pass || failMissingBin.skipped) {
+    throw new Error(`runPhpUnit should fail when binary missing under requirePhpunit: ${JSON.stringify(failMissingBin)}`);
+  }
+
+  const rtStrictMissing = runRuntimeEvaluation(tmpMissingDir, [], fakeNoPhp, { requirePhpunit: true });
+  const rtPhpunitGate = rtStrictMissing.find((r) => r.id === 'runtime-phpunit');
+  if (!rtPhpunitGate || !rtPhpunitGate.required || rtPhpunitGate.pass) {
+    throw new Error(`runRuntimeEvaluation should emit failing required runtime-phpunit under requirePhpunit: ${JSON.stringify(rtPhpunitGate)}`);
+  }
+
+  rmSync(tmpPhpunitDir, { recursive: true, force: true });
+  rmSync(tmpMissingDir, { recursive: true, force: true });
+} catch (e) {
+  console.error(`FAIL phpunit-runtime-validation: ${e.message}`);
   bad++;
 }
 

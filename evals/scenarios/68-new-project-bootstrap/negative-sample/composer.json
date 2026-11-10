@@ -1,0 +1,8 @@
+{
+  "name": "app/service",
+  "require": {
+    "php": "^8.2",
+    "yiisoft/db": "^2.0",
+    "yiisoft/db-mysql": "^2.0"
+  }
+}

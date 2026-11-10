@@ -1,8 +1,1180 @@
 {
   "metadata": {
-    "generated_at": "2026-11-10T01:01:00.196Z",
+    "generated_at": "2026-11-10T16:21:50.434Z",
     "source": "references/ (130 yiisoft/* package clones)",
-    "packages_indexed": 132
+    "packages_indexed": 130,
+    "packages": [
+      {
+        "package": "yiisoft/access",
+        "dir": "access",
+        "commit": "19dfb9ef191f4be0b1f954d986e095787c7fb572",
+        "commit_date": "2026-09-04T17:37:00+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/access.git"
+      },
+      {
+        "package": "yiisoft/active-record",
+        "dir": "active-record",
+        "commit": "4fa9d4418d999f0d461398483d5df39aea390517",
+        "commit_date": "2026-10-21T13:31:31+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/active-record.git"
+      },
+      {
+        "package": "yiisoft/aliases",
+        "dir": "aliases",
+        "commit": "cbee32e6517c95fd23863c69a513b875e2bb6c5e",
+        "commit_date": "2026-09-04T17:37:15+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/aliases.git"
+      },
+      {
+        "package": "yiisoft/app",
+        "dir": "app",
+        "commit": "fb0c8cb64782aa194b382feb26b4307ad23fde51",
+        "commit_date": "2026-10-16T10:15:13+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/app.git"
+      },
+      {
+        "package": "yiisoft/app-api",
+        "dir": "app-api",
+        "commit": "3f518dbb5a995882117482fe1e119b1dd0b9d4c6",
+        "commit_date": "2026-10-16T10:15:59+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/app-api.git"
+      },
+      {
+        "package": "yiisoft/app-console",
+        "dir": "app-console",
+        "commit": "7b8763e34e40b1fa45684c49e53dda789319349c",
+        "commit_date": "2026-10-21T10:12:42+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/app-console.git"
+      },
+      {
+        "package": "yiisoft/arrays",
+        "dir": "arrays",
+        "commit": "aefc60b88543859c97dca529432301ef235f7351",
+        "commit_date": "2026-09-04T17:37:34+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/arrays.git"
+      },
+      {
+        "package": "yiisoft/assets",
+        "dir": "assets",
+        "commit": "a8967f8cf16b02925b6d3f42716f69c919803b6a",
+        "commit_date": "2026-09-04T17:37:38+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/assets.git"
+      },
+      {
+        "package": "yiisoft/auth",
+        "dir": "auth",
+        "commit": "bc2c52c3bf26a6e5d0f410892b587fed46643068",
+        "commit_date": "2026-09-04T17:37:43+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/auth.git"
+      },
+      {
+        "package": "yiisoft/auth-jwt",
+        "dir": "auth-jwt",
+        "commit": "65c010832b3cc6364747cbe6341c372848fdddd8",
+        "commit_date": "2026-09-04T17:37:48+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/auth-jwt.git"
+      },
+      {
+        "package": "yiisoft/bootstrap5",
+        "dir": "bootstrap5",
+        "commit": "f63004edea88b457babc055fbeebcfd0f780d0b2",
+        "commit_date": "2026-09-04T17:37:52+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/bootstrap5.git"
+      },
+      {
+        "package": "yiisoft/cache",
+        "dir": "cache",
+        "commit": "0f1caf8cae4ea1fad14dea4aac15871df29b54d8",
+        "commit_date": "2026-09-04T17:37:57+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache.git"
+      },
+      {
+        "package": "yiisoft/cache-apcu",
+        "dir": "cache-apcu",
+        "commit": "7777270fabf2970c269f64085eb435826bdfe31b",
+        "commit_date": "2026-09-04T17:38:01+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache-apcu.git"
+      },
+      {
+        "package": "yiisoft/cache-db",
+        "dir": "cache-db",
+        "commit": "268b0a6911901b76b1362fa6e8149740a26589fd",
+        "commit_date": "2026-10-21T13:03:56+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache-db.git"
+      },
+      {
+        "package": "yiisoft/cache-file",
+        "dir": "cache-file",
+        "commit": "e328c084ac7f4af53cd9dff86650eeef7f451b82",
+        "commit_date": "2026-09-04T17:38:11+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache-file.git"
+      },
+      {
+        "package": "yiisoft/cache-memcached",
+        "dir": "cache-memcached",
+        "commit": "52408f77d3faf4d4d99455ae835a414310a1bb43",
+        "commit_date": "2026-10-22T12:46:58+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache-memcached.git"
+      },
+      {
+        "package": "yiisoft/cache-redis",
+        "dir": "cache-redis",
+        "commit": "35bccd730b313ab1187c47b6a4a3d67bb0b4d795",
+        "commit_date": "2026-10-16T10:15:38+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache-redis.git"
+      },
+      {
+        "package": "yiisoft/cache-wincache",
+        "dir": "cache-wincache",
+        "commit": "efaedd6ba102519f8078fbb4e48a37fdd5db7501",
+        "commit_date": "2026-10-21T14:56:19+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cache-wincache.git"
+      },
+      {
+        "package": "yiisoft/classifier",
+        "dir": "classifier",
+        "commit": "c94be164b571a8f1092bff0286f755a8f80da07c",
+        "commit_date": "2026-09-04T17:38:30+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/classifier.git"
+      },
+      {
+        "package": "yiisoft/code-style",
+        "dir": "code-style",
+        "commit": "d7485ab5800f00bf14a0e884c2a4d2297a74aa1b",
+        "commit_date": "2026-09-18T17:58:30+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/code-style.git"
+      },
+      {
+        "package": "yiisoft/config",
+        "dir": "config",
+        "commit": "1c289f7e20357cc3cd4ff79c0107d0b895c04e29",
+        "commit_date": "2026-09-04T17:38:39+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/config.git"
+      },
+      {
+        "package": "yiisoft/cookies",
+        "dir": "cookies",
+        "commit": "9a437fe98bfce9808a79d083aff2a65b727eec22",
+        "commit_date": "2026-09-04T17:38:44+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/cookies.git"
+      },
+      {
+        "package": "yiisoft/csrf",
+        "dir": "csrf",
+        "commit": "a4d315b9035fa0d00d0f74d500ffca887c57874c",
+        "commit_date": "2026-09-08T22:30:27+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/csrf.git"
+      },
+      {
+        "package": "yiisoft/data",
+        "dir": "data",
+        "commit": "80ee40df80aa30651a08ac1f5aa0be82bde3f195",
+        "commit_date": "2026-09-04T17:38:48+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/data.git"
+      },
+      {
+        "package": "yiisoft/data-cycle",
+        "dir": "data-cycle",
+        "commit": "fbf254c5f7135462973d39b04e2a5587469413d5",
+        "commit_date": "2026-10-20T10:30:28+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/data-cycle.git"
+      },
+      {
+        "package": "yiisoft/data-db",
+        "dir": "data-db",
+        "commit": "798e710e9e5afee3638541693eddd3520e29833b",
+        "commit_date": "2026-10-21T10:46:39+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/data-db.git"
+      },
+      {
+        "package": "yiisoft/data-response",
+        "dir": "data-response",
+        "commit": "0e890538eafa9c477884be91667f043e3b517776",
+        "commit_date": "2026-09-04T17:39:02+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/data-response.git"
+      },
+      {
+        "package": "yiisoft/db",
+        "dir": "db",
+        "commit": "ab9a0ca16333677d7201a131789c984b3523cb9f",
+        "commit_date": "2026-10-22T09:20:52+03:00",
+        "branch": "master",
+        "nearest_tag": "2.1.0",
+        "remote": "https://github.com/yiisoft/db.git"
+      },
+      {
+        "package": "yiisoft/db-migration",
+        "dir": "db-migration",
+        "commit": "d5eb1528f51ffa60b07a9bc727d03ecd0601f9fd",
+        "commit_date": "2026-10-19T21:47:56+03:00",
+        "branch": "master",
+        "nearest_tag": "2.2.0",
+        "remote": "https://github.com/yiisoft/db-migration.git"
+      },
+      {
+        "package": "yiisoft/db-mssql",
+        "dir": "db-mssql",
+        "commit": "20b1388458c65a726cd2428bb27d2efaf5d60efe",
+        "commit_date": "2026-10-18T10:16:14+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-mssql.git"
+      },
+      {
+        "package": "yiisoft/db-mysql",
+        "dir": "db-mysql",
+        "commit": "3eb03ed76b67c63dcf585912ecda4c15a2b13921",
+        "commit_date": "2026-10-21T14:55:54+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-mysql.git"
+      },
+      {
+        "package": "yiisoft/db-oracle",
+        "dir": "db-oracle",
+        "commit": "63ebeee9db626b2f8e0488700b25f079330c4772",
+        "commit_date": "2026-10-21T13:04:55+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-oracle.git"
+      },
+      {
+        "package": "yiisoft/db-pgsql",
+        "dir": "db-pgsql",
+        "commit": "b8cd87b0f03d603af717a66223ce8c5dcd70a1fc",
+        "commit_date": "2026-10-21T08:57:25+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-pgsql.git"
+      },
+      {
+        "package": "yiisoft/db-sqlite",
+        "dir": "db-sqlite",
+        "commit": "a958f3949ee9e630369d819c10bdcbbc0cb9f1d8",
+        "commit_date": "2026-10-21T13:04:27+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-sqlite.git"
+      },
+      {
+        "package": "yiisoft/definitions",
+        "dir": "definitions",
+        "commit": "11551632c93d073735d9ae3b1f6831e99d3d21fd",
+        "commit_date": "2026-10-21T10:13:50+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/definitions.git"
+      },
+      {
+        "package": "yiisoft/di",
+        "dir": "di",
+        "commit": "0a802a647aff805441d11a578861737ac3f63f12",
+        "commit_date": "2026-08-09T14:41:20+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/di.git"
+      },
+      {
+        "package": "yiisoft/error-handler",
+        "dir": "error-handler",
+        "commit": "3f50d07e5946adde48c614aabf104b4e65b6ff43",
+        "commit_date": "2026-09-04T17:40:08+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/error-handler.git"
+      },
+      {
+        "package": "yiisoft/event-dispatcher",
+        "dir": "event-dispatcher",
+        "commit": "1a887d041ed4213cd0612c32403a966c60c0b045",
+        "commit_date": "2026-09-04T17:40:13+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/event-dispatcher.git"
+      },
+      {
+        "package": "yiisoft/factory",
+        "dir": "factory",
+        "commit": "1fbfa8fb89ba0eaec3af64ee1e91792f60561431",
+        "commit_date": "2026-09-04T17:40:17+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/factory.git"
+      },
+      {
+        "package": "yiisoft/file-router",
+        "dir": "file-router",
+        "commit": "843839038ea7f18940be9f291df2decd5499591d",
+        "commit_date": "2026-09-04T17:40:22+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/file-router.git"
+      },
+      {
+        "package": "yiisoft/files",
+        "dir": "files",
+        "commit": "0f4e963ca0a2f068ef01bf1b12298743811bb63a",
+        "commit_date": "2026-09-04T17:40:27+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/files.git"
+      },
+      {
+        "package": "yiisoft/form",
+        "dir": "form",
+        "commit": "7719d2b1b0437c7253fdcb79553fe71016c626fe",
+        "commit_date": "2026-09-04T17:40:31+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/form.git"
+      },
+      {
+        "package": "yiisoft/form-model",
+        "dir": "form-model",
+        "commit": "90ea8c64b9be129a747aac06be7708f019b52270",
+        "commit_date": "2026-09-04T17:40:36+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/form-model.git"
+      },
+      {
+        "package": "yiisoft/friendly-exception",
+        "dir": "friendly-exception",
+        "commit": "7016cbdc03367728442c070a441352edd49aa214",
+        "commit_date": "2026-09-04T17:40:41+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/friendly-exception.git"
+      },
+      {
+        "package": "yiisoft/html",
+        "dir": "html",
+        "commit": "119c06c44dfc24b65fe00325f9237858e5d78867",
+        "commit_date": "2026-09-04T17:40:45+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/html.git"
+      },
+      {
+        "package": "yiisoft/http",
+        "dir": "http",
+        "commit": "62a0f3b9975f8c0e35b4532a6c0b62b38d1a4712",
+        "commit_date": "2026-09-10T18:30:09+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/http.git"
+      },
+      {
+        "package": "yiisoft/http-middleware",
+        "dir": "http-middleware",
+        "commit": "1850fbe5392eef8113d1222a13eb01e931295f3e",
+        "commit_date": "2026-09-04T17:40:55+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/http-middleware.git"
+      },
+      {
+        "package": "yiisoft/hydrator",
+        "dir": "hydrator",
+        "commit": "769848e9792570d5fc46939c7df31c2b13d5c8fc",
+        "commit_date": "2026-10-03T10:40:58Z",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/hydrator.git"
+      },
+      {
+        "package": "yiisoft/hydrator-validator",
+        "dir": "hydrator-validator",
+        "commit": "ba83ab4c715a6da37fdbb0bf1b86acba99d8f3c2",
+        "commit_date": "2026-08-09T16:47:22+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/hydrator-validator.git"
+      },
+      {
+        "package": "yiisoft/i18n",
+        "dir": "i18n",
+        "commit": "b85582ba4ab81fe3f474bb54b2566e634b379b0d",
+        "commit_date": "2026-09-04T17:41:05+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/i18n.git"
+      },
+      {
+        "package": "yiisoft/translator-message-gettext",
+        "dir": "i18n-message-gettext",
+        "commit": "93ffc7b23e96c71e1bbe1cc02d4fe96a548fe0f3",
+        "commit_date": "2026-08-09T19:43:20+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/i18n-message-gettext.git"
+      },
+      {
+        "package": "yiisoft/translator-message-php",
+        "dir": "i18n-message-php",
+        "commit": "c8f0808089cbdc952ef0ba9ace3cbd1070c3d6fe",
+        "commit_date": "2026-09-04T17:44:39+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/i18n-message-php.git"
+      },
+      {
+        "package": "yiisoft/injector",
+        "dir": "injector",
+        "commit": "9c596892248e7b459dfb1e75a4244b96269c0333",
+        "commit_date": "2026-09-04T17:41:09+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/injector.git"
+      },
+      {
+        "package": "yiisoft/input-http",
+        "dir": "input-http",
+        "commit": "924934cd8bf7d42ec79f8a531e5d8cd2aee7e1d0",
+        "commit_date": "2026-09-04T17:41:14+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/input-http.git"
+      },
+      {
+        "package": "yiisoft/json",
+        "dir": "json",
+        "commit": "1307e519ad90e8944e7fd379de13dcbd360a8110",
+        "commit_date": "2026-09-04T17:41:19+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/json.git"
+      },
+      {
+        "package": "yiisoft/log",
+        "dir": "log",
+        "commit": "aec9294a4b86f8d1321af0994913b0d1a0665cd8",
+        "commit_date": "2026-09-04T17:41:28+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/log.git"
+      },
+      {
+        "package": "yiisoft/log-target-db",
+        "dir": "log-target-db",
+        "commit": "88d036d93f62b7f1e27d266a6ebc2313c3f9f5a5",
+        "commit_date": "2026-10-22T13:16:25+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/log-target-db.git"
+      },
+      {
+        "package": "yiisoft/log-target-email",
+        "dir": "log-target-email",
+        "commit": "e1cdecb34b46e31137ad1d52f3c6f77a66eae28b",
+        "commit_date": "2026-09-04T17:41:38+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/log-target-email.git"
+      },
+      {
+        "package": "yiisoft/log-target-file",
+        "dir": "log-target-file",
+        "commit": "38e83f89bc6e895192bbe6cb9b2da4493610f030",
+        "commit_date": "2026-09-04T17:41:43+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/log-target-file.git"
+      },
+      {
+        "package": "yiisoft/log-target-syslog",
+        "dir": "log-target-syslog",
+        "commit": "2bad8ea290d4752ad280e142430c1e744a51ea2c",
+        "commit_date": "2026-09-04T17:41:48+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/log-target-syslog.git"
+      },
+      {
+        "package": "yiisoft/mailer",
+        "dir": "mailer",
+        "commit": "99dcadc00c52de3a6d3983d65479a28a7b8fdf4f",
+        "commit_date": "2026-09-04T17:41:54+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mailer.git"
+      },
+      {
+        "package": "yiisoft/mailer-symfony",
+        "dir": "mailer-symfony",
+        "commit": "8ce160bd9cae72f420484c2d72cfac5ecb6710a7",
+        "commit_date": "2026-09-04T17:41:59+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mailer-symfony.git"
+      },
+      {
+        "package": "yiisoft/middleware-dispatcher",
+        "dir": "middleware-dispatcher",
+        "commit": "67a8ec20dc2908cd6164f21a27882a1833d4f094",
+        "commit_date": "2026-09-18T13:05:21+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/middleware-dispatcher.git"
+      },
+      {
+        "package": "yiisoft/mutex",
+        "dir": "mutex",
+        "commit": "57acea1db470bbd35d65b013bd79bd0d25fd551d",
+        "commit_date": "2026-09-04T17:42:08+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mutex.git"
+      },
+      {
+        "package": "yiisoft/mutex-file",
+        "dir": "mutex-file",
+        "commit": "f74c3a6d3834c872015891a79c3438becb1da369",
+        "commit_date": "2026-10-09T18:00:36+03:00",
+        "branch": "master",
+        "nearest_tag": "1.1.2",
+        "remote": "https://github.com/yiisoft/mutex-file.git"
+      },
+      {
+        "package": "yiisoft/mutex-pdo-mysql",
+        "dir": "mutex-pdo-mysql",
+        "commit": "d4da1206dfa065c4b7603163125100c1614cb605",
+        "commit_date": "2026-10-22T12:47:26+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mutex-pdo-mysql.git"
+      },
+      {
+        "package": "yiisoft/mutex-pdo-oracle",
+        "dir": "mutex-pdo-oracle",
+        "commit": "db9be622637c4c8d1bf066d1adddac989e346931",
+        "commit_date": "2026-10-21T18:01:20+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mutex-pdo-oracle.git"
+      },
+      {
+        "package": "yiisoft/mutex-pdo-pgsql",
+        "dir": "mutex-pdo-pgsql",
+        "commit": "b4e70bf08650cc6ffed3467d0166d11a2ccad871",
+        "commit_date": "2026-10-22T12:49:58+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mutex-pdo-pgsql.git"
+      },
+      {
+        "package": "yiisoft/mutex-redis",
+        "dir": "mutex-redis",
+        "commit": "8a41f443cf357aa807e47f80ac60dbbf561e07db",
+        "commit_date": "2026-09-04T17:42:27+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/mutex-redis.git"
+      },
+      {
+        "package": "yiisoft/network-utilities",
+        "dir": "network-utilities",
+        "commit": "2da48e2a7f316520fe77901e4778b3d43df1b17e",
+        "commit_date": "2026-08-09T17:41:05+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/network-utilities.git"
+      },
+      {
+        "package": "yiisoft/profiler",
+        "dir": "profiler",
+        "commit": "713f13cebaafc7f3c35a25e5deaf99ee00b99de7",
+        "commit_date": "2026-09-04T17:42:40+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/profiler.git"
+      },
+      {
+        "package": "yiisoft/proxy",
+        "dir": "proxy",
+        "commit": "37d0090395844f61e83ee19ec70d80db33ba1f4a",
+        "commit_date": "2026-09-04T17:42:45+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/proxy.git"
+      },
+      {
+        "package": "yiisoft/proxy-middleware",
+        "dir": "proxy-middleware",
+        "commit": "f54869c23a667e4a9ae01df2346d64fc3b0c01a8",
+        "commit_date": "2026-09-04T17:42:49+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/proxy-middleware.git"
+      },
+      {
+        "package": "yiisoft/psr-emitter",
+        "dir": "psr-emitter",
+        "commit": "fec919eb9e942324b76cee50d374f483e8b7938f",
+        "commit_date": "2026-09-04T17:42:54+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/psr-emitter.git"
+      },
+      {
+        "package": "yiisoft/queue",
+        "dir": "queue",
+        "commit": "7c79c3b6d24a5bea6728ff49bd426d3267f034e0",
+        "commit_date": "2026-09-15T16:02:30+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/queue.git"
+      },
+      {
+        "package": "yiisoft/queue-amqp",
+        "dir": "queue-amqp",
+        "commit": "54361d194471f77c4fa01f087e6d5f38fb9ee7c3",
+        "commit_date": "2026-10-22T12:48:00+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/queue-amqp.git"
+      },
+      {
+        "package": "yiisoft/queue-db",
+        "dir": "queue-db",
+        "commit": "bf0117897364bc00ff40b0ad5aee2edc00a5ac95",
+        "commit_date": "2026-09-04T17:43:08+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/queue-db.git"
+      },
+      {
+        "package": "yiisoft/queue-redis",
+        "dir": "queue-redis",
+        "commit": "c23261521fe34ea6488a073122dd463d5699be96",
+        "commit_date": "2026-09-29T12:54:31+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/queue-redis.git"
+      },
+      {
+        "package": "yiisoft/rate-limiter",
+        "dir": "rate-limiter",
+        "commit": "43e8fc56605498f5047740c132d519e3ee28b61f",
+        "commit_date": "2026-09-04T17:43:17+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/rate-limiter.git"
+      },
+      {
+        "package": "yiisoft/rbac",
+        "dir": "rbac",
+        "commit": "f96e8313c08280fe9aa1ebac11b9c79206c338c4",
+        "commit_date": "2026-09-04T17:43:22+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/rbac.git"
+      },
+      {
+        "package": "yiisoft/rbac-cycle-db",
+        "dir": "rbac-cycle-db",
+        "commit": "2b7c7c2cd350b21a13303ffcc1ef0a989b9c7a0e",
+        "commit_date": "2026-09-23T11:25:06+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/rbac-cycle-db.git"
+      },
+      {
+        "package": "yiisoft/rbac-db",
+        "dir": "rbac-db",
+        "commit": "64db5818dade99bb520bd6a99f63847399a60931",
+        "commit_date": "2026-10-22T13:18:51+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/rbac-db.git"
+      },
+      {
+        "package": "yiisoft/rbac-php",
+        "dir": "rbac-php",
+        "commit": "4d9cbfade801c816887b55877336944efc7ac264",
+        "commit_date": "2026-08-09T19:03:10+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/rbac-php.git"
+      },
+      {
+        "package": "yiisoft/rbac-rules-container",
+        "dir": "rbac-rules-container",
+        "commit": "e1d1eeca81f888579640c75fb139186231857763",
+        "commit_date": "2026-09-04T17:43:36+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/rbac-rules-container.git"
+      },
+      {
+        "package": "yiisoft/request-body-parser",
+        "dir": "request-body-parser",
+        "commit": "8edbef7000fce0435dec755000f7cd0bd104e827",
+        "commit_date": "2026-09-04T17:43:41+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/request-body-parser.git"
+      },
+      {
+        "package": "yiisoft/request-provider",
+        "dir": "request-provider",
+        "commit": "694e592c0e385bd3abef710f19f40bcd17c23176",
+        "commit_date": "2026-09-04T17:43:45+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/request-provider.git"
+      },
+      {
+        "package": "yiisoft/requirements",
+        "dir": "requirements",
+        "commit": "d102fedc5b033907d4151be02bdc96578b2f0894",
+        "commit_date": "2026-09-04T17:43:50+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/requirements.git"
+      },
+      {
+        "package": "yiisoft/response-download",
+        "dir": "response-download",
+        "commit": "eb1cc27a00a1d7e5e1771f77ec89801e82232f52",
+        "commit_date": "2026-09-04T17:43:54+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/response-download.git"
+      },
+      {
+        "package": "yiisoft/router",
+        "dir": "router",
+        "commit": "c47f7c1d65810a94782d1b8fc553d04b54ae3345",
+        "commit_date": "2026-09-10T20:04:22+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/router.git"
+      },
+      {
+        "package": "yiisoft/router-composer-attribute-collector",
+        "dir": "router-composer-attribute-collector",
+        "commit": "03b0b627e5e1a3ead6958a9ffdb06c64097e34d3",
+        "commit_date": "2026-08-09T19:15:05+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/router-composer-attribute-collector.git"
+      },
+      {
+        "package": "yiisoft/router-fastroute",
+        "dir": "router-fastroute",
+        "commit": "da1cd690ead84e082f69362be3be933671e6dbdb",
+        "commit_date": "2026-09-04T17:44:00+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/router-fastroute.git"
+      },
+      {
+        "package": "yiisoft/security",
+        "dir": "security",
+        "commit": "8a7e01792e6fd5ffe7901eb5e9a43391bb2ff3fe",
+        "commit_date": "2026-09-24T09:34:28+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/security.git"
+      },
+      {
+        "package": "yiisoft/session",
+        "dir": "session",
+        "commit": "7021de9ca77d6b9487632c178293dc261f10ccee",
+        "commit_date": "2026-09-30T09:31:16+03:00",
+        "branch": "master",
+        "nearest_tag": "3.0.3",
+        "remote": "https://github.com/yiisoft/session.git"
+      },
+      {
+        "package": "yiisoft/strings",
+        "dir": "strings",
+        "commit": "e93e1ba4daf3956f7f31bdc4df9daf4487edfd83",
+        "commit_date": "2026-09-04T17:44:10+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/strings.git"
+      },
+      {
+        "package": "yiisoft/test-support",
+        "dir": "test-support",
+        "commit": "2c9a1556568d5bf90661ec57b390e0835e7b9e77",
+        "commit_date": "2026-09-04T17:44:15+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/test-support.git"
+      },
+      {
+        "package": "yiisoft/translator",
+        "dir": "translator",
+        "commit": "829b1748233e80376435e1089a3947e36a21fb80",
+        "commit_date": "2026-09-04T17:44:19+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/translator.git"
+      },
+      {
+        "package": "yiisoft/translator-extractor",
+        "dir": "translator-extractor",
+        "commit": "5b8ccc24bcc705e28b6b4d99a4efd9be841b9f9e",
+        "commit_date": "2026-09-04T17:44:24+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/translator-extractor.git"
+      },
+      {
+        "package": "yiisoft/translator-message-db",
+        "dir": "translator-message-db",
+        "commit": "8ffbceb166dd3c8bb4d29c39f64c4d7d4854940a",
+        "commit_date": "2026-09-23T04:59:03+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/translator-message-db.git"
+      },
+      {
+        "package": "yiisoft/translator-message-gettext",
+        "dir": "translator-message-gettext",
+        "commit": "93ffc7b23e96c71e1bbe1cc02d4fe96a548fe0f3",
+        "commit_date": "2026-08-09T19:43:20+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/translator-message-gettext.git"
+      },
+      {
+        "package": "yiisoft/translator-message-php",
+        "dir": "translator-message-php",
+        "commit": "c8f0808089cbdc952ef0ba9ace3cbd1070c3d6fe",
+        "commit_date": "2026-09-04T17:44:39+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/translator-message-php.git"
+      },
+      {
+        "package": "yiisoft/user",
+        "dir": "user",
+        "commit": "b0e13411934f6e99f6027f43045e55601d07b8a0",
+        "commit_date": "2026-09-18T08:44:12+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/user.git"
+      },
+      {
+        "package": "yiisoft/validator",
+        "dir": "validator",
+        "commit": "12ae8011a6e5f4ff71f4da079372e93cb2a5ce2a",
+        "commit_date": "2026-09-28T09:29:09+03:00",
+        "branch": "master",
+        "nearest_tag": "2.6.1",
+        "remote": "https://github.com/yiisoft/validator.git"
+      },
+      {
+        "package": "yiisoft/var-dumper",
+        "dir": "var-dumper",
+        "commit": "39928072ca25a156f4f5a667a59605a9778e514d",
+        "commit_date": "2026-09-04T17:44:49+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/var-dumper.git"
+      },
+      {
+        "package": "yiisoft/view",
+        "dir": "view",
+        "commit": "29e8897d3e7ec74ceb9c1bfb074e543912471935",
+        "commit_date": "2026-09-04T17:44:54+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/view.git"
+      },
+      {
+        "package": "yiisoft/view-twig",
+        "dir": "view-twig",
+        "commit": "dafadbc6a81f2df7891e5469cc5ef80f4493cd73",
+        "commit_date": "2026-08-09T19:52:20+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/view-twig.git"
+      },
+      {
+        "package": "yiisoft/widget",
+        "dir": "widget",
+        "commit": "9fe49207daa294faf2a0cb59999c867917d845dc",
+        "commit_date": "2026-09-04T17:44:58+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/widget.git"
+      },
+      {
+        "package": "yiisoft/yii-auth-client",
+        "dir": "yii-auth-client",
+        "commit": "915f4f51d72ac8f55e553aff86de00da947d0789",
+        "commit_date": "2026-10-15T01:45:58+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-auth-client.git"
+      },
+      {
+        "package": "yiisoft/yii-bulma",
+        "dir": "yii-bulma",
+        "commit": "f128a7b90e9c084b3ee86f3996e072c206604835",
+        "commit_date": "2026-09-04T17:45:08+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-bulma.git"
+      },
+      {
+        "package": "yiisoft/yii-console",
+        "dir": "yii-console",
+        "commit": "0cf71b7c2a25d45cebcc679147fe9650e738fe2d",
+        "commit_date": "2026-09-16T08:44:28+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-console.git"
+      },
+      {
+        "package": "yiisoft/yii-cycle",
+        "dir": "yii-cycle",
+        "commit": "952d73e63f52e5be7920acc7f5cb2a30f04f7a9c",
+        "commit_date": "2026-10-19T10:20:01+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-cycle.git"
+      },
+      {
+        "package": "yiisoft/yii-dataview",
+        "dir": "yii-dataview",
+        "commit": "daae6f4a803d64d5827bac31a2b0b9accde84a87",
+        "commit_date": "2026-09-15T21:24:30+03:00",
+        "branch": "master",
+        "nearest_tag": "1.3.0",
+        "remote": "https://github.com/yiisoft/yii-dataview.git"
+      },
+      {
+        "package": "yiisoft/yii-debug",
+        "dir": "yii-debug",
+        "commit": "c07ac6d8262d08d17dea0fe5b2e5a5f058ca712e",
+        "commit_date": "2026-09-04T17:45:27+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-debug.git"
+      },
+      {
+        "package": "yiisoft/yii-debug-api",
+        "dir": "yii-debug-api",
+        "commit": "0f126a72b981e677727b7f6a47586b98bd8626df",
+        "commit_date": "2026-10-18T11:12:05+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-debug-api.git"
+      },
+      {
+        "package": "yiisoft/yii-debug-viewer",
+        "dir": "yii-debug-viewer",
+        "commit": "ff5279ff8a9f4404502a7a260dde6f6ff87ff594",
+        "commit_date": "2026-09-04T17:45:32+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-debug-viewer.git"
+      },
+      {
+        "package": "yiisoft/yii-dev-tool",
+        "dir": "yii-dev-tool",
+        "commit": "03bf627d4879315181fc6eb1c6cb3ad83f1a77a1",
+        "commit_date": "2026-10-12T00:23:52+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-dev-tool.git"
+      },
+      {
+        "package": "yiisoft/yii-event",
+        "dir": "yii-event",
+        "commit": "f6cdbc9e806c0247f4271403b3212ca06e3489da",
+        "commit_date": "2026-09-04T17:45:42+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-event.git"
+      },
+      {
+        "package": "yiisoft/yii-gii",
+        "dir": "yii-gii",
+        "commit": "195a0134c6548cfa4bf1556c0edabdf107d89720",
+        "commit_date": "2026-09-04T17:45:47+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-gii.git"
+      },
+      {
+        "package": "yiisoft/yii-http",
+        "dir": "yii-http",
+        "commit": "5a2f07b8cc3050e8e85e4e1cd6664ae6f2ee6565",
+        "commit_date": "2026-09-04T17:45:51+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-http.git"
+      },
+      {
+        "package": "yiisoft/yii-middleware",
+        "dir": "yii-middleware",
+        "commit": "df3e8bff520bb49b2395b9c32d8b0080008a86a3",
+        "commit_date": "2026-09-04T17:45:56+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-middleware.git"
+      },
+      {
+        "package": "yiisoft/yii-runner",
+        "dir": "yii-runner",
+        "commit": "4408b56835f67916b3c466767e87c38a4aa4f638",
+        "commit_date": "2026-10-07T19:32:57+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner.git"
+      },
+      {
+        "package": "yiisoft/yii-runner-console",
+        "dir": "yii-runner-console",
+        "commit": "7e66f339deda5612a99e0cd28c53832876577683",
+        "commit_date": "2026-09-04T17:46:07+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner-console.git"
+      },
+      {
+        "package": "yiisoft/yii-runner-frankenphp",
+        "dir": "yii-runner-frankenphp",
+        "commit": "483980503e5d256c9193398f31fa00cf506b4a6a",
+        "commit_date": "2026-09-04T17:46:11+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner-frankenphp.git"
+      },
+      {
+        "package": "yiisoft/yii-runner-http",
+        "dir": "yii-runner-http",
+        "commit": "95182a5156ed01917374b2c4ea3e0e45a4bf9aac",
+        "commit_date": "2026-09-04T17:46:16+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner-http.git"
+      },
+      {
+        "package": "yiisoft/yii-runner-roadrunner",
+        "dir": "yii-runner-roadrunner",
+        "commit": "f34264211ced70ad16b35751883c7e32b66dd89e",
+        "commit_date": "2026-10-16T11:11:40+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner-roadrunner.git"
+      },
+      {
+        "package": "yiisoft/yii-sentry",
+        "dir": "yii-sentry",
+        "commit": "668c6d2e29897788cb6e8b80937aa4ba7aea9aaf",
+        "commit_date": "2026-09-23T11:02:21+03:00",
+        "branch": "master",
+        "nearest_tag": "3.0.1",
+        "remote": "https://github.com/yiisoft/yii-sentry.git"
+      },
+      {
+        "package": "yiisoft/yii-swagger",
+        "dir": "yii-swagger",
+        "commit": "bce8c5619f0d881882f9b64d9b822e4efb45ffc9",
+        "commit_date": "2026-09-04T17:46:31+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-swagger.git"
+      },
+      {
+        "package": "yiisoft/yii-testing",
+        "dir": "yii-testing",
+        "commit": "f04e41ec5512a938cd5659d81b584a2d76c4cab6",
+        "commit_date": "2026-09-04T17:46:35+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-testing.git"
+      },
+      {
+        "package": "yiisoft/yii-twig",
+        "dir": "yii-twig",
+        "commit": "c923d27cfe986b9a44ee8ae191c1817baf593c3d",
+        "commit_date": "2026-09-04T17:46:40+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-twig.git"
+      },
+      {
+        "package": "yiisoft/yii-view-renderer",
+        "dir": "yii-view-renderer",
+        "commit": "0f1793c187b6a8c460970c3745a74d9f2878edbb",
+        "commit_date": "2026-09-04T17:46:44+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-view-renderer.git"
+      },
+      {
+        "package": "yiisoft/yii-widgets",
+        "dir": "yii-widgets",
+        "commit": "5469095f7b59379be259ef7825e9ea396243b0bb",
+        "commit_date": "2026-10-03T06:03:17+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-widgets.git"
+      }
+    ]
   },
   "classes": [
     "Psr\\Http\\Message\\ResponseFactoryInterface",
@@ -44,6 +1216,8 @@
     "Yiisoft\\Db\\Connection\\ConnectionInterface",
     "Yiisoft\\Db\\Connection\\ConnectionProvider",
     "Yiisoft\\Db\\Migration\\MigrationBuilder",
+    "Yiisoft\\Db\\Query\\QueryInterface",
+    "Yiisoft\\Db\\Query\\QueryPartsInterface",
     "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
     "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
     "Yiisoft\\Db\\Transaction\\TransactionInterface",
@@ -53,6 +1227,7 @@
     "Yiisoft\\Di\\Container",
     "Yiisoft\\Di\\ContainerConfig",
     "Yiisoft\\Di\\Reference\\TagReference",
+    "Yiisoft\\Di\\StateResetter",
     "Yiisoft\\ErrorHandler\\ErrorHandler",
     "Yiisoft\\ErrorHandler\\Event\\ApplicationError",
     "Yiisoft\\ErrorHandler\\Exception\\UserException",
@@ -7045,6 +8220,495 @@
       "isConstOrCase": false,
       "params": []
     },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::bigPrimaryKey": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "autoIncrement",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::string": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "size",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnInterface::notNull": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "notNull",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::text": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "size",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnInterface::defaultValue": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "defaultValue",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::smallint": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "size",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::datetime": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "size",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnInterface::null": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionInterface::createCommand": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
+      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "sql",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Command\\CommandInterface::insert": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
+      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Command\\CommandInterface::execute": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Db\\Command\\CommandInterface::update": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 5,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
+      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "condition",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "from",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionInterface::createQuery": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Db\\Query\\QueryPartsInterface::from": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "tables",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::from": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "tables",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryPartsInterface::select": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "option",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::select": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "option",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryPartsInterface::where": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "condition",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::where": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "condition",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryPartsInterface::andWhere": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "condition",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::andWhere": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "condition",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryPartsInterface::orderBy": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::orderBy": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryPartsInterface::limit": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "limit",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::limit": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Query\\QueryInterface",
+      "definedIn": "Yiisoft\\Db\\Query\\QueryPartsInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "limit",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Query\\QueryInterface::all": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Query\\QueryInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Di\\StateResetter::reset": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Di\\StateResetter",
+      "isConstOrCase": false,
+      "params": []
+    },
     "Yiisoft\\ActiveRecord\\LazyLoadGuard::set": {
       "visibility": "public",
       "isStatic": true,
@@ -7408,28 +9072,6 @@
         }
       ]
     },
-    "Yiisoft\\Db\\Connection\\ConnectionInterface::createCommand": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
-      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "sql",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "params",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
     "Yiisoft\\Db\\Command\\CommandInterface::queryScalar": {
       "visibility": "public",
       "isStatic": false,
@@ -7611,17 +9253,6 @@
           "isVariadic": false
         }
       ]
-    },
-    "Yiisoft\\Db\\Command\\CommandInterface::execute": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
-      "isConstOrCase": false,
-      "params": []
     },
     "Yiisoft\\Db\\Command\\CommandInterface::delete": {
       "visibility": "public",
@@ -8095,40 +9726,6 @@
         }
       ]
     },
-    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::string": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "size",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Schema\\Column\\ColumnInterface::notNull": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "notNull",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
     "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::integer": {
       "visibility": "public",
       "isStatic": true,
@@ -8195,28 +9792,6 @@
       "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
       "isConstOrCase": false,
       "params": []
-    },
-    "Yiisoft\\Db\\Command\\CommandInterface::insert": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
-      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "table",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "columns",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
     },
     "Yiisoft\\Session\\SessionInterface::has": {
       "visibility": "public",

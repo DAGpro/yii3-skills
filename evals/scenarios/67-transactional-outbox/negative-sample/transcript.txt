@@ -1,0 +1,1 @@
+Order creation wraps repository save and direct queue push inside CreateOrderAction transaction. No outbox migration, relay worker, or inbox deduplication added.

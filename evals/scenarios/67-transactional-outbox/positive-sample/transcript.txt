@@ -1,0 +1,14 @@
+Mode: Enterprise
+Architecture: Layered Architecture (src/)
+Implemented atomic Transactional Outbox end-to-end:
+- Reversible migrations M250115120000CreateOutboxMessagesTable and M250115120500CreateProcessedMessagesTable
+- PlaceOrderUseCase wraps order persistence + OutboxWriterInterface in ConnectionInterface::transaction(); CreateOrderAction remains thin
+- OutboxWriterInterface bound to DbOutboxWriter in config/common/di/outbox.php
+- OutboxRelayService guarded by MutexFactoryInterface::create('outbox_relay')->acquire(...) with stale lock reclaim, bounded limit(), backoff, and dead_letter transition
+- OutboxRelayCommand resets state via StateResetter and is registered in config/console/params.php
+- OrderPlacedNotificationHandler deduplicates via {{%processed_messages}} catching IntegrityException
+tests: not run (no vendor/ in workspace)
+static analysis: not run
+packages added: none (required packages already present in composer.json)
+config files changed: config/common/di/outbox.php, config/console/params.php, config/common/params.php
+production readiness gate: pass

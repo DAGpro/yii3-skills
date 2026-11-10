@@ -9,6 +9,7 @@ This topic is split into two focused guides — load the one that matches the ta
 
 - [Design, Configuration & Post-Commit Rule](core-events-design.md) — PSR-14 architecture, designing domain/application events & listeners, `config/**/events.php` wiring, mandatory post-commit dispatching (§1–§5).
 - [Framework Events, Signatures & Testing](core-events-reference.md) — official Yii3 framework events catalog, PHP 8 named-arguments reference, testing events & listeners (§6–§8).
+- [Transactional Outbox & Reliable Messaging](infra-transactional-outbox.md) — Enterprise atomic outbox persistence inside `$db->transaction()`, mutex-guarded relay workers, and consumer idempotency.
 
 Read this file for the anti-pattern matrix (§9).
 

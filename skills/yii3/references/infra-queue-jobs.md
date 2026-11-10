@@ -336,6 +336,9 @@ final readonly class PlaceOrderUseCase
 }
 ```
 
+> [!TIP]
+> **Enterprise At-Least-Once Guarantee:** Post-commit `push()` still drops messages if the broker times out or the PHP worker crashes immediately after DB commit. When losing a message is unacceptable (payments, critical orders, webhooks), write the job payload atomically to `{{%outbox_messages}}` inside `$db->transaction()` and publish via a relay worker — see the [Transactional Outbox & Reliable Messaging Guide](infra-transactional-outbox.md).
+
 ### Pushing to Named Channels (`QueueProducerProviderInterface`)
 
 When routing messages to specific queue channels (e.g. `notifications`, `exports`), inject `QueueProducerProviderInterface`:
@@ -780,6 +783,7 @@ sudo systemctl enable --now yii-queue@{1..4}.service
 
 ## Related Topic Guides
 
+- [Transactional Outbox & Reliable Messaging Guide](infra-transactional-outbox.md) — Atomic `$db->transaction()` + outbox writes, mutex-guarded relay workers, backoff/dead-letter handling, and consumer idempotency.
 - [Queue Broker Adapters Guide](infra-queue-brokers.md) — Named multi-queue wiring, the `queue-db` / `queue-redis` / `queue-amqp` adapters, `SyncQueueProducer`, and the driver comparison matrix.
 - [Queue Mutex & Distributed Concurrency Guide](infra-queue-mutex.md) — `MutexFactoryInterface`, `Synchronizer`, and mutex driver DI recipes.
 - [Console Commands Guide](infra-commands.md) — Console command registration, arguments, and testing (`queue:listen` workers are console commands).

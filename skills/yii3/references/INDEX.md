@@ -1,6 +1,8 @@
 # Yii3 Topic Guides Index
 
 > Master inventory of specialized reference guides for the Yii 3 framework (`yiisoft/*` packages).
+>
+> **Guide types:** Leaf guides hold concrete recipes and API patterns; entries labeled **split index** organize child guides and host shared module **Anti-Pattern Matrices** audited during verification.
 
 ## References
 
@@ -21,7 +23,8 @@
 - `references/core-events-design.md` — PSR-14 architecture, event/listener design, config, post-commit rule
 - `references/core-events-reference.md` — framework events catalog, signatures reference, testing
 - `references/core-version-notes.md` — version-gated behavior catalog with `composer.lock` verification
-- `references/aif-adapter.md` — AI Factory workflow lifecycle, durable execution state, cross-session coordination
+- `references/aif-adapter.md` — AI Factory extension mode (default): workflow lifecycle, durable execution state, cross-session coordination
+- `references/standalone-adapter.md` — standalone fallback mode: plan resolution, architecture tier self-derivation, Mission State durability, interactive protocol, self-verification loop, final report contract
 
 ### HTTP & Presentation
 - `references/http-routes.md` — split index: worker-environment caveats, anti-pattern matrix, related guides
@@ -77,6 +80,7 @@
 - `references/infra-queue-jobs.md` — queue jobs, message DTOs, workers, failure pipelines
 - `references/infra-queue-brokers.md` — broker adapters (queue-db/redis/amqp, SyncQueue)
 - `references/infra-queue-mutex.md` — distributed mutex locks
+- `references/infra-transactional-outbox.md` — atomic outbox pattern, mutex-guarded relay workers, backoff & dead-letter recovery, consumer idempotency
 - `references/infra-auth-and-rbac.md` — identity, password hashing, RBAC rules, route protection
 - `references/infra-auth-session.md` — stateful session authentication, CurrentUser, login/logout lifecycles, CookieLogin, web events
 - `references/infra-auth-jwt.md` — JWT authentication

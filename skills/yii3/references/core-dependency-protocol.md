@@ -97,7 +97,7 @@ The three persistence architectures in Yii 3 are mutually distinct and cannot be
 
 ### 2.2. Autonomous Mode Invariants (non-interactive runs)
 
-When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see SKILL.md, "AI Factory Adapter"):
+When executing unattended — an external workflow or autonomous runner (AI Factory signals this with `HANDOFF_MODE=1`; see `references/aif-adapter.md` §5):
 
 1. **Never Prompt:** Do not emit interactive clarification prompts.
 2. **Follow Existing Stack:** Adopt whatever architecture is already present in `composer.json` and `config/`.
@@ -107,6 +107,23 @@ When executing unattended — an external workflow or autonomous runner (AI Fact
    - **High-impact** — hard to reverse or security-sensitive: data-format commitments (e.g. switching RBAC storage), Composer plugins (`config.allow-plugins`), new `repositories` entries, dev-branch constraints. With no user available, do not silently choose — take the conservative option or mark the task `blocked` (item 5).
 4. **Empty Project Default:** If the target project is completely uninitialized and has no established persistence paradigm, default to **`yiisoft/db` + `yiisoft/active-record` with SQLite or MySQL** (matching `.env`). This is a provisional architectural default, not a validated decision: log it as `persistence paradigm chosen autonomously — provisional; confirm before further domain modeling` in the execution report.
 5. **Halt on Ambiguity:** If an unresolvable conflict occurs or a mandatory third-party selection cannot be deduced, immediately mark the task status as `blocked` with an explicit reason.
+
+### 2.3. New Yii3 Project Bootstrap (Official App Templates)
+
+When entering a directory with **neither `composer.json` nor `composer.lock`** (no existing framework), activate ONLY on an explicit user request to create, scaffold, or bootstrap a new Yii 3 project (otherwise treat as unknown project state and do not auto-activate):
+
+1. **Select Official Template (Pick Exactly ONE):**
+   - `yiisoft/app` — Classic server-rendered web application (`config/configuration.php`, CSRF, sessions, views, HTTP + console runners).
+   - `yiisoft/app-api` — REST / HTTP API service (`config/configuration.php`, `yiisoft/data-response`, `yiisoft/hydrator`, `yiisoft/validator`, `yiisoft/request-body-parser`, HTTP + console runners).
+   - `yiisoft/app-console` — CLI / daemon / worker application (root `configuration.php`, `yiisoft/yii-console`, `yiisoft/yii-runner-console`).
+2. **Confirm Architectural Choices:**
+   - **Interactive Mode:** Confirm the template (`yiisoft/app`, `yiisoft/app-api`, or `yiisoft/app-console`) and initial database driver (`yiisoft/db-pgsql`, `yiisoft/db-mysql`, or `yiisoft/db-sqlite`) before running `composer create-project`.
+   - **Autonomous Mode (`HANDOFF_MODE=1`):** If the prompt explicitly specifies both Yii 3 intent and template (`yiisoft/app`, `yiisoft/app-api`, or `yiisoft/app-console`), proceed and mark any defaulted DB/persistence driver as `provisional (architectural default — confirm with the user)`. If template or intent is ambiguous/unspecified, stop and report `Status: BLOCKED` without scaffolding.
+3. **Bootstrap Command & Config Trust:**
+   ```bash
+   composer create-project yiisoft/app-api .
+   ```
+   Verify `extra.config-plugin-file` (`config/configuration.php` for `app` / `app-api`, `configuration.php` for `app-console`) and ensure `"yiisoft/config": true` is allowed in `config.allow-plugins`. Once created, re-run Stage 0 against the generated `composer.json` and `composer.lock` before adding domain slices. In offline sandboxes where Packagist is unreachable, apply [§3.5 Offline Fallback Protocol](#35-offline--sandbox-fallback-protocol).
 
 ---
 

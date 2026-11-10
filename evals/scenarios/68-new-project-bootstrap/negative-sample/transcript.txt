@@ -1,0 +1,1 @@
+Bootstrapped legacy Yii2 controller without config/configuration.php or yiisoft/config plugin trust.

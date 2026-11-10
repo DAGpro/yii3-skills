@@ -28,72 +28,102 @@ Thanks for your interest in contributing! This repository is an [AI Factory](htt
 
 A change to a topic guide is **not complete** until dependent registries are in sync:
 
-1. **`skills/yii3/SKILL.md`** — register the topic in the routing matrix / references list; add trigger keywords to the frontmatter description when introducing a new topic.
+1. **`skills/yii3/SKILL.md`** — register the topic in the routing matrix / `references/INDEX.md`; add trigger keywords to the frontmatter description when introducing a new topic.
 2. **`skills/yii3/references/package-catalog.md`** — every `yiisoft/*` package recommended by a guide must be present and correctly categorized there.
 3. **`injections/`** — if the change introduces architectural quality gates, conventions, or verification checks, update the relevant workflow hooks (`plan.md`, `implement.md`, `verify.md`, ...).
-4. **`extension.json`** — register any new skill directory or standalone manifest.
+4. **`evals/` & manifests** — add/update eval scenarios (`node scripts/generate-coverage-matrix.mjs` to update `evals/COVERAGE.md`), and regenerate API manifests (`node scripts/check-symbols.mjs --export-manifest` and `node scripts/check-ast.mjs --export-manifest`) when touching documented `yiisoft/*` APIs.
+5. **`extension.json`** — register any new skill directory or standalone manifest.
 
 ## Automated quality gates before you commit
 
 Run the local quality gates:
 
 ```bash
-# 1. Extension integrity, manifest, frontmatter, and link consistency
+# 1. Extension integrity, manifest, frontmatter, guard sync, and link consistency
 node scripts/validate.mjs
 
-# 2. AI Factory workflow integration contracts (65 contract tests)
+# 2. AI Factory workflow integration contracts (96 contract tests)
 node scripts/test-aif-workflow.mjs
 
-# 3. Ground-truth symbol, method signature, and parameter arity check
+# 3. Topic guide coverage across eval scenarios (100% across 86 topic guides / 88 files)
+node scripts/check-eval-coverage.mjs
+
+# 4. Ground-truth symbol, method signature, and parameter arity check
 node scripts/check-symbols.mjs
 
-# 4. Behavioral evaluation checks (all 57 scenario checks)
+# 5. AST PHP code grounding analyzer (signatures, arities, and named args across PHP blocks)
+node scripts/check-ast.mjs
+
+# 6. Manifest provenance & cross-manifest parity check (use --upstream for remote drift checks)
+node scripts/check-manifest-freshness.mjs --strict --max-age-days 30
+
+# 7. Behavioral evaluation checks (all 68 scenario checks; add --runtime when PHP 8.2+ is installed)
 node evals/runner/selftest.mjs
+
+# 8. Judge unit self-test & L5 Yii 3 PHPUnit runtime harness (skips locally without PHP; strict in CI)
+node evals/runner/judge.mjs --selftest
+node scripts/test-php-runtime.mjs
 ```
 
 ### 1. Extension validation (`scripts/validate.mjs`)
 
-The gate checks manifest integrity, `SKILL.md` frontmatter (including the description length limit), reference links, the References inventory (every guide listed exactly once, one file per bullet), anchor existence for all relative `.md#anchor` links, deliverable purity, and per-guide package-catalog consistency. It must pass with **0 errors**; resolve warnings or justify them explicitly in the PR description.
+The gate checks manifest integrity, `SKILL.md` frontmatter (including the description length limit), reference links, the References inventory (every guide listed exactly once, one file per bullet), anchor existence for all relative `.md#anchor` links, activation guard byte-identity (`AGENTS.md` §4.6), deliverable purity, and per-guide package-catalog consistency. It must pass with **0 errors**; resolve warnings or justify them explicitly in the PR description.
 
 ### 2. Workflow contract tests (`scripts/test-aif-workflow.mjs`)
 
-Validates integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): activation guards, path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
+Validates all 96 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): activation guards, path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
 
-### 3. Symbol & signature check against sources (`scripts/check-symbols.mjs`)
+### 3. Topic guide coverage (`scripts/check-eval-coverage.mjs` & `scripts/generate-coverage-matrix.mjs`)
 
-Grounding gate for the guides: it extracts every `Yiisoft\...` FQCN and `Class::method()` pair from `skills/yii3/references/*.md`, parses method signatures, and verifies both symbol existence and argument arity against the offline clones in `references/<pkg>/src` (PSR-4 mapping from each clone's `composer.json`, with `extends`/`implements`/trait resolution). Exit codes:
+Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (`100.0%` coverage across 86 topic guides / 68 scenarios) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
 
-- **0** — all symbols and signatures confirmed, or `references/` is not populated (a warning is printed instead);
-- **1** — at least one symbol or call arity could not be confirmed.
+### 4. Symbol & AST signature checks (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`, `scripts/check-manifest-freshness.mjs`)
 
-Symbols quoted intentionally as non-existent (phantom-API warnings in anti-pattern tables) live in the `ALLOWLIST` array at the top of `scripts/check-symbols.mjs`. Every entry must state **why** the symbol cannot be confirmed against the clones — no bare entries. If you quote a non-existent API in a guide, add both the warning and the allowlist entry in the same PR.
+Grounding gates for the guides: `check-symbols.mjs` extracts every `Yiisoft\...` FQCN and `Class::method()` pair from `skills/yii3/references/*.md`, parses method signatures, and verifies symbol existence and argument arity against `references/<pkg>/src` (or `evals/data/api-symbols-manifest.json` with `--manifest-mode`). `check-ast.mjs` performs structural analysis over all PHP fenced blocks (typed instances, static/fluent chains, call arities, and named parameters). Exit codes:
 
-Populate the clones first ([references/README.md](references/README.md)); without them the gate is a no-op.
+- **0** — all symbols, signatures, and AST checks confirmed (use `--manifest-mode` when `references/` is absent, as in CI);
+- **1** — at least one symbol, call arity, or named parameter could not be confirmed.
 
-### 4. Eval harness self-test (`evals/runner/selftest.mjs`)
+Symbols quoted intentionally as non-existent (phantom-API warnings in anti-pattern tables) live in the `ALLOWLIST` array at the top of `scripts/check-symbols.mjs` / `scripts/check-ast.mjs`. Every entry must state **why** the symbol cannot be confirmed against the clones — no bare entries. If you quote a non-existent API in a guide, add both the warning and the allowlist entry in the same PR.
 
-Validates all 57 behavioral test scenarios: confirms scenario JSON schemas, guide bindings, positive/negative sample checks, and delimiter state machines.
+Whenever `references/` clones are present, also run `node scripts/check-manifest-freshness.mjs --strict --max-age-days 30` (or regenerate manifests with `--export-manifest`) so `evals/data/api-symbols-manifest.json` and `evals/data/ast-signatures-manifest.json` match the cloned package commits. Run `node scripts/check-manifest-freshness.mjs --upstream` to inspect upstream `yiisoft/*` remote drift without mutating local clones.
+
+Populate the clones first ([references/README.md](references/README.md)); without them use `--manifest-mode` for `check-symbols.mjs` and `check-ast.mjs`.
+
+### 5. Eval harness & L5 PHPUnit runtime (`evals/runner/selftest.mjs`, `scripts/test-php-runtime.mjs`)
+
+`evals/runner/selftest.mjs` validates all 68 behavioral test scenarios: confirms scenario JSON schemas, guide bindings, positive/negative sample checks, and delimiter state machines (`--runtime` adds `php -l` and `composer validate` checks when PHP is available).
+
+`evals/runtime-harness/` provides a real L5 Yii 3 + SQLite + PHPUnit 11 integration suite (DI container, FastRoute routing, `ValidatingHydrator`, DB migrations, transactional outbox + mutex relay, sync queue, and `StateResetter`). Run `node scripts/test-php-runtime.mjs` locally (skips cleanly if PHP/Composer/`pdo_sqlite` is absent) or `node scripts/test-php-runtime.mjs --strict` in PHP 8.2+ environments (enforced in CI `php-runtime-gates`).
 
 ## Workflow
 
 1. Branch from `main` with a short-lived topic branch.
 2. Make the change following the ground rules and the synchronization cascade above.
-3. Run all four quality gates — all must pass green with zero errors:
+3. Run all quality gates — all must pass green with zero errors:
    - `node scripts/validate.mjs`
    - `node scripts/test-aif-workflow.mjs`
-   - `node scripts/check-symbols.mjs`
+   - `node scripts/check-eval-coverage.mjs`
+   - `node scripts/check-symbols.mjs` (or `--manifest-mode`)
+   - `node scripts/check-ast.mjs` (or `--manifest-mode`)
+   - `node scripts/check-manifest-freshness.mjs --strict` (when `references/` is populated; omit `--strict` in clone-free CI environments)
    - `node evals/runner/selftest.mjs`
+   - `node evals/runner/judge.mjs --selftest`
+   - `node scripts/test-php-runtime.mjs` (pass `--strict` when PHP 8.2+ and `evals/runtime-harness/vendor` are available)
 4. Commit following [Conventional Commits](https://www.conventionalcommits.org/) (e.g. `docs(skill): ...`, `feat(injections): ...`, `refactor(skill): ...`).
 5. Open a PR describing what changed and which cascade points were touched.
 
 ## PR checklist
 
 - [ ] `node scripts/validate.mjs` — 0 errors, 0 warnings (or justified in the PR description).
-- [ ] `node scripts/test-aif-workflow.mjs` — 65 passed, 0 failed.
-- [ ] `node scripts/check-symbols.mjs` — 0 unconfirmed symbols / arities (clones populated), or the no-clones warning is acknowledged.
-- [ ] `node evals/runner/selftest.mjs` — 57/57 OK.
+- [ ] `node scripts/test-aif-workflow.mjs` — 96 passed, 0 failed.
+- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (86/86 topic guides, 68 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
+- [ ] `node scripts/check-symbols.mjs` and `node scripts/check-ast.mjs` — 0 unconfirmed symbols, arities, or AST defects (run with `--manifest-mode` if `references/` is not populated).
+- [ ] `node scripts/check-manifest-freshness.mjs` — manifest provenance and parity check passes (`--strict` if `references/` is populated).
+- [ ] `node evals/runner/selftest.mjs` — 68/68 OK (`--runtime` and `node scripts/test-php-runtime.mjs --strict` pass on PHP 8.2+ / CI `php-runtime-gates`).
+- [ ] `node evals/runner/judge.mjs --selftest` — PASS.
 - [ ] Every new/quoted API claim was inspected in `references/<pkg>/src/` or `vendor/yiisoft/<pkg>/src/`.
-- [ ] Synchronization cascade touched: SKILL.md routing/inventory, package-catalog, injections (when the change adds gates or conventions).
+- [ ] Synchronization cascade touched: SKILL.md routing/inventory, package-catalog, injections, coverage matrix, and manifests (when applicable).
 - [ ] No deliverable contains authoring-library paths, Windows drive paths, or self-referential install paths.
 
 ## Reporting issues

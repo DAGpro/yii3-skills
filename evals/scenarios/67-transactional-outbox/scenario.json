@@ -1,0 +1,31 @@
+{
+  "id": "67-transactional-outbox",
+  "title": "Enterprise mode: Transactional Outbox — atomic DB + outbox write, mutex-guarded relay command, and idempotent consumer",
+  "mode": "enterprise",
+  "tags": [
+    "enterprise",
+    "outbox",
+    "transaction",
+    "mutex",
+    "queue",
+    "console",
+    "idempotency"
+  ],
+  "timeoutSec": 1500,
+  "negativeMustFail": [
+    "outbox-migration-exists",
+    "atomic-transaction-outbox-write",
+    "no-queue-push-inside-transaction",
+    "mutex-guarded-relay-service",
+    "relay-command-registered",
+    "thin-action",
+    "consumer-idempotency"
+  ],
+  "layer": "composite",
+  "guides": [
+    "references/infra-transactional-outbox.md",
+    "references/core-events-design.md",
+    "references/infra-queue-jobs.md",
+    "references/infra-queue-mutex.md"
+  ]
+}

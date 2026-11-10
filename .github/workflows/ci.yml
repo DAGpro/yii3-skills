@@ -29,10 +29,13 @@ jobs:
         run: node scripts/check-eval-coverage.mjs
 
       - name: API symbols grounding check (manifest mode on CI, package clones locally)
-        run: node scripts/check-symbols.mjs
+        run: node scripts/check-symbols.mjs --manifest-mode
 
-      - name: AST PHP code grounding analyzer
-        run: node scripts/check-ast.mjs
+      - name: AST PHP code grounding analyzer (manifest mode on CI)
+        run: node scripts/check-ast.mjs --manifest-mode
+
+      - name: API manifest provenance & cross-manifest parity check
+        run: node scripts/check-manifest-freshness.mjs --max-age-days 180
 
   php-runtime-gates:
     runs-on: ubuntu-latest
@@ -43,6 +46,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: pdo_sqlite, json, mbstring, dom
           tools: composer
 
       - uses: actions/setup-node@v7
@@ -51,3 +55,10 @@ jobs:
 
       - name: Eval selftest with runtime evaluation (PHP lint & Composer validation)
         run: node evals/runner/selftest.mjs --runtime
+
+      - name: Install real Yii 3 runtime harness dependencies
+        working-directory: evals/runtime-harness
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run L5 Yii 3 PHPUnit integration harness (strict)
+        run: node scripts/test-php-runtime.mjs --strict

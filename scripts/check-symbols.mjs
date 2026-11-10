@@ -13,6 +13,7 @@
 // mentioned in the same guide; ambiguous or unknown short names are skipped.
 
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -149,11 +150,16 @@ function collectAncestors(src) {
   const imports = parseUseImports(src);
   const out = [];
   // anchor on the real class declaration line, not on docblock code samples
-  const decl = src.match(/(?:^|\n)\s*(?:abstract\s+|final\s+|readonly\s+)*class\s+\w+([^{]*)\{/);
+  const decl = src.match(/(?:^|\n)\s*(?:(?:abstract|final|readonly)\s+)*(?:class|interface|trait)\s+\w+([^{]*)\{/);
   const declRest = decl?.[1] ?? '';
-  const extendsMatch = declRest.match(/extends\s+([\w\\]+)/);
-  if (extendsMatch) out.push(resolveName(extendsMatch[1], ns, imports));
-  const implementsBlock = declRest.match(/implements\s+([\w\\\s,]+)/);
+  const extendsMatch = declRest.match(/\bextends\s+([\w\\\s,]+?)(?=\s+implements\b|\s*$)/);
+  if (extendsMatch) {
+    for (const raw of extendsMatch[1].split(',')) {
+      const name = raw.trim();
+      if (name) out.push(resolveName(name, ns, imports));
+    }
+  }
+  const implementsBlock = declRest.match(/\bimplements\s+([\w\\\s,]+)/);
   if (implementsBlock) {
     for (const raw of implementsBlock[1].split(',')) {
       const name = raw.trim();
@@ -505,19 +511,66 @@ for (const file of guideFiles) {
   }
 }
 
+function gitOutput(pkgDir, args) {
+  try {
+    return execFileSync('git', ['-C', pkgDir, ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000,
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function collectPackageMetadata() {
+  const packages = [];
+  for (const dir of listPackages()) {
+    const pkgDir = join(referencesDir, dir);
+    const composerPath = join(pkgDir, 'composer.json');
+    if (!existsSync(composerPath)) continue;
+    let packageName = `yiisoft/${dir}`;
+    try {
+      const composer = JSON.parse(readText(composerPath));
+      if (typeof composer?.name === 'string' && composer.name.trim() !== '') {
+        packageName = composer.name.trim();
+      }
+    } catch {
+      // Keep directory fallback name
+    }
+    const showOut = gitOutput(pkgDir, ['show', '-s', '--format=%H%n%cI', 'HEAD']);
+    const [commit = null, commitDate = null] = showOut ? showOut.split(/\r?\n/) : [];
+    const branch = gitOutput(pkgDir, ['rev-parse', '--abbrev-ref', 'HEAD']);
+    const nearestTag = gitOutput(pkgDir, ['describe', '--tags', '--abbrev=0']);
+    const remote = gitOutput(pkgDir, ['remote', 'get-url', 'origin']);
+    packages.push({
+      package: packageName,
+      dir,
+      commit,
+      commit_date: commitDate,
+      branch,
+      nearest_tag: nearestTag,
+      remote,
+    });
+  }
+  return packages;
+}
+
 if (shouldExportManifest && unconfirmed.length === 0) {
   mkdirSync(dirname(manifestPath), { recursive: true });
+  const packageMetadata = collectPackageMetadata();
   const payload = {
     metadata: {
       generated_at: new Date().toISOString(),
-      source: 'references/ (130 yiisoft/* package clones)',
+      source: `references/ (${packageMetadata.length} yiisoft/* package clones)`,
       packages_indexed: classMap.packages,
+      packages: packageMetadata,
     },
     fqcns: [...new Set(confirmedManifest.fqcns)].sort(),
     methods: confirmedManifest.methods,
   };
   writeFileSync(manifestPath, JSON.stringify(payload, null, 2));
-  console.log(`[check-symbols] exported API symbols manifest with ${payload.fqcns.length} classes and ${Object.keys(payload.methods).length} signatures to ${manifestPath}`);
+  console.log(`[check-symbols] exported API symbols manifest with ${payload.fqcns.length} classes and ${Object.keys(payload.methods).length} signatures (${packageMetadata.length} packages) to ${manifestPath}`);
 }
 
 for (const line of unconfirmed) console.log(line);

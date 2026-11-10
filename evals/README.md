@@ -106,7 +106,7 @@ node evals/runner/run.mjs --changed main --runs 0                      # ... vs 
 node evals/runner/run.mjs --layer unit --runs 0                        # diagnostics layer only
 ```
 
-`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist.
+`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` enforces 100% coverage across all 86 topic guides and 68 scenarios; run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
 
 **Calibration policy.** The true difficulty of a scenario is its baseline pass-rate. A unit
 scenario whose baseline mean stays >= 80% (delta < ~10 pp) must be hardened (indirect prompt,
@@ -115,25 +115,34 @@ Headline metric of the suite = delta on composite scenarios; unit scenarios are 
 
 ## Runtime Verification Layer (L4/L5)
 
-The harness includes a runtime verification module (`evals/lib/runtime.mjs`) supporting PHP syntax linting (`php -l`), `composer validate`, and `phpunit` test execution:
+The harness includes a runtime verification module (`evals/lib/runtime.mjs`) supporting PHP syntax linting (`php -l`), `composer validate`, and strict `phpunit` test execution:
 
 ```bash
 # Enable runtime checks on evaluate.mjs
 node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --runtime
 
-# Validate syntax across all scenario samples
+# Require PHPUnit execution to pass (fail if PHP, vendor/, phpunit binary, or config is missing)
+EVAL_REQUIRE_PHPUNIT=1 node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --runtime
+
+# Validate syntax across all scenario samples (68 scenarios)
 node evals/runner/selftest.mjs --runtime
+
+# Run the standalone L5 Yii 3 PHPUnit integration harness (skips locally without PHP; use --strict in PHP 8.2+ / CI)
+node scripts/test-php-runtime.mjs
+node scripts/test-php-runtime.mjs --strict
+node scripts/test-php-runtime.mjs --install --strict
 
 # Or set the environment variable for batch runs
 export EVAL_ENABLE_RUNTIME=1
 ```
 
-- **Environment Detection:** Automatically detects local PHP and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). When PHP is absent in offline runner sandboxes, runtime checks report `skipped` without failing structural checks.
+- **Environment Detection:** Automatically detects local PHP (`>= 8.2`) and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). By default, when PHP is absent in offline runner sandboxes, runtime checks report `skipped` (`pass: true`) without failing structural checks; pass `EVAL_REQUIRE_PHPUNIT=1` (or `--strict` in `test-php-runtime.mjs`) to fail explicitly instead of skipping.
 - **Checks executed:**
   - `runtime-php-lint`: Verifies valid PHP 8.2+ syntax (`php -l`) on all generated or touched `.php` files.
   - `runtime-composer-validate`: Verifies `composer.json` syntax and schema.
-  - `runtime-vendor-prewarmed`: Automatically attaches a pre-warmed vendor layer from `EVAL_PREWARMED_VENDOR`, `evals/cache/vendor`, or automatic Composer install (`EVAL_AUTO_COMPOSER_INSTALL=1`) to enable offline `phpunit` execution.
-  - `runtime-phpunit`: Executes PHPUnit tests when tests and configuration exist.
+  - `runtime-vendor-prewarmed`: Automatically attaches a pre-warmed vendor layer from `EVAL_PREWARMED_VENDOR`, `evals/cache/vendor`, or automatic Composer install (`EVAL_AUTO_COMPOSER_INSTALL=1`) to enable `phpunit` execution.
+  - `runtime-phpunit`: Resolves `phpunit` (`vendor/phpunit/phpunit/phpunit` / `vendor/bin/phpunit` or custom override) and `phpunit.xml` / `phpunit.xml.dist`, runs PHPUnit tests, and captures parsed test/assertion/error/failure/skip summaries.
+- **L5 Runtime Integration Harness (`evals/runtime-harness/`):** A self-contained Yii 3 application slice executed via PHPUnit 11 + SQLite `:memory:` (`composer.json`, `phpunit.xml.dist`, `config/di.php`, `src/`, `tests/Integration/RuntimeStackTest.php`). It verifies real `yiisoft/di` container compilation & `StateResetter`, FastRoute route dispatch, `ValidatingHydrator` 422 validation errors and 404 fallbacks, atomic `Db` transactions + `Migrator` up/down, Transactional Outbox writes, rollback isolation, `FileMutexFactory` + `SyncQueueProducer` relay, and idempotent message consumption. Enforced in CI by `.github/workflows/ci.yml` (`php-runtime-gates`).
 
 ## Semantic LLM Judge Layer (`rubric.md`)
 

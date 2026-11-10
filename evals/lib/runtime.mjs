@@ -420,43 +420,122 @@ export function ensurePrewarmedVendor(workDir, toolchain = detectPhpToolchain())
   return { vendorPresent: false, source: null };
 }
 
-export function runPhpUnit(workDir, options = {}, toolchain = detectPhpToolchain()) {
-  ensurePrewarmedVendor(workDir, toolchain);
+export function parsePhpUnitSummary(output) {
+  if (typeof output !== 'string' || !output.trim()) return null;
+  const okMatch = output.match(/OK\s*\((\d+)\s+tests?,\s*(\d+)\s+assertions?\)/i);
+  if (okMatch) {
+    return {
+      tests: Number.parseInt(okMatch[1], 10),
+      assertions: Number.parseInt(okMatch[2], 10),
+      errors: 0,
+      failures: 0,
+      skipped: 0,
+    };
+  }
+  const summaryMatch = output.match(/Tests:\s*(\d+),\s*Assertions:\s*(\d+)([^\n]*)/i);
+  if (!summaryMatch) return null;
+  const tail = summaryMatch[3] || '';
+  const extract = (label) => {
+    const m = tail.match(new RegExp(`${label}:\\s*(\\d+)`, 'i'));
+    return m ? Number.parseInt(m[1], 10) : 0;
+  };
+  return {
+    tests: Number.parseInt(summaryMatch[1], 10),
+    assertions: Number.parseInt(summaryMatch[2], 10),
+    errors: extract('Errors'),
+    failures: extract('Failures'),
+    skipped: extract('Skipped'),
+  };
+}
 
-  const hasConfig =
+export function resolvePhpUnitBinary(workDir, options = {}) {
+  const candidates = [
+    options.phpunitBin || null,
+    process.env.EVAL_PHPUNIT_BIN || null,
+    join(workDir, 'vendor', 'phpunit', 'phpunit', 'phpunit'),
+    join(workDir, 'vendor', 'bin', 'phpunit'),
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+export function hasPhpUnitConfig(workDir) {
+  return (
     existsSync(join(workDir, 'phpunit.xml')) ||
-    existsSync(join(workDir, 'phpunit.dist.xml'));
+    existsSync(join(workDir, 'phpunit.dist.xml')) ||
+    existsSync(join(workDir, 'phpunit.xml.dist'))
+  );
+}
+
+export function runPhpUnit(workDir, options = {}, toolchain = detectPhpToolchain()) {
+  const requirePhpunit = Boolean(options.requirePhpunit || process.env.EVAL_REQUIRE_PHPUNIT === '1');
+  if (options.attachPrewarmedVendor !== false) {
+    ensurePrewarmedVendor(workDir, toolchain);
+  }
+
+  const hasConfig = hasPhpUnitConfig(workDir);
   const hasTestsDir = existsSync(join(workDir, 'tests'));
-  const customPhpunitBin = process.env.EVAL_PHPUNIT_BIN || null;
-  const phpunitBin = customPhpunitBin || join(workDir, 'vendor', 'bin', 'phpunit');
-  const hasPhpunitBin = existsSync(phpunitBin);
+  const phpunitBin = resolvePhpUnitBinary(workDir, options);
 
   if (!hasConfig && !hasTestsDir) {
-    return { pass: true, skipped: true, evidence: 'no PHPUnit configuration or tests directory found (skipped)' };
-  }
-  if (!hasPhpunitBin) {
     return {
-      pass: true,
-      skipped: true,
-      evidence: 'vendor/bin/phpunit not installed in work dir (skipped; composer install not run)',
+      pass: !requirePhpunit,
+      skipped: !requirePhpunit,
+      evidence: 'no PHPUnit configuration or tests directory found (skipped)',
+    };
+  }
+  if (!phpunitBin) {
+    return {
+      pass: !requirePhpunit,
+      skipped: !requirePhpunit,
+      evidence: requirePhpunit
+        ? 'PHPUnit required (--strict / EVAL_REQUIRE_PHPUNIT=1) but vendor/phpunit/phpunit/phpunit or vendor/bin/phpunit is not installed (run composer install)'
+        : 'vendor/bin/phpunit not installed in work dir (skipped; composer install not run)',
     };
   }
   if (!toolchain.isAvailable) {
-    return { pass: true, skipped: true, evidence: 'php CLI not available in environment (skipped)' };
+    return {
+      pass: !requirePhpunit,
+      skipped: !requirePhpunit,
+      evidence: requirePhpunit
+        ? 'PHPUnit required (--strict / EVAL_REQUIRE_PHPUNIT=1) but php CLI is not available in environment'
+        : 'php CLI not available in environment (skipped)',
+    };
   }
 
   const args = [phpunitBin, '--no-coverage'];
   const res = execPhp(args, workDir, toolchain);
   if (!res) {
-    return { pass: true, skipped: true, evidence: 'failed to spawn phpunit executable' };
+    return {
+      pass: !requirePhpunit,
+      skipped: !requirePhpunit,
+      evidence: 'failed to spawn phpunit executable',
+    };
   }
+  const combinedOutput = `${res.stdout || ''}\n${res.stderr || ''}`.trim();
+  const summary = parsePhpUnitSummary(combinedOutput);
   if (res.status === 0) {
-    return { pass: true, skipped: false, evidence: (res.stdout || 'PHPUnit passed').trim() };
+    const summaryNote = summary
+      ? ` [tests=${summary.tests}, assertions=${summary.assertions}, skipped=${summary.skipped}]`
+      : '';
+    return {
+      pass: true,
+      skipped: false,
+      summary,
+      evidence: `${(res.stdout || 'PHPUnit passed').trim()}${summaryNote}`,
+    };
   }
-  return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'PHPUnit failed').trim() };
+  return {
+    pass: false,
+    skipped: false,
+    summary,
+    evidence: (res.stderr || res.stdout || 'PHPUnit failed').trim(),
+  };
 }
 
-export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = detectPhpToolchain()) {
+export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = detectPhpToolchain(), options = {}) {
   const results = [];
 
   // L4: PHP runtime availability check
@@ -544,19 +623,18 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
     });
   }
 
-  // L5: PHPUnit execution if tests are present
-  const hasTests =
-    existsSync(join(workDir, 'tests')) ||
-    existsSync(join(workDir, 'phpunit.xml')) ||
-    existsSync(join(workDir, 'phpunit.dist.xml'));
-  if (hasTests) {
-    const phpunit = runPhpUnit(workDir, {}, toolchain);
+  // L5: PHPUnit execution if tests/config exist or PHPUnit is required
+  const requirePhpunit = Boolean(options.requirePhpunit || process.env.EVAL_REQUIRE_PHPUNIT === '1');
+  const hasTests = existsSync(join(workDir, 'tests')) || hasPhpUnitConfig(workDir);
+  if (hasTests || requirePhpunit) {
+    const phpunit = runPhpUnit(workDir, { ...options, attachPrewarmedVendor: false }, toolchain);
     const phpunitRequired = !phpunit.skipped;
     results.push({
       id: 'runtime-phpunit',
       description: 'PHPUnit test suite execution',
       required: phpunitRequired,
       pass: phpunit.pass,
+      summary: phpunit.summary || null,
       evidence: phpunit.evidence,
     });
   }

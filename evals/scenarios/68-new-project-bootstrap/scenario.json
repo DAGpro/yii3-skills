@@ -1,0 +1,25 @@
+{
+  "id": "68-new-project-bootstrap",
+  "title": "Opt-in New Yii3 Project Bootstrap on uninitialized directory with explicit app-api + PostgreSQL intent",
+  "mode": "feature",
+  "tags": [
+    "bootstrap",
+    "guard",
+    "app-api",
+    "dependencies",
+    "config-plugin"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "composer-json-bootstrapped",
+    "single-db-driver-pgsql",
+    "config-entrypoint-present",
+    "health-endpoint-thin-action",
+    "no-yii2"
+  ],
+  "layer": "unit",
+  "guides": [
+    "SKILL.md",
+    "references/core-dependency-protocol.md"
+  ]
+}

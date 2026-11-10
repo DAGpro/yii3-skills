@@ -7,7 +7,7 @@
 
 ## 1. Operating Model & Responsibility Separation
 
-When running inside an automated AI Factory environment, the `yii3` skill operates as a specialized domain engine embedded within broader multi-agent workflows. The repository and runtime separation of concerns:
+This is the `yii3` skill's **default operating mode** (AI Factory extension): whenever the target project runs AI Factory — an invoking `aif-*` workflow or a present `.ai-factory/` directory — the skill operates as a specialized domain engine embedded within broader multi-agent workflows. Only when neither signal is present (no `.ai-factory/` directory AND no `aif-*` invocation) does the skill fall back to standalone operation (plans via root `PLAN.md` / `docs/plans/`, concluded at the Finale without AI Factory handoff artifacts — see SKILL.md, "Operating Context Routing"). The repository and runtime separation of concerns:
 
 - **AI Factory Workflows (`aif-*`):** Own high-level project automation, task scheduling, plan artifact durability, and cross-agent invocation loops.
 - **Yii3 Skill (`yii3`):** Single source of truth (SSOT) for Yii 3 framework architecture, bottom-up stage progression, per-step wiring gates, signature lookup protocols, and Definition of Done gates.
@@ -89,8 +89,12 @@ paths:
   rules_file: .ai-factory/rules/yii3.md      # Project-specific AI rules
 ```
 
-- If `.ai-factory/config.yaml` is absent, fallback to standard locations: `PLAN.md` or `docs/plans/` for plans, and guide-placement rules for architecture.
+- If `.ai-factory/config.yaml` is absent (standalone fallback — the project does not use AI Factory), use standard locations: `PLAN.md` or `docs/plans/` for plans, and guide-placement rules for architecture.
 - When an architecture artifact exists, it is the supreme structural authority for file placement and naming conventions (Core rule 2, Project conventions).
+
+### Architecture Artifact Authority (`/aif-architecture`)
+
+The architecture artifact produced by `/aif-architecture` (`paths.architecture` from `.ai-factory/config.yaml`, else `.ai-factory/ARCHITECTURE.md`) is the supreme structural authority: it fixes the Architectural Tier (`Pragmatic | Balanced | Strict`), the architecture pattern, module boundaries, and naming conventions; the skill never re-derives them. Execution Mode (`Patch | Feature | Enterprise`) and Architectural Tier are orthogonal — all 9 combinations are valid (`references/core-architecture-alignment.md` §1; per-tier recipes: `references/core-feature-recipes.md`).
 
 ---
 

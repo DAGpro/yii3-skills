@@ -1,0 +1,1 @@
+Create a new Yii 3 REST API project in this empty directory using the official `yiisoft/app-api` template and PostgreSQL (`yiisoft/db-pgsql`). Configure `composer.json` with `yiisoft/config` plugin trust, verify `config/configuration.php`, and add a `GET /health` endpoint returning JSON `{"status":"ok"}`.

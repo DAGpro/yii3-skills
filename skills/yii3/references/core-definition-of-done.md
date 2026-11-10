@@ -44,7 +44,7 @@ In addition to technical compilation and DI wiring, every delivered feature is e
 | **3. API & Signature Correctness** | Every invoked method, constructor, and parameter type verified against installed package sources in `vendor/yiisoft/*/src/`. Zero deprecated Yii2 facades or static helpers (`Yii::$app`, `ActiveRecord::find()`). Version-gated syntax respected. | `references/core-version-notes.md`, Mandatory Signature Lookup Protocol |
 | **4. Integration & Wiring Correctness** | Every new interface is DI-bound in `config/**/di/*.php`. Actions mapped in `config/**/routes.php`. Commands registered in `config/console/params.php`. Domain events subscribed in `config/**/events.php`. All packages declared in `composer.json`. | SKILL.md per-step wiring gates, `references/core-di-and-config.md` |
 | **5. Security & Safety** | Typed input DTOs validate all untrusted user data. Mutating HTML routes protected by `CsrfTokenMiddleware` preceded by `SessionMiddleware`. Route-level authentication and RBAC permissions (`CurrentUser::can()`) verified before execution. Views escape dynamic data via `Html::encode()`. | `references/http-validation-rules.md`, `references/http-state.md`, `references/infra-auth-and-rbac.md`, `references/http-views.md` |
-| **6. Reliability & Performance** | Multi-step database persistence wrapped in explicit transactions (`ConnectionInterface::transaction()`). Domain event dispatching deferred until after database transaction commit (post-commit rule). Pagination (`OffsetPaginator`) or SQL limits enforced on listings. Worker state safely cleared via `StateResetter`. | `references/persistence-db-connection-and-queries.md`, `references/core-events-design.md`, `references/infra-state-resetter.md` |
+| **6. Reliability & Performance** | Multi-step database persistence wrapped in explicit transactions (`ConnectionInterface::transaction()`). Domain event and queue dispatching deferred until after database transaction commit (post-commit rule), or persisted atomically via Transactional Outbox in Enterprise workflows with mutex-guarded relay and consumer idempotency. Pagination (`OffsetPaginator`) or SQL limits enforced on listings. Worker state safely cleared via `StateResetter`. | `references/persistence-db-connection-and-queries.md`, `references/core-events-design.md`, `references/infra-transactional-outbox.md`, `references/infra-state-resetter.md` |
 
 ## 3. Production Readiness Gate
 
@@ -56,11 +56,12 @@ The difference between "milestone closed" and "product ready". Every item is gro
 - CSRF on state-changing routes (`references/http-state.md`) + DTO validation (`references/http-validation-and-forms.md`);
 - auth/RBAC on protected routes (`references/infra-auth-and-rbac.md`);
 - reversible migrations, one persistence branch, transactions in use cases (`references/persistence-migrations.md`, `references/persistence-db.md`);
+- atomic Transactional Outbox + mutex-guarded relay + consumer idempotency when zero lost events/messages across DB commit / broker crashes is required (`references/infra-transactional-outbox.md`);
 - `yii-debug` / `yii-gii` / `code-style` only in `require-dev` (stack invariant via `references/package-catalog.md`);
 - cache on hot paths (`references/persistence-caching.md`) + pagination limits (`references/persistence-db.md`);
 - unit + HTTP tests and static analysis green (`references/testing-core.md`).
 
-Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see SKILL.md "AI Factory Adapter").
+Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see `references/aif-adapter.md`).
 
 ### 3.1. Code Quality & Formatting Toolchain (`yiisoft/code-style`)
 

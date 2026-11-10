@@ -517,4 +517,8 @@ final readonly class PlaceOrderUseCase
 }
 ```
 
+### Enterprise Upgrade Path: Transactional Outbox
+
+Post-commit dispatch prevents dispatching events for rolled-back transactions, but still leaves a crash window if the PHP process or downstream broker fails right after `commit()`. For Enterprise workloads requiring at-least-once delivery across process crashes (financial transactions, order fulfillment, external webhooks), persist outbox rows inside `$db->transaction()` and relay them asynchronously via a mutex-guarded worker — see the [Transactional Outbox & Reliable Messaging Guide](infra-transactional-outbox.md).
+
 ---

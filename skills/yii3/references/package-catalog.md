@@ -178,6 +178,8 @@ composer require yiisoft/user yiisoft/auth yiisoft/session yiisoft/security yiis
 composer require yiisoft/queue yiisoft/queue-db yiisoft/mutex yiisoft/mutex-pdo-mysql
 ```
 
+> **Transactional Outbox Composition:** Enterprise outbox delivery composes existing ecosystem packages (`yiisoft/db`, `yiisoft/db-migration`, `yiisoft/json`, `yiisoft/mutex`, `yiisoft/queue`, `yiisoft/yii-console`) — see the [Transactional Outbox Guide](infra-transactional-outbox.md). There is no standalone `yiisoft/outbox` package.
+
 ### 4.8. HTML Web Form with Widgets
 ```bash
 composer require yiisoft/form yiisoft/form-model yiisoft/html yiisoft/view yiisoft/yii-view-renderer yiisoft/assets yiisoft/csrf

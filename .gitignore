@@ -1,6 +1,8 @@
 # Dependencies / build output
 node_modules/
 vendor/
+.phpunit.cache/
+evals/runtime-harness/composer.lock
 
 # Eval runner output (results/<timestamp>/ per run)
 evals/results/

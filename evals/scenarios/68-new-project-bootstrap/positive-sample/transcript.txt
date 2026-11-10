@@ -1,0 +1,9 @@
+Opt-in New Yii3 Project Bootstrap activated for explicit yiisoft/app-api + PostgreSQL request.
+Mode: Feature
+Architecture: Layered Architecture (convention fallback)
+Scaffolded yiisoft/app-api skeleton with yiisoft/db-pgsql, config/configuration.php, yiisoft/config plugin trust, and GET /health -> HealthAction.
+tests: not run (offline environment)
+static analysis: not run
+packages added: yiisoft/app-api baseline + yiisoft/db + yiisoft/db-pgsql + yiisoft/db-migration
+config files changed: config/configuration.php, config/common/routes.php
+production readiness gate: n/a

@@ -100,7 +100,7 @@ console.log('\n3. Validating 6-Phase Plan Contract & Decomposition Intensity...'
 
 const CANONICAL_PHASES = [
   'Phase 1 Migration & Schema',
-  'Phase 2 Domain Entity & Repository Interface',
+  'Phase 2 Domain / Model & Repository Boundary',
   'Phase 3 Repository Implementation',
   'Phase 4 Use Case Handler & Events',
   'Phase 5 Input DTO & Single-Action Handler',
@@ -129,7 +129,7 @@ const mockFullPlan = `
 # Plan: User Registration Feature
 ## Phase 1 Migration & Schema
 - [ ] Task 1.1: Create users table migration in migrations/
-## Phase 2 Domain Entity & Repository Interface
+## Phase 2 Domain / Model & Repository Boundary
 - [ ] Task 2.1: Domain aggregate User in src/User/Domain/
 - [ ] Task 2.2: UserRepositoryInterface in src/User/Domain/
 ## Phase 3 Repository Implementation
@@ -153,7 +153,7 @@ const mockFeaturePlan = `
 # Plan: Simple Admin Status Toggle
 ## Phase 1 Migration & Schema
 - [ ] Task 1.1: Add status column migration
-## Phase 2 Domain Entity & Repository Interface
+## Phase 2 Domain / Model & Repository Boundary
 - [ ] skipped — pragmatic architecture consumes Status model directly
 ## Phase 3 Repository Implementation
 - [ ] Task 3.1: StatusRepository in src/Setting/
@@ -174,7 +174,7 @@ assert(missingFeature.length === 0, 'Feature plan preserves 6 phases with pragma
 const mockInvalidActionPlan = `
 ## Phase 1 Migration & Schema
 - [ ] Task 1.1: migration
-## Phase 2 Domain Entity & Repository Interface
+## Phase 2 Domain / Model & Repository Boundary
 - [ ] skipped
 ## Phase 3 Repository Implementation
 - [ ] Task 3.1: repo
@@ -222,7 +222,7 @@ const mockTranscript = `
 - **Guides:** references/http-actions-core.md, references/persistence-db.md
 - **Stage Progress:**
   - Stage 1 [Migration & Schema]: pending
-  - Stage 2 [Domain Entity & Repository Contract]: pending
+  - Stage 2 [Domain / Model & Repository Boundary]: pending
   - Stage 3 [Repository Implementation]: pending
   - Stage 4 [Use Case & Domain Events]: pending
   - Stage 5 [Input DTO & Action / Command]: pending

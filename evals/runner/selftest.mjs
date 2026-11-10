@@ -135,6 +135,22 @@ try {
     throw new Error(`case D (ignore lock flag) failed: ${JSON.stringify(resD)}`);
   }
   delete process.env.EVAL_VENDOR_IGNORE_LOCK;
+
+  // Case E: Work dir has composer.json but missing composer.lock -> lockMissing: true, vendorPresent: false
+  const workNoLock = mkdtempSync(join(tmpdir(), 'work-no-lock-test-'));
+  writeFileSync(join(workNoLock, 'composer.json'), '{"require": {"yiisoft/di": "^1.0"}}');
+  const resE = ensurePrewarmedVendor(workNoLock);
+  if (resE.vendorPresent !== false || resE.lockMissing !== true) {
+    throw new Error(`case E (workDir has composer.json without lock) failed: ${JSON.stringify(resE)}`);
+  }
+
+  // Case F: Work dir has composer.json without lock, but EVAL_VENDOR_IGNORE_LOCK=1 -> attached
+  process.env.EVAL_VENDOR_IGNORE_LOCK = '1';
+  const resF = ensurePrewarmedVendor(workNoLock);
+  if (resF.vendorPresent !== true) {
+    throw new Error(`case F (workDir without lock but ignore lock flag) failed: ${JSON.stringify(resF)}`);
+  }
+  delete process.env.EVAL_VENDOR_IGNORE_LOCK;
   delete process.env.EVAL_PREWARMED_VENDOR;
 } catch (e) {
   console.error(`FAIL vendor-cache-lock-validation: ${e.message}`);
@@ -147,12 +163,22 @@ try {
   const vPass = validateAifGateResult(passBlock, { expectedStatus: 'pass' });
   if (!vPass.pass) throw new Error(`vPass failed: ${vPass.evidence}`);
 
-  const failBlock = '```aif-gate-result\n{"schema_version":1,"gate":"verify","status":"fail","blocking":true,"blockers":[{"id":"ERR","severity":"error","summary":"broken"}],"affected_files":["src/Foo.php"],"suggested_next":{"command":"/aif-fix","reason":"fix it"}}\n```';
+  const failBlock = '```aif-gate-result\n{"schema_version":1,"gate":"verify","status":"fail","blocking":true,"blockers":[{"id":"ERR","severity":"error","file":"src/Foo.php","summary":"broken"}],"affected_files":["src/Foo.php"],"suggested_next":{"command":"/aif-fix","reason":"fix it"}}\n```';
   const vFail = validateAifGateResult(failBlock, { expectedStatus: 'fail' });
   if (!vFail.pass) throw new Error(`vFail failed: ${vFail.evidence}`);
 
   const vPassOnFail = validateAifGateResult(failBlock, { expectedStatus: 'pass' });
   if (vPassOnFail.pass) throw new Error('vPassOnFail should have failed');
+
+  // Blocker file must be string if present
+  const badFileBlock = '```aif-gate-result\n{"schema_version":1,"gate":"verify","status":"fail","blocking":true,"blockers":[{"id":"ERR","severity":"error","file":123,"summary":"broken"}],"affected_files":["src/Foo.php"],"suggested_next":{"command":"/aif-fix","reason":"fix it"}}\n```';
+  const vBadFile = validateAifGateResult(badFileBlock, { expectedStatus: 'fail' });
+  if (vBadFile.pass) throw new Error('vBadFile should have failed due to non-string file');
+
+  // Status/blocking inconsistency without expectedStatus
+  const inconsistentBlock = '```aif-gate-result\n{"schema_version":1,"gate":"verify","status":"fail","blocking":false,"blockers":[],"affected_files":["src/Foo.php"],"suggested_next":{"command":"/aif-commit","reason":"ok"}}\n```';
+  const vInconsistent = validateAifGateResult(inconsistentBlock, { expectedStatus: null });
+  if (vInconsistent.pass) throw new Error('vInconsistent should have failed due to status fail with blocking false');
 } catch (e) {
   console.error(`FAIL gate-result-validation: ${e.message}`);
   bad++;

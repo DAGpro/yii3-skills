@@ -58,6 +58,7 @@ The workflow decouples the task's operational scope (**Execution Mode**) from th
 - **Transactions:** Handled strictly in Application Services or Use Case Handlers via `ConnectionInterface::transaction()`, never inside HTTP Actions.
 - **Patch Migrations:** In Patch Mode, schema migrations are skipped *only* when the patch does not require schema changes. If a bugfix or patch alters the database schema, a reversible migration (`up()` / `down()`) MUST be authored.
 - **Architectural Respect:** An Enterprise task in a Balanced project demands enterprise rigor (atomic transactions, event publishing, idempotency, comprehensive integration tests) while respecting the project's Balanced modular conventions without unilaterally rewriting the project into Strict Clean Architecture.
+- **Undetermined Project Tier (Convention Fallback):** When no `.ai-factory/ARCHITECTURE.md` or architecture document is present, the convention fallback defaults to the **Pragmatic** tier (`layers`), or infers Pragmatic vs. Balanced from 2–3 existing features in `src/` (Core rule 3).
 
 ### Archetype A: State-Changing Business Process (e.g., checkout, registration, booking, payment)
 Creates or modifies domain state and involves side-effects.
@@ -701,7 +702,7 @@ Before writing code, establish and print the explicit Mission State:
 - **Guides:** <primary guides to load>
 - **Stage Progress:**
   - Stage 1 [Migration & Schema]: <pending | skipped — reason>
-  - Stage 2 [Domain Entity & Repository Contract]: <pending | skipped — reason>
+  - Stage 2 [Domain / Model & Repository Boundary]: <pending | skipped — reason>
   - Stage 3 [Repository Implementation]: <pending | skipped — reason>
   - Stage 4 [Use Case & Domain Events]: <pending | skipped — reason>
   - Stage 5 [Input DTO & Action / Command]: <pending | skipped — reason>

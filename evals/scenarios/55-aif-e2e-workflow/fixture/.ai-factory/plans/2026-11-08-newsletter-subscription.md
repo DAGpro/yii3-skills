@@ -3,7 +3,7 @@
 ## Phase 1 Migration & Schema
 - [ ] Task 1.1: Create `newsletter_subscribers` table migration in `migrations/`
 
-## Phase 2 Domain Entity & Repository Interface
+## Phase 2 Domain / Model & Repository Boundary
 - [ ] Task 2.1: Domain aggregate `Subscriber` in `src/Newsletter/Domain/`
 - [ ] Task 2.2: `SubscriberRepositoryInterface` in `src/Newsletter/Domain/`
 

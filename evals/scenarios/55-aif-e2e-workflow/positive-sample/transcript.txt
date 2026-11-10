@@ -13,7 +13,7 @@ Detected AI Factory configuration in .ai-factory/config.yaml:
 - **Guides:** references/http-actions-core.md, references/persistence-db.md, references/core-events-design.md
 - **Stage Progress:**
   - Stage 1 [Migration & Schema]: pending
-  - Stage 2 [Domain Entity & Repository Contract]: pending
+  - Stage 2 [Domain / Model & Repository Boundary]: pending
   - Stage 3 [Repository Implementation]: pending
   - Stage 4 [Use Case & Domain Events]: pending
   - Stage 5 [Input DTO & Action / Command]: pending

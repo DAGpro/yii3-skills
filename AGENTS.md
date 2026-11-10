@@ -256,7 +256,7 @@ The execution workflow separates the task's scope from the target project's stru
      - **Discipline:** Executes touched stages only; bypasses domain layer overhead; skips schema migrations ONLY when the patch does not require schema changes (if a bugfix or patch alters the database schema, a reversible migration is mandatory); skips extended Definition of Done.
    - **Feature Mode (`Mode: Feature`) — Canonical Default (~80%):**
      - **Scope:** Standard business features, CRUD endpoints, queries, data listings, and Active Record / Cycle flows.
-     - **Discipline:** Executes the full 7-stage Mission Workflow bottom-up (Migration → Domain/Interface → Repository → Use Case Handler → DTO & Thin Action → Wiring → Tests) and standard Definition of Done.
+     - **Discipline:** Executes the full 7-stage Mission Workflow bottom-up (Migration → Domain/Model & Boundary → Repository → Use Case Handler → DTO & Thin Action → Wiring → Tests) and standard Definition of Done.
      - **Anti-Collapsing Invariant:** Agents must **NEVER** collapse this bottom-up graph into 1–2 generic monolithic controller actions. Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero SQL, direct persistence, or transaction management in presentation.
    - **Enterprise Mode (`Mode: Enterprise`):**
      - **Scope:** Mission-critical, high-throughput systems, multi-step transactions, event-driven pipelines, auth/security cores, or modular architecture slices.

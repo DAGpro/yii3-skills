@@ -293,7 +293,7 @@ export function lintPhpFiles(workDir, targetFiles = null, toolchain = detectPhpT
   };
 }
 
-export function validateComposerJson(workDir, toolchain = detectPhpToolchain()) {
+export function validateComposerJson(workDir, toolchain = detectPhpToolchain(), { checkLock = false } = {}) {
   const composerJsonPath = join(workDir, 'composer.json');
   if (!existsSync(composerJsonPath)) {
     return { pass: true, skipped: true, evidence: 'composer.json not present in work dir (skipped)' };
@@ -301,7 +301,11 @@ export function validateComposerJson(workDir, toolchain = detectPhpToolchain()) 
   if (!toolchain.hasComposer) {
     return { pass: true, skipped: true, evidence: 'composer CLI not available in environment or container (skipped)' };
   }
-  const res = execComposer(['validate', '--no-check-all', '--no-check-publish'], workDir, toolchain);
+  const args = ['validate', '--no-check-all', '--no-check-publish'];
+  if (!checkLock) {
+    args.push('--no-check-lock');
+  }
+  const res = execComposer(args, workDir, toolchain);
   if (!res) {
     return { pass: true, skipped: true, evidence: 'failed to spawn composer executable' };
   }
@@ -309,6 +313,14 @@ export function validateComposerJson(workDir, toolchain = detectPhpToolchain()) 
     return { pass: true, skipped: false, evidence: 'composer.json is valid' };
   }
   return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'composer.json validation failed').trim() };
+}
+
+export function validateComposerLock(workDir, toolchain = detectPhpToolchain()) {
+  const composerLockPath = join(workDir, 'composer.lock');
+  if (!existsSync(composerLockPath)) {
+    return { pass: true, skipped: true, evidence: 'composer.lock not present in work dir (skipped)' };
+  }
+  return validateComposerJson(workDir, toolchain, { checkLock: true });
 }
 
 /**
@@ -329,19 +341,27 @@ export function ensurePrewarmedVendor(workDir, toolchain = detectPhpToolchain())
   const candidateVendor = (envVendor && existsSync(envVendor)) ? envVendor : (existsSync(defaultVendor) ? defaultVendor : null);
 
   if (candidateVendor) {
-    // Verify dependency lock compatibility when composer.lock is present
+    // Verify dependency lock compatibility when composer.json/composer.lock is present
+    const hasWorkComposerJson = existsSync(join(workDir, 'composer.json'));
     const workLock = join(workDir, 'composer.lock');
-    if (existsSync(workLock) && process.env.EVAL_VENDOR_IGNORE_LOCK !== '1') {
-      const cacheLockCandidate = join(dirname(candidateVendor), 'composer.lock');
-      if (existsSync(cacheLockCandidate)) {
-        const hWork = createHash('sha256').update(readFileSync(workLock)).digest('hex');
-        const hCache = createHash('sha256').update(readFileSync(cacheLockCandidate)).digest('hex');
-        if (hWork !== hCache) {
-          // Prewarmed vendor was built for a different dependency lock - skip attaching
-          return { vendorPresent: false, source: null, lockMismatch: true };
+    const hasWorkLock = existsSync(workLock);
+
+    if (process.env.EVAL_VENDOR_IGNORE_LOCK !== '1') {
+      if (hasWorkLock) {
+        const cacheLockCandidate = join(dirname(candidateVendor), 'composer.lock');
+        if (existsSync(cacheLockCandidate)) {
+          const hWork = createHash('sha256').update(readFileSync(workLock)).digest('hex');
+          const hCache = createHash('sha256').update(readFileSync(cacheLockCandidate)).digest('hex');
+          if (hWork !== hCache) {
+            // Prewarmed vendor was built for a different dependency lock - skip attaching
+            return { vendorPresent: false, source: null, lockMismatch: true };
+          }
+        } else {
+          // Prewarmed vendor has no sidecar composer.lock to verify compatibility against workDir lock
+          return { vendorPresent: false, source: null, lockMissing: true };
         }
-      } else {
-        // Prewarmed vendor has no sidecar composer.lock to verify compatibility against workDir lock
+      } else if (hasWorkComposerJson) {
+        // composer.json exists without composer.lock: dependency compatibility cannot be verified
         return { vendorPresent: false, source: null, lockMissing: true };
       }
     }

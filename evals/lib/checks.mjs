@@ -176,6 +176,7 @@ export function validateAifGateResult(transcript, { expectedStatus = 'pass', ter
       if (!b.id || typeof b.id !== 'string') return fail(`blocker missing string id: ${JSON.stringify(b)}`);
       if (!['error', 'warning'].includes(b.severity)) return fail(`blocker invalid severity: ${b.severity}`);
       if (!b.summary || typeof b.summary !== 'string') return fail(`blocker missing string summary: ${JSON.stringify(b)}`);
+      if (b.file !== undefined && typeof b.file !== 'string') return fail(`blocker file must be string: ${JSON.stringify(b)}`);
       for (const k of Object.keys(b)) {
         if (!ALLOWED_BLOCKER_KEYS.has(k)) {
           return fail(`blocker contains unsupported key "${k}": ${JSON.stringify(b)}`);
@@ -196,6 +197,15 @@ export function validateAifGateResult(transcript, { expectedStatus = 'pass', ter
     }
     if (typeof parsed.suggested_next.reason !== 'string' && parsed.suggested_next.reason !== null) {
       return fail('suggested_next.reason must be a string or null');
+    }
+
+    // General status and blocking/blockers consistency (per AGENTS.md §4.7)
+    if (parsed.status === 'fail') {
+      if (parsed.blocking !== true) return fail(`status "fail" requires blocking: true, got ${parsed.blocking}`);
+      if (parsed.blockers.length === 0) return fail('status "fail" requires non-empty blockers array');
+    } else if (parsed.status === 'pass' || parsed.status === 'warn') {
+      if (parsed.blocking !== false) return fail(`status "${parsed.status}" requires blocking: false, got ${parsed.blocking}`);
+      if (parsed.blockers.length > 0) return fail(`status "${parsed.status}" requires empty blockers array, got ${parsed.blockers.length} blocker(s)`);
     }
 
     if (expectedStatus === 'pass') {
@@ -232,6 +242,7 @@ export {
   lintPhpFile,
   lintPhpFiles,
   validateComposerJson,
+  validateComposerLock,
   runPhpUnit,
   runRuntimeEvaluation,
   ensurePrewarmedVendor,

@@ -50,7 +50,7 @@ This skill is designed primarily as an AI Factory extension, with standalone cha
 Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 applications — at least one `yiisoft/yii-*` package (application/runtime stack: `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, `yiisoft/yii-console`, ...; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. A Yii 2 project (`yiisoft/yii2` present), a Yii-ecosystem library project (base `yiisoft/*` packages only — `yiisoft/di`, `yiisoft/strings`, ... — without application runtime stack), or a non-Yii project: stop and report inapplicability — never apply Yii 3 rules to them. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): report and ask before applying; autonomous runs report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions).
 
 1. **Bootstrap checklist** (skip items the running workflow already resolved — never redo):
-   - Architecture source: the project's architecture artifact if present (`references/core-architecture-alignment.md`); otherwise guide placement rules — check 2–3 similar existing features as integration context (Core rule 3).
+   - Architecture source: the project's architecture artifact if present (`references/core-architecture-alignment.md`); otherwise convention fallback defaults to Pragmatic tier (`layers`) or infers from 2–3 existing features (Core rule 3).
    - Rules: the configured rules file(s), else the project's existing conventions.
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages — re-anchor SSOT (Core rule 2), check against `references/package-catalog.md`.
 2. **Cross-milestone consistency:** past milestones fixed the stack — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
@@ -68,7 +68,7 @@ Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 a
      - **Guides to load:** <primary guides>
      - **Stage Progress:**
        - Stage 1 [Migration & Schema]: <pending | skipped — reason>
-       - Stage 2 [Domain Entity & Repository Contract]: <pending | skipped — reason>
+       - Stage 2 [Domain / Model & Repository Boundary]: <pending | skipped — reason>
        - Stage 3 [Repository Implementation]: <pending | skipped — reason>
        - Stage 4 [Use Case & Domain Events]: <pending | skipped — reason>
        - Stage 5 [Input DTO & Action / Command]: <pending | skipped — reason>
@@ -91,7 +91,7 @@ For business features execute the stages strictly bottom-up, wiring each artifac
 | Plan phase | Execution stages |
 |---|---|
 | 1 Migration & Schema | Stage 1 |
-| 2 Domain Entity & Repository Interface | Stage 2 |
+| 2 Domain / Model & Repository Boundary | Stage 2 |
 | 3 Repository Implementation | Stage 3 |
 | 4 Use Case Handler & Events | Stage 4 |
 | 5 Input DTO & Single-Action Handler | Stage 5 |
@@ -109,7 +109,7 @@ Never implement an Action or Controller before its Input DTO and service/reposit
 **Mandatory Signature Lookup Protocol:** before calling any `yiisoft/*` method or constructor with more than 1 argument, look up the installed signature in `vendor/yiisoft/<pkg>/src` (Core rule 2, API row); never invent method names or copy Yii2 APIs. If `vendor/` is absent, request `composer install` first; when that is impossible, flag every API used as "not verified against sources" in the final report.
 
 - **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations-schema.md`, `references/persistence-migrations-operations.md`, `references/persistence-db.md`.
-- **Stage 2 — Domain Entity & Repository Interface (Phase 2).** Pure aggregate, value objects, PSR-14 domain events, repository contract. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
+- **Stage 2 — Domain / Model & Repository Boundary (Phase 2).** Tier-adaptive: Pragmatic uses Model / Entity (optional POPO, Active Record, or Cycle entity) with repository when needed (no mandatory interface indirection); Balanced uses Module Entity / Rich Model with interfaces at module boundaries; Strict requires Pure Aggregate, Value Objects, PSR-14 domain events, and explicit repository contract (`*RepositoryInterface`). Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
 - **Stage 3 — Repository Implementation (Phase 3).** Strictly the project's one persistence path (`yiisoft/db` / Active Record / Cycle); wrap multi-step persistence in transactions. Guides: the matching persistence row in the matrix.
 - **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler (or cohesive Application Service methods in Balanced/Pragmatic tiers; Strict prefers dedicated single-responsibility Use Case Handlers); domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
 - **Stage 5 — Input DTO & Single-Action Handler (or Console Command) (Phase 5).** Typed input DTO with `yiisoft/validator` rule attributes (rule names must exist in the installed validator); separate Create/Update DTOs. Thin Action = HTTP transport orchestration only, returning `Psr\Http\Message\ResponseInterface` via the archetype's response adapter (`WebViewRenderer` for HTML views, `DataResponseFactoryInterface` for REST/JSON API data responses, PSR-7 `ResponseFactoryInterface` for redirects/downloads); thin console command = CLI I/O only (`SymfonyStyle`, `ExitCode`) delegating to use cases. Actions never act as Application Services or execute direct queries. Guides: the matrix row for the archetype.

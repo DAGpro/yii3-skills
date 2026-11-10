@@ -31,7 +31,7 @@ The skill automatically selects an execution mode based on task scope, or respec
 | Mode | Trigger & Scope | Architectural Workflow | CLI Flag |
 |---|---|---|---|
 | **Patch** | Bug fixes, isolated changes (1–3 files), docs, typo/config fixes | Direct surgical edit + project checks; skips aggregate design and schema migrations (unless schema changes required) | `--mode=patch` |
-| **Feature** *(default)* | Standard business features, endpoints, console commands, domain logic (~80% of tasks) | Bottom-up stages: Schema/Migration → Domain/Interface → Use Case Handler → DTO & Thin Action → Wiring → Tests | `--mode=feature` |
+| **Feature** *(default)* | Standard business features, endpoints, console commands, domain logic (~80% of tasks) | Bottom-up stages: Schema/Migration → Domain/Model & Boundary → Repository/Persistence → Use Case Handler → DTO & Thin Action → Wiring → Tests | `--mode=feature` |
 | **Enterprise** | High-throughput systems, event-driven pipelines, auth/security cores, multi-step transactions | Production-grade rigor: atomic transactions, event publishing, idempotency, complete Production Readiness Gate; decomposition adapts to Architectural Tier (Pragmatic / Balanced / Strict) | `--mode=enterprise` |
 
 ## Integration Contexts

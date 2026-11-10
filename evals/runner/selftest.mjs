@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens, normalizeCost } from './core.mjs';
-import { changedFiles, validateAifGateResult, ensurePrewarmedVendor } from '../lib/checks.mjs';
+import { changedFiles, validateAifGateResult, ensurePrewarmedVendor, validateComposerJson, validateComposerLock } from '../lib/checks.mjs';
 import { runRuntimeEvaluation } from '../lib/runtime.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -181,6 +181,29 @@ try {
   if (vInconsistent.pass) throw new Error('vInconsistent should have failed due to status fail with blocking false');
 } catch (e) {
   console.error(`FAIL gate-result-validation: ${e.message}`);
+  bad++;
+}
+
+// Validate composer.json isolation from synthetic/stub composer.lock
+try {
+  const tmpCompDir = mkdtempSync(join(tmpdir(), 'comp-test-'));
+  writeFileSync(join(tmpCompDir, 'composer.json'), JSON.stringify({
+    name: 'test/project',
+    type: 'project',
+    require: { 'php': '>=8.2' }
+  }));
+  // Synthetic/stub lock file that does not contain require-dev information
+  writeFileSync(join(tmpCompDir, 'composer.lock'), JSON.stringify({
+    _readme: ['test'],
+    packages: []
+  }));
+
+  const resJson = validateComposerJson(tmpCompDir);
+  if (!resJson.skipped && !resJson.pass) {
+    throw new Error(`validateComposerJson failed on isolated dir: ${resJson.evidence}`);
+  }
+} catch (e) {
+  console.error(`FAIL composer-isolation-validation: ${e.message}`);
   bad++;
 }
 

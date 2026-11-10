@@ -31,7 +31,7 @@ Pick and print the execution mode at Stage 0 before writing code:
 
 **Architectural Alignment (independent axis from execution mode, maps 1:1 to `/aif-architecture` types, detailed in [`references/core-architecture-alignment.md`](references/core-architecture-alignment.md)):**
 Execution mode (`Patch`, `Feature`, `Enterprise`) and architectural tier (`Pragmatic`, `Balanced`, `Strict`) are two independent orthogonal axes (all 9 combinations valid per `references/core-feature-recipes.md`). The project's architecture tier dictates file placement and layer boundaries without restricting execution mode:
-- **Layered Architecture (`layers`, Pragmatic Tier):** standard horizontal layers; actions consuming Application Services or repositories/Active Record models directly without forced interface indirection or decoupled domain aggregates unless project architecture mandates them; Validated Models/Entities, explicit repositories.
+- **Layered Architecture (`layers`, Pragmatic Tier):** standard horizontal layers (`Actions` → `Application Services` → `Repositories / Active Record Models`); actions delegate to Application Services without layer skipping; services orchestrate transactions and data access using Active Record models or concrete repositories directly (port interfaces not required); Validated Models/Entities.
 - **Structured Modules (`structured*`, Balanced Tier):** feature modules; rich models with Active Record / Cycle permitted; module aggregates, domain events, and interfaces at module boundaries.
 - **Explicit Architecture (`explicit*`, Strict Tier):** pure domain aggregates, value objects, decoupled repository interfaces/ports, dedicated single-responsibility Use Case Handlers (`*Command` + `*Handler`).
 *Universal Invariants:* In all three modes and across all architectural tiers, Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero direct SQL, persistence, or transaction management in presentation. Transactions are managed strictly in services or use case handlers via `ConnectionInterface::transaction()`.
@@ -50,7 +50,7 @@ This skill is designed primarily as an AI Factory extension, with standalone cha
 Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 applications — at least one `yiisoft/yii-*` package (application/runtime stack: `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console`, `yiisoft/yii-http`, `yiisoft/yii-console`, ...; `yiisoft/yii2` excluded) in `composer.json` or `composer.lock`. A Yii 2 project (`yiisoft/yii2` present), a Yii-ecosystem library project (base `yiisoft/*` packages only — `yiisoft/di`, `yiisoft/strings`, ... — without application runtime stack), or a non-Yii project: stop and report inapplicability — never apply Yii 3 rules to them. Unknown project state (neither composer.json nor composer.lock present, contradictory evidence): report and ask before applying; autonomous runs report the task blocked (`composer.json` declares intent; `composer.lock` confirms installed versions).
 
 1. **Bootstrap checklist** (skip items the running workflow already resolved — never redo):
-   - Architecture source: the project's architecture artifact if present (`references/core-architecture-alignment.md`); otherwise convention fallback defaults to Pragmatic tier (`layers`) or infers from 2–3 existing features (Core rule 3).
+   - Architecture source: determine tier via 3-step protocol: (1) explicit architecture artifact (`.ai-factory/ARCHITECTURE.md` or `docs/architecture/`); (2) dominant layout of 2–3 existing features in `src/` (`layers`, `modules/`, or `domain/`); (3) convention fallback to Pragmatic tier (`layers`) if ambiguous or new (Core rule 3).
    - Rules: the configured rules file(s), else the project's existing conventions.
    - `composer.json` + `composer.lock`: installed `yiisoft/*` packages — re-anchor SSOT (Core rule 2), check against `references/package-catalog.md`.
 2. **Cross-milestone consistency:** past milestones fixed the stack — exactly one DB driver, one persistence path, one queue/cache/mutex driver, one RBAC storage, one translator message storage, one test runner; dev tools stay in `require-dev`. Never introduce a second mechanism next to the existing one.
@@ -69,7 +69,7 @@ Run first, in every mode. **Applicability guard:** this skill applies to Yii 3 a
      - **Stage Progress:**
        - Stage 1 [Migration & Schema]: <pending | skipped — reason>
        - Stage 2 [Domain / Model & Repository Boundary]: <pending | skipped — reason>
-       - Stage 3 [Repository Implementation]: <pending | skipped — reason>
+       - Stage 3 [Repository / Persistence Implementation]: <pending | skipped — reason>
        - Stage 4 [Use Case & Domain Events]: <pending | skipped — reason>
        - Stage 5 [Input DTO & Action / Command]: <pending | skipped — reason>
        - Stage 6 [Config Audit & Wiring Gate]: pending
@@ -92,12 +92,12 @@ For business features execute the stages strictly bottom-up, wiring each artifac
 |---|---|
 | 1 Migration & Schema | Stage 1 |
 | 2 Domain / Model & Repository Boundary | Stage 2 |
-| 3 Repository Implementation | Stage 3 |
+| 3 Repository / Persistence Implementation | Stage 3 |
 | 4 Use Case Handler & Events | Stage 4 |
 | 5 Input DTO & Single-Action Handler | Stage 5 |
 | 6 Wiring & Tests | Stages 6–7 |
 
-Never implement an Action or Controller before its Input DTO and service/repository dependencies exist. Actions depend on the active tier's abstraction (Application Service or concrete repository/model in Pragmatic tier; module service or handler in Balanced tier; dedicated Use Case Handler and repository interface in Strict tier). Actions never absorb persistence logic, SQL, or transaction boundaries. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
+Never implement an Action or Controller before its Input DTO and service dependencies exist. Actions depend on the active tier's application abstraction (Application Service in Pragmatic tier; Module Service or Use Case Handler in Balanced tier; dedicated Use Case Handler in Strict tier). Actions never act as Application Services, execute direct queries, or absorb persistence logic, SQL, or transaction boundaries. Decompose per `references/core-feature-recipes.md` (§6 Chain Integrity Checklist). Install missing packages per `references/core-dependency-protocol.md` before writing code that uses them.
 
 **Mission State execution discipline:**
 1. Progress through active stages sequentially bottom-up.
@@ -110,7 +110,7 @@ Never implement an Action or Controller before its Input DTO and service/reposit
 
 - **Stage 1 — Migration & Schema (Phase 1).** Tables, indexes, foreign keys via `yiisoft/db-migration`; every migration implements a reversible `down()`. Guides: `references/persistence-migrations-schema.md`, `references/persistence-migrations-operations.md`, `references/persistence-db.md`.
 - **Stage 2 — Domain / Model & Repository Boundary (Phase 2).** Tier-adaptive: Pragmatic uses Model / Entity (optional POPO, Active Record, or Cycle entity) with repository when needed (no mandatory interface indirection); Balanced uses Module Entity / Rich Model with interfaces at module boundaries; Strict requires Pure Aggregate, Value Objects, PSR-14 domain events, and explicit repository contract (`*RepositoryInterface`). Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
-- **Stage 3 — Repository Implementation (Phase 3).** Strictly the project's one persistence path (`yiisoft/db` / Active Record / Cycle); wrap multi-step persistence in transactions. Guides: the matching persistence row in the matrix.
+- **Stage 3 — Repository / Persistence Implementation (Phase 3).** Persistence implementation via the project's chosen path (concrete Repository using `yiisoft/db`, Active Record queries/finder methods, or Cycle mapper; when persistence is handled directly via Active Record model without a separate repository, mark Stage 3 as skipped or satisfied by model). Guides: the matching persistence row in the matrix.
 - **Stage 4 — Use Case Handler & Events (Phase 4).** Use case command & handler (or cohesive Application Service methods in Balanced/Pragmatic tiers; Strict prefers dedicated single-responsibility Use Case Handlers); domain checks → `ConnectionInterface::transaction()` → PSR-14 listeners dispatched strictly after the transaction returns. Guides: `references/core-feature-recipes.md`, `references/core-events-design.md`.
 - **Stage 5 — Input DTO & Single-Action Handler (or Console Command) (Phase 5).** Typed input DTO with `yiisoft/validator` rule attributes (rule names must exist in the installed validator); separate Create/Update DTOs. Thin Action = HTTP transport orchestration only, returning `Psr\Http\Message\ResponseInterface` via the archetype's response adapter (`WebViewRenderer` for HTML views, `DataResponseFactoryInterface` for REST/JSON API data responses, PSR-7 `ResponseFactoryInterface` for redirects/downloads); thin console command = CLI I/O only (`SymfonyStyle`, `ExitCode`) delegating to use cases. Actions never act as Application Services or execute direct queries. Guides: the matrix row for the archetype.
 - **Stage 6 — Config Audit & Consolidation (Phase 6).** Final configuration pass: wiring already landed per step (wiring gates above) — verify every gate and add only cross-artifact config that no single step owns. Where things live: DI bindings in `config/**/di/*.php`; routes in `config/**/routes.php`; console commands in `config/console/params.php` under `'yiisoft/yii-console' => ['commands' => [...]]`; custom RBAC rules in `config/common/params.php` under `'yiisoft/rbac-rules-container'`; events in `config/**/events.php`. Guide: `references/core-di-and-config.md`.

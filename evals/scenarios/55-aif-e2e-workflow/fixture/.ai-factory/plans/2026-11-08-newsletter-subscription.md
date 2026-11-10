@@ -7,7 +7,7 @@
 - [ ] Task 2.1: Domain aggregate `Subscriber` in `src/Newsletter/Domain/`
 - [ ] Task 2.2: `SubscriberRepositoryInterface` in `src/Newsletter/Domain/`
 
-## Phase 3 Repository Implementation
+## Phase 3 Repository / Persistence Implementation
 - [ ] Task 3.1: `SqlSubscriberRepository` in `src/Newsletter/Infrastructure/`
 
 ## Phase 4 Use Case Handler & Events

@@ -247,7 +247,7 @@ use App\Tests\Integration\DatabaseTestCase;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Query\Query;
 
-// 1. Domain Entity & Repository Interface
+// 1. Domain Entity / Model & Repository Boundary
 final class UserRecord
 {
     public function __construct(

@@ -3,7 +3,8 @@
 // runs syntax linting (php -l), composer validate, and test suites (phpunit).
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, statSync, cpSync, symlinkSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, cpSync, symlinkSync, readFileSync, mkdtempSync, copyFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -301,18 +302,35 @@ export function validateComposerJson(workDir, toolchain = detectPhpToolchain(), 
   if (!toolchain.hasComposer) {
     return { pass: true, skipped: true, evidence: 'composer CLI not available in environment or container (skipped)' };
   }
-  const args = ['validate', '--no-check-all', '--no-check-publish'];
-  if (!checkLock) {
-    args.push('--no-check-lock');
+
+  if (checkLock) {
+    const res = execComposer(['validate', '--no-check-all', '--no-check-publish'], workDir, toolchain);
+    if (!res) {
+      return { pass: true, skipped: true, evidence: 'failed to spawn composer executable' };
+    }
+    if (res.status === 0) {
+      return { pass: true, skipped: false, evidence: 'composer.json and composer.lock are valid' };
+    }
+    return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'composer.json/lock validation failed').trim() };
   }
-  const res = execComposer(args, workDir, toolchain);
-  if (!res) {
-    return { pass: true, skipped: true, evidence: 'failed to spawn composer executable' };
+
+  // Isolate composer.json in a clean ephemeral directory so Composer does not parse any synthetic/fixture composer.lock
+  const isolatedDir = mkdtempSync(join(tmpdir(), 'composer-validate-'));
+  try {
+    copyFileSync(composerJsonPath, join(isolatedDir, 'composer.json'));
+    const res = execComposer(['validate', '--no-check-all', '--no-check-publish', '--no-check-lock'], isolatedDir, toolchain);
+    if (!res) {
+      return { pass: true, skipped: true, evidence: 'failed to spawn composer executable' };
+    }
+    if (res.status === 0) {
+      return { pass: true, skipped: false, evidence: 'composer.json is valid' };
+    }
+    return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'composer.json validation failed').trim() };
+  } finally {
+    try {
+      rmSync(isolatedDir, { recursive: true, force: true });
+    } catch {}
   }
-  if (res.status === 0) {
-    return { pass: true, skipped: false, evidence: 'composer.json is valid' };
-  }
-  return { pass: false, skipped: false, evidence: (res.stderr || res.stdout || 'composer.json validation failed').trim() };
 }
 
 export function validateComposerLock(workDir, toolchain = detectPhpToolchain()) {

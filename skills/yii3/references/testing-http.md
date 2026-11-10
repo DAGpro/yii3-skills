@@ -464,7 +464,7 @@ final class DirectRunnerHttpTest extends TestCase
 
 `Yiisoft\Test\Support\HttpMessage\StringStream` implements `Psr\Http\Message\StreamInterface` with string content. In HTTP tests, use it to mock or supply request bodies and verify streaming behavior, including rewinding and the custom `readable`/`writable`/`seekable` constructor flags for error-path testing.
 
-The full test-double example — stream inspection, pointer/rewind semantics, and edge-case testing with configurable flags — lives in [`testing-core.md`, §3.6](testing-core.md#36-psr-7-stream-stringstream); its constructor signature is listed in §8 below.
+The full test-double example — stream inspection, pointer/rewind semantics, and edge-case testing with configurable flags — lives in [`testing-psr-doubles.md`, §7](testing-psr-doubles.md#7-psr-7-stream-stringstream); its constructor signature is listed in §8 below.
 
 ---
 

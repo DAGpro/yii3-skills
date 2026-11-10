@@ -686,7 +686,7 @@ To assert lifecycle events (owned by the [Mailer Async Sending & Lifecycle Event
 
 > [!TIP]
 > **Mailer Testing Reference:**
-> For the complete reference on the PSR-14 event double used to assert `BeforeSend`/`AfterSend` dispatching, see the [Testing Core Guide, §3.1. PSR-14 Event Dispatcher (`SimpleEventDispatcher`)](testing-core.md#31-psr-14-event-dispatcher-simpleeventdispatcher). For logging assertions with `Yiisoft\Test\Support\Log\SimpleLogger` (`LoggerInterface` via `LoggerTrait`, `getMessages(): array`), see [§3.2. PSR-3 Logger (`SimpleLogger`)](testing-core.md#32-psr-3-logger-simplelogger).
+> For the complete reference on the PSR-14 event double used to assert `BeforeSend`/`AfterSend` dispatching, see the [Testing PSR Doubles Guide, §2. PSR-14 Event Dispatcher (`SimpleEventDispatcher`)](testing-psr-doubles.md#2-psr-14-event-dispatcher-simpleeventdispatcher). For logging assertions with `Yiisoft\Test\Support\Log\SimpleLogger` (`LoggerInterface` via `LoggerTrait`, `getMessages(): array`), see [§3. PSR-3 Logger (`SimpleLogger`)](testing-psr-doubles.md#3-psr-3-logger-simplelogger).
 
 ---
 

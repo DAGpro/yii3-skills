@@ -600,7 +600,7 @@ real logger. With debug disabled nothing is decorated — production logging con
 
 > [!TIP]
 > **Logging Testing Reference:**
-> For the complete reference on the PSR-3 `SimpleLogger` double — interpolation behavior, level validation, and the missing `hasMessage()`/`clear()` methods — see the [Testing Core Guide, §3.2. PSR-3 Logger (`SimpleLogger`)](testing-core.md#32-psr-3-logger-simplelogger).
+> For the complete reference on the PSR-3 `SimpleLogger` double — interpolation behavior, level validation, and the missing `hasMessage()`/`clear()` methods — see the [Testing PSR Doubles Guide, §3. PSR-3 Logger (`SimpleLogger`)](testing-psr-doubles.md#3-psr-3-logger-simplelogger).
 
 ```php
 declare(strict_types=1);

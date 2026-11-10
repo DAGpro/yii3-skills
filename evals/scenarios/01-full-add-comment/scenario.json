@@ -33,6 +33,7 @@
     "references/core-version-notes.md",
     "references/http-actions-core.md",
     "references/core-events-design.md",
-    "references/testing-core.md"
+    "references/testing-core.md",
+    "references/testing-psr-doubles.md"
   ]
 }

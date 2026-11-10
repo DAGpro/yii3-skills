@@ -35,21 +35,13 @@
   - [4.4. Event Lifecycle Handlers (`EventsTrait`, Timestamps & Soft Delete)](#44-event-lifecycle-handlers-eventstrait-timestamps--soft-delete)
   - [4.5. Optimistic Concurrency Control (`OptimisticLockInterface`)](#45-optimistic-concurrency-control-optimisticlockinterface)
   - [4.6. Explicit Transaction Demarcation](#46-explicit-transaction-demarcation)
-- [5. Relation Definitions & Queries](#5-relation-definitions--queries)
-  - [5.1. Explicit Relation Resolution via `relationQuery()` vs `MagicRelationsTrait`](#51-explicit-relation-resolution-via-relationquery-vs-magicrelationstrait)
-  - [5.2. `hasOne` and `hasMany` Link Syntax](#52-hasone-and-hasmany-link-syntax)
-  - [5.3. Many-to-Many via Intermediate Model (`via()`) and Junction Table (`viaTable()`)](#53-many-to-many-via-intermediate-model-via-and-junction-table-viatable)
-  - [5.4. Filtering & Sorting Relations with `joinWith()` and `innerJoinWith()`](#54-filtering--sorting-relations-with-joinwith-and-innerjoinwith)
-- [6. Eager Loading, N+1 Prevention & Worker Isolation](#6-eager-loading-n1-prevention--worker-isolation)
-  - [6.1. Eager Loading with `with()`](#61-eager-loading-with-with)
-  - [6.2. Strict N+1 Detection with `LazyLoadGuard` & Trait Requirement](#62-strict-n1-detection-with-lazyloadguard--trait-requirement)
-  - [6.3. Long-Running Worker Isolation (RoadRunner / Swoole State Reset)](#63-long-running-worker-isolation-roadrunner--swoole-state-reset)
-- [7. Grid Pagination & Sorting (`QueryDataReader` & `OffsetPaginator`)](#7-grid-pagination--sorting-querydatareader--offsetpaginator)
-  - [7.1. Hydrated Data Reader Pipeline (`QueryDataReader`)](#71-hydrated-data-reader-pipeline-querydatareader)
-  - [7.2. Whitelist Sorting with `Sort::only()`](#72-whitelist-sorting-with-sortonly)
-- [8. PHP 8 Named Arguments & Signatures Reference](#8-php-8-named-arguments--signatures-reference)
-- [9. Anti-Pattern Matrix: Active Record](#9-anti-pattern-matrix-active-record)
-- [10. Related Topic Guides](#10-related-topic-guides)
+- [5. Relations, Eager Loading & N+1 Prevention](#5-relations-eager-loading--n1-prevention)
+- [6. Grid Pagination & Sorting (`QueryDataReader` & `OffsetPaginator`)](#6-grid-pagination--sorting-querydatareader--offsetpaginator)
+  - [6.1. Hydrated Data Reader Pipeline (`QueryDataReader`)](#61-hydrated-data-reader-pipeline-querydatareader)
+  - [6.2. Whitelist Sorting with `Sort::only()`](#62-whitelist-sorting-with-sortonly)
+- [7. PHP 8 Named Arguments & Signatures Reference](#7-php-8-named-arguments--signatures-reference)
+- [8. Anti-Pattern Matrix: Active Record](#8-anti-pattern-matrix-active-record)
+- [9. Related Topic Guides](#9-related-topic-guides)
 
 ---
 
@@ -856,243 +848,23 @@ $order->db()->transaction(static function (ConnectionInterface $db) use ($order,
 
 ---
 
-## 5. Relation Definitions & Queries
+## 5. Relations, Eager Loading & N+1 Prevention
 
-### 5.1. Explicit Relation Resolution via `relationQuery()` vs `MagicRelationsTrait`
-
-In Yii3 Active Record, relation discovery does not rely on magic getter prefixes by default.
-
-#### The Canonical Explicit Pattern (No Magic Traits)
-Override `public function relationQuery(string $name): ActiveQueryInterface` using a PHP 8 `match` expression:
-
-```php
-declare(strict_types=1);
-
-namespace App\Infrastructure\Persistence\ActiveRecord;
-
-use Yiisoft\ActiveRecord\ActiveQueryInterface;
-use Yiisoft\ActiveRecord\ActiveRecord;
-use Yiisoft\ActiveRecord\Trait\LazyLoadGuardTrait;
-use Yiisoft\ActiveRecord\Trait\RepositoryTrait;
-
-final class UserRecord extends ActiveRecord
-{
-    use RepositoryTrait;
-    use LazyLoadGuardTrait;
-
-    public ?string $id = null;
-    public string $name = '';
-
-    public function tableName(): string
-    {
-        return '{{%user}}';
-    }
-
-    /**
-     * Canonical relation resolution without magic traits.
-     */
-    public function relationQuery(string $name): ActiveQueryInterface
-    {
-        return match ($name) {
-            'profile' => $this->hasOne(ProfileRecord::class, ['user_id' => 'id']),
-            'orders' => $this->hasMany(OrderRecord::class, ['user_id' => 'id']),
-            default => parent::relationQuery($name),
-        };
-    }
-}
-```
-
-#### The Magic Relations Trait Alternative (`MagicRelationsTrait`)
-If prefer method-based declarations, import `Yiisoft\ActiveRecord\Trait\MagicRelationsTrait`. Methods **must** be suffixed with `Query`:
-
-```php
-declare(strict_types=1);
-
-namespace App\Infrastructure\Persistence\ActiveRecord;
-
-use Yiisoft\ActiveRecord\ActiveQueryInterface;
-use Yiisoft\ActiveRecord\ActiveRecord;
-use Yiisoft\ActiveRecord\Trait\MagicRelationsTrait;
-
-final class UserRecord extends ActiveRecord
-{
-    use MagicRelationsTrait;
-
-    public ?string $id = null;
-
-    public function tableName(): string
-    {
-        return '{{%user}}';
-    }
-
-    /**
-     * Suffix 'Query' is mandatory when using MagicRelationsTrait!
-     */
-    public function getProfileQuery(): ActiveQueryInterface
-    {
-        return $this->hasOne(ProfileRecord::class, ['user_id' => 'id']);
-    }
-
-    public function getOrdersQuery(): ActiveQueryInterface
-    {
-        return $this->hasMany(OrderRecord::class, ['user_id' => 'id']);
-    }
-}
-```
-
-### 5.2. `hasOne` and `hasMany` Link Syntax
-
-The `$link` array defines the relation column mapping:
-`['related_model_property' => 'this_model_property']`
-
-- **1:1 HasOne (`User` $\rightarrow$ `Profile`):**
-  `$this->hasOne(ProfileRecord::class, ['user_id' => 'id'])` (`user_id` on ProfileRecord, `id` on UserRecord).
-- **1:1 BelongsTo (`Profile` $\rightarrow$ `User`):**
-  `$this->hasOne(UserRecord::class, ['id' => 'user_id'])` (`id` on UserRecord, `user_id` on ProfileRecord).
-- **1:N HasMany (`User` $\rightarrow$ `Order`):**
-  `$this->hasMany(OrderRecord::class, ['user_id' => 'id'])` (`user_id` on OrderRecord, `id` on UserRecord).
-
-### 5.3. Many-to-Many via Intermediate Model (`via()`) and Junction Table (`viaTable()`)
-
-#### Option A: M:N via Intermediate Active Record Model (`via()`)
-When the junction table requires its own Active Record model (e.g. tracking additional metadata like `assigned_at`):
-
-```php
-public function relationQuery(string $name): ActiveQueryInterface
-{
-    return match ($name) {
-        'userRoles' => $this->hasMany(UserRoleRecord::class, ['user_id' => 'id']),
-        'roles' => $this->hasMany(RoleRecord::class, ['id' => 'role_id'])->via('userRoles'),
-        default => parent::relationQuery($name),
-    };
-}
-```
-
-#### Option B: M:N Directly via Junction Table (`viaTable()`)
-When the junction table is purely a linkage table without requiring a dedicated Active Record model:
-
-```php
-public function relationQuery(string $name): ActiveQueryInterface
-{
-    return match ($name) {
-        'roles' => $this->hasMany(RoleRecord::class, ['id' => 'role_id'])
-            ->viaTable('{{%user_role}}', ['user_id' => 'id']),
-        default => parent::relationQuery($name),
-    };
-}
-```
-
-### 5.4. Filtering & Sorting Relations with `joinWith()` and `innerJoinWith()`
-
-`joinWith()` joins related tables into the primary SQL query to filter or sort by related columns while simultaneously eager loading related models into memory:
-
-```php
-declare(strict_types=1);
-
-use App\Infrastructure\Persistence\ActiveRecord\UserRecord;
-
-// 1. LEFT JOIN related orders and filter primary users by order properties
-$users = UserRecord::query()
-    ->joinWith('orders')
-    ->where(['orders.status' => 'paid'])
-    ->all();
-
-// 2. INNER JOIN profile and sort by profile country
-$users = UserRecord::query()
-    ->innerJoinWith('profile')
-    ->orderBy(['profile.country' => SORT_ASC])
-    ->all();
-
-// 3. Join with disabled eager loading (joins table strictly for filtering/sorting)
-$users = UserRecord::query()
-    ->joinWith('orders', eagerLoading: false)
-    ->where(['orders.total' => 1000])
-    ->all();
-```
-
----
-
-## 6. Eager Loading, N+1 Prevention & Worker Isolation
-
-### 6.1. Eager Loading with `with()`
-
-Always eager-load relations when querying multiple records to prevent N+1 query storms. Eager loading runs a single additional `IN (...)` query and maps related records into memory:
-
-```php
-declare(strict_types=1);
-
-use App\Infrastructure\Persistence\ActiveRecord\UserRecord;
-
-// Eager loads orders and profile in 2 additional IN (...) queries instead of N queries
-$users = UserRecord::query()
-    ->with('orders', 'profile')
-    ->where(['status' => 'active'])
-    ->all();
-```
-
-Nested and constrained eager loading:
-
-```php
-$users = UserRecord::query()
-    ->with([
-        'profile',
-        'orders' => static fn(ActiveQuery $query) => $query->andWhere(['status' => 'paid']),
-        'orders.items', // Eager load nested items relation
-    ])
-    ->all();
-```
-
-### 6.2. Strict N+1 Detection with `LazyLoadGuard` & Trait Requirement
-
-`LazyLoadGuard` intercepts relation calls at runtime to detect and eliminate lazy-loading bottlenecks:
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\ActiveRecord\LazyLoadGuard;
-use Yiisoft\ActiveRecord\LazyLoadGuardMode;
-
-// Configure strict N+1 detection during bootstrap (throws LazyLoadException on violations)
-LazyLoadGuard::set(LazyLoadGuardMode::Strict);
-```
-
-> [!CRITICAL]
-> **Guard Invariants & Detection Semantics:**
-> 1. **Trait Requirement:** The guard **only inspects records whose class uses `Yiisoft\ActiveRecord\Trait\LazyLoadGuardTrait`**. Without this trait on the model class, `LazyLoadGuard::set()` has no effect — lazy loads continue undetected.
-> 2. **Detection Semantics:** `Strict` mode throws `LazyLoadException` only when **two or more records of the same result set** lazy-load the same relation. A single record lazy-loading a relation is allowed.
-> 3. **Modes:** `LazyLoadGuardMode` has only two cases: `LazyLoadGuardMode::Strict` and `LazyLoadGuardMode::Log`. There is no `Off` mode.
-
-### 6.3. Long-Running Worker Isolation (RoadRunner / Swoole State Reset)
-
-In persistent PHP runtimes (RoadRunner, Swoole, FrankenPHP, Workerman), in-memory state accumulates across requests. Active Record maintains static counters and reflection caches that must be cleared between requests:
-
-```php
-declare(strict_types=1);
-
-use Yiisoft\ActiveRecord\Event\EventDispatcherProvider;
-use Yiisoft\ActiveRecord\LazyLoadGuard;
-
-// Inside the long-running worker request loop (finally block):
-try {
-    $response = $application->handle($request);
-    $worker->respond($response);
-} finally {
-    // 1. Clears result set counters and WeakMap while PRESERVING mode and logger
-    LazyLoadGuard::resetCounters();
-
-    // 2. Clears cached attribute reflection listener collections
-    EventDispatcherProvider::reset();
-}
-```
+Active Record relations in Yii 3 are decoupled from magic getters and require explicit query methods:
+- **Canonical declaration:** Override `public function relationQuery(string $name): ActiveQueryInterface` using a PHP 8 `match` expression with `$this->hasOne(...)` or `$this->hasMany(...)`.
+- **Alternative with traits:** Use `Yiisoft\ActiveRecord\Trait\MagicRelationsTrait` with mandatory `Query` method suffix (e.g. `getProfileQuery()`).
+- **Many-to-Many:** Defined via intermediate models (`->via('userRoles')`) or directly through junction tables (`->viaTable('{{%user_role}}', ['user_id' => 'id'])`).
+- **Eager Loading:** Always load related records on lists using `$query->with('orders', 'profile')` to prevent N+1 queries. Filter or sort with `joinWith()`.
+- **Runtime N+1 Guard:** Enforce `LazyLoadGuard::set(LazyLoadGuardMode::Strict)` combined with `LazyLoadGuardTrait` on record classes.
+- **Worker Isolation:** Call `LazyLoadGuard::resetCounters()` in long-running worker loops (RoadRunner / Swoole).
 
 > [!IMPORTANT]
-> Always call `LazyLoadGuard::resetCounters()` rather than `reset()`. `resetCounters()` purges the static `WeakMap` and iteration counters while preserving the configured `Strict` mode and logger. `reset()` resets the mode back to `Log` and the logger to `null`.
-
-> **For the complete reference on** container-level worker state safety — the DI `StateResetter` mechanics, the `StateResetter::class` definition trap, and the built-in package resetter catalog (which covers the ORM-adjacent services used alongside Active Record) — **see the** [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md).
+> For the complete, dedicated guide covering relation syntax, nested eager loading, junction tables, `LazyLoadGuard` runtime mechanics, and anti-patterns, see the companion guide:
+> **[`persistence-active-record-relations.md`](persistence-active-record-relations.md)**.
 
 ---
 
-## 7. Grid Pagination & Sorting (`QueryDataReader` & `OffsetPaginator`)
+## 6. Grid Pagination & Sorting (`QueryDataReader` & `OffsetPaginator`)
 
 ### 7.1. Hydrated Data Reader Pipeline (`QueryDataReader`)
 
@@ -1169,7 +941,7 @@ $sort = Sort::only([
 
 ---
 
-## 8. PHP 8 Named Arguments & Signatures Reference
+## 7. PHP 8 Named Arguments & Signatures Reference
 
 ```php
 declare(strict_types=1);
@@ -1247,7 +1019,7 @@ LazyLoadGuard::resetCounters();
 
 ---
 
-## 9. Anti-Pattern Matrix: Active Record
+## 8. Anti-Pattern Matrix: Active Record
 
 | Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
 |---|---|---|
@@ -1273,8 +1045,9 @@ LazyLoadGuard::resetCounters();
 
 ---
 
-## 10. Related Topic Guides
+## 9. Related Topic Guides
 
+- [Active Record Relations & Optimization](persistence-active-record-relations.md) — Relation definitions, `hasOne`/`hasMany`, intermediate junction tables, eager loading, and N+1 prevention.
 - [Database Persistence Guide](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
 - [Cycle ORM Persistence Guide](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
 - [Database Migrations Guide](persistence-migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands.

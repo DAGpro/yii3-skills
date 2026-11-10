@@ -15,6 +15,7 @@
   "layer": "unit",
   "guides": [
     "references/persistence-active-record.md",
+    "references/persistence-active-record-relations.md",
     "references/core-di-and-config.md",
     "references/http-routes-definition.md",
     "references/persistence-migrations-schema.md"

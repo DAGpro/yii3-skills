@@ -163,11 +163,11 @@ Load only the archetype's guides:
 | **Database & Schema Migrations** | `references/persistence-migrations-schema.md`<br>`references/persistence-migrations-operations.md`<br>`references/persistence-db-connection-and-queries.md` | `references/core-di-and-config.md`<br>`references/persistence-caching.md` |
 | **Full Architecture Slices** | `references/core-architecture-alignment.md`<br>`references/core-feature-recipes.md` | `references/core-dependency-protocol.md`<br>`references/core-definition-of-done.md`<br>`references/package-catalog.md` |
 | **Email / Notifications** | `references/infra-mailer.md` | `references/core-di-and-config.md`<br>`references/infra-mailer-transports.md` |
-| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/http-validation-custom-rules.md` |
+| **Testing** | `references/testing-core.md` | `references/testing-http.md`<br>`references/testing-database.md`<br>`references/testing-psr-doubles.md`<br>`references/http-validation-custom-rules.md` |
 | **i18n** | `references/http-i18n-translation-api.md`<br>`references/http-i18n-storage-and-locale.md` | `references/http-routes-url-and-middleware.md`<br>`references/core-di-and-config.md` |
 | **OpenAPI / Swagger** | `references/http-openapi-setup.md`<br>`references/http-openapi-endpoints.md` | `references/http-routes.md`<br>`references/http-openapi-ui-and-ops.md` |
 | **Events & Listeners** | `references/core-events-design.md` | `references/core-events-reference.md`<br>`references/core-di-and-config.md` |
-| **Active Record** | `references/persistence-active-record.md` | `references/persistence-db-connection-and-queries.md`<br>`references/persistence-migrations-schema.md` |
+| **Active Record** | `references/persistence-active-record.md`<br>`references/persistence-active-record-relations.md` | `references/persistence-db-connection-and-queries.md`<br>`references/persistence-migrations-schema.md` |
 | **Bootstrap / Runners / Workers** | `references/infra-runners-and-runtimes.md` | `references/core-di-and-config.md`<br>`references/infra-state-resetter.md` |
 | **Helper Lookup** | `references/core-utilities.md` | `references/package-catalog.md`<br>`references/core-utilities-niche.md`<br>`references/core-friendly-exceptions.md` · Tier 2: `vendor/yiisoft/<pkg>/src/` |
 

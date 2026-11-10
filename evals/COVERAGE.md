@@ -7,10 +7,10 @@
 
 | Metric | Value | Scope |
 |---|---|---|
-| **Total Reference Files** | 83 | All reference documents in `skills/yii3/references/` |
+| **Total Reference Files** | 85 | All reference documents in `skills/yii3/references/` |
 | **Catalogs & Navigation Indexes** | 2 | `INDEX.md`, `package-catalog.md` |
-| **Evaluated Topic Guides** | 81 | Concrete architectural and implementation reference guides |
-| **Covered Topic Guides** | 81 (100.0%) | 100% mapped guide coverage (all 81 topic guides mapped to >= 1 dedicated eval scenario) |
+| **Evaluated Topic Guides** | 83 | Concrete architectural and implementation reference guides |
+| **Covered Topic Guides** | 83 (100.0%) | 100% mapped guide coverage (all 83 topic guides mapped to >= 1 dedicated eval scenario) |
 | **Unbound Topic Guides** | 0 (0.0%) | Full coverage achieved across all evaluated reference guides |
 | **Total Eval Scenarios** | 66 | Deterministic test fixtures with full check-suites and mutation canaries |
 
@@ -86,6 +86,7 @@
 | `references/infra-state-resetter.md` | [61](scenarios/61-state-resetter) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/package-catalog.md` | — | — | — | — | — | Catalog Index |
 | `references/persistence-active-record.md` | [07](scenarios/07-second-mechanism) | unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/persistence-active-record-relations.md` | [07](scenarios/07-second-mechanism) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-cache-drivers.md` | [18](scenarios/18-cache-hot-path) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-caching.md` | [18](scenarios/18-cache-hot-path) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/persistence-cycle-orm.md` | [30](scenarios/30-cycle-entity-persist) | unit | Yes | Yes | php-lint, composer | **Covered** |
@@ -101,11 +102,12 @@
 | `references/testing-database.md` | [44](scenarios/44-database-testing) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/testing-http.md` | [29](scenarios/29-functional-test) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/testing-infection.md` | [57](scenarios/57-mutation-testing-infection) | unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/testing-psr-doubles.md` | [01](scenarios/01-full-add-comment) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/testing-testo.md` | [65](scenarios/65-testo-runner) | unit | Yes | Yes | php-lint, composer | **Covered** |
 
 ## 3. Unbound Guides Gap Analysis (Roadmap P3 Completed)
 
-All 8 former Roadmap P3 guides have been implemented as dedicated eval scenarios (58–65), achieving **100.0% coverage** across all 81 topic guides:
+All 8 former Roadmap P3 guides have been implemented as dedicated eval scenarios (58–65), achieving **100.0% coverage** across all 83 topic guides:
 
 | # | Topic Guide | Primary Package | Governing Scenario | Status |
 |---|---|---|---|---|

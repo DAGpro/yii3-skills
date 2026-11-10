@@ -58,7 +58,8 @@
 - `references/persistence-db.md` — split index: anti-pattern matrix, related guides
 - `references/persistence-db-connection-and-queries.md` — Connection, Command, Query Builder, transactions
 - `references/persistence-db-readers-and-drivers.md` — pagination & data readers, drivers & DSN, signatures
-- `references/persistence-active-record.md` — Active Record models, queries, relations
+- `references/persistence-active-record.md` — Active Record models, repositories, ActiveQuery, mutations
+- `references/persistence-active-record-relations.md` — relationQuery, hasOne/hasMany, viaTable, eager loading, LazyLoadGuard
 - `references/persistence-cycle-orm.md` — Cycle ORM data mapper
 - `references/persistence-migrations.md` — split index: schema vs operations guides
 - `references/persistence-migrations-schema.md` — migration contracts, naming, ColumnBuilder, FKs, DDL, seeding
@@ -86,7 +87,8 @@
 - `references/infra-error-handling.md` — split index: anti-pattern matrix, related guides
 - `references/infra-error-handling-web.md` — ErrorCatcher, exception mapping, renderers, friendly/user exceptions
 - `references/infra-error-handling-ops.md` — Sentry monitoring, console error handling, low-level ErrorHandler
-- `references/testing-core.md` — test architecture, PHPUnit canon, PSR test doubles, mocking rules
+- `references/testing-core.md` — test architecture, PHPUnit canon, mocking rules, use case testing
+- `references/testing-psr-doubles.md` — ready-made PSR test doubles (SimpleEventDispatcher, SimpleLogger, MemorySimpleCache, StaticClock, SimpleContainer, StringStream)
 - `references/testing-testo.md` — Testo alternative runner
 - `references/testing-codeception.md` — Codeception alternative runner
 - `references/testing-infection.md` — mutation testing gate

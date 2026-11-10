@@ -673,7 +673,7 @@ public function testGetFeaturedProductsIsCached(): void
 
 > [!TIP]
 > **Cache Testing Reference:**
-> For the complete reference on `MemorySimpleCache` fault-injection flags, `SimpleCacheActionLogger` / `Action` semantics, and the `clearActions()` trap, see the [Testing Core Guide, §3.3. PSR-16 Simple Cache (`MemorySimpleCache` & `SimpleCacheActionLogger`)](testing-core.md#33-psr-16-simple-cache-memorysimplecache--simplecacheactionlogger).
+> For the complete reference on `MemorySimpleCache` fault-injection flags, `SimpleCacheActionLogger` / `Action` semantics, and the `clearActions()` trap, see the [Testing PSR Doubles Guide, §4. PSR-16 Simple Cache (`MemorySimpleCache` & `SimpleCacheActionLogger`)](testing-psr-doubles.md#4-psr-16-simple-cache-memorysimplecache--simplecacheactionlogger).
 
 ---
 

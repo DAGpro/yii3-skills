@@ -1,4 +1,9 @@
 {
+  "metadata": {
+    "generated_at": "2026-11-10T01:01:00.196Z",
+    "source": "references/ (130 yiisoft/* package clones)",
+    "packages_indexed": 132
+  },
   "classes": [
     "Psr\\Http\\Message\\ResponseFactoryInterface",
     "Psr\\Http\\Message\\ResponseInterface",
@@ -6221,111 +6226,6 @@
         }
       ]
     },
-    "Yiisoft\\User\\CurrentUser::login": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\User\\CurrentUser",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "identity",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\User\\Login\\Cookie\\CookieLogin::addCookie": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 3,
-      "isVariadic": false,
-      "returnType": "Psr\\Http\\Message\\ResponseInterface",
-      "definedIn": "Yiisoft\\User\\Login\\Cookie\\CookieLogin",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "identity",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "response",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "duration",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\User\\CurrentUser::logout": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\User\\CurrentUser",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\User\\Login\\Cookie\\CookieLogin::expireCookie": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Psr\\Http\\Message\\ResponseInterface",
-      "definedIn": "Yiisoft\\User\\Login\\Cookie\\CookieLogin",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "response",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\User\\Event\\BeforeLogin::getIdentity": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Auth\\IdentityInterface",
-      "definedIn": "Yiisoft\\User\\Event\\BeforeLogin",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Psr\\Log\\LoggerInterface::warning": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Psr\\Log\\LoggerInterface",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\User\\Event\\BeforeLogin::invalidate": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\User\\Event\\BeforeLogin",
-      "isConstOrCase": false,
-      "params": []
-    },
     "Yiisoft\\Rbac\\ManagerInterface::addPermission": {
       "visibility": "public",
       "isStatic": false,
@@ -6565,6 +6465,111 @@
       "isVariadic": false,
       "returnType": null,
       "definedIn": "Yiisoft\\Yii\\AuthClient\\AuthClientInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\User\\CurrentUser::login": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\User\\CurrentUser",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "identity",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\User\\Login\\Cookie\\CookieLogin::addCookie": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "isVariadic": false,
+      "returnType": "Psr\\Http\\Message\\ResponseInterface",
+      "definedIn": "Yiisoft\\User\\Login\\Cookie\\CookieLogin",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "identity",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "response",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "duration",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\User\\CurrentUser::logout": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\User\\CurrentUser",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\User\\Login\\Cookie\\CookieLogin::expireCookie": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Psr\\Http\\Message\\ResponseInterface",
+      "definedIn": "Yiisoft\\User\\Login\\Cookie\\CookieLogin",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "response",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\User\\Event\\BeforeLogin::getIdentity": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Auth\\IdentityInterface",
+      "definedIn": "Yiisoft\\User\\Event\\BeforeLogin",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Psr\\Log\\LoggerInterface::warning": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Psr\\Log\\LoggerInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\User\\Event\\BeforeLogin::invalidate": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\User\\Event\\BeforeLogin",
       "isConstOrCase": false,
       "params": []
     },
@@ -8028,6 +8033,230 @@
       "isConstOrCase": false,
       "params": []
     },
+    "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::getEvents": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Factory\\Factory::withDefinitions": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Factory\\Factory",
+      "definedIn": "Yiisoft\\Factory\\Factory",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "definitions",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Di\\Container::get": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Di\\Container",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "id",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::primaryKey": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "autoIncrement",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::string": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "size",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnInterface::notNull": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "notNull",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::integer": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
+      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "size",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionInterface::beginTransaction": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Transaction\\TransactionInterface",
+      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "isolationLevel",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionInterface::getTransaction": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Transaction\\TransactionInterface",
+      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Db\\Transaction\\TransactionInterface::rollBack": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Transaction\\TransactionInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Db\\Connection\\ConnectionInterface::close": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Db\\Command\\CommandInterface::insert": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
+      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Session\\SessionInterface::has": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Session\\SessionInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "key",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Session\\SessionInterface::get": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Session\\SessionInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "key",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "default",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
     "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::dispatch": {
       "visibility": "public",
       "isStatic": false,
@@ -8044,17 +8273,6 @@
           "isVariadic": false
         }
       ]
-    },
-    "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::getEvents": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher",
-      "isConstOrCase": false,
-      "params": []
     },
     "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::getEventClasses": {
       "visibility": "public",
@@ -8478,219 +8696,6 @@
         {
           "name": "length",
           "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Factory\\Factory::withDefinitions": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Factory\\Factory",
-      "definedIn": "Yiisoft\\Factory\\Factory",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "definitions",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Di\\Container::get": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Di\\Container",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "id",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::primaryKey": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "autoIncrement",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::string": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "size",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Schema\\Column\\ColumnInterface::notNull": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "notNull",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::integer": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Schema\\Column\\ColumnInterface",
-      "definedIn": "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "size",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Connection\\ConnectionInterface::beginTransaction": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Transaction\\TransactionInterface",
-      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "isolationLevel",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Connection\\ConnectionInterface::getTransaction": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Transaction\\TransactionInterface",
-      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\Db\\Transaction\\TransactionInterface::rollBack": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Transaction\\TransactionInterface",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\Db\\Connection\\ConnectionInterface::close": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Connection\\ConnectionInterface",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\Db\\Command\\CommandInterface::insert": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Db\\Command\\CommandInterface",
-      "definedIn": "Yiisoft\\Db\\Command\\CommandInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "table",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "columns",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Session\\SessionInterface::has": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Session\\SessionInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "key",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Session\\SessionInterface::get": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Session\\SessionInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "key",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "default",
-          "hasDefault": true,
           "isVariadic": false
         }
       ]

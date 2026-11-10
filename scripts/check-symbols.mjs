@@ -506,8 +506,17 @@ for (const file of guideFiles) {
 
 if (shouldExportManifest && unconfirmed.length === 0) {
   mkdirSync(dirname(manifestPath), { recursive: true });
-  writeFileSync(manifestPath, JSON.stringify(confirmedManifest, null, 2));
-  console.log(`[check-symbols] exported API symbols manifest with ${confirmedManifest.fqcns.length} classes and ${Object.keys(confirmedManifest.methods).length} signatures to ${manifestPath}`);
+  const payload = {
+    metadata: {
+      generated_at: new Date().toISOString(),
+      source: 'references/ (130 yiisoft/* package clones)',
+      packages_indexed: classMap.packages,
+    },
+    fqcns: [...new Set(confirmedManifest.fqcns)].sort(),
+    methods: confirmedManifest.methods,
+  };
+  writeFileSync(manifestPath, JSON.stringify(payload, null, 2));
+  console.log(`[check-symbols] exported API symbols manifest with ${payload.fqcns.length} classes and ${Object.keys(payload.methods).length} signatures to ${manifestPath}`);
 }
 
 for (const line of unconfirmed) console.log(line);

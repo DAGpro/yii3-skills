@@ -811,6 +811,11 @@ function main() {
   if (shouldExportManifest && defects.length === 0) {
     mkdirSync(dirname(manifestPath), { recursive: true });
     const payload = {
+      metadata: {
+        generated_at: new Date().toISOString(),
+        source: 'references/ (130 yiisoft/* package clones)',
+        packages_indexed: classMap.prefixes.length,
+      },
       classes: [...confirmedManifest.classes].sort(),
       methods: confirmedManifest.methods
     };

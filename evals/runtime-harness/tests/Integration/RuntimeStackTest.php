@@ -154,6 +154,9 @@ final class RuntimeStackTest extends TestCase
                 'amountCents' => 0,
             ]);
 
+        // Second request in the same worker: reset request-scoped state (CurrentRoute, etc.).
+        $container->get(StateResetter::class)->reset();
+
         $response = $dispatcher->dispatch($invalidRequest, $fallback);
         self::assertSame(Status::UNPROCESSABLE_ENTITY, $response->getStatusCode());
         self::assertStringContainsString('application/json', $response->getHeaderLine('Content-Type'));

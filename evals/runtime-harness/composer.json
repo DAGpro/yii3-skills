@@ -32,7 +32,7 @@
         "yiisoft/middleware-dispatcher": "^5.4",
         "yiisoft/mutex": "^1.1",
         "yiisoft/mutex-file": "^1.1",
-        "yiisoft/queue": "^3.0 || dev-master",
+        "yiisoft/queue": "^3.0",
         "yiisoft/router": "^4.0",
         "yiisoft/router-fastroute": "^4.0",
         "yiisoft/validator": "^2.5"
@@ -51,6 +51,9 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        }
     }
 }

@@ -42,10 +42,10 @@ Run the local quality gates:
 # 1. Extension integrity, manifest, frontmatter, guard sync, and link consistency
 node scripts/validate.mjs
 
-# 2. AI Factory workflow integration contracts (96 contract tests)
+# 2. AI Factory workflow integration contracts (88 contract tests)
 node scripts/test-aif-workflow.mjs
 
-# 3. Topic guide coverage across eval scenarios (100% across 86 topic guides / 88 files)
+# 3. Topic guide coverage across eval scenarios (100% across 87 topic guides / 89 files)
 node scripts/check-eval-coverage.mjs
 
 # 4. Ground-truth symbol, method signature, and parameter arity check

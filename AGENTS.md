@@ -90,7 +90,7 @@ The repository is strictly divided into **Distributable Deliverables** and **Int
 
 | **Operational Nervous System** | `.ai-factory/` | Internal dev config & plans for *this* repo | **Working control center** of the target app (architecture, rules, plans) |
 
-| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (68 test cases + `evals/runtime-harness/` L5 PHPUnit suite), ground-truth symbol and arity verification, manifest freshness checks, workflow contract tests | Not distributed to target applications |
+| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (69 test cases + `evals/runtime-harness/` L5 PHPUnit suite), ground-truth symbol and arity verification, manifest freshness checks, workflow contract tests | Not distributed to target applications |
 
 | **Authoring References** | `references/` *(130 repos)*, `PACKAGES.md` (package navigation index) | Offline source of truth for APIs and doc examples; the index telling agents which packages to study per task | `references/` does not exist; `PACKAGES.md` is not used by target agents |
 

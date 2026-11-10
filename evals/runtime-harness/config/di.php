@@ -65,7 +65,7 @@ use Yiisoft\Queue\Worker\WorkerInterface;
 use Yiisoft\Router\CurrentRoute;
 use Yiisoft\Router\FastRoute\UrlMatcher;
 use Yiisoft\Router\Middleware\Router;
-use Yiisoft\Router\Route\Post;
+use Yiisoft\Router\Route;
 use Yiisoft\Router\RouteCollection;
 use Yiisoft\Router\RouteCollectionInterface;
 use Yiisoft\Router\RouteCollector;
@@ -139,8 +139,12 @@ return [
     ],
 
     RouteCollectorInterface::class => static function (): RouteCollectorInterface {
+        // router 4.0.2 (installed under platform php 8.2): the `Route\Post` value-object
+        // class lands in 4.0.3 — use the static factory + chain until the platform floor rises.
         return (new RouteCollector())->addRoute(
-            new Post('/orders', name: 'orders.create', action: CreateOrderAction::class),
+            Route::post('/orders')
+                ->name('orders.create')
+                ->action(CreateOrderAction::class),
         );
     },
     RouteCollectionInterface::class => RouteCollection::class,
@@ -153,15 +157,13 @@ return [
         },
     ],
     MiddlewareFactory::class => MiddlewareFactory::class,
-    MiddlewareDispatcher::class => [
-        'class' => MiddlewareDispatcher::class,
-        '__construct()' => [
-            'middlewareDefinitions' => [
-                JsonDataResponseMiddleware::class,
-                Router::class,
-            ],
-        ],
-    ],
+    // middleware-dispatcher 5.4.x (tagged): middlewares are attached via withMiddlewares();
+    // the constructor-parameter form (`middlewareDefinitions`) lands in 5.5+.
+    MiddlewareDispatcher::class => static fn (MiddlewareFactory $factory): MiddlewareDispatcher => (new MiddlewareDispatcher($factory))
+        ->withMiddlewares([
+            JsonDataResponseMiddleware::class,
+            Router::class,
+        ]),
 
     PushMiddlewareFactoryInterface::class => PushMiddlewareFactory::class,
     ConsumeMiddlewareFactoryInterface::class => ConsumeMiddlewareFactory::class,

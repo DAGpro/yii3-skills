@@ -1,7 +1,7 @@
 {
   "id": "43-locale-middleware",
   "title": "Per-request locale resolution: PSR-15 middleware resolves the locale from the {_language} URL prefix and exposes it through Yiisoft\\I18n\\LocaleProvider - no TranslatorInterface::setLocale() mutation of the shared translator, no unwired middleware",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "i18n",

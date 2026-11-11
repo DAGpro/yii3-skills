@@ -1,4 +1,5 @@
 import { check, ok, fail, read, matchParen } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const srcPhp = (changed) => php(changed).filter((c) => /^src\//.test(c.path));
@@ -99,16 +100,10 @@ export default [
     return hit.length ? ok(hit.map((b) => b.path).join(', ')) : fail('no search() method in the changed code - public contract broken');
   }),
 
-  check('no-yii2', 'No Yii2 constructs or #[Override] in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]|ActiveForm::begin|->getFlash\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions-binding', 'The transcript reports the fix in binding terms (parameter binding / bound value / placeholder), not as escaping', ({ transcript }) => {
     return /\bbind|\bbound\b|placeholder/i.test(transcript)

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { copyDir, listScenarios, loadScenario, runChecks, requiredFailed, extractTelemetry, normalizeTokens, normalizeCost } from './core.mjs';
 import { changedFiles, validateAifGateResult, ensurePrewarmedVendor, validateComposerJson, validateComposerLock, isStubComposerLock, execComposer, detectPhpToolchain } from '../lib/checks.mjs';
 import { runRuntimeEvaluation, runPhpUnit, parsePhpUnitSummary, resolvePhpUnitBinary, hasPhpUnitConfig } from '../lib/runtime.mjs';
+import { runParserProbes } from '../audit/parser-probes.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const runtimeFlag = process.argv.includes('--runtime');
@@ -386,12 +387,51 @@ for (const id of listScenarios(root)) {
   const pos = await evalSample(id, sDir, 'positive');
   const posFailed = requiredFailed(pos);
   const neg = await evalSample(id, sDir, 'negative');
-  const negFailedIds = neg.filter((r) => !r.pass).map((r) => r.id);
+  const negFailedIds = neg.filter((r) => r.status === 'failed').map((r) => r.id);
   const missing = (sc.negativeMustFail ?? []).filter((x) => !negFailedIds.includes(x));
   const okPos = posFailed.length === 0;
   const okNeg = missing.length === 0;
   const okGuides = missingGuides.length === 0;
   console.log(`${okPos && okNeg && okGuides ? 'OK  ' : 'FAIL'} ${id}  positive-required-failed=[${posFailed.map((r) => `${r.id}: ${r.evidence}`)}]  negative-not-caught=[${missing}]  guides-missing=[${missingGuides}]`);
   if (!okPos || !okNeg || !okGuides) bad++;
+}
+
+// Parser & canonical-check probes (meta-tests, evals/audit/parser-probes.mjs)
+try {
+  const failures = await runParserProbes((line) => console.log(line));
+  if (failures.length) {
+    console.error(`FAIL parser-probes: ${failures.join('; ')}`);
+    bad++;
+  } else {
+    console.log('parser-probes: OK  (15/15)');
+  }
+} catch (e) {
+  console.error(`FAIL parser-probes: ${e.message}`);
+  bad++;
+}
+
+// Floor control (audit fix 2026-11-12): a do-nothing attempt (no changed files, empty
+// transcript) must fail the attempt gate in every scenario - the "do nothing" pass-rate
+// floor must stay at zero on the headline gates metric.
+try {
+  const floorDir = mkdtempSync(join(tmpdir(), 'selftest-floor-'));
+  try {
+    for (const id of listScenarios(root)) {
+      const sDir = join(root, 'scenarios', id);
+      const ctx = { dir: floorDir, base: join(sDir, 'fixture'), transcript: '', changed: [], mode: 'floor' };
+      const results = await runChecks(sDir, ctx);
+      const gateFailed = results.some((r) => r.id === 'attempt-gate' && r.required && r.status === 'failed');
+      if (!gateFailed) {
+        console.error(`FAIL floor-control ${id}: a do-nothing attempt did not fail the attempt gate`);
+        bad++;
+      }
+    }
+    console.log(`floor-control: do-nothing attempt fails the attempt gate in all scenarios`);
+  } finally {
+    rmSync(floorDir, { recursive: true, force: true });
+  }
+} catch (e) {
+  console.error(`FAIL floor-control: ${e.message}`);
+  bad++;
 }
 process.exit(bad ? 1 : 0);

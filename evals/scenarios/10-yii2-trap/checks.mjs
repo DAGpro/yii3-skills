@@ -33,5 +33,5 @@ export default [
   check('yii2-solution', 'The /health endpoint is added idiomatically for Yii2 (controller action with FORMAT_JSON or a urlManager rule)', ({ changed }) => {
     const hit = changed.find((c) => /\.php$/.test(c.path) && /actionHealth|Response::FORMAT_JSON|'\/health'|"\/health"/.test(read(c.abs)));
     return hit ? ok(hit.path) : fail('no Yii2-idiomatic /health endpoint found in changed files');
-  }, { required: false }),
+  }, { required: true }),
 ];

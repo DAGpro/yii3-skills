@@ -38,66 +38,71 @@ export function changedFiles(dir, base) {
 /** All files in the tree whose relative path matches the regex. */
 export const filesMatching = (dir, re) => walk(dir).filter((p) => re.test(rel(dir, p)));
 
-/** State-machine based delimiter matcher ignoring PHP comments and string literals. */
+/** Index where a PHP heredoc/nowdoc starting at `i` (`<<<LABEL`) ends (past the closing label), or null. */
+function phpHeredocEnd(text, i) {
+  if (text[i] !== '<' || text[i + 1] !== '<' || text[i + 2] !== '<') return null;
+  const m = /^<<<[ \t]*(?:'([A-Za-z_][A-Za-z0-9_]*)'|"([A-Za-z_][A-Za-z0-9_]*)"|([A-Za-z_][A-Za-z0-9_]*))/.exec(text.slice(i, i + 96));
+  if (!m) return null;
+  const label = m[1] || m[2] || m[3];
+  const closeRe = new RegExp(`^[ \\t]*${label}(?![A-Za-z0-9_])`, 'm');
+  const close = closeRe.exec(text.slice(i + m[0].length));
+  if (!close) return text.length; // unterminated heredoc: PHP would not parse; treat the rest as noise
+  return i + m[0].length + close.index + close[0].length;
+}
+
+/** Skips a PHP single/double-quoted string starting at the opening quote; returns the index past the closing quote. */
+function skipQuotedString(text, start) {
+  let i = start + 1;
+  const n = text.length;
+  while (i < n) {
+    const ch = text[i];
+    if (ch === '\\') {
+      i += 2; // consume the escape pair ('\\'', '\\\\', '\\"', ...) - the quote after an odd backslash run must not close
+      continue;
+    }
+    if (ch === text[start]) return i + 1;
+    i++;
+  }
+  return n; // unterminated string: PHP would not parse; treat the rest as noise
+}
+
+/** State-machine based delimiter matcher ignoring PHP comments, string literals, and heredocs. */
 function matchDelimiter(text, openIdx, openChar, closeChar) {
   let depth = 0;
-  let inSingleQuote = false;
-  let inDoubleQuote = false;
-  let inLineComment = false;
-  let inBlockComment = false;
-
-  for (let i = openIdx; i < text.length; i++) {
+  let i = openIdx;
+  const n = text.length;
+  while (i < n) {
     const ch = text[i];
-    const prev = i > 0 ? text[i - 1] : '';
-    const next = i + 1 < text.length ? text[i + 1] : '';
+    const next = i + 1 < n ? text[i + 1] : '';
 
-    if (inLineComment) {
-      if (ch === '\n') inLineComment = false;
-      continue;
-    }
-
-    if (inBlockComment) {
-      if (ch === '*' && next === '/') {
-        inBlockComment = false;
-        i++; // skip /
-      }
-      continue;
-    }
-
-    if (inSingleQuote) {
-      if (ch === '\'' && prev !== '\\') inSingleQuote = false;
-      continue;
-    }
-
-    if (inDoubleQuote) {
-      if (ch === '"' && prev !== '\\') inDoubleQuote = false;
-      continue;
-    }
-
-    // Check for comment starts
+    // Comments ('#' only outside attributes: `#[...]` is PHP 8 attribute syntax)
     if (ch === '/' && next === '/') {
-      inLineComment = true;
-      i++;
+      const nl = text.indexOf('\n', i);
+      i = nl === -1 ? n : nl + 1;
       continue;
     }
-    if (ch === '#') {
-      inLineComment = true;
+    if (ch === '#' && next !== '[') {
+      const nl = text.indexOf('\n', i);
+      i = nl === -1 ? n : nl + 1;
       continue;
     }
     if (ch === '/' && next === '*') {
-      inBlockComment = true;
-      i++;
+      const close = text.indexOf('*/', i + 2);
+      i = close === -1 ? n : close + 2;
       continue;
     }
 
-    // Check for string starts
-    if (ch === '\'') {
-      inSingleQuote = true;
+    // Strings (escape-pair aware) and heredocs
+    if (ch === '\'' || ch === '"') {
+      i = skipQuotedString(text, i);
       continue;
     }
-    if (ch === '"') {
-      inDoubleQuote = true;
-      continue;
+    if (ch === '<' && next === '<' && text[i + 2] === '<') {
+      const end = phpHeredocEnd(text, i);
+      if (end !== null) {
+        i = end;
+        continue;
+      }
     }
 
     // Count delimiters
@@ -107,8 +112,65 @@ function matchDelimiter(text, openIdx, openChar, closeChar) {
       depth--;
       if (depth === 0) return i;
     }
+    i++;
   }
   return -1;
+}
+
+/**
+ * Blanks PHP comments, string literals, and heredoc bodies with spaces (offset- and
+ * line-preserving) so text-level pattern checks do not match inside noise: docblock
+ * mentions, string contents, and `'\\'`-style escapes no longer produce false hits.
+ * Used by the shared hygiene checks in shared-checks.mjs.
+ */
+export function stripPhpNoise(text) {
+  const out = text.split('');
+  const n = text.length;
+  const blank = (from, to) => {
+    for (let k = from; k < to && k < n; k++) {
+      if (out[k] !== '\n' && out[k] !== '\r') out[k] = ' ';
+    }
+  };
+  let i = 0;
+  while (i < n) {
+    const ch = text[i];
+    const next = i + 1 < n ? text[i + 1] : '';
+    if (ch === '/' && next === '/') {
+      const nl = text.indexOf('\n', i);
+      blank(i, nl === -1 ? n : nl);
+      i = nl === -1 ? n : nl;
+      continue;
+    }
+    if (ch === '#' && next !== '[') {
+      const nl = text.indexOf('\n', i);
+      blank(i, nl === -1 ? n : nl);
+      i = nl === -1 ? n : nl;
+      continue;
+    }
+    if (ch === '/' && next === '*') {
+      const close = text.indexOf('*/', i + 2);
+      const end = close === -1 ? n : close + 2;
+      blank(i, end);
+      i = end;
+      continue;
+    }
+    if (ch === '\'' || ch === '"') {
+      const end = skipQuotedString(text, i);
+      blank(i, end);
+      i = end;
+      continue;
+    }
+    if (ch === '<' && next === '<' && text[i + 2] === '<') {
+      const end = phpHeredocEnd(text, i);
+      if (end !== null && end > i) {
+        blank(i, end);
+        i = end;
+        continue;
+      }
+    }
+    i++;
+  }
+  return out.join('');
 }
 
 /** Index of the closing paren for an opening one at openIdx (respects PHP strings & comments). */
@@ -130,7 +192,8 @@ export function methodBody(text, methodName) {
   return close === -1 ? null : text.slice(open, close + 1);
 }
 
-export const check = (id, description, run, { required = true } = {}) => ({ id, description, required, run });
+export const check = (id, description, run, { required = true, category = 'invariant' } = {}) =>
+  ({ id, description, required, run, category });
 export const ok = (evidence = '') => ({ pass: true, evidence });
 export const fail = (evidence = '') => ({ pass: false, evidence });
 

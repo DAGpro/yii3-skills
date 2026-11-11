@@ -17,5 +17,5 @@ export default [
   check('solution-added', 'The slugify() method is added to StringService idiomatically (plain PHP, no framework constructs)', ({ changed }) => {
     const hit = changed.find((c) => c.path.endsWith('StringService.php') && /function\s+slugify/.test(read(c.abs)));
     return hit ? ok(hit.path) : fail('no slugify() method found in StringService.php');
-  }, { required: false }),
+  }, { required: true }),
 ];

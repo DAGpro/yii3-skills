@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { noYii2Check } from '../../lib/shared-checks.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -119,11 +120,7 @@ export default [
     return hit ? ok('composer.json script configures --min-msi') : fail('no minMsi in infection config or --min-msi in composer.json scripts');
   }),
 
-  check('no-yii2', 'No Yii2 constructs in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|ActiveForm::begin|->getFlash\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
   check('transcript-mentions-infection', 'The transcript reports the Infection mutation testing setup and MSI threshold', ({ transcript }) =>
     /infection|mutation|msi/i.test(transcript)

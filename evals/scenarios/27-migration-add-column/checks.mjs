@@ -1,4 +1,5 @@
 import { check, ok, fail, read, matchParen, methodBody } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const migrationChanges = (changed) => php(changed).filter((c) => /^migrations\/.*\.php$/.test(c.path));
@@ -91,14 +92,8 @@ export default [
     return bad.length ? fail(`namespace differs from existing migrations (${expected}): ${bad.map((b) => b.path)}`) : ok(m.map((x) => x.path).join(', '));
   }),
 
-  check('no-yii2', 'No Yii2 constructs or #[Override] in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]|ActiveForm::begin|->getFlash\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 ];

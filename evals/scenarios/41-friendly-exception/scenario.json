@@ -1,7 +1,7 @@
 {
   "id": "41-friendly-exception",
   "title": "Duplicate-order failure becomes a FriendlyExceptionInterface implementation: human title, no internal details, actionable solution",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "error-handling",

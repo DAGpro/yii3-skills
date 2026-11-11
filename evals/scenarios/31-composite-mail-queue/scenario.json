@@ -1,7 +1,7 @@
 {
   "id": "31-composite-mail-queue",
   "title": "Composite: move the blocking welcome-email send out of RegisterAction into a typed queue message DTO + handler (mailer in handler, push in action, yiisoft/queue messages/handlers registration)",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "composite",

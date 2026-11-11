@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching, matchParen } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const srcPhp = (changed) => php(changed).filter((c) => /^src\/.*\.php$/.test(c.path));
@@ -138,16 +139,10 @@ export default [
     return ok(files.map((f) => f.path).join(', '));
   }),
 
-  check('no-yii2', 'No Yii2 constructs in changed PHP files (Yii::$app, \\Yii::, use yii\\, #[Override], ActiveForm, session flash methods)', ({ changed }) => {
-    const re = /Yii::\$app|\\Yii::|\buse\s+yii\\|#\[Override\]|ActiveForm::begin|->setFlash\s*\(|->getFlash\s*\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions-jwt', 'The final answer mentions the JWT/bearer authentication and the 401 rejection', ({ transcript }) =>
     /jwt|bearer|401/i.test(transcript)

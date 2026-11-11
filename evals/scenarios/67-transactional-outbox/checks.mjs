@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching, matchParen } from '../../lib/checks.mjs';
+import { noYii2Check } from '../../lib/shared-checks.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -137,11 +138,7 @@ export default [
       : fail('config/common/params.php missing order.placed handler mapping');
   }),
 
-  check('no-yii2', 'No legacy Yii2 constructs in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
   check('tests-added', 'Integration/unit tests added under tests/', ({ changed }) =>
     changed.some((c) => c.added && /^tests\/.*Test\.php$/.test(c.path)) ? ok() : fail('no tests added'), { required: false }),

@@ -1,7 +1,7 @@
 {
   "id": "32-custom-validation-rule",
   "title": "Unit: reserved-username check as a reusable custom validation rule (RuleInterface value object + RuleHandlerInterface service) wired into the form model - not inline logic in the action",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "validation",

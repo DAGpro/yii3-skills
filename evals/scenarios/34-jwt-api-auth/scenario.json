@@ -1,7 +1,7 @@
 {
   "id": "34-jwt-api-auth",
   "title": "Wire Bearer JWT authentication (yiisoft/auth-jwt) on the /api orders routes so unauthenticated calls get 401",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "auth",

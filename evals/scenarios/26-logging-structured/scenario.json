@@ -1,7 +1,7 @@
 {
   "id": "26-logging-structured",
   "title": "Unit: structured failure logging - inject Psr\\Log\\LoggerInterface, log a warning with context in the failure path, wire FileTarget -> runtime/logs/app.log in config",
-  "mode": "light",
+  "mode": "patch",
   "tags": [
     "light",
     "logging",

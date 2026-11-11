@@ -1,7 +1,7 @@
 {
   "id": "22-action-pagination",
   "title": "Listing endpoint bounded: OffsetPaginator with explicit page size or an explicit limit - never an unbounded ->all()",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "pagination",

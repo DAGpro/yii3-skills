@@ -1,4 +1,5 @@
 import { check, ok, fail, read, matchParen, filesMatching } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const srcPhp = (changed) => php(changed).filter((c) => /^src\/.*\.php$/.test(c.path));
@@ -124,16 +125,10 @@ export default [
     return bad.length ? fail(`raw flock() in changed src files: ${bad.map((b) => b.path).join(', ')}`) : ok();
   }),
 
-  check('no-yii2', 'No Yii2 constructs in changed PHP files (Yii::$app, \\Yii::, use yii\\, #[Override], ActiveForm, session flash methods)', ({ changed }) => {
-    const re = /Yii::\$app|\\Yii::|\buse\s+yii\\|#\[Override\]|ActiveForm::begin|->setFlash\s*\(|->getFlash\s*\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions-lock', 'The final answer mentions the lock/mutex guard', ({ transcript }) =>
     /lock|mutex|acquire/i.test(transcript)

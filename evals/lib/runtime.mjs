@@ -324,7 +324,7 @@ export function lintPhpFiles(workDir, targetFiles = null, toolchain = detectPhpT
   }
 
   if (filesToCheck.length === 0 && missingFiles.length === 0) {
-    return { pass: true, skipped: false, count: 0, errors: [], evidence: 'no PHP files to lint' };
+    return { pass: true, skipped: true, count: 0, errors: [], evidence: 'no PHP files to lint' };
   }
 
   if (errors.length === 0) {
@@ -592,12 +592,13 @@ export function runPhpUnit(workDir, options = {}, toolchain = detectPhpToolchain
 export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = detectPhpToolchain(), options = {}) {
   const results = [];
 
-  // L4: PHP runtime availability check
+  // L4: PHP runtime availability check (skipped, not passed, when no runtime exists)
   results.push({
     id: 'runtime-php-availability',
     description: 'PHP CLI or container runtime availability check',
     required: false,
     pass: toolchain.isAvailable,
+    skipped: !toolchain.isAvailable,
     evidence: toolchain.isAvailable
       ? `PHP runtime available via ${toolchain.preferredPhpRuntime} (${toolchain.phpVersion || 'version unverified'})`
       : 'PHP runtime not detected in environment or Docker (skipped)',
@@ -623,6 +624,7 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
       description: 'PHP version compatibility check (PHP >= 8.2)',
       required: false,
       pass: true,
+      skipped: true,
       evidence: 'PHP runtime not detected in environment or Docker (skipped)',
     });
   }
@@ -635,6 +637,7 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
     description: 'PHP syntax check (php -l) on generated/modified files',
     required: lintRequired,
     pass: lint.pass,
+    skipped: lint.skipped === true,
     evidence: lint.evidence,
   });
 
@@ -647,6 +650,7 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
       description: 'Composer validation (composer validate)',
       required: compRequired,
       pass: comp.pass,
+      skipped: comp.skipped === true,
       evidence: comp.evidence,
     });
   }
@@ -661,6 +665,7 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
       description: 'Composer lock validation (composer validate with lock)',
       required: lockRequired,
       pass: lockRes.pass,
+      skipped: lockRes.skipped === true,
       evidence: lockRes.evidence,
     });
   }
@@ -688,6 +693,7 @@ export function runRuntimeEvaluation(workDir, changedFiles = null, toolchain = d
       description: 'PHPUnit test suite execution',
       required: phpunitRequired,
       pass: phpunit.pass,
+      skipped: phpunit.skipped === true,
       summary: phpunit.summary || null,
       evidence: phpunit.evidence,
     });

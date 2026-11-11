@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { check, ok, fail, read } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 
 const NEWEST = 'docs/plans/2026-01-12-enable-psr16-cache.md';
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
@@ -69,14 +70,8 @@ export default [
     return missing.length ? fail(`report fields missing: ${missing.join(', ')}`) : ok();
   }),
 
-  check('no-yii2', 'No Yii2 constructs or #[Override] in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]|->getFlash\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 ];

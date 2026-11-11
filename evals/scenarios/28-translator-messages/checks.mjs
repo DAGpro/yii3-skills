@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching, rel } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 
@@ -77,16 +78,9 @@ export default [
       : fail(`CategorySource defined but not attached via 'translation.categorySource' tag or addCategorySources(): ${wiring.map((w) => w.path).join(', ')}`);
   }),
 
-  check('no-yii2', 'No Yii2 constructs (Yii::t() static facade, Yii::$app, yii\\ namespace) in changed PHP files', ({ changed }) => {
-    const re = /Yii::t\s*\(|Yii::\$app|\\Yii::|\buse\s+yii\\/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions', 'The transcript reports the translation work (translator, category, dictionary or message source)', ({ transcript }) =>
     /translat|dictionar|message source|messages\//i.test(transcript) ? ok() : fail('transcript does not mention the translation/dictionary work')),

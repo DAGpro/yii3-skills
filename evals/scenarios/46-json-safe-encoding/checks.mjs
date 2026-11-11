@@ -1,4 +1,5 @@
 import { check, ok, fail, read } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const srcPhp = (changed) => php(changed).filter((c) => /^src\/.*\.php$/.test(c.path));
@@ -50,16 +51,10 @@ export default [
     return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
   }),
 
-  check('no-yii2', 'No Yii2 constructs or #[Override] in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]|ActiveForm::begin|->getFlash\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions-safe-json', 'The answer names the HTML-encode defense for script-tag payloads and the safe JSON helper', ({ transcript }) => {
     if (!/html\s*-?\s*encode/i.test(transcript)) return fail('transcript does not mention HTML-encoding the embedded payload');

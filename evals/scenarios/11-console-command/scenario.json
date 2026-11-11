@@ -1,7 +1,7 @@
 {
   "id": "11-console-command",
   "title": "Patch mode: console command - registration wiring gates",
-  "mode": "light",
+  "mode": "patch",
   "tags": [
     "light",
     "console",

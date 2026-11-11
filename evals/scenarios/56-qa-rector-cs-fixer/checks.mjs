@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck } from '../../lib/shared-checks.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -101,16 +102,9 @@ export default [
     return hit ? ok(hit) : fail('composer.json missing scripts for rector and cs-fix');
   }),
 
-  check('no-yii2', 'No Yii2 constructs in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|ActiveForm::begin|->getFlash\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions-quality', 'The transcript reports the code quality / rector / cs-fixer setup', ({ transcript }) =>
     /code-style|rector|cs-fix|php-cs-fixer/i.test(transcript)

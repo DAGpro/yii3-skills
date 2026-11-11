@@ -1,7 +1,7 @@
 {
   "id": "07-second-mechanism",
   "title": "Feature mode: tags feature on an Active Record project - no second persistence mechanism",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "consistency",

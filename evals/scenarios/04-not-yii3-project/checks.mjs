@@ -14,5 +14,5 @@ export default [
   check('endpoint-added', 'The /health endpoint is added idiomatically for Laravel (routes/*.php)', ({ changed }) => {
     const hit = changed.find((c) => /^routes\/.*\.php$/.test(c.path) && /\/health/.test(read(c.abs)));
     return hit ? ok(hit.path) : fail('no /health in routes/');
-  }, { required: false }),
+  }, { required: true }),
 ];

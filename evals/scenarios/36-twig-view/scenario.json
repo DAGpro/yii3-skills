@@ -1,7 +1,7 @@
 {
   "id": "36-twig-view",
   "title": "Unit: PHP post page view converted to a Twig template rendered through the registered TwigTemplateRenderer - manual htmlspecialchars escaping dropped in favor of Twig autoescaping, no |raw bypass",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "views",

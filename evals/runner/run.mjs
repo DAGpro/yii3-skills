@@ -131,7 +131,7 @@ for (const id of selected) {
         contaminated = true;
         console.error(`WARN: the source repository changed during the ${id} ${mode} #${n} agent run - the agent likely escaped its work dir. Inspect git status/log before trusting these results.`);
       }
-      const { rate, reqFailed, tokens, cost } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000, repoTouched } });
+      const { rate, gatesPassed, reqFailed, tokens, cost } = await evaluateWork(sDir, { dir: work, transcript, mode, run: n, outRoot, extra: { seconds: (Date.now() - started) / 1000, repoTouched } });
       let judgeScore = null;
       if (judgeFlag) {
         try {
@@ -142,10 +142,10 @@ for (const id of selected) {
           console.error(`WARN: judge failed on ${id} ${mode} #${n}: ${jErr.message}`);
         }
       }
-      rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, reqFailed, judgeScore, tokens, cost });
+      rows.push({ id, layer: loadSc(id).layer ?? 'unit', mode, n, rate, gatesPassed, reqFailed, judgeScore, tokens, cost });
       const tokInfo = tokens?.total ? ` tokens=${tokens.total}` : '';
       const costInfo = cost !== undefined ? ` cost=$${cost}` : '';
-      console.log(`${id} ${mode} #${n}: ${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]${judgeScore !== null ? ` judge=${(judgeScore * 100).toFixed(0)}%` : ''}${tokInfo}${costInfo}`);
+      console.log(`${id} ${mode} #${n}: gates=${gatesPassed ? 'PASS' : 'FAIL'} rate=${(rate * 100).toFixed(0)}% required-failed=[${reqFailed}]${judgeScore !== null ? ` judge=${(judgeScore * 100).toFixed(0)}%` : ''}${tokInfo}${costInfo}`);
     }
   }
 }

@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesAllChangedCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const twig = (changed) => changed.filter((c) => c.path.endsWith('.twig'));
@@ -86,16 +87,9 @@ export default [
       : ok('old PHP view kept but unreferenced');
   }),
 
-  check('no-yii2', 'No Yii2 constructs (Yii::$app, \\Yii::, yii\\ root namespace) in changed PHP or twig files', ({ changed }) => {
-    const re = /Yii::\$app|\\Yii::|\buse\s+yii\\/;
-    const bad = php(changed).concat(twig(changed)).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check({ files: (changed) => php(changed).concat(twig(changed)) }),
 
-  check('strict-types', 'declare(strict_types=1) present in every changed PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesAllChangedCheck(),
 
   check('transcript-mentions', 'The transcript reports the Twig conversion (twig, autoescaping or escaping)', ({ transcript }) =>
     /twig|autoescap|escaping/i.test(transcript) ? ok() : fail('transcript does not mention the twig/escaping work')),

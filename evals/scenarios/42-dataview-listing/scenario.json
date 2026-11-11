@@ -1,7 +1,7 @@
 {
   "id": "42-dataview-listing",
   "title": "Hand-rolled HTML table listing replaced with a yiisoft/yii-dataview widget (GridView/ListView) fed by an OffsetPaginator over the same repository data reader - no manual foreach table, no hand-sliced pagination",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "dataview",

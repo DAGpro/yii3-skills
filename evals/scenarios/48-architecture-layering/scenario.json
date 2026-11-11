@@ -1,7 +1,7 @@
 {
   "id": "48-architecture-layering",
   "title": "Light mode: domain layering - invert the domain-to-infrastructure dependency behind a domain-owned interface bound in DI",
-  "mode": "light",
+  "mode": "patch",
   "tags": [
     "light",
     "architecture",

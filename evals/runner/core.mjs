@@ -1,4 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { changedFiles } from '../lib/checks.mjs';
@@ -13,24 +14,105 @@ export function listScenarios(evalsRoot) {
 
 export const loadScenario = (dir) => JSON.parse(readFileSync(join(dir, 'scenario.json'), 'utf8'));
 
+/**
+ * Normalizes a scenario check run result into the canonical shape:
+ * status: 'passed' | 'failed' | 'skipped'. Skipped checks are never required and carry
+ * pass: null - a skipped check is neither passed nor failed (audit fix: skip != pass).
+ */
+function normalizeCheckResult(c, r) {
+  const skipped = r.skipped === true;
+  return {
+    id: c.id,
+    description: c.description,
+    category: c.category ?? 'invariant',
+    required: skipped ? false : c.required !== false,
+    status: skipped ? 'skipped' : r.pass ? 'passed' : 'failed',
+    pass: skipped ? null : Boolean(r.pass),
+    skipped,
+    evidence: r.evidence ?? '',
+  };
+}
+
+/** Normalizes a runtime-layer result (these are plain objects, not check() factories). */
+function normalizeRuntimeResult(r) {
+  const skipped = r.skipped === true;
+  return {
+    id: r.id,
+    description: r.description,
+    category: 'runtime',
+    required: skipped ? false : r.required === true,
+    status: skipped ? 'skipped' : r.pass ? 'passed' : 'failed',
+    pass: skipped ? null : Boolean(r.pass),
+    skipped,
+    evidence: r.evidence ?? '',
+    ...(r.summary ? { summary: r.summary } : {}),
+  };
+}
+
 export async function runChecks(scenarioDir, ctx) {
   const mod = await import(pathToFileURL(join(scenarioDir, 'checks.mjs')).href);
   const out = [];
+  // Attempt gate: an attempt that changed nothing scores zero. Hygiene checks
+  // (no-yii2, strict-types, ...) pass vacuously on an empty diff, so without this
+  // gate a do-nothing run would earn a passing rate on the cheap checks.
+  out.push({
+    id: 'attempt-gate',
+    description: 'At least one file changed relative to the fixture (do-nothing attempts score zero)',
+    category: 'protocol',
+    required: true,
+    status: ctx.changed.length > 0 ? 'passed' : 'failed',
+    pass: ctx.changed.length > 0,
+    skipped: false,
+    evidence: ctx.changed.length > 0 ? `${ctx.changed.length} file(s) changed` : 'no files changed relative to the fixture',
+  });
   for (const c of mod.default) {
+    let r;
     try {
-      const r = await c.run(ctx);
-      out.push({ id: c.id, description: c.description, required: c.required, pass: r.pass, evidence: r.evidence });
+      r = await c.run(ctx);
     } catch (e) {
-      out.push({ id: c.id, description: c.description, required: c.required, pass: false, evidence: `exception: ${e.message}` });
+      r = { pass: false, evidence: `exception: ${e.message}` };
     }
+    out.push(normalizeCheckResult(c, r));
   }
   return out;
 }
 
-export const passRate = (results) =>
-  results.length ? results.filter((r) => r.pass).length / results.length : 1;
+/** Share of non-skipped checks that passed. Skipped checks are excluded from the denominator. */
+export const passRate = (results) => {
+  const counted = results.filter((r) => r.status !== 'skipped');
+  return counted.length ? counted.filter((r) => r.status === 'passed').length / counted.length : 1;
+};
 
-export const requiredFailed = (results) => results.filter((r) => r.required && !r.pass);
+/** Required checks that failed (the gates). Skipped checks are never required. */
+export const requiredFailed = (results) => results.filter((r) => r.required && r.status === 'failed');
+
+/** Gate verdict: pass only when every required check passed (headline metric, not a check-average). */
+export const gatesPassed = (results) => requiredFailed(results).length === 0;
+
+/** Hygiene slice (strict-types / no-yii2 class): cheap vacuous-on-empty checks, reported separately. */
+export const hygieneStats = (results) => {
+  const h = results.filter((r) => r.category === 'hygiene');
+  return {
+    total: h.length,
+    passed: h.filter((r) => r.status === 'passed').length,
+    failed: h.filter((r) => r.status === 'failed').length,
+  };
+};
+
+const CHECKS_VERSION_FILES = ['lib/checks.mjs', 'lib/shared-checks.mjs', 'lib/runtime.mjs'];
+
+/** Fingerprint of the grading logic (shared check libs + this scenario's checks.mjs). */
+export function checksVersion(scenarioDir) {
+  const evalsRoot = join(scenarioDir, '..', '..');
+  const hash = createHash('sha1');
+  for (const rel of CHECKS_VERSION_FILES) {
+    const p = join(evalsRoot, rel);
+    if (existsSync(p)) hash.update(rel).update(readFileSync(p));
+  }
+  const scenarioChecks = join(scenarioDir, 'checks.mjs');
+  if (existsSync(scenarioChecks)) hash.update('scenario/checks.mjs').update(readFileSync(scenarioChecks));
+  return hash.digest('hex').slice(0, 12);
+}
 
 /**
  * Merges two token objects, preserving existing defined values and computing total if possible.
@@ -302,8 +384,7 @@ export async function evaluateWork(scenarioDir, { dir, transcript, mode, run = 1
   const ctx = { dir, base, transcript, changed, mode };
   const results = await runChecks(scenarioDir, ctx);
   if (extra.runtime || process.env.EVAL_ENABLE_RUNTIME === '1') {
-    const runtimeResults = runRuntimeEvaluation(dir, changed);
-    results.push(...runtimeResults);
+    results.push(...runRuntimeEvaluation(dir, changed).map(normalizeRuntimeResult));
   }
   const telemetry = extractTelemetry({ dir, transcript, extra });
   const runDir = join(outRoot, basename(scenarioDir), `${mode}-${run}`);
@@ -312,6 +393,7 @@ export async function evaluateWork(scenarioDir, { dir, transcript, mode, run = 1
     id: basename(scenarioDir),
     mode,
     run,
+    checksVersion: checksVersion(scenarioDir),
     ...extra,
     ...telemetry,
     changed: changed.map((c) => c.path),
@@ -321,7 +403,10 @@ export async function evaluateWork(scenarioDir, { dir, transcript, mode, run = 1
   if (transcript) writeFileSync(join(runDir, 'transcript.txt'), transcript);
   return {
     rate: passRate(results),
+    gatesPassed: gatesPassed(results),
     reqFailed: requiredFailed(results).map((r) => r.id),
+    hygiene: hygieneStats(results),
+    skippedCount: results.filter((r) => r.status === 'skipped').length,
     results,
     tokens: telemetry.tokens,
     cost: telemetry.cost

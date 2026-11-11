@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching, validateAifGateResult } from '../../lib/checks.mjs';
+import { noYii2Check } from '../../lib/shared-checks.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -71,14 +72,7 @@ export default [
     return ok('CancelOrderDto has validated properties');
   }),
 
-  check('no-yii2', 'No legacy Yii2 facades used', ({ changed }) => {
-    for (const c of php(changed)) {
-      if (/Yii::\$app/i.test(read(c.abs))) {
-        return fail(`${c.path} uses forbidden Yii::$app`);
-      }
-    }
-    return ok();
-  }),
+  noYii2Check(),
 
   check('aif-gate-result-emitted', 'Valid aif-gate-result JSON emitted per AI Factory 2.x schema', ({ transcript }) =>
     validateAifGateResult(transcript, { expectedStatus: 'pass', terminal: true })),

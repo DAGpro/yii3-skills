@@ -1,7 +1,7 @@
 {
   "id": "50-oauth2-github-login",
   "title": "Unit: Sign in with GitHub - Collection client params, AuthAction entry/callback wiring, callback login through the existing session flow",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "oauth2",

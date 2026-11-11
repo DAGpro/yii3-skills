@@ -1,7 +1,7 @@
 {
   "id": "52-swagger-setup",
   "title": "Unit: OpenAPI spec generation from action attributes (yiisoft/yii-swagger + zircote/swagger-php) with Swagger UI and raw JSON spec served at /docs - no hand-written spec file",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "openapi",

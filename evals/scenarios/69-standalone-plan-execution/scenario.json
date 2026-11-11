@@ -1,7 +1,7 @@
 {
   "id": "69-standalone-plan-execution",
   "title": "Standalone fallback: resolve the newest docs/plans task, execute it, self-verify",
-  "mode": "light",
+  "mode": "patch",
   "tags": [
     "standalone",
     "plan-resolution",

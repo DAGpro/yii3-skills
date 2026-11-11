@@ -1,7 +1,7 @@
 {
   "id": "30-cycle-entity-persist",
   "title": "Debugging: Cycle ORM Unit-of-Work trap - TagRepository::create() stages persist() but never executes it, silent data loss; the fix is ->run() after ->persist()",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "cycle-orm",

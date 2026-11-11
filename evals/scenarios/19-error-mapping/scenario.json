@@ -1,7 +1,7 @@
 {
   "id": "19-error-mapping",
   "title": "Map a domain exception to an API error response via the ExceptionResponder exceptionMap, wired inside ErrorCatcher",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "error-handling",

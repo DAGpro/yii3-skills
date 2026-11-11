@@ -1,7 +1,7 @@
 {
   "id": "06-convention-conflict",
   "title": "Project dispatches events inside the transaction: correctness rule wins, conflict escalated",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "convention-conflict",
     "events",

@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { noYii2Check, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -71,9 +72,6 @@ export default [
     return ok(actions[0]);
   }),
 
-  check('no-yii2', 'No Yii 2 facades, yii\\ namespaces, or #[Override]', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|#\[Override\]/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
+  overrideAdvisoryCheck(),
 ];

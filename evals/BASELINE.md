@@ -1,5 +1,14 @@
 # Eval baseline campaign — 2026-11-07/08
 
+> **Note (2026-11-12, post-audit metric fix):** the grading semantics changed after the
+> external audits were fixed in the harness (`evals/README.md` → "Grading semantics"):
+> attempt gate (do-nothing attempts score zero), `skipped` checks excluded from the
+> pass-rate denominator, headline metric = required-gate verdict, shared hygiene checks.
+> Pass-rate numbers below were computed under the **old** semantics — a do-nothing run
+> averaged a 35.2% pass-rate floor across the 69 scenarios, so treat them as positions
+> above that floor, not as absolute quality. They are not directly comparable with
+> post-fix runs.
+
 First documented paired campaign: the same scenarios solved twice by a fresh agent —
 **baseline** (no skill) vs **with-skill** (the `yii3` skill package installed and
 instructed to be followed). This file is the committed record; raw per-run artifacts

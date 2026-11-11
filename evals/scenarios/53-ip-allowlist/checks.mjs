@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching, matchParen } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesAllChangedCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const srcPhp = (changed) => php(changed).filter((c) => /^src\/.*\.php$/.test(c.path));
@@ -179,16 +180,9 @@ export default [
     return ok(files.map((f) => f.path).join(', '));
   }),
 
-  check('no-yii2', 'No Yii2 constructs (Yii::$app, \\Yii::, yii\\ root namespace) in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\\Yii::|\buse\s+yii\\/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
-  check('strict-types', 'declare(strict_types=1) present in every changed PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesAllChangedCheck(),
 
   check('transcript-mentions', 'The transcript reports the admin allowlist work (subnet, allowlist, office network or the CIDR range)', ({ transcript }) =>
     /subnet|allowlist|203\.0\.113|office|cidr/i.test(transcript) ? ok() : fail('transcript does not mention the admin subnet/allowlist work')),

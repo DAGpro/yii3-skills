@@ -1,7 +1,7 @@
 {
   "id": "51-domain-event-listener",
   "title": "Unit: decouple the confirmation email from OrderService - dispatch an OrderCompleted domain event and react with a config-registered listener",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "events",

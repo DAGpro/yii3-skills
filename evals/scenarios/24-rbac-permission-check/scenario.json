@@ -1,7 +1,7 @@
 {
   "id": "24-rbac-permission-check",
   "title": "Guard an admin delete action with the RBAC userAdmin permission (CurrentUser::can) returning 403 for users without it",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "rbac",

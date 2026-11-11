@@ -1,7 +1,7 @@
 {
   "id": "39-conditional-validation",
   "title": "Unit: coupon code required only when hasCoupon is true - validator conditional rule (when) on the form model, not if-branches in the action",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "validation",

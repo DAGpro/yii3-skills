@@ -1,4 +1,5 @@
 import { check, ok, fail, read, filesMatching } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
@@ -28,16 +29,9 @@ export default [
     return wired.length ? ok(wired.map((w) => w.path).join(', ')) : fail('no added src/ class is referenced from the params config next to user:import');
   }),
 
-  check('no-yii2', 'No Yii2 constructs in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\buse\s+yii\\|ActiveForm::begin|->getFlash\(|\$this->render\(/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = php(changed).filter((c) => c.added && !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('install-requested', 'A composer install / dependency installation was requested before writing vendor-backed code', ({ transcript }) =>
     /composer\s+install|install the (composer )?dependencies|vendor\/ is (not|absent|missing)/i.test(transcript)

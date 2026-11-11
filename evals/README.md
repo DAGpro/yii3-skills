@@ -42,12 +42,15 @@ Exit code 1 if any with-skill / manual run failed a required check (both runners
 
 ```
 scenarios/NN-slug/
-  scenario.json      id, title, mode (intent metadata — the skill mode the scenario exercises;
-                     never read by the runner), tags, timeoutSec (agent spawn timeout, default 900),
-                     guides, layer, negativeMustFail (checks a bad sample must fail)
+  scenario.json      id, title, mode (intent metadata — the skill execution tier the scenario
+                     exercises: feature | patch | enterprise; never read by the runner), tags,
+                     timeoutSec (agent spawn timeout, default 900), guides, layer,
+                     negativeMustFail (checks a bad sample must fail)
   prompt.md          verbatim user request
   fixture/           project state before the agent runs (copied to a temp dir)
-  checks.mjs         deterministic checks: check(id, description, ctx => ok()/fail(evidence))
+  checks.mjs         deterministic checks: check(id, description, ctx => ok()/fail(evidence));
+                     hygiene checks (no-yii2, strict-types) must use the shared factories from
+                     evals/lib/shared-checks.mjs — no per-scenario regex copies
   rubric.md          criteria for a model judge (what cannot be checked by code)
   positive-sample/   overlay with a good solution + transcript.txt
   negative-sample/   overlay with a deliberately bad solution + transcript.txt
@@ -56,6 +59,39 @@ scenarios/NN-slug/
 `ctx` in checks: `{ dir, base, changed, transcript, mode }`, where `changed` is the set of files
 added or modified relative to the fixture (`{path, abs, added}`). Dot-entries are never scanned
 (skill install dirs, `.git`, agent state) — the work-dir contract is agent-independent.
+
+## Grading semantics (metric definitions)
+
+Every check result carries `status: 'passed' | 'failed' | 'skipped'` (plus `category`:
+`invariant` | `hygiene` | `protocol` | `runtime` | `convention`):
+
+- **Attempt gate.** The harness prepends a required `attempt-gate` check: a work dir with
+  zero changes relative to the fixture fails the gate. Hygiene checks pass vacuously on an
+  empty diff, so without the gate a do-nothing run would earn a passing rate on the cheap
+  checks. `selftest.mjs` enforces the floor control: a do-nothing attempt must fail the
+  attempt gate in **all** scenarios.
+- **Gates (headline metric).** `gates: PASS` iff no required check failed. Campaign-level
+  quality is the share of scenarios with `gates: PASS` — never an average over checks.
+- **Pass-rate (diagnostic).** Share of non-skipped checks that passed. Skipped checks are
+  excluded from the denominator and carry `pass: null` — a skipped check is neither passed
+  nor failed (`skip != pass`; a missing runtime makes a check skipped, not green).
+- **Hygiene slice.** The cheap vacuous-on-empty checks (`no-yii2`, `strict-types`) are
+  tagged `category: 'hygiene'` and reported separately (`hygiene: passed/total`); they stay
+  required, but the slice keeps the headline readable.
+- **checksVersion.** Every `result.json` records a fingerprint of the grading logic (shared
+  check libs + the scenario's checks.mjs). Re-baseline campaigns when it changes.
+
+Shared hygiene checks (one implementation instead of per-scenario regex copies):
+`noYii2Check()`, `strictTypesCheck()` (declare in every **added** PHP file),
+`strictTypesAllChangedCheck()` (every **changed** PHP file), `overrideAdvisoryCheck()`
+(`#[Override]` per core-version-notes.md R10: non-blocking convention advisory, not a Yii2
+construct). Patterns run against comment/string/heredoc-stripped source (`stripPhpNoise`), so
+docblock mentions and string contents no longer trigger, and whitespace variants
+(`declare( strict_types = 1 );`) are accepted.
+
+Meta-tests for the grading machinery itself (parser regression probes, do-nothing floor
+measurement) live in [`evals/audit/`](audit/); the parser probes run as a permanent phase
+of `selftest.mjs`.
 
 ## The two runner entry points
 
@@ -138,7 +174,7 @@ node scripts/test-php-runtime.mjs --install --strict
 export EVAL_ENABLE_RUNTIME=1
 ```
 
-- **Environment Detection:** Automatically detects local PHP (`>= 8.2`) and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). Composer-in-docker supports two image styles: `composer` on the image PATH (`php:*-cli` with composer copied → `EVAL_DOCKER_IMAGE` as-is) and composer-as-ENTRYPOINT images (official `composer:2` → set `EVAL_COMPOSER_DOCKER_IMAGE="composer:2"`). By default, when PHP is absent in offline runner sandboxes, runtime checks report `skipped` (`pass: true`) without failing structural checks; pass `EVAL_REQUIRE_PHPUNIT=1` (or `--strict` in `test-php-runtime.mjs`) to fail explicitly instead of skipping.
+- **Environment Detection:** Automatically detects local PHP (`>= 8.2`) and Composer binaries, or an optional Docker image (`EVAL_DOCKER_IMAGE="php:8.2-cli"`). Composer-in-docker supports two image styles: `composer` on the image PATH (`php:*-cli` with composer copied → `EVAL_DOCKER_IMAGE` as-is) and composer-as-ENTRYPOINT images (official `composer:2` → set `EVAL_COMPOSER_DOCKER_IMAGE="composer:2"`). By default, when PHP is absent in offline runner sandboxes, runtime checks report `status: 'skipped'` — excluded from the pass-rate denominator, counted as neither passed nor failed; pass `EVAL_REQUIRE_PHPUNIT=1` (or `--strict` in `test-php-runtime.mjs`) to fail explicitly instead of skipping. For release benchmarks an absent mandatory runtime must make a run inconclusive, not green.
 - **Checks executed:**
   - `runtime-php-lint`: Verifies valid PHP 8.2+ syntax (`php -l`) on all generated or touched `.php` files.
   - `runtime-composer-validate`: Verifies `composer.json` syntax and schema.
@@ -199,6 +235,7 @@ node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-0
     "id": "01-full-add-comment",
     "mode": "with-skill",
     "run": 1,
+    "checksVersion": "a1b2c3d4e5f6",
     "tokens": {
       "prompt": 1200,
       "completion": 300,
@@ -209,14 +246,18 @@ node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-0
     "results": [...]
   }
   ```
+  Each entry in `results` carries `{ id, description, category, required, status, pass, skipped, evidence }`.
 - **Campaign Reporting:** When telemetry is captured, `runner/run.mjs` appends an aggregate `## Telemetry (Tokens & Cost)` summary table into `summary.md`.
 
 ## Adding a scenario
 
 1. Copy the closest scenario, adjust the fixture and `prompt.md`.
 2. Write `checks.mjs`: structural properties only, no coupling to the agent's class names.
+   Import the shared hygiene checks (`noYii2Check`, `strictTypesCheck`, …) from
+   `evals/lib/shared-checks.mjs` instead of copying regexes.
 3. Create `positive-sample` and `negative-sample`; list in `negativeMustFail` the check ids
    the bad sample must fail.
-4. `node evals/runner/selftest.mjs` must be green.
+4. `node evals/runner/selftest.mjs` must be green (it also asserts the do-nothing floor
+   control: an empty attempt fails the attempt gate).
 
 Rule: every agent failure found on a real project becomes a new scenario.

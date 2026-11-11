@@ -1,7 +1,7 @@
 {
   "id": "01-full-add-comment",
   "title": "Feature mode: add post comments (full bottom-up workflow)",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "happy-path",
     "full",

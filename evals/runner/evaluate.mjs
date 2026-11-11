@@ -38,9 +38,12 @@ const extra = { runtime };
 if (args.tokens !== undefined) extra.tokens = args.tokens;
 if (args.cost !== undefined) extra.cost = args.cost;
 
-const { rate, reqFailed, results, tokens, cost } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot, extra });
-for (const r of results) console.log(`${r.pass ? 'PASS' : 'FAIL'}${r.required ? '' : ' (opt)'} ${r.id}: ${r.evidence}`);
-console.log(`pass-rate: ${(rate * 100).toFixed(0)}%  required-failed=[${reqFailed}]`);
+const { rate, gatesPassed, reqFailed, hygiene, skippedCount, results, tokens, cost } = await evaluateWork(join(evalsRoot, 'scenarios', id), { dir: work, transcript, mode, run, outRoot, extra });
+for (const r of results) {
+  const mark = r.status === 'skipped' ? 'SKIP' : r.status === 'passed' ? 'PASS' : 'FAIL';
+  console.log(`${mark}${r.required ? '' : ' (opt)'} ${r.id}: ${r.evidence}`);
+}
+console.log(`gates: ${gatesPassed ? 'PASS' : 'FAIL'}  required-failed=[${reqFailed}]  pass-rate: ${(rate * 100).toFixed(0)}% (skipped excluded: ${skippedCount})  hygiene: ${hygiene.passed}/${hygiene.total}`);
 
 if (tokens || cost !== undefined) {
   const parts = [];

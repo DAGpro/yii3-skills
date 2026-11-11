@@ -1,7 +1,7 @@
 {
   "id": "25-composite-auth-login",
   "title": "Full mode: composite login flow - form hydration and validation, credential verification via the repository, CurrentUser login, flash messages and PRG redirect",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "auth",

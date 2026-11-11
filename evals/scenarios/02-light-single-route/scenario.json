@@ -1,7 +1,7 @@
 {
   "id": "02-light-single-route",
   "title": "Single-route feature: Light mode, no full decomposition",
-  "mode": "light",
+  "mode": "patch",
   "tags": [
     "light",
     "mode-selection",

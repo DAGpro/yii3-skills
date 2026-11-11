@@ -1,7 +1,7 @@
 {
   "id": "08-no-vendor-flag",
   "title": "vendor/ absent: signature lookup impossible — used APIs must be flagged 'not verified against sources'",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "no-vendor",
     "signature-protocol"

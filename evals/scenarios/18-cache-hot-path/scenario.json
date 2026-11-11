@@ -1,7 +1,7 @@
 {
   "id": "18-cache-hot-path",
   "title": "Cache a hot path: read-through via injected Yiisoft\\Cache\\CacheInterface, getOrSet + TTL, persistent driver wired in DI",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "cache",

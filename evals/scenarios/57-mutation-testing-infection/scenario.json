@@ -1,7 +1,7 @@
 {
   "id": "57-mutation-testing-infection",
   "title": "Unit: Mutation testing setup with Infection (infection/infection + roave/infection-static-analysis-plugin) and canonical infection.json.dist configuration",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "testing",

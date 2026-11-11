@@ -1,7 +1,7 @@
 {
   "id": "33-url-generation",
   "title": "Unit: named routes + UrlGeneratorInterface - replace hardcoded URL strings in actions and views with generated links",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "routing",

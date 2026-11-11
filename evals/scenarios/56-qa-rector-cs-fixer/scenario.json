@@ -1,7 +1,7 @@
 {
   "id": "56-qa-rector-cs-fixer",
   "title": "Unit: Code quality and automated refactoring setup (yiisoft/code-style + rector/rector + php-cs-fixer) with Yii3 conventions (SetList::YII_CORE, ConfigBuilder)",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "qa",

@@ -1,7 +1,7 @@
 {
   "id": "47-error-log-listener",
   "title": "Log unhandled errors: ApplicationError PSR-14 listener registered in the events group, with a dispatcher actually reaching ErrorCatcher",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "error-handling",

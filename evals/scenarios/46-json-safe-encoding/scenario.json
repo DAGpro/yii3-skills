@@ -1,7 +1,7 @@
 {
   "id": "46-json-safe-encoding",
   "title": "Replace raw json_encode/json_decode with the exception-safe Yiisoft\\Json\\Json helper and encode script-tag payloads with Json::htmlEncode",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "json",

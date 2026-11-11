@@ -1,7 +1,7 @@
 {
   "id": "44-database-testing",
   "title": "Unit: ephemeral in-memory SQLite test setup - transactional DatabaseTestCase base running migrations via NullMigrationInformer, repository round-trip test, never the dev MySQL DSN in tests",
-  "mode": "full",
+  "mode": "feature",
   "tags": [
     "full",
     "testing",

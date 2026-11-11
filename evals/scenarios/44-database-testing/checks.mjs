@@ -1,4 +1,5 @@
 import { check, ok, fail, read } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const testPhp = (changed) => php(changed).filter((c) => c.path.startsWith('tests/'));
@@ -69,16 +70,9 @@ export default [
     return bad.length ? fail(`changed test files connect to the dev MySQL DSN: ${bad.map((b) => b.path).join(', ')}`) : ok();
   }),
 
-  check('no-yii2', 'No Yii2 constructs (Yii::$app, yii\\ namespace) in changed PHP files', ({ changed }) => {
-    const re = /Yii::\$app|\\Yii::|\buse\s+yii\\/;
-    const bad = php(changed).filter((c) => re.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  noYii2Check(),
 
-  check('strict-types', 'declare(strict_types=1) in every added PHP file', ({ changed }) => {
-    const bad = addedPhp(changed).filter((c) => !/declare\(strict_types=1\);/.test(read(c.abs)));
-    return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
-  }),
+  strictTypesCheck(),
 
   check('transcript-mentions-isolation', 'The transcript explains the isolation strategy (in-memory SQLite and transaction rollback)', ({ transcript }) => {
     const t = transcript ?? '';

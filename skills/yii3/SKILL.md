@@ -38,7 +38,7 @@ At Stage 0, detect the operating context first and route to the matching adapter
 
 ## Stage 0 — Mission Bootstrap
 
-Run first, in every mode. **Scope:** apply the skill to the extent the user's task touches Yii 3 / `yiisoft/*` packages (topic guides, vendor signature lookup in `vendor/yiisoft/<pkg>/src`, `references/package-catalog.md`); no project-environment classification is performed. **Operating context:** detect first and route per "Operating Context Routing" above (default: AI Factory extension).
+Run first, in every mode. **Scope:** apply the skill to the extent the user's task touches Yii 3 / `yiisoft/*` packages (topic guides, vendor signature lookup in `vendor/yiisoft/<pkg>/src`, `references/package-catalog.md`); no project-environment classification is performed. **Zero-Yii3-scope tasks** (neither the task nor the target stack touches Yii 3 / `yiisoft/*`): reply with a brief note that the `yii3` skill is not applicable and why, then execute the task with the target project's own conventions — do not enter the Mission Workflow, print no Mission State tracker, and emit no Finale/DoD artifacts. **Operating context:** detect first and route per "Operating Context Routing" above (default: AI Factory extension).
 
 1. **Bootstrap checklist** (skip items the caller already resolved):
    - Architecture source: the operating context's architecture artifact per the active adapter (§4) — an existing artifact is the supreme structural authority; absent artifact → dominant layout of 2–3 existing features in `src/` (tier self-derivation: `references/core-standalone-adapter.md` §4) → Pragmatic tier (`layers`) if ambiguous or new (Core rule 3).

@@ -1,6 +1,6 @@
 {
   "id": "14-mailer-notification",
-  "title": "Full mode: email notification - MailerInterface injection, Message composition, mailer defaults wiring",
+  "title": "Feature mode: email notification - MailerInterface injection, Message composition, mailer defaults wiring",
   "mode": "full",
   "tags": [
     "full",

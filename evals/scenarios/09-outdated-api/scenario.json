@@ -1,6 +1,6 @@
 {
   "id": "09-outdated-api",
-  "title": "Light mode: new route on an old router version - API must match composer.lock",
+  "title": "Patch mode: new route on an old router version - API must match composer.lock",
   "mode": "light",
   "tags": [
     "light",

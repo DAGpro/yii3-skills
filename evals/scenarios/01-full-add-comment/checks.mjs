@@ -71,8 +71,8 @@ export default [
   check('tests-added', 'Tests added (tests/**Test.php)', ({ changed }) =>
     added(changed, /^tests\/.*Test\.php$/).length ? ok() : fail('no tests'), { required: false }),
 
-  check('report-present', 'The answer contains: Full mode, Architecture:, Finale report', ({ transcript }) => {
-    const need = [/\bFull\b/, /Architecture:/, /production readiness gate/i];
+  check('report-present', 'The answer contains: Feature mode, Architecture:, Finale report', ({ transcript }) => {
+    const need = [/\bFeature\b/, /Architecture:/, /production readiness gate/i];
     const miss = need.filter((r) => !r.test(transcript)).map(String);
     return miss.length ? fail(`missing from transcript: ${miss}`) : ok();
   }),

@@ -148,10 +148,14 @@ composer require yiisoft/cache-file
 > [!CAUTION]
 > **Strictly Forbidden Actions:**
 > - ❌ **NEVER run `composer update` without package arguments.** An unconstrained update can cause unexpected transitive major version upgrades across the entire lockfile.
+> - ❌ **NEVER leave `composer.lock` behind the code.** Bumping a constraint in `composer.json` without regenerating the lockfile keeps the install-time truth on the old version: code that calls an API newer than the locked one is a guaranteed fatal `Error: Class not found` after `composer install`.
 > - ❌ **NEVER pass `--ignore-platform-reqs` or `--ignore-platform-req=...`.** Bypassing platform requirements masks missing PHP extensions and results in fatal runtime crashes.
 > - ❌ **NEVER specify `dev-master` or `@dev` constraints.** All packages must resolve to tagged releases unless the target repository explicitly specifies development branches.
 > - ❌ **NEVER add arbitrary third-party `repositories` to `composer.json`** without explicit architectural authorization.
 > - ❌ **NEVER place runtime or persistence packages in `require-dev`.** The `--dev` flag is strictly reserved for testing tools (`phpunit/phpunit`), linters (`vimeo/psalm`, `phpstan/phpstan`), and code fixers.
+
+> [!IMPORTANT]
+> **Lock–API Coherence:** `composer.lock` is the install-time source of truth for versions. If the implemented code requires an API introduced in a version newer than the lockfile pins, raising the `composer.json` constraint alone is NOT a fix: the lock must be regenerated with a package-argument update (`composer update yiisoft/router` — never unconstrained, see the caution above). If the code can be implemented against the locked version's API instead, prefer that. In an offline environment where the lock cannot be regenerated, either implement against the locked version or record the exact `composer update <package>` command under `Pending Manual Installation Steps` (§3.5) and mark the task verification `unverified`.
 
 ### 3.3. Composer Plugin Trust (`config.allow-plugins`)
 

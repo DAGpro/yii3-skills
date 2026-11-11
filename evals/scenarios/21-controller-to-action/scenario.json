@@ -1,6 +1,6 @@
 {
   "id": "21-controller-to-action",
-  "title": "Full mode: migrate legacy controller actionX() endpoints to single-action invokable classes",
+  "title": "Feature mode: migrate legacy controller actionX() endpoints to single-action invokable classes",
   "mode": "full",
   "tags": [
     "full",

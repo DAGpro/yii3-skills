@@ -6,6 +6,7 @@
 // Output: error lines, WARN [validate] lines, one summary line. Exit 0/1.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -508,6 +509,37 @@ function main() {
         checkSkillTextReferences(join(root, manifest.skills[0]), manifest);
       }
     }
+  }
+
+  // quality_gates.versioning.warn_on_no_version_bump: warn when deliverable
+  // files (skills/, injections/) changed — uncommitted or since the last
+  // release tag — while the extension version stayed the same. Advisory only;
+  // a no-op in shallow CI checkouts (no base history, clean worktree).
+  if (manifest?.version && existsSync(join(root, '.git'))) {
+    try {
+      const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+      const shallow = git(['rev-parse', '--is-shallow-repository']) === 'true';
+      const headVersion = JSON.parse(git(['show', 'HEAD:extension.json'])).version;
+      const stale = [];
+      const dirty = git(['diff', '--name-only', 'HEAD', '--', 'skills/', 'injections/']);
+      if (dirty.length > 0 && headVersion === manifest.version) {
+        stale.push('uncommitted skills/ or injections/ changes without a version bump');
+      }
+      if (!shallow) {
+        let lastTag = null;
+        try { lastTag = git(['describe', '--tags', '--abbrev=0']); } catch { /* no tags yet */ }
+        if (lastTag) {
+          const sinceTag = git(['diff', '--name-only', `${lastTag}..HEAD`, '--', 'skills/', 'injections/']);
+          if (sinceTag.length > 0 && lastTag.replace(/^v/, '') === manifest.version) {
+            stale.push(`skills/ or injections/ changed since tag ${lastTag} without a version bump`);
+          }
+        }
+      }
+      if (stale.length > 0) {
+        const manifestText = readText(join(root, 'extension.json'));
+        warn('extension.json', lineOf(manifestText, manifestText.indexOf('"version"')), 'version-bump', `${stale.join('; ')} — bump extension.json before release (quality_gates.versioning.warn_on_no_version_bump)`);
+      }
+    } catch { /* git unavailable or unusable — advisory check skipped */ }
   }
 
   if (errors.length > 0) {

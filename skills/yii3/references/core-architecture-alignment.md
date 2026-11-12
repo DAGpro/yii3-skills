@@ -111,9 +111,7 @@ Controllers, actions, view templates, and CLI commands must **never** perform da
 - All data retrieval and mutation must be delegated to Services, Repositories, or Domain Handlers.
 
 ### 3.3. Composition Root in `config/`
-All dependency injection wiring, alias definitions, and environment parameters reside strictly in `config/`:
-- Common DI definitions: `config/common/di/*.php`.
-- Web-specific DI definitions: `config/web/di/*.php`.
+All dependency injection wiring, alias definitions, and environment parameters are rooted strictly in `config/` (follow the project's chosen organization per [Configuration Architecture & Parameters, §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs); template default is `config/common/di/*.php` and `config/web/di/*.php`):
 - Route registration: `config/common/routes.php` (the canonical template's only routes group; use `config/web/routes.php` only if a `routes-web` group is explicitly declared in the project's config plugin).
 - Application code inside `src/` must never configure or mutate the container at runtime.
 
@@ -180,7 +178,7 @@ In `ARCHITECTURE.md`, pre-existing code that differs from the target pattern is 
 | **HTTP Transport & Routing**<br>(`router`, `session`, `csrf`, `data-response`) | **Presentation** (`Api/`, `Web/`) | **Controllers** in modules | Root `src/Controllers/` and `src/Middleware/` |
 | **Input DTOs & Validation**<br>(`input-http`, `validator`, `form-model`) | DTOs in **Presentation**; validation in **Application** | DTOs in module **Controllers** / **Models** | In `src/Models/` or `src/Controllers/` |
 | **View Rendering & UI**<br>(`view`, `html`, `yii-view-renderer`, `widget`) | **Presentation** exclusively | **Controllers** / module views exclusively | `src/Controllers/` / `views/` exclusively |
-| **Composition Root**<br>(`di`, `config`, `aliases`, `injector`) | Root `config/` | Root `config/` (or module config) | Root `config/` |
+| **Composition Root**<br>(`di`, `config`, `aliases`, `injector`) | Root `config/` ([§3.3](#33-composition-root-in-config)) | Root `config/` ([§3.3](#33-composition-root-in-config)) | Root `config/` ([§3.3](#33-composition-root-in-config)) |
 
 ---
 

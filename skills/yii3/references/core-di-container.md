@@ -24,7 +24,7 @@ Yii3 completely departs from the Yii2 service locator pattern (`Yii::$app->servi
 5. **Worker-Ready State Management:**
    - Persistent PHP runtimes (RoadRunner, FrankenPHP; Swoole is cited in the docs as motivation) keep container instances alive across multiple HTTP requests. Stateful services must implement explicit reset logic via `StateResetter` callbacks. The worker runners ship as `yiisoft/yii-runner-roadrunner` and `yiisoft/yii-runner-frankenphp` (see 5.2).
 6. **Separation of Configuration and Logic:**
-   - Service wiring, constructor arguments, and environment settings are declared in configuration files returning PHP arrays. Domain and application code remain completely decoupled from framework wiring.
+   - Service wiring, constructor arguments, and environment settings are declared in configuration files returning PHP arrays (`config/*/di/*.php`) or encapsulated in `ServiceProviderInterface` classes registered in `config/` (`di-providers*`) — see [Configuration Architecture & Parameters, §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs). Domain and application code remain completely decoupled from framework wiring.
 
 ---
 
@@ -114,7 +114,7 @@ The `'reset'` callback must be a `Closure` — the container binds it to the ser
 
 ### 5.3. Service Providers (`ServiceProviderInterface`)
 
-Service providers allow packages or modules to encapsulate service definitions and extensions:
+Service providers allow packages, feature modules, or applications choosing class-based DI wiring to encapsulate service definitions and extensions in one class (compare array files vs. providers in [Configuration Architecture & Parameters, §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs)):
 
 ```php
 <?php
@@ -123,12 +123,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Provider;
 
-use App\Http\Middleware\UserActivityMiddleware;
+use App\Domain\User\UserNotifierInterface;
 use App\Domain\User\UserRepositoryInterface;
+use App\Infrastructure\Notification\EmailUserNotifier;
+use App\Infrastructure\Notification\LoggingUserNotifier;
 use App\Infrastructure\Persistence\CycleUserRepository;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Yiisoft\Di\ServiceProviderInterface;
-use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
 
 final class UserModuleServiceProvider implements ServiceProviderInterface
 {
@@ -136,6 +138,7 @@ final class UserModuleServiceProvider implements ServiceProviderInterface
     {
         return [
             UserRepositoryInterface::class => CycleUserRepository::class,
+            UserNotifierInterface::class => EmailUserNotifier::class,
         ];
     }
 
@@ -145,33 +148,25 @@ final class UserModuleServiceProvider implements ServiceProviderInterface
             // Extends or decorates services defined elsewhere in the container.
             // The extension callable is invoked as ($container, $service)
             // and must return the modified service (or null to keep it unchanged).
-            MiddlewareDispatcher::class => static function (
+            UserNotifierInterface::class => static function (
                 ContainerInterface $container,
-                MiddlewareDispatcher $dispatcher
-            ): MiddlewareDispatcher {
-                return $dispatcher->withMiddlewares([
-                    UserActivityMiddleware::class,
-                ]);
+                UserNotifierInterface $notifier,
+            ): UserNotifierInterface {
+                return new LoggingUserNotifier(
+                    $notifier,
+                    $container->get(LoggerInterface::class),
+                );
             },
         ];
     }
 }
 ```
 
-`withMiddlewares(array $middlewareDefinitions)` comes from `Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher` (package `yiisoft/middleware-dispatcher`) and returns a new immutable dispatcher instance.
+Providers are accepted as class-strings or instances; class-strings are instantiated with `new $provider()`, so a class-string provider needs a no-argument constructor (when `$params` are needed, instantiate `new MyServiceProvider($params['...'])` inside the `di-providers` config file). `getDefinitions()` runs at container construction; extensions collected from all providers are applied after all definitions, so an extension may target another provider's service or a service defined in `config/*/di/*.php`.
 
-> [!WARNING]
-> **Deprecated API:** `MiddlewareDispatcher::withMiddlewares()` is deprecated since `yiisoft/middleware-dispatcher` 5.5.0 — pass middleware definitions to the `MiddlewareDispatcher` **constructor** instead. The example is kept because it demonstrates the extension mechanism; in new code, wire middleware definitions through the constructor argument or the application's middleware stack.
-
-> [!TIP]
-> **Middlewares Reference:**
-> For the complete reference on the idiomatic middleware stack — declaring middleware in the global application pipeline — see the [PSR-15 Middlewares Guide, §4.1. Global Application Pipeline](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
-
-Providers are accepted as class-strings or instances; class-strings are instantiated with `new $provider()`, so a provider needs a no-argument constructor. `getDefinitions()` runs at container construction; extensions collected from all providers are applied after all definitions, so an extension may target another provider's service.
-
-Register service providers in your runner or `configuration.php` under `'di-providers'` / `'di-providers-web'`. Config-plugin group values are **file paths** (or `'$group'` references to other groups) — never class names; the referenced file returns the list of provider class-strings:
+Register service providers in your runner or `config/configuration.php` under `'di-providers'` / `'di-providers-web'` / `'di-providers-console'`. Config-plugin group values are **file paths** (or `'$group'` references to other groups) — never class names directly inside `configuration.php`; the referenced file returns the list of provider class-strings or instances:
 ```php
-// configuration.php
+// config/configuration.php
 <?php
 
 declare(strict_types=1);
@@ -181,13 +176,17 @@ return [
         'di-providers' => 'common/di-providers.php',
         'di-providers-web' => [
             '$di-providers',
-            'web/di-providers.php',
+            '?web/di-providers.php',
+        ],
+        'di-providers-console' => [
+            '$di-providers',
+            '?console/di-providers.php',
         ],
     ],
 ];
 ```
 ```php
-// common/di-providers.php
+// config/common/di-providers.php
 <?php
 
 declare(strict_types=1);
@@ -199,7 +198,7 @@ return [
 ];
 ```
 
-Note: extension keys must reference an already-registered service ID; extending a non-existent service throws `InvalidConfigException` (`Extended service "..." doesn't exist.`), and extending `ContainerInterface::class` is forbidden.
+Note: extension keys must reference an already-registered service ID; extending a non-existent service throws `InvalidConfigException` (`Extended service "..." doesn't exist.`), and extending `ContainerInterface::class` is forbidden. Passing `ContainerInterface` inside a provider extension closure is the Composition Root exception (just like factory closures in `config/*/di/*.php`) — never inject `ContainerInterface` into domain or application services.
 
 ---
 

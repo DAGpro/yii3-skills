@@ -228,6 +228,24 @@ Full constructor signature (`Yiisoft\Config\Config`):
 
 ---
 
+### 2.6. Choosing How to Organize Application Configs
+
+`yiisoft/config` and `yiisoft/di` support multiple config layouts. To prevent style drift, separate **when** a choice is made from **how** it is executed:
+
+- **Feature / patch work:** Do **not** invent or mix config styles. Follow `.ai-factory/ARCHITECTURE.md` or the existing `config/` layout (default when unconfigured: `config/*/di/*.php`).
+- **New project / `/aif-architecture`:** Choose one primary DI wiring style (and config map layout) and record it in `ARCHITECTURE.md`:
+
+| DI Wiring Style | Structure | Choose when… | Notes |
+|---|---|---|---|
+| **1. Definition array files** *(default)* | `config/common/di/*.php`, `config/web/di/*.php`, `config/console/di/*.php` returning `[Interface::class => Implementation::class, ...]` | Standard apps (`Pragmatic` / `Balanced`), direct `$params` / `$config` access, or matching `yiisoft/app*` defaults. | Auto-discovered by `'di' => 'common/di/*.php'`. Cannot decorate an existing service without replacing its key. |
+| **2. Service Provider classes** | `Yiisoft\Di\ServiceProviderInterface` classes listed in `config/*/di-providers.php` under `'di-providers*'` ([DI Container, §5.3](core-di-container.md#53-service-providers-serviceproviderinterface)) | Modular monoliths / Bounded Contexts encapsulating module wiring in one class, or when **`getExtensions()`** decoration is needed. | Class-string providers need a zero-arg constructor (or instantiate with `$params` in `di-providers.php`). `getExtensions()` may also decorate services defined in `di/*.php`. |
+
+**Config map & file grouping options:**
+- **Map location:** `config/configuration.php` (`"extra": {"config-plugin-file": "config/configuration.php"}`, template default) or inline `"extra": {"config-plugin": {...}}` in `composer.json`.
+- **File grouping:** centralized `config/{common,web,console}/...` files (default) or module-scoped globs in `config/configuration.php` (e.g., `'../src/*/config/di.php'`). Whenever `config/configuration.php` changes, run `composer yii-config-rebuild`.
+
+---
+
 ## 3. Parameter Management (`params.php`)
 
 Parameters are primitive values (strings, integers, floats, booleans, arrays) consumed by service definitions.

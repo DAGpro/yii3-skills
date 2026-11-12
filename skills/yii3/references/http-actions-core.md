@@ -10,10 +10,13 @@
 1. **Strict PSR-7 Contract:**
    - Every Action handler MUST accept `Psr\Http\Message\ServerRequestInterface` (or parameters auto-resolved by `yiisoft/input-http` / `yiisoft/middleware-dispatcher`).
    - Every Action handler MUST return `Psr\Http\Message\ResponseInterface` (never `array`, `string`, `int`, or `void`). Returning anything other than a `ResponseInterface` causes `Yiisoft\Middleware\Dispatcher\InvalidMiddlewareDefinitionException`.
-2. **Single-Action Invokable Classes (Recommended):**
-   - Prefer single-action classes implementing `__invoke(ServerRequestInterface $request): ResponseInterface` or PSR-15 `Psr\Http\Server\RequestHandlerInterface::handle(ServerRequestInterface $request): ResponseInterface`.
-   - Multi-action controllers (e.g. `[UserController::class, 'view']`) are supported via `MiddlewareFactory`, but every action method must strictly return `ResponseInterface`.
-   - Actions are mapped to HTTP endpoints via route definitions. For routing syntax, FastRoute placeholders, and route groups, see [Routing Guide](http-routes.md).
+2. **Choosing Action Handler Shape (follow project style; pick one pattern per module/app):**
+   | Handler Shape | Signature / Form | Choose when… | Notes |
+   |---|---|---|---|
+   | **1. Single-action invokable** *(default)* | `__invoke(ServerRequestInterface $request): ResponseInterface` | Focused endpoint per class (`Feature`/`Enterprise` slices, Clean Architecture). | Supports `yiisoft/input-http` parameter resolution and clean constructor DI. |
+   | **2. PSR-15 `RequestHandlerInterface`** | `handle(ServerRequestInterface $request): ResponseInterface` | Strict framework-neutral PSR-15 contract with zero magic parameter resolution. | Fixed signature (`$request` only); resolve input manually via `$request`, `CurrentRoute`, `HydratorInterface`. |
+   | **3. Plain multi-action controller** | `[UserController::class, 'view']` (or `FileRouter`) | Projects organizing cohesive CRUD methods into one class or using `FileRouter`. | Still a plain POPO with constructor DI (no framework base `Controller` class); every method must return `ResponseInterface`. |
+   - Actions are mapped to HTTP endpoints via route definitions or `FileRouter`. For routing strategy and syntax, see [Routing Guide](http-routes-definition.md#choosing-how-to-route-http-requests).
    - Actions are the terminal handlers of the PSR-15 pipeline. For middleware ordering, body parsers, and guard filters, see [PSR-15 Middlewares Guide](http-middlewares.md).
 3. **Thin Action Principle (Strict Boundary):**
    - **Allowed in Actions:**
@@ -21,7 +24,7 @@
      - Hydrate and validate input DTOs (`HydratorInterface`, `ValidatorInterface`, `yiisoft/input-http`) or Form Models (`FormHydrator`).
      - Check current user state and permissions (`Yiisoft\User\CurrentUser`).
      - Invoke an Application Use Case, Command Handler, or Service.
-     - Build and return PSR-7 responses (`DataResponseFactoryInterface`, `WebViewRenderer`, `DownloadResponseFactory`, HTTP redirects). The legacy `ViewRenderer` is `@deprecated`.
+     - Build and return PSR-7 responses (`DataResponseFactoryInterface`, self-contained `JsonResponseFactory`/`XmlResponseFactory`/`ContentNegotiatorResponseFactory`, `WebViewRenderer`, `DownloadResponseFactory`, PSR-17 `ResponseFactoryInterface` redirects). The legacy `ViewRenderer` is `@deprecated`.
    - **Strictly Forbidden in Actions (Anti-Patterns):**
      - ❌ Direct SQL queries, Query Builder, or ActiveRecord / Cycle persistence calls (delegate to Application Use Cases or Application Services).
      - ❌ Database transaction management (`$db->transaction()` belongs in Use Cases / Unit of Work).
@@ -132,7 +135,14 @@ final readonly class ViewUserAction
 
 ### 3.2. Request Parsing & DTO Hydration (`yiisoft/hydrator`, `yiisoft/input-http`, `yiisoft/validator`)
 
-In Yii3, request bodies and query parameters should be converted into strongly-typed DTOs rather than reading raw associative arrays across the action.
+In Yii3, request bodies and query parameters should be converted into strongly-typed DTOs (or FormModels for HTML forms) rather than reading raw associative arrays across the action. Match the existing project style, or pick per endpoint:
+
+| Input Strategy | Packages | Choose when… | Notes |
+|---|---|---|---|
+| **Manual Hydrator + Validator** *(Approach A)* | `yiisoft/hydrator`, `yiisoft/validator` | Framework-neutral DTOs, or adding DTO hydration explicitly inside `handle()` / `__invoke()`. | For constructor-promoted `readonly` typed parameters where raw strings could trigger PHP `TypeError`, use `ValidatingHydrator` + `#[Validate]` ([§9.2](http-forms-and-hydration.md#92-two-stage-validation-via-validatinghydrator--validate)). |
+| **Auto-Resolved Input DTO** *(Approach B)* | `yiisoft/input-http` (`RequestInputParametersResolver`) | JSON/query APIs with `#[FromBody]`/`#[FromQuery]` DTOs extending `AbstractInput`. | Inspect `$input->getValidationResult()` in the action **or** enable `'throwInputValidationException' => true` for centralized error middleware (§3.2.4–5). |
+| **Per-Parameter Attributes** | `yiisoft/input-http` (`HydratorAttributeParametersResolver`) | Simple read/list endpoints taking 1–3 scalar `#[Query]`/`#[Body]` arguments without a dedicated DTO class. | See §3.2.3 below. |
+| **HTML Web Form** | `yiisoft/form-model`, `yiisoft/form`, `yiisoft/csrf` | Server-rendered HTML forms or `GET` filter/search forms. | Uses `FormModel` + `FormHydrator` — full comparison in [`http-validation-and-forms.md` §11](http-validation-and-forms.md#11-architectural-decision-matrix-choosing-the-right-tool). |
 
 > [!IMPORTANT]
 > To parse JSON request bodies (`application/json`), the PSR-15 middleware `Yiisoft\Request\Body\RequestBodyParser` from package `yiisoft/request-body-parser` MUST be added to the middleware pipeline before the action. Otherwise, `$request->getParsedBody()` returns `null` for JSON payloads. Note that the package ships only a JSON parser out of the box; parsing other body formats requires a custom `ParserInterface` implementation. Canonical description and pipeline placement: [PSR-15 Middlewares Guide](http-middlewares.md).
@@ -507,10 +517,16 @@ if (!$result->isValid()) {
 
 ### 3.4. REST API Responses (`yiisoft/data-response`, `yiisoft/http`)
 
-Use `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` to generate structured API responses. Content negotiation middleware (`Yiisoft\DataResponse\Middleware\ContentNegotiatorDataResponseMiddleware`) automatically formats the data stream to JSON or XML according to the client's `Accept` header:
+Match the project's existing response convention on feature/patch work, or pick one API response mechanism at architecture/bootstrap time:
+
+| Response Approach | Service / Class | Choose when… | Notes |
+|---|---|---|---|
+| **1. `DataResponseFactory` + Middleware** | `DataResponseFactoryInterface` (`DataResponseFactory`) + `DataResponseMiddleware` / `ContentNegotiatorDataResponseMiddleware` | Multi-format REST APIs (`Accept`-based JSON/XML) or centralized response envelope middleware. | Default DI binding in `yiisoft/data-response` maps `DataResponseFactoryInterface::class => DataResponseFactory::class`. |
+| **2. Self-Contained Formatted Factory** | `JsonResponseFactory`, `XmlResponseFactory`, `HtmlResponseFactory`, `PlainTextResponseFactory`, or `ContentNegotiatorResponseFactory` | JSON-only APIs or per-endpoint formatting **without** adding response-formatting middleware to the pipeline. | Concrete factories extend `AbstractFormattedResponseFactory` (implements `DataResponseFactoryInterface`; constructor `(ResponseFactoryInterface, <Formatter>)`). `ContentNegotiatorResponseFactory` selects JSON/XML/HTML by `Accept` header directly. |
+| **3. Raw PSR-17 Factory** | `Psr\Http\Message\ResponseFactoryInterface` (optionally `StreamFactoryInterface`) | Redirects (`Status::FOUND`/`Status::SEE_OTHER`), `204 No Content`, or minimal endpoints without `yiisoft/data-response`. | Also used for HTML (`WebViewRenderer`, [§3.5](http-actions-concerns.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model)) and binary downloads (`DownloadResponseFactory`, [§3.6](http-actions-concerns.md#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp)). |
 
 > [!IMPORTANT]
-> Always inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface`. The legacy interface `Yiisoft\DataResponse\DataResponseFactoryInterface` and the old middleware `Yiisoft\DataResponse\Middleware\ContentNegotiator` are deprecated.
+> Always inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` or the concrete `Yiisoft\DataResponse\ResponseFactory\*` factories (`JsonResponseFactory`, etc.). The legacy interface `Yiisoft\DataResponse\DataResponseFactoryInterface` and the old middleware `Yiisoft\DataResponse\Middleware\ContentNegotiator` are deprecated.
 
 > [!NOTE]
 > Pipeline content negotiation via `ContentNegotiatorDataResponseMiddleware` (with `JsonFormatter` / `XmlFormatter`), formatter maps, and `Accept` header fallback handlers are owned by the [PSR-15 Middlewares Guide](http-middlewares.md), section 5.

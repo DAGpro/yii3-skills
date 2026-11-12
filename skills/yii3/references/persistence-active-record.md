@@ -5,7 +5,7 @@
 
 > Practical guide for `yiisoft/active-record` model definition, typed properties, static finder traits, relation definitions, lifecycle events, streaming, concurrency control, and N+1 prevention with `LazyLoadGuard`.
 >
-> Persistence details belong strictly to the Infrastructure Layer; Active Record models must never be used as pure Domain Entities or coupled to Presentation Actions.
+> Active Record must never be injected or queried directly in Presentation Actions or View templates; whether AR acts as a pure schema adapter or a rich model depends on the project's Architectural Tier (§1.1, `core-architecture-alignment.md` §1–§2).
 
 ---
 
@@ -49,7 +49,14 @@
 
 ### 1.1. Architecture Placement & Boundary Separation
 
-In Yii3 Clean Architecture, `ActiveRecord` models serve strictly as **Infrastructure Schema Data Structures**. They must never contain business domain logic and should remain isolated from Domain Entities:
+Match Active Record placement to the project's **Architectural Tier** (`core-architecture-alignment.md` §1–§2): continue the existing `src/` style on feature/patch tasks, and never inject or query Active Record models inside HTTP Presentation Actions or View templates (`core-architecture-alignment.md` §3.2).
+
+| Placement Option | Active Tier(s) | Structure & Flow | Trade-offs |
+|---|---|---|---|
+| **Option A — Schema Adapter + POPO Entity** | **Strict** (`explicit*`) | `UserRecord extends ActiveRecord` in `Infrastructure/Persistence/ActiveRecord/` + `ArUserRepository implements UserRepositoryInterface` + `Hydrator` reconstituting pure POPO `User`. | Pure vendor-free Domain with repository ports; higher mapping boilerplate (§1.2–§1.3). |
+| **Option B — Rich Active Record Model** | **Balanced** (`structured*`) & **Pragmatic** (`layers`) | `User extends ActiveRecord` lives as a rich Model (optionally with `RepositoryTrait` finders or a concrete repository for complex queries), consumed directly by Application Services. | Zero duplicate POPO mapping; binds Domain model directly to `yiisoft/active-record`. |
+
+**Option A Reference Layout (`Strict` / `explicit` tier):**
 
 ```text
 src/

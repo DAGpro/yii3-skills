@@ -249,7 +249,12 @@ final readonly class LogOrderPlacementListener
 
 ## 4. Event Configuration (`yiisoft/config` & `yiisoft/yii-event`)
 
-Yii3 wires events declaratively using PHP configuration arrays compiled into `Yiisoft\EventDispatcher\Provider\ListenerCollection`.
+Choose **one** listener-registration style per project/library (apps default to declarative `yiisoft/yii-event`; continue the existing project setup on feature work):
+
+| Wiring Style | Package | Choose when… | Notes |
+|---|---|---|---|
+| **1. Declarative Config Groups** *(app default)* | `yiisoft/yii-event` (`config/**/events*.php`) | Yii3 web/console applications wired with `yiisoft/config`. | Event FQCN is the config array key (§4.1–§4.2). Run `ListenerConfigurationChecker::check()` in dev/tests (§4.3). |
+| **2. Programmatic `ListenerCollection`** | `yiisoft/event-dispatcher` (`Provider` + `ListenerCollection`) | Standalone libraries, isolated modules without `yiisoft/yii-event`, or unit tests. | `$listeners = (new ListenerCollection())->add($callable); $dispatcher = new Dispatcher(new Provider($listeners));` (`add()` infers the event type from the parameter and returns a cloned instance). |
 
 ### 4.1. Configuration Architecture & Scopes
 
@@ -388,6 +393,14 @@ Details:
 > ⚠️ **CRITICAL ARCHITECTURAL RULE:**
 > Never dispatch external side-effects (emails, SMS, webhooks, queue messages) **inside** an active database transaction.
 > If the transaction rolls back due to a subsequent query error or lock timeout, the email or queue job has already been sent!
+
+**Choosing a Post-Commit Delivery Mechanism** (follow `.ai-factory/ARCHITECTURE.md` / task execution mode):
+
+| Delivery Mechanism | Guarantee & Cost | Choose when… | Notes |
+|---|---|---|---|
+| **1. Sync post-commit PSR-14** | Best-effort after DB commit; runs inline before response returns. | `Feature` defaults, local domain listeners, cache invalidation, fast best-effort mail/logging. | Dispatch `releaseEvents()` right after `$db->transaction()` returns. |
+| **2. Post-commit queue push** (`yiisoft/queue`) | Asynchronous background worker with retries; small crash window between DB commit and broker push. | Slow I/O jobs (emails with attachments, PDF/CSV exports, notifications) where occasional missed push is acceptable. | Push to queue after commit or inside a post-commit listener ([Queue Guide](infra-queue-jobs.md)). |
+| **3. Transactional Outbox** | At-least-once across PHP/broker crashes; requires outbox table + mutex relay worker. | `Enterprise` / critical flows (payments, orders, webhooks) that cannot lose messages after commit. | Persist outbox rows inside `$db->transaction()` and relay asynchronously ([Outbox Guide](infra-transactional-outbox.md)). |
 
 ### Why the Rule Holds: the `transaction()` API
 

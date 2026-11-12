@@ -12,7 +12,7 @@
 ## Table of Contents
 - [1. Data Mapper Architecture & Clean Boundaries](#1-data-mapper-architecture--clean-boundaries)
   - [1.1. Data Mapper vs Active Record](#11-data-mapper-vs-active-record)
-  - [1.2. Architecture Layout (Clean DDD)](#12-architecture-layout-clean-ddd)
+  - [1.2. Architecture Layout & Entity Mapping Options](#12-architecture-layout--entity-mapping-options)
 - [2. Entity Definition with PHP 8 Attributes (`cycle/annotated`)](#2-entity-definition-with-php-8-attributes-cycleannotated)
   - [2.1. Basic Entity & Column Types](#21-basic-entity--column-types)
   - [2.2. Relational Attributes (`HasOne`, `HasMany`, `BelongsTo`, `ManyToMany`) & Collection Factories](#22-relational-attributes-hasone-hasmany-belongsto-manytomany--collection-factories)
@@ -42,9 +42,14 @@ Cycle ORM implements the **Data Mapper** pattern. Unlike Active Record:
 - **Unit of Work:** Mutations are staged in memory via `EntityManagerInterface::persist()` or `EntityManagerInterface::delete()` and executed atomically when `run()` is called.
 - **Pure Domain Entities:** Domain entities can be annotated directly with PHP 8 attributes (`#[Entity]`, `#[Column]`) or kept completely pure using custom schema providers (e.g., compiled PHP or XML/YAML mapping definitions).
 
-### 1.2. Architecture Layout (Clean DDD)
+### 1.2. Architecture Layout & Entity Mapping Options
 
-In clean DDD or layered architectures, domain entities and repository contracts remain independent of framework plumbing:
+| Entity Option | Active Tier(s) | Structure | Notes |
+|---|---|---|---|
+| **1. Annotated Entities (`cycle/annotated`)** *(default)* | **Pragmatic**, **Balanced**, pragmatic **DDD** | POPO entities annotated with `#[Entity]` / `#[Column]` directly in `Domain/Model/` (zero Cycle base class or DB connection). | Minimal config; pair with compiled schema provider in production (`FromFilesSchemaProvider`). |
+| **2. Pure POPO Entities + Schema Provider** | **Strict** (`explicit*`, vendor-free Domain) | Plain POPO entities in `Domain/` with zero `Cycle\*` attributes; table/column mapping defined in schema config/providers under `Infrastructure/`. | Preserves zero vendor imports in `Domain/` (`core-architecture-alignment.md` §2.1). |
+
+**Attributed Clean Architecture Reference Layout:**
 
 ```text
 src/

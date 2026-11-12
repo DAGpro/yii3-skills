@@ -9,7 +9,17 @@
 
 Routing in Yii3 connects incoming PSR-7 HTTP requests (`Method` + `URI path`) to a dedicated PSR-15 middleware pipeline terminating in an action handler.
 
-Routes are declared in configuration files (typically `config/routes.php`, `config/common/routes.php`, or `config/web/routes.php`) returning an array of `Yiisoft\Router\Route` and `Yiisoft\Router\Group` instances. These route declarations are fed into `Yiisoft\Router\RouteCollectorInterface`.
+### Choosing How to Route HTTP Requests
+
+- **Feature / patch work:** Do **not** invent or mix routing styles next to an active router without architectural intent. Follow `.ai-factory/ARCHITECTURE.md` or the existing route/middleware stack (default when unconfigured: explicit route tables).
+- **New project / `/aif-architecture`:** Pick one primary routing mechanism (or explicit `Router` + `FileRouter` fallback) and record it:
+
+| Routing Strategy | Package & Entry Point | Choose when… | Notes |
+|---|---|---|---|
+| **1. Explicit Route Tables** *(default)* | `yiisoft/router` + `yiisoft/router-fastroute` (`config/common/routes.php`, or `config/web/routes.php` if a `routes-web` group is declared) | Standard web apps & REST APIs needing typed regex constraints (`{id:\d+}`), named reverse routing (`UrlGeneratorInterface`), `CurrentRoute`, or per-route/group middlewares. | Choose fluent chaining (`§1.1`) vs constructor init (`§1.1`), and string vs backed-enum names (`§1.2`). Routes without middleware/action are skipped. |
+| **2. Convention File Routing** *(optional)* | `yiisoft/file-router` (`Yiisoft\FileRouter\FileRouter` PSR-15 middleware) | Rapid prototyping, admin panels, or Next.js-style controller-per-path apps without `routes.php` (also usable as fallback after `Router`). | Details in [`http-routes-url-and-middleware.md` §7](http-routes-url-and-middleware.md#7-alternative--convention-based-routing-yiisoftfile-router). Requires camelCase URIs (no kebab-case); does **not** populate `CurrentRoute`, `#[RouteArgument]`, or named `UrlGeneratorInterface` routes. |
+
+When using explicit route tables, routes are declared in configuration files returning an array of `Yiisoft\Router\Route` and `Yiisoft\Router\Group` instances fed into `Yiisoft\Router\RouteCollectorInterface`.
 
 > [!NOTE]
 > **Route Matchability Invariant:**

@@ -7,7 +7,7 @@
 
 This topic is split into two focused guides — load the one that matches the task:
 
-- [Route Definitions, Groups & Route Arguments](http-routes-definition.md) — modern verb-class route syntax, FastRoute argument patterns/constraints/caching, route groups & nested routing, accessing route arguments (§1–§4).
+- [Route Definitions, Groups & Route Arguments](http-routes-definition.md) — [choosing how to route HTTP requests](http-routes-definition.md#choosing-how-to-route-http-requests), modern verb-class route syntax, FastRoute argument patterns/constraints/caching, route groups & nested routing, accessing route arguments (§1–§4).
 - [Middleware Ordering & URL Generation](http-routes-url-and-middleware.md) — route middleware pipeline & execution order, URL generation & reverse routing, convention-based file routing (§5–§7).
 
 Read this file for worker-environment caveats (§8), the anti-pattern matrix (§9), and related guides (§10).

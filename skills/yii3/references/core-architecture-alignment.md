@@ -96,7 +96,7 @@ Regardless of architectural strictness, the following 4 rules apply to **every**
 
 ### 3.1. The Presentation Exception
 In all architectures, the **Presentation (Inbound Transport)** layer directly consumes vendor framework tools:
-- Route definitions and attributes: `yiisoft/router`, `yiisoft/router-fastroute`.
+- Route definitions and attributes: `yiisoft/router`, `yiisoft/router-fastroute` (or optional `yiisoft/file-router`).
 - Request body hydration: `yiisoft/input-http`, `yiisoft/request-body-parser`.
 - Input validation: `yiisoft/validator`, `yiisoft/form-model`.
 - Response creation: `yiisoft/data-response`, `psr/http-message`.
@@ -112,7 +112,7 @@ Controllers, actions, view templates, and CLI commands must **never** perform da
 
 ### 3.3. Composition Root in `config/`
 All dependency injection wiring, alias definitions, and environment parameters are rooted strictly in `config/` (follow the project's chosen organization per [Configuration Architecture & Parameters, §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs); template default is `config/common/di/*.php` and `config/web/di/*.php`):
-- Route registration: `config/common/routes.php` (the canonical template's only routes group; use `config/web/routes.php` only if a `routes-web` group is explicitly declared in the project's config plugin).
+- Route registration: follow the project's routing style ([Routing Guide](http-routes-definition.md#choosing-how-to-route-http-requests); template default is `config/common/routes.php`, or `config/web/routes.php` when `routes-web` is explicitly declared; optional `FileRouter` middleware).
 - Application code inside `src/` must never configure or mutate the container at runtime.
 
 ### 3.4. One Mechanism per Concern
@@ -187,7 +187,7 @@ In `ARCHITECTURE.md`, pre-existing code that differs from the target pattern is 
 When reviewing code (`aif-review`) or verifying changes (`aif-verify`), apply checks according to the active pattern:
 
 - [ ] **Presentation is DB-free (All patterns):** Confirm controllers and view templates contain zero database queries or direct `ConnectionInterface` calls.
-- [ ] **Presentation leverages native transport (All patterns):** Ensure HTTP actions use `yiisoft/input-http`, `WebViewRenderer`, or `DataResponseFactoryInterface` directly without redundant custom wrappers.
+- [ ] **Presentation leverages native transport (All patterns):** Ensure HTTP actions use `yiisoft/input-http`, `WebViewRenderer`, `DataResponseFactoryInterface` (including self-contained `JsonResponseFactory`), or PSR-17 `ResponseFactoryInterface` directly without redundant custom wrappers.
 - [ ] **Strict Domain Purity (Explicit only):** When architecture is Explicit, verify that `Domain/` has zero `yiisoft/*` persistence or view imports.
 - [ ] **Downward Flow (Layered only):** In Layered architecture, ensure Actions and Controllers do not skip the service layer to call repositories or execute queries directly.
 - [ ] **Composition Root Confined (All patterns):** Verify that all DI bindings and container configurations live strictly under `config/`.

@@ -136,7 +136,7 @@ return [
 
 ## 2. Schema Provider Pipeline & Production Caching
 
-Cycle ORM compiles an in-memory schema describing table layouts, column types, relationships, and typecasting rules.
+Cycle ORM compiles an in-memory schema describing table layouts, column types, relationships, and typecasting rules. Schema compilation strategy depends on the stage and tier: use compiled PHP (`FromFilesSchemaProvider`) for zero-reflection production runtime, `SimpleCacheSchemaProvider` or `FromConveyorSchemaProvider` during local development, and either explicit Cycle migrations (`§3`) or dev-only `SyncTables` (never in production) for DDL changes.
 
 `MetadataSchemaConveyor` automatically registers **14 standard schema generators** across three internal compilation stages:
 - **STAGE_INDEX:** `ResetTables`, `Embeddings`, `Entities`, `TableInheritance`, `MergeColumns`

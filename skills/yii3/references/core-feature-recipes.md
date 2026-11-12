@@ -71,7 +71,7 @@ Creates or modifies domain state and involves side-effects.
   1. **Persistence & Schema:** DB migration (`yiisoft/db-migration`) with reversible `down()`. Storage via concrete repository, Active Record model, or Cycle mapper.
   2. **Application / Business Logic:** Application Service (e.g. `OrderService::createOrder()`) or Use Case Handler wrapping multi-step persistence in `ConnectionInterface::transaction()`. Events dispatched strictly after commit.
   3. **Presentation / HTTP:** Typed Input DTO with `Yiisoft\Validator\Rule\*` attributes; thin single-action controller returning `ResponseInterface`.
-  4. **Wiring & Tests:** Route in `config/common/routes.php`, DI bindings in `config/common/di/*.php`, unit and HTTP integration tests.
+  4. **Wiring & Tests:** Route per project routing style (`config/common/routes.php` default, [Routing Guide](http-routes-definition.md#choosing-how-to-route-http-requests)), DI bindings per project config style (`config/common/di/*.php` default, [Config Organization](core-config-tree.md#26-choosing-how-to-organize-application-configs)), unit and HTTP integration tests.
 - **In Enterprise Mode (Decomposition adapts to Tier; Strict baseline shown below):**
   1. **Domain:** Pure Entity/Aggregate + Value Objects; PSR-14 Domain Events; pure `*RepositoryInterface`.
   2. **Infrastructure / Persistence:** DB migration; storage implementation of the repository interface (`Sql*Repository`).
@@ -93,13 +93,13 @@ Creates or modifies domain state and involves side-effects.
    - **Event Listeners / Handlers:** Handle side-effects asynchronously or detached (e.g., `SendWelcomeEmailListener` via `yiisoft/mailer`).
 4. **Presentation / HTTP:**
    - **Input DTO:** Strongly-typed class with `Yiisoft\Validator\Rule\*` PHP attributes (note: the `Image`, `Date\*`, and `Type\*` rule families are nested one level deeper, e.g. `Yiisoft\Validator\Rule\Image\Image`).
-   - **Single-Action Controller / Action:** Commonly an invokable class (`__invoke(ServerRequestInterface $request): ResponseInterface`) or a PSR-15 `RequestHandlerInterface` implementation.
-     - *Responsibility:* Hydrate DTO (`yiisoft/hydrator`; the integrated HTTP path is `yiisoft/hydrator-validator` + `yiisoft/input-http`), validate (`yiisoft/validator`), call Use Case, return `ResponseInterface` via `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` (API) or `Yiisoft\Yii\View\Renderer\WebViewRenderer` (HTML; `ViewRenderer` is deprecated since yii-view-renderer 7.4.0).
+   - **Action / Controller:** Choose one handler shape per project style (`__invoke(ServerRequestInterface $request): ResponseInterface` single-action invokable default, PSR-15 `RequestHandlerInterface`, or plain constructor-DI controller method `[UserController::class, 'view']` — see [`http-actions-core.md` §1](http-actions-core.md#1-core-action-principles-in-yii3)).
+     - *Responsibility:* Hydrate DTO (`yiisoft/hydrator`; the integrated HTTP path is `yiisoft/hydrator-validator` + `yiisoft/input-http`), validate (`yiisoft/validator`), call Use Case, return `ResponseInterface` via `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` (including self-contained `JsonResponseFactory` — [`http-actions-core.md` §3.4](http-actions-core.md#34-rest-api-responses-yiisoftdata-response-yiisofthttp)), `Yiisoft\Yii\View\Renderer\WebViewRenderer` (`ViewRenderer` is deprecated), or PSR-17 `ResponseFactoryInterface`.
      - *Anti-pattern:* Never put SQL queries, password hashing, or email sending directly inside the Action.
 5. **Configuration & Wiring (Mandatory):**
-   - **DI:** Bind `OrderRepositoryInterface => SqlOrderRepository` in `config/common/di/*.php`. Definition forms: `Interface::class => Class::class` or the full form `['class' => ..., '__construct()' => [...]]`.
-   - **Events:** Map listeners in the events config group selected by the `'yiisoft/yii-event' => ['eventsConfigGroup' => ...]` param (`events-web` for HTTP, `events-console` for console). Group declaration, the `$events` reference wiring, and the file-mapping recipe (e.g. `config/common/events.php`) are owned by the [Events & Listeners Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes).
-   - **Routes:** Register routes in `config/common/routes.php` (the only routes group in the canonical template — there is no `routes-web` group). Use version-aware route syntax — see Archetype F and the [Routing Guide](http-routes.md).
+   - **DI:** Bind `OrderRepositoryInterface => SqlOrderRepository` per project config style (`config/common/di/*.php` default, [`core-config-tree.md` §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs)). Definition forms: `Interface::class => Class::class` or `['class' => ..., '__construct()' => [...]]`.
+   - **Events:** Map listeners per project event wiring (`config/**/events.php` in the `eventsConfigGroup` parameter via `yiisoft/yii-event` default, or programmatic `ListenerCollection` — [Events & Listeners Guide, §4](core-events-design.md#4-event-configuration-yiisoftconfig--yiisoftyii-event)).
+   - **Routes:** Register routes per project routing style (`config/common/routes.php` default — the canonical template has no `routes-web` group — or `FileRouter` middleware; [`http-routes-definition.md` §1](http-routes-definition.md#choosing-how-to-route-http-requests)). Use version-aware route syntax — see Archetype F and the [Routing Guide](http-routes.md).
 
 ---
 
@@ -111,9 +111,9 @@ Queries data without changing state; supports pagination, sorting, filters.
 2. **Read Service / Query Repository:** Read-only queries using `yiisoft/db` or `yiisoft/data` (`DataReaderInterface`, `OffsetPaginator`, `Sort`).
 3. **Action:** Hydrates query parameters, calls Read Service, formats data.
 4. **Presentation:**
-   - API: `DataResponseFactoryInterface` with serialized data and paginator metadata.
+   - API: `DataResponseFactoryInterface` (or `JsonResponseFactory`) with serialized data and paginator metadata.
    - Web: View template using `yiisoft/view` and the `Yiisoft\Yii\DataView\GridView\GridView` widget.
-5. **Wiring:** Route in `config/common/routes.php`, bind the reader implementation in `config/common/di/*.php`.
+5. **Wiring:** Route per project routing style (`config/common/routes.php` default) and DI binding per project config style (`config/common/di/*.php` default).
 
 **Reference read service (pagination + meta):**
 
@@ -719,15 +719,15 @@ As each stage completes, verify its per-step wiring gate immediately and record 
 
 - [ ] **Mission State complete:** All active stages in the Mission State tracker completed with passing wiring gates.
 - [ ] **Data layer connected:** If entity persists state → Migration exists + Repository implements Interface.
-- [ ] **DI registered:** Every newly introduced interface has a binding in `config/common/di/*.php` or `config/web/di/*.php`.
-- [ ] **Route reachable:** Every newly created Action is mounted in `config/common/routes.php` (the canonical template has no `routes-web` group) with correct HTTP method and typed parameter tokens (`{id:\d+}`).
+- [ ] **DI registered:** Every newly introduced interface has a binding per the project's config style (`config/common/di/*.php`, `config/web/di/*.php`, or a `ServiceProviderInterface` — see [Configuration Architecture & Parameters, §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs)).
+- [ ] **Route reachable:** Every newly created Action is mounted per the project's routing style (`config/common/routes.php` default — no `routes-web` group in canonical template — with correct HTTP method and typed parameter tokens `{id:\d+}`, or active `FileRouter` path; see [Routing Guide, §1](http-routes-definition.md#choosing-how-to-route-http-requests)).
 - [ ] **Console command wired:** Every Console Command is registered in `config/console/params.php`.
-- [ ] **Events wired:** Any Domain Event has listeners mapped in the events config group selected by `eventsConfigGroup` (see [Events & Listeners Guide, §4.1](core-events-design.md#41-configuration-architecture--scopes)).
+- [ ] **Events wired:** Any Domain Event has listeners mapped in the events config group selected by `eventsConfigGroup` (or active `ListenerCollection` when using `yiisoft/event-dispatcher` directly — see [Events & Listeners Guide, §4](core-events-design.md#4-event-configuration-yiisoftconfig--yiisoftyii-event)).
 - [ ] **Events post-commit:** All event dispatches with external side-effects (mail, sms, queue) occur outside/after DB transactions (see [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)).
-- [ ] **Input sanitized:** Any user input passes through a DTO validated with `yiisoft/validator` attributes.
+- [ ] **Input sanitized:** Any user input passes through a DTO/FormModel validated with `yiisoft/validator` rules/attributes (or explicit validator calls for ad-hoc scalar checks).
 - [ ] **Forms protected:** Web forms are covered by the active CSRF middleware `Yiisoft\Csrf\CsrfTokenMiddleware` (with `SessionMiddleware` before it) and token validation.
 - [ ] **Action is thin:** Action only coordinates HTTP: Request -> Hydrate DTO -> Validate -> Call Handler/Service -> Build Response.
-- [ ] **Response is PSR-7:** Action returns `Psr\Http\Message\ResponseInterface` via `ResponseFactory\DataResponseFactoryInterface` or `WebViewRenderer` (the `ViewRenderer` alias is deprecated).
+- [ ] **Response is PSR-7:** Action returns `Psr\Http\Message\ResponseInterface` via `ResponseFactory\DataResponseFactoryInterface` (including self-contained `JsonResponseFactory`), `WebViewRenderer` (`ViewRenderer` alias is deprecated), or PSR-17 `ResponseFactoryInterface`.
 
 ---
 

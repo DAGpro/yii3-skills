@@ -21,3 +21,4 @@ package.json
 
 /references/*
 !/references/README.md
+!/references/packages.lock.json

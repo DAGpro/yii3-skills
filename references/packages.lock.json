@@ -1,0 +1,1177 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-12T18:25:05.912Z",
+  "packages_count": 130,
+  "packages": {
+    "access": {
+      "package": "yiisoft/access",
+      "remote": "https://github.com/yiisoft/access.git",
+      "branch": "master",
+      "commit": "19dfb9ef191f4be0b1f954d986e095787c7fb572",
+      "commit_date": "2026-09-04T17:37:00+03:00",
+      "tag": null,
+      "release": "2.0.1"
+    },
+    "active-record": {
+      "package": "yiisoft/active-record",
+      "remote": "https://github.com/yiisoft/active-record.git",
+      "branch": "master",
+      "commit": "4fa9d4418d999f0d461398483d5df39aea390517",
+      "commit_date": "2026-10-21T13:31:31+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "aliases": {
+      "package": "yiisoft/aliases",
+      "remote": "https://github.com/yiisoft/aliases.git",
+      "branch": "master",
+      "commit": "cbee32e6517c95fd23863c69a513b875e2bb6c5e",
+      "commit_date": "2026-09-04T17:37:15+03:00",
+      "tag": null,
+      "release": "3.1.1"
+    },
+    "app": {
+      "package": "yiisoft/app",
+      "remote": "https://github.com/yiisoft/app.git",
+      "branch": "master",
+      "commit": "fb0c8cb64782aa194b382feb26b4307ad23fde51",
+      "commit_date": "2026-10-16T10:15:13+03:00",
+      "tag": null,
+      "release": "1.4.0"
+    },
+    "app-api": {
+      "package": "yiisoft/app-api",
+      "remote": "https://github.com/yiisoft/app-api.git",
+      "branch": "master",
+      "commit": "3f518dbb5a995882117482fe1e119b1dd0b9d4c6",
+      "commit_date": "2026-10-16T10:15:59+03:00",
+      "tag": null,
+      "release": "1.4.0"
+    },
+    "app-console": {
+      "package": "yiisoft/app-console",
+      "remote": "https://github.com/yiisoft/app-console.git",
+      "branch": "master",
+      "commit": "7b8763e34e40b1fa45684c49e53dda789319349c",
+      "commit_date": "2026-10-21T10:12:42+03:00",
+      "tag": null,
+      "release": "1.0.2"
+    },
+    "arrays": {
+      "package": "yiisoft/arrays",
+      "remote": "https://github.com/yiisoft/arrays.git",
+      "branch": "master",
+      "commit": "aefc60b88543859c97dca529432301ef235f7351",
+      "commit_date": "2026-09-04T17:37:34+03:00",
+      "tag": null,
+      "release": "3.2.1"
+    },
+    "assets": {
+      "package": "yiisoft/assets",
+      "remote": "https://github.com/yiisoft/assets.git",
+      "branch": "master",
+      "commit": "a8967f8cf16b02925b6d3f42716f69c919803b6a",
+      "commit_date": "2026-09-04T17:37:38+03:00",
+      "tag": null,
+      "release": "5.1.2"
+    },
+    "auth": {
+      "package": "yiisoft/auth",
+      "remote": "https://github.com/yiisoft/auth.git",
+      "branch": "master",
+      "commit": "bc2c52c3bf26a6e5d0f410892b587fed46643068",
+      "commit_date": "2026-09-04T17:37:43+03:00",
+      "tag": null,
+      "release": "3.3.1"
+    },
+    "auth-jwt": {
+      "package": "yiisoft/auth-jwt",
+      "remote": "https://github.com/yiisoft/auth-jwt.git",
+      "branch": "master",
+      "commit": "65c010832b3cc6364747cbe6341c372848fdddd8",
+      "commit_date": "2026-09-04T17:37:48+03:00",
+      "tag": null,
+      "release": "2.1.0"
+    },
+    "bootstrap5": {
+      "package": "yiisoft/bootstrap5",
+      "remote": "https://github.com/yiisoft/bootstrap5.git",
+      "branch": "master",
+      "commit": "f63004edea88b457babc055fbeebcfd0f780d0b2",
+      "commit_date": "2026-09-04T17:37:52+03:00",
+      "tag": null,
+      "release": "1.2.0"
+    },
+    "cache": {
+      "package": "yiisoft/cache",
+      "remote": "https://github.com/yiisoft/cache.git",
+      "branch": "master",
+      "commit": "0f1caf8cae4ea1fad14dea4aac15871df29b54d8",
+      "commit_date": "2026-09-04T17:37:57+03:00",
+      "tag": null,
+      "release": "3.2.0"
+    },
+    "cache-apcu": {
+      "package": "yiisoft/cache-apcu",
+      "remote": "https://github.com/yiisoft/cache-apcu.git",
+      "branch": "master",
+      "commit": "7777270fabf2970c269f64085eb435826bdfe31b",
+      "commit_date": "2026-09-04T17:38:01+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "cache-db": {
+      "package": "yiisoft/cache-db",
+      "remote": "https://github.com/yiisoft/cache-db.git",
+      "branch": "master",
+      "commit": "268b0a6911901b76b1362fa6e8149740a26589fd",
+      "commit_date": "2026-10-21T13:03:56+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "cache-file": {
+      "package": "yiisoft/cache-file",
+      "remote": "https://github.com/yiisoft/cache-file.git",
+      "branch": "master",
+      "commit": "e328c084ac7f4af53cd9dff86650eeef7f451b82",
+      "commit_date": "2026-09-04T17:38:11+03:00",
+      "tag": null,
+      "release": "3.2.0"
+    },
+    "cache-memcached": {
+      "package": "yiisoft/cache-memcached",
+      "remote": "https://github.com/yiisoft/cache-memcached.git",
+      "branch": "master",
+      "commit": "52408f77d3faf4d4d99455ae835a414310a1bb43",
+      "commit_date": "2026-10-22T12:46:58+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "cache-redis": {
+      "package": "yiisoft/cache-redis",
+      "remote": "https://github.com/yiisoft/cache-redis.git",
+      "branch": "master",
+      "commit": "35bccd730b313ab1187c47b6a4a3d67bb0b4d795",
+      "commit_date": "2026-10-16T10:15:38+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "cache-wincache": {
+      "package": "yiisoft/cache-wincache",
+      "remote": "https://github.com/yiisoft/cache-wincache.git",
+      "branch": "master",
+      "commit": "efaedd6ba102519f8078fbb4e48a37fdd5db7501",
+      "commit_date": "2026-10-21T14:56:19+03:00",
+      "tag": null,
+      "release": "1.0.1"
+    },
+    "classifier": {
+      "package": "yiisoft/classifier",
+      "remote": "https://github.com/yiisoft/classifier.git",
+      "branch": "master",
+      "commit": "c94be164b571a8f1092bff0286f755a8f80da07c",
+      "commit_date": "2026-09-04T17:38:30+03:00",
+      "tag": null,
+      "release": null
+    },
+    "code-style": {
+      "package": "yiisoft/code-style",
+      "remote": "https://github.com/yiisoft/code-style.git",
+      "branch": "master",
+      "commit": "d7485ab5800f00bf14a0e884c2a4d2297a74aa1b",
+      "commit_date": "2026-09-18T17:58:30+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "config": {
+      "package": "yiisoft/config",
+      "remote": "https://github.com/yiisoft/config.git",
+      "branch": "master",
+      "commit": "1c289f7e20357cc3cd4ff79c0107d0b895c04e29",
+      "commit_date": "2026-09-04T17:38:39+03:00",
+      "tag": null,
+      "release": "1.6.2"
+    },
+    "cookies": {
+      "package": "yiisoft/cookies",
+      "remote": "https://github.com/yiisoft/cookies.git",
+      "branch": "master",
+      "commit": "9a437fe98bfce9808a79d083aff2a65b727eec22",
+      "commit_date": "2026-09-04T17:38:44+03:00",
+      "tag": null,
+      "release": "1.2.4"
+    },
+    "csrf": {
+      "package": "yiisoft/csrf",
+      "remote": "https://github.com/yiisoft/csrf.git",
+      "branch": "master",
+      "commit": "a4d315b9035fa0d00d0f74d500ffca887c57874c",
+      "commit_date": "2026-09-08T22:30:27+03:00",
+      "tag": null,
+      "release": "2.2.3"
+    },
+    "data": {
+      "package": "yiisoft/data",
+      "remote": "https://github.com/yiisoft/data.git",
+      "branch": "master",
+      "commit": "80ee40df80aa30651a08ac1f5aa0be82bde3f195",
+      "commit_date": "2026-09-04T17:38:48+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "data-cycle": {
+      "package": "yiisoft/data-cycle",
+      "remote": "https://github.com/yiisoft/data-cycle.git",
+      "branch": "master",
+      "commit": "fbf254c5f7135462973d39b04e2a5587469413d5",
+      "commit_date": "2026-10-20T10:30:28+03:00",
+      "tag": null,
+      "release": "1.0.0"
+    },
+    "data-db": {
+      "package": "yiisoft/data-db",
+      "remote": "https://github.com/yiisoft/data-db.git",
+      "branch": "master",
+      "commit": "798e710e9e5afee3638541693eddd3520e29833b",
+      "commit_date": "2026-10-21T10:46:39+03:00",
+      "tag": null,
+      "release": "1.0.0"
+    },
+    "data-response": {
+      "package": "yiisoft/data-response",
+      "remote": "https://github.com/yiisoft/data-response.git",
+      "branch": "master",
+      "commit": "0e890538eafa9c477884be91667f043e3b517776",
+      "commit_date": "2026-09-04T17:39:02+03:00",
+      "tag": null,
+      "release": "2.2.0"
+    },
+    "db": {
+      "package": "yiisoft/db",
+      "remote": "https://github.com/yiisoft/db.git",
+      "branch": "master",
+      "commit": "ab9a0ca16333677d7201a131789c984b3523cb9f",
+      "commit_date": "2026-10-22T09:20:52+03:00",
+      "tag": "2.1.0",
+      "release": "2.1.0"
+    },
+    "db-migration": {
+      "package": "yiisoft/db-migration",
+      "remote": "https://github.com/yiisoft/db-migration.git",
+      "branch": "master",
+      "commit": "d5eb1528f51ffa60b07a9bc727d03ecd0601f9fd",
+      "commit_date": "2026-10-19T21:47:56+03:00",
+      "tag": "2.2.0",
+      "release": "2.2.0"
+    },
+    "db-mssql": {
+      "package": "yiisoft/db-mssql",
+      "remote": "https://github.com/yiisoft/db-mssql.git",
+      "branch": "master",
+      "commit": "20b1388458c65a726cd2428bb27d2efaf5d60efe",
+      "commit_date": "2026-10-18T10:16:14+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "db-mysql": {
+      "package": "yiisoft/db-mysql",
+      "remote": "https://github.com/yiisoft/db-mysql.git",
+      "branch": "master",
+      "commit": "3eb03ed76b67c63dcf585912ecda4c15a2b13921",
+      "commit_date": "2026-10-21T14:55:54+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "db-oracle": {
+      "package": "yiisoft/db-oracle",
+      "remote": "https://github.com/yiisoft/db-oracle.git",
+      "branch": "master",
+      "commit": "63ebeee9db626b2f8e0488700b25f079330c4772",
+      "commit_date": "2026-10-21T13:04:55+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "db-pgsql": {
+      "package": "yiisoft/db-pgsql",
+      "remote": "https://github.com/yiisoft/db-pgsql.git",
+      "branch": "master",
+      "commit": "b8cd87b0f03d603af717a66223ce8c5dcd70a1fc",
+      "commit_date": "2026-10-21T08:57:25+03:00",
+      "tag": null,
+      "release": "2.0.1"
+    },
+    "db-sqlite": {
+      "package": "yiisoft/db-sqlite",
+      "remote": "https://github.com/yiisoft/db-sqlite.git",
+      "branch": "master",
+      "commit": "a958f3949ee9e630369d819c10bdcbbc0cb9f1d8",
+      "commit_date": "2026-10-21T13:04:27+03:00",
+      "tag": null,
+      "release": "2.0.0"
+    },
+    "definitions": {
+      "package": "yiisoft/definitions",
+      "remote": "https://github.com/yiisoft/definitions.git",
+      "branch": "master",
+      "commit": "11551632c93d073735d9ae3b1f6831e99d3d21fd",
+      "commit_date": "2026-10-21T10:13:50+03:00",
+      "tag": null,
+      "release": "3.4.1"
+    },
+    "di": {
+      "package": "yiisoft/di",
+      "remote": "https://github.com/yiisoft/di.git",
+      "branch": "master",
+      "commit": "0a802a647aff805441d11a578861737ac3f63f12",
+      "commit_date": "2026-08-09T14:41:20+03:00",
+      "tag": null,
+      "release": "1.4.1"
+    },
+    "error-handler": {
+      "package": "yiisoft/error-handler",
+      "remote": "https://github.com/yiisoft/error-handler.git",
+      "branch": "master",
+      "commit": "3f50d07e5946adde48c614aabf104b4e65b6ff43",
+      "commit_date": "2026-09-04T17:40:08+03:00",
+      "tag": null,
+      "release": "4.3.2"
+    },
+    "event-dispatcher": {
+      "package": "yiisoft/event-dispatcher",
+      "remote": "https://github.com/yiisoft/event-dispatcher.git",
+      "branch": "master",
+      "commit": "1a887d041ed4213cd0612c32403a966c60c0b045",
+      "commit_date": "2026-09-04T17:40:13+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "factory": {
+      "package": "yiisoft/factory",
+      "remote": "https://github.com/yiisoft/factory.git",
+      "branch": "master",
+      "commit": "1fbfa8fb89ba0eaec3af64ee1e91792f60561431",
+      "commit_date": "2026-09-04T17:40:17+03:00",
+      "tag": null,
+      "release": "1.3.1"
+    },
+    "file-router": {
+      "package": "yiisoft/file-router",
+      "remote": "https://github.com/yiisoft/file-router.git",
+      "branch": "master",
+      "commit": "843839038ea7f18940be9f291df2decd5499591d",
+      "commit_date": "2026-09-04T17:40:22+03:00",
+      "tag": null,
+      "release": "1.0.0"
+    },
+    "files": {
+      "package": "yiisoft/files",
+      "remote": "https://github.com/yiisoft/files.git",
+      "branch": "master",
+      "commit": "0f4e963ca0a2f068ef01bf1b12298743811bb63a",
+      "commit_date": "2026-09-04T17:40:27+03:00",
+      "tag": null,
+      "release": "2.1.0"
+    },
+    "form": {
+      "package": "yiisoft/form",
+      "remote": "https://github.com/yiisoft/form.git",
+      "branch": "master",
+      "commit": "7719d2b1b0437c7253fdcb79553fe71016c626fe",
+      "commit_date": "2026-09-04T17:40:31+03:00",
+      "tag": null,
+      "release": "1.5.2"
+    },
+    "form-model": {
+      "package": "yiisoft/form-model",
+      "remote": "https://github.com/yiisoft/form-model.git",
+      "branch": "master",
+      "commit": "90ea8c64b9be129a747aac06be7708f019b52270",
+      "commit_date": "2026-09-04T17:40:36+03:00",
+      "tag": null,
+      "release": "1.1.1"
+    },
+    "friendly-exception": {
+      "package": "yiisoft/friendly-exception",
+      "remote": "https://github.com/yiisoft/friendly-exception.git",
+      "branch": "master",
+      "commit": "7016cbdc03367728442c070a441352edd49aa214",
+      "commit_date": "2026-09-04T17:40:41+03:00",
+      "tag": null,
+      "release": "1.2.0"
+    },
+    "html": {
+      "package": "yiisoft/html",
+      "remote": "https://github.com/yiisoft/html.git",
+      "branch": "master",
+      "commit": "119c06c44dfc24b65fe00325f9237858e5d78867",
+      "commit_date": "2026-09-04T17:40:45+03:00",
+      "tag": null,
+      "release": "4.2.0"
+    },
+    "http": {
+      "package": "yiisoft/http",
+      "remote": "https://github.com/yiisoft/http.git",
+      "branch": "master",
+      "commit": "62a0f3b9975f8c0e35b4532a6c0b62b38d1a4712",
+      "commit_date": "2026-09-10T18:30:09+03:00",
+      "tag": null,
+      "release": "1.3.0"
+    },
+    "http-middleware": {
+      "package": "yiisoft/http-middleware",
+      "remote": "https://github.com/yiisoft/http-middleware.git",
+      "branch": "master",
+      "commit": "1850fbe5392eef8113d1222a13eb01e931295f3e",
+      "commit_date": "2026-09-04T17:40:55+03:00",
+      "tag": null,
+      "release": "1.3.0"
+    },
+    "hydrator": {
+      "package": "yiisoft/hydrator",
+      "remote": "https://github.com/yiisoft/hydrator.git",
+      "branch": "master",
+      "commit": "769848e9792570d5fc46939c7df31c2b13d5c8fc",
+      "commit_date": "2026-10-03T10:40:58Z",
+      "tag": null,
+      "release": "1.6.3"
+    },
+    "hydrator-validator": {
+      "package": "yiisoft/hydrator-validator",
+      "remote": "https://github.com/yiisoft/hydrator-validator.git",
+      "branch": "master",
+      "commit": "ba83ab4c715a6da37fdbb0bf1b86acba99d8f3c2",
+      "commit_date": "2026-08-09T16:47:22+03:00",
+      "tag": null,
+      "release": "2.0.2"
+    },
+    "i18n": {
+      "package": "yiisoft/i18n",
+      "remote": "https://github.com/yiisoft/i18n.git",
+      "branch": "master",
+      "commit": "b85582ba4ab81fe3f474bb54b2566e634b379b0d",
+      "commit_date": "2026-09-04T17:41:05+03:00",
+      "tag": null,
+      "release": "1.2.2"
+    },
+    "i18n-message-gettext": {
+      "package": "yiisoft/translator-message-gettext",
+      "remote": "https://github.com/yiisoft/i18n-message-gettext.git",
+      "branch": "master",
+      "commit": "93ffc7b23e96c71e1bbe1cc02d4fe96a548fe0f3",
+      "commit_date": "2026-08-09T19:43:20+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "i18n-message-php": {
+      "package": "yiisoft/translator-message-php",
+      "remote": "https://github.com/yiisoft/i18n-message-php.git",
+      "branch": "master",
+      "commit": "c8f0808089cbdc952ef0ba9ace3cbd1070c3d6fe",
+      "commit_date": "2026-09-04T17:44:39+03:00",
+      "tag": null,
+      "release": "1.1.2"
+    },
+    "injector": {
+      "package": "yiisoft/injector",
+      "remote": "https://github.com/yiisoft/injector.git",
+      "branch": "master",
+      "commit": "9c596892248e7b459dfb1e75a4244b96269c0333",
+      "commit_date": "2026-09-04T17:41:09+03:00",
+      "tag": null,
+      "release": "1.2.1"
+    },
+    "input-http": {
+      "package": "yiisoft/input-http",
+      "remote": "https://github.com/yiisoft/input-http.git",
+      "branch": "master",
+      "commit": "924934cd8bf7d42ec79f8a531e5d8cd2aee7e1d0",
+      "commit_date": "2026-09-04T17:41:14+03:00",
+      "tag": null,
+      "release": "1.0.1"
+    },
+    "json": {
+      "package": "yiisoft/json",
+      "remote": "https://github.com/yiisoft/json.git",
+      "branch": "master",
+      "commit": "1307e519ad90e8944e7fd379de13dcbd360a8110",
+      "commit_date": "2026-09-04T17:41:19+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "log": {
+      "package": "yiisoft/log",
+      "remote": "https://github.com/yiisoft/log.git",
+      "branch": "master",
+      "commit": "aec9294a4b86f8d1321af0994913b0d1a0665cd8",
+      "commit_date": "2026-09-04T17:41:28+03:00",
+      "tag": null,
+      "release": "2.2.1"
+    },
+    "log-target-db": {
+      "package": "yiisoft/log-target-db",
+      "remote": "https://github.com/yiisoft/log-target-db.git",
+      "branch": "master",
+      "commit": "88d036d93f62b7f1e27d266a6ebc2313c3f9f5a5",
+      "commit_date": "2026-10-22T13:16:25+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "log-target-email": {
+      "package": "yiisoft/log-target-email",
+      "remote": "https://github.com/yiisoft/log-target-email.git",
+      "branch": "master",
+      "commit": "e1cdecb34b46e31137ad1d52f3c6f77a66eae28b",
+      "commit_date": "2026-09-04T17:41:38+03:00",
+      "tag": null,
+      "release": "4.2.0"
+    },
+    "log-target-file": {
+      "package": "yiisoft/log-target-file",
+      "remote": "https://github.com/yiisoft/log-target-file.git",
+      "branch": "master",
+      "commit": "38e83f89bc6e895192bbe6cb9b2da4493610f030",
+      "commit_date": "2026-09-04T17:41:43+03:00",
+      "tag": null,
+      "release": "3.1.0"
+    },
+    "log-target-syslog": {
+      "package": "yiisoft/log-target-syslog",
+      "remote": "https://github.com/yiisoft/log-target-syslog.git",
+      "branch": "master",
+      "commit": "2bad8ea290d4752ad280e142430c1e744a51ea2c",
+      "commit_date": "2026-09-04T17:41:48+03:00",
+      "tag": null,
+      "release": "2.1.0"
+    },
+    "mailer": {
+      "package": "yiisoft/mailer",
+      "remote": "https://github.com/yiisoft/mailer.git",
+      "branch": "master",
+      "commit": "99dcadc00c52de3a6d3983d65479a28a7b8fdf4f",
+      "commit_date": "2026-09-04T17:41:54+03:00",
+      "tag": null,
+      "release": "6.1.0"
+    },
+    "mailer-symfony": {
+      "package": "yiisoft/mailer-symfony",
+      "remote": "https://github.com/yiisoft/mailer-symfony.git",
+      "branch": "master",
+      "commit": "8ce160bd9cae72f420484c2d72cfac5ecb6710a7",
+      "commit_date": "2026-09-04T17:41:59+03:00",
+      "tag": null,
+      "release": "4.0.1"
+    },
+    "middleware-dispatcher": {
+      "package": "yiisoft/middleware-dispatcher",
+      "remote": "https://github.com/yiisoft/middleware-dispatcher.git",
+      "branch": "master",
+      "commit": "67a8ec20dc2908cd6164f21a27882a1833d4f094",
+      "commit_date": "2026-09-18T13:05:21+03:00",
+      "tag": null,
+      "release": "5.4.0"
+    },
+    "mutex": {
+      "package": "yiisoft/mutex",
+      "remote": "https://github.com/yiisoft/mutex.git",
+      "branch": "master",
+      "commit": "57acea1db470bbd35d65b013bd79bd0d25fd551d",
+      "commit_date": "2026-09-04T17:42:08+03:00",
+      "tag": null,
+      "release": "1.1.1"
+    },
+    "mutex-file": {
+      "package": "yiisoft/mutex-file",
+      "remote": "https://github.com/yiisoft/mutex-file.git",
+      "branch": "master",
+      "commit": "f74c3a6d3834c872015891a79c3438becb1da369",
+      "commit_date": "2026-10-09T18:00:36+03:00",
+      "tag": "1.1.2",
+      "release": "1.1.2"
+    },
+    "mutex-pdo-mysql": {
+      "package": "yiisoft/mutex-pdo-mysql",
+      "remote": "https://github.com/yiisoft/mutex-pdo-mysql.git",
+      "branch": "master",
+      "commit": "d4da1206dfa065c4b7603163125100c1614cb605",
+      "commit_date": "2026-10-22T12:47:26+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "mutex-pdo-oracle": {
+      "package": "yiisoft/mutex-pdo-oracle",
+      "remote": "https://github.com/yiisoft/mutex-pdo-oracle.git",
+      "branch": "master",
+      "commit": "db9be622637c4c8d1bf066d1adddac989e346931",
+      "commit_date": "2026-10-21T18:01:20+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "mutex-pdo-pgsql": {
+      "package": "yiisoft/mutex-pdo-pgsql",
+      "remote": "https://github.com/yiisoft/mutex-pdo-pgsql.git",
+      "branch": "master",
+      "commit": "b4e70bf08650cc6ffed3467d0166d11a2ccad871",
+      "commit_date": "2026-10-22T12:49:58+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "mutex-redis": {
+      "package": "yiisoft/mutex-redis",
+      "remote": "https://github.com/yiisoft/mutex-redis.git",
+      "branch": "master",
+      "commit": "8a41f443cf357aa807e47f80ac60dbbf561e07db",
+      "commit_date": "2026-09-04T17:42:27+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "network-utilities": {
+      "package": "yiisoft/network-utilities",
+      "remote": "https://github.com/yiisoft/network-utilities.git",
+      "branch": "master",
+      "commit": "2da48e2a7f316520fe77901e4778b3d43df1b17e",
+      "commit_date": "2026-08-09T17:41:05+03:00",
+      "tag": null,
+      "release": "1.2.1"
+    },
+    "profiler": {
+      "package": "yiisoft/profiler",
+      "remote": "https://github.com/yiisoft/profiler.git",
+      "branch": "master",
+      "commit": "713f13cebaafc7f3c35a25e5deaf99ee00b99de7",
+      "commit_date": "2026-09-04T17:42:40+03:00",
+      "tag": null,
+      "release": "3.0.0"
+    },
+    "proxy": {
+      "package": "yiisoft/proxy",
+      "remote": "https://github.com/yiisoft/proxy.git",
+      "branch": "master",
+      "commit": "37d0090395844f61e83ee19ec70d80db33ba1f4a",
+      "commit_date": "2026-09-04T17:42:45+03:00",
+      "tag": null,
+      "release": "1.2.0"
+    },
+    "proxy-middleware": {
+      "package": "yiisoft/proxy-middleware",
+      "remote": "https://github.com/yiisoft/proxy-middleware.git",
+      "branch": "master",
+      "commit": "f54869c23a667e4a9ae01df2346d64fc3b0c01a8",
+      "commit_date": "2026-09-04T17:42:49+03:00",
+      "tag": null,
+      "release": "1.0.3"
+    },
+    "psr-emitter": {
+      "package": "yiisoft/psr-emitter",
+      "remote": "https://github.com/yiisoft/psr-emitter.git",
+      "branch": "master",
+      "commit": "fec919eb9e942324b76cee50d374f483e8b7938f",
+      "commit_date": "2026-09-04T17:42:54+03:00",
+      "tag": null,
+      "release": "1.0.1"
+    },
+    "queue": {
+      "package": "yiisoft/queue",
+      "remote": "https://github.com/yiisoft/queue.git",
+      "branch": "master",
+      "commit": "7c79c3b6d24a5bea6728ff49bd426d3267f034e0",
+      "commit_date": "2026-09-15T16:02:30+03:00",
+      "tag": null,
+      "release": null
+    },
+    "queue-amqp": {
+      "package": "yiisoft/queue-amqp",
+      "remote": "https://github.com/yiisoft/queue-amqp.git",
+      "branch": "master",
+      "commit": "54361d194471f77c4fa01f087e6d5f38fb9ee7c3",
+      "commit_date": "2026-10-22T12:48:00+03:00",
+      "tag": null,
+      "release": null
+    },
+    "queue-db": {
+      "package": "yiisoft/queue-db",
+      "remote": "https://github.com/yiisoft/queue-db.git",
+      "branch": "master",
+      "commit": "bf0117897364bc00ff40b0ad5aee2edc00a5ac95",
+      "commit_date": "2026-09-04T17:43:08+03:00",
+      "tag": null,
+      "release": null
+    },
+    "queue-redis": {
+      "package": "yiisoft/queue-redis",
+      "remote": "https://github.com/yiisoft/queue-redis.git",
+      "branch": "master",
+      "commit": "c23261521fe34ea6488a073122dd463d5699be96",
+      "commit_date": "2026-09-29T12:54:31+03:00",
+      "tag": null,
+      "release": null
+    },
+    "rate-limiter": {
+      "package": "yiisoft/rate-limiter",
+      "remote": "https://github.com/yiisoft/rate-limiter.git",
+      "branch": "master",
+      "commit": "43e8fc56605498f5047740c132d519e3ee28b61f",
+      "commit_date": "2026-09-04T17:43:17+03:00",
+      "tag": null,
+      "release": "3.0.0"
+    },
+    "rbac": {
+      "package": "yiisoft/rbac",
+      "remote": "https://github.com/yiisoft/rbac.git",
+      "branch": "master",
+      "commit": "f96e8313c08280fe9aa1ebac11b9c79206c338c4",
+      "commit_date": "2026-09-04T17:43:22+03:00",
+      "tag": null,
+      "release": "2.1.2"
+    },
+    "rbac-cycle-db": {
+      "package": "yiisoft/rbac-cycle-db",
+      "remote": "https://github.com/yiisoft/rbac-cycle-db.git",
+      "branch": "master",
+      "commit": "2b7c7c2cd350b21a13303ffcc1ef0a989b9c7a0e",
+      "commit_date": "2026-09-23T11:25:06+03:00",
+      "tag": null,
+      "release": "3.0.0"
+    },
+    "rbac-db": {
+      "package": "yiisoft/rbac-db",
+      "remote": "https://github.com/yiisoft/rbac-db.git",
+      "branch": "master",
+      "commit": "64db5818dade99bb520bd6a99f63847399a60931",
+      "commit_date": "2026-10-22T13:18:51+03:00",
+      "tag": null,
+      "release": "2.1.0"
+    },
+    "rbac-php": {
+      "package": "yiisoft/rbac-php",
+      "remote": "https://github.com/yiisoft/rbac-php.git",
+      "branch": "master",
+      "commit": "4d9cbfade801c816887b55877336944efc7ac264",
+      "commit_date": "2026-08-09T19:03:10+03:00",
+      "tag": null,
+      "release": "2.1.0"
+    },
+    "rbac-rules-container": {
+      "package": "yiisoft/rbac-rules-container",
+      "remote": "https://github.com/yiisoft/rbac-rules-container.git",
+      "branch": "master",
+      "commit": "e1d1eeca81f888579640c75fb139186231857763",
+      "commit_date": "2026-09-04T17:43:36+03:00",
+      "tag": null,
+      "release": "2.1.0"
+    },
+    "request-body-parser": {
+      "package": "yiisoft/request-body-parser",
+      "remote": "https://github.com/yiisoft/request-body-parser.git",
+      "branch": "master",
+      "commit": "8edbef7000fce0435dec755000f7cd0bd104e827",
+      "commit_date": "2026-09-04T17:43:41+03:00",
+      "tag": null,
+      "release": "1.2.1"
+    },
+    "request-provider": {
+      "package": "yiisoft/request-provider",
+      "remote": "https://github.com/yiisoft/request-provider.git",
+      "branch": "master",
+      "commit": "694e592c0e385bd3abef710f19f40bcd17c23176",
+      "commit_date": "2026-09-04T17:43:45+03:00",
+      "tag": null,
+      "release": "1.3.0"
+    },
+    "requirements": {
+      "package": "yiisoft/requirements",
+      "remote": "https://github.com/yiisoft/requirements.git",
+      "branch": "master",
+      "commit": "d102fedc5b033907d4151be02bdc96578b2f0894",
+      "commit_date": "2026-09-04T17:43:50+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "response-download": {
+      "package": "yiisoft/response-download",
+      "remote": "https://github.com/yiisoft/response-download.git",
+      "branch": "master",
+      "commit": "eb1cc27a00a1d7e5e1771f77ec89801e82232f52",
+      "commit_date": "2026-09-04T17:43:54+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "router": {
+      "package": "yiisoft/router",
+      "remote": "https://github.com/yiisoft/router.git",
+      "branch": "master",
+      "commit": "c47f7c1d65810a94782d1b8fc553d04b54ae3345",
+      "commit_date": "2026-09-10T20:04:22+03:00",
+      "tag": null,
+      "release": "4.0.2"
+    },
+    "router-composer-attribute-collector": {
+      "package": "yiisoft/router-composer-attribute-collector",
+      "remote": "https://github.com/yiisoft/router-composer-attribute-collector.git",
+      "branch": "master",
+      "commit": "03b0b627e5e1a3ead6958a9ffdb06c64097e34d3",
+      "commit_date": "2026-08-09T19:15:05+03:00",
+      "tag": null,
+      "release": null
+    },
+    "router-fastroute": {
+      "package": "yiisoft/router-fastroute",
+      "remote": "https://github.com/yiisoft/router-fastroute.git",
+      "branch": "master",
+      "commit": "da1cd690ead84e082f69362be3be933671e6dbdb",
+      "commit_date": "2026-09-04T17:44:00+03:00",
+      "tag": null,
+      "release": "4.0.3"
+    },
+    "security": {
+      "package": "yiisoft/security",
+      "remote": "https://github.com/yiisoft/security.git",
+      "branch": "master",
+      "commit": "8a7e01792e6fd5ffe7901eb5e9a43391bb2ff3fe",
+      "commit_date": "2026-09-24T09:34:28+03:00",
+      "tag": null,
+      "release": "1.2.0"
+    },
+    "session": {
+      "package": "yiisoft/session",
+      "remote": "https://github.com/yiisoft/session.git",
+      "branch": "master",
+      "commit": "7021de9ca77d6b9487632c178293dc261f10ccee",
+      "commit_date": "2026-09-30T09:31:16+03:00",
+      "tag": "3.0.3",
+      "release": "3.0.3"
+    },
+    "strings": {
+      "package": "yiisoft/strings",
+      "remote": "https://github.com/yiisoft/strings.git",
+      "branch": "master",
+      "commit": "e93e1ba4daf3956f7f31bdc4df9daf4487edfd83",
+      "commit_date": "2026-09-04T17:44:10+03:00",
+      "tag": null,
+      "release": "2.7.0"
+    },
+    "test-support": {
+      "package": "yiisoft/test-support",
+      "remote": "https://github.com/yiisoft/test-support.git",
+      "branch": "master",
+      "commit": "2c9a1556568d5bf90661ec57b390e0835e7b9e77",
+      "commit_date": "2026-09-04T17:44:15+03:00",
+      "tag": null,
+      "release": "3.2.0"
+    },
+    "translator": {
+      "package": "yiisoft/translator",
+      "remote": "https://github.com/yiisoft/translator.git",
+      "branch": "master",
+      "commit": "829b1748233e80376435e1089a3947e36a21fb80",
+      "commit_date": "2026-09-04T17:44:19+03:00",
+      "tag": null,
+      "release": "3.2.1"
+    },
+    "translator-extractor": {
+      "package": "yiisoft/translator-extractor",
+      "remote": "https://github.com/yiisoft/translator-extractor.git",
+      "branch": "master",
+      "commit": "5b8ccc24bcc705e28b6b4d99a4efd9be841b9f9e",
+      "commit_date": "2026-09-04T17:44:24+03:00",
+      "tag": null,
+      "release": "2.1.1"
+    },
+    "translator-message-db": {
+      "package": "yiisoft/translator-message-db",
+      "remote": "https://github.com/yiisoft/translator-message-db.git",
+      "branch": "master",
+      "commit": "8ffbceb166dd3c8bb4d29c39f64c4d7d4854940a",
+      "commit_date": "2026-09-23T04:59:03+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "translator-message-gettext": {
+      "package": "yiisoft/translator-message-gettext",
+      "remote": "https://github.com/yiisoft/translator-message-gettext.git",
+      "branch": "master",
+      "commit": "93ffc7b23e96c71e1bbe1cc02d4fe96a548fe0f3",
+      "commit_date": "2026-08-09T19:43:20+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "translator-message-php": {
+      "package": "yiisoft/translator-message-php",
+      "remote": "https://github.com/yiisoft/translator-message-php.git",
+      "branch": "master",
+      "commit": "c8f0808089cbdc952ef0ba9ace3cbd1070c3d6fe",
+      "commit_date": "2026-09-04T17:44:39+03:00",
+      "tag": null,
+      "release": "1.1.2"
+    },
+    "user": {
+      "package": "yiisoft/user",
+      "remote": "https://github.com/yiisoft/user.git",
+      "branch": "master",
+      "commit": "b0e13411934f6e99f6027f43045e55601d07b8a0",
+      "commit_date": "2026-09-18T08:44:12+03:00",
+      "tag": null,
+      "release": "2.3.2"
+    },
+    "validator": {
+      "package": "yiisoft/validator",
+      "remote": "https://github.com/yiisoft/validator.git",
+      "branch": "master",
+      "commit": "12ae8011a6e5f4ff71f4da079372e93cb2a5ce2a",
+      "commit_date": "2026-09-28T09:29:09+03:00",
+      "tag": "2.6.1",
+      "release": "2.6.1"
+    },
+    "var-dumper": {
+      "package": "yiisoft/var-dumper",
+      "remote": "https://github.com/yiisoft/var-dumper.git",
+      "branch": "master",
+      "commit": "39928072ca25a156f4f5a667a59605a9778e514d",
+      "commit_date": "2026-09-04T17:44:49+03:00",
+      "tag": null,
+      "release": "1.7.1"
+    },
+    "view": {
+      "package": "yiisoft/view",
+      "remote": "https://github.com/yiisoft/view.git",
+      "branch": "master",
+      "commit": "29e8897d3e7ec74ceb9c1bfb074e543912471935",
+      "commit_date": "2026-09-04T17:44:54+03:00",
+      "tag": null,
+      "release": "12.2.4"
+    },
+    "view-twig": {
+      "package": "yiisoft/view-twig",
+      "remote": "https://github.com/yiisoft/view-twig.git",
+      "branch": "master",
+      "commit": "dafadbc6a81f2df7891e5469cc5ef80f4493cd73",
+      "commit_date": "2026-08-09T19:52:20+03:00",
+      "tag": null,
+      "release": "3.0.0"
+    },
+    "widget": {
+      "package": "yiisoft/widget",
+      "remote": "https://github.com/yiisoft/widget.git",
+      "branch": "master",
+      "commit": "9fe49207daa294faf2a0cb59999c867917d845dc",
+      "commit_date": "2026-09-04T17:44:58+03:00",
+      "tag": null,
+      "release": "2.2.2"
+    },
+    "yii-auth-client": {
+      "package": "yiisoft/yii-auth-client",
+      "remote": "https://github.com/yiisoft/yii-auth-client.git",
+      "branch": "master",
+      "commit": "915f4f51d72ac8f55e553aff86de00da947d0789",
+      "commit_date": "2026-10-15T01:45:58+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-bulma": {
+      "package": "yiisoft/yii-bulma",
+      "remote": "https://github.com/yiisoft/yii-bulma.git",
+      "branch": "master",
+      "commit": "f128a7b90e9c084b3ee86f3996e072c206604835",
+      "commit_date": "2026-09-04T17:45:08+03:00",
+      "tag": null,
+      "release": "1.1.0"
+    },
+    "yii-console": {
+      "package": "yiisoft/yii-console",
+      "remote": "https://github.com/yiisoft/yii-console.git",
+      "branch": "master",
+      "commit": "0cf71b7c2a25d45cebcc679147fe9650e738fe2d",
+      "commit_date": "2026-09-16T08:44:28+03:00",
+      "tag": null,
+      "release": "2.4.2"
+    },
+    "yii-cycle": {
+      "package": "yiisoft/yii-cycle",
+      "remote": "https://github.com/yiisoft/yii-cycle.git",
+      "branch": "master",
+      "commit": "952d73e63f52e5be7920acc7f5cb2a30f04f7a9c",
+      "commit_date": "2026-10-19T10:20:01+03:00",
+      "tag": null,
+      "release": "1.0.0"
+    },
+    "yii-dataview": {
+      "package": "yiisoft/yii-dataview",
+      "remote": "https://github.com/yiisoft/yii-dataview.git",
+      "branch": "master",
+      "commit": "daae6f4a803d64d5827bac31a2b0b9accde84a87",
+      "commit_date": "2026-09-15T21:24:30+03:00",
+      "tag": "1.3.0",
+      "release": "1.3.0"
+    },
+    "yii-debug": {
+      "package": "yiisoft/yii-debug",
+      "remote": "https://github.com/yiisoft/yii-debug.git",
+      "branch": "master",
+      "commit": "c07ac6d8262d08d17dea0fe5b2e5a5f058ca712e",
+      "commit_date": "2026-09-04T17:45:27+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-debug-api": {
+      "package": "yiisoft/yii-debug-api",
+      "remote": "https://github.com/yiisoft/yii-debug-api.git",
+      "branch": "master",
+      "commit": "0f126a72b981e677727b7f6a47586b98bd8626df",
+      "commit_date": "2026-10-18T11:12:05+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-debug-viewer": {
+      "package": "yiisoft/yii-debug-viewer",
+      "remote": "https://github.com/yiisoft/yii-debug-viewer.git",
+      "branch": "master",
+      "commit": "ff5279ff8a9f4404502a7a260dde6f6ff87ff594",
+      "commit_date": "2026-09-04T17:45:32+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-dev-tool": {
+      "package": "yiisoft/yii-dev-tool",
+      "remote": "https://github.com/yiisoft/yii-dev-tool.git",
+      "branch": "master",
+      "commit": "03bf627d4879315181fc6eb1c6cb3ad83f1a77a1",
+      "commit_date": "2026-10-12T00:23:52+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-event": {
+      "package": "yiisoft/yii-event",
+      "remote": "https://github.com/yiisoft/yii-event.git",
+      "branch": "master",
+      "commit": "f6cdbc9e806c0247f4271403b3212ca06e3489da",
+      "commit_date": "2026-09-04T17:45:42+03:00",
+      "tag": null,
+      "release": "2.2.0"
+    },
+    "yii-gii": {
+      "package": "yiisoft/yii-gii",
+      "remote": "https://github.com/yiisoft/yii-gii.git",
+      "branch": "master",
+      "commit": "195a0134c6548cfa4bf1556c0edabdf107d89720",
+      "commit_date": "2026-09-04T17:45:47+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-http": {
+      "package": "yiisoft/yii-http",
+      "remote": "https://github.com/yiisoft/yii-http.git",
+      "branch": "master",
+      "commit": "5a2f07b8cc3050e8e85e4e1cd6664ae6f2ee6565",
+      "commit_date": "2026-09-04T17:45:51+03:00",
+      "tag": null,
+      "release": "1.1.1"
+    },
+    "yii-middleware": {
+      "package": "yiisoft/yii-middleware",
+      "remote": "https://github.com/yiisoft/yii-middleware.git",
+      "branch": "master",
+      "commit": "df3e8bff520bb49b2395b9c32d8b0080008a86a3",
+      "commit_date": "2026-09-04T17:45:56+03:00",
+      "tag": null,
+      "release": "1.1.2"
+    },
+    "yii-runner": {
+      "package": "yiisoft/yii-runner",
+      "remote": "https://github.com/yiisoft/yii-runner.git",
+      "branch": "master",
+      "commit": "4408b56835f67916b3c466767e87c38a4aa4f638",
+      "commit_date": "2026-10-07T19:32:57+03:00",
+      "tag": null,
+      "release": "2.2.1"
+    },
+    "yii-runner-console": {
+      "package": "yiisoft/yii-runner-console",
+      "remote": "https://github.com/yiisoft/yii-runner-console.git",
+      "branch": "master",
+      "commit": "7e66f339deda5612a99e0cd28c53832876577683",
+      "commit_date": "2026-09-04T17:46:07+03:00",
+      "tag": null,
+      "release": "2.2.1"
+    },
+    "yii-runner-frankenphp": {
+      "package": "yiisoft/yii-runner-frankenphp",
+      "remote": "https://github.com/yiisoft/yii-runner-frankenphp.git",
+      "branch": "master",
+      "commit": "483980503e5d256c9193398f31fa00cf506b4a6a",
+      "commit_date": "2026-09-04T17:46:11+03:00",
+      "tag": null,
+      "release": "1.0.0"
+    },
+    "yii-runner-http": {
+      "package": "yiisoft/yii-runner-http",
+      "remote": "https://github.com/yiisoft/yii-runner-http.git",
+      "branch": "master",
+      "commit": "95182a5156ed01917374b2c4ea3e0e45a4bf9aac",
+      "commit_date": "2026-09-04T17:46:16+03:00",
+      "tag": null,
+      "release": "3.2.1"
+    },
+    "yii-runner-roadrunner": {
+      "package": "yiisoft/yii-runner-roadrunner",
+      "remote": "https://github.com/yiisoft/yii-runner-roadrunner.git",
+      "branch": "master",
+      "commit": "f34264211ced70ad16b35751883c7e32b66dd89e",
+      "commit_date": "2026-10-16T11:11:40+03:00",
+      "tag": null,
+      "release": "3.2.0"
+    },
+    "yii-sentry": {
+      "package": "yiisoft/yii-sentry",
+      "remote": "https://github.com/yiisoft/yii-sentry.git",
+      "branch": "master",
+      "commit": "668c6d2e29897788cb6e8b80937aa4ba7aea9aaf",
+      "commit_date": "2026-09-23T11:02:21+03:00",
+      "tag": "3.0.1",
+      "release": "3.0.1"
+    },
+    "yii-swagger": {
+      "package": "yiisoft/yii-swagger",
+      "remote": "https://github.com/yiisoft/yii-swagger.git",
+      "branch": "master",
+      "commit": "bce8c5619f0d881882f9b64d9b822e4efb45ffc9",
+      "commit_date": "2026-09-04T17:46:31+03:00",
+      "tag": null,
+      "release": "2.2.0"
+    },
+    "yii-testing": {
+      "package": "yiisoft/yii-testing",
+      "remote": "https://github.com/yiisoft/yii-testing.git",
+      "branch": "master",
+      "commit": "f04e41ec5512a938cd5659d81b584a2d76c4cab6",
+      "commit_date": "2026-09-04T17:46:35+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-twig": {
+      "package": "yiisoft/yii-twig",
+      "remote": "https://github.com/yiisoft/yii-twig.git",
+      "branch": "master",
+      "commit": "c923d27cfe986b9a44ee8ae191c1817baf593c3d",
+      "commit_date": "2026-09-04T17:46:40+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-view-renderer": {
+      "package": "yiisoft/yii-view-renderer",
+      "remote": "https://github.com/yiisoft/yii-view-renderer.git",
+      "branch": "master",
+      "commit": "0f1793c187b6a8c460970c3745a74d9f2878edbb",
+      "commit_date": "2026-09-04T17:46:44+03:00",
+      "tag": null,
+      "release": "7.4.1"
+    },
+    "yii-widgets": {
+      "package": "yiisoft/yii-widgets",
+      "remote": "https://github.com/yiisoft/yii-widgets.git",
+      "branch": "master",
+      "commit": "5469095f7b59379be259ef7825e9ea396243b0bb",
+      "commit_date": "2026-10-03T06:03:17+03:00",
+      "tag": null,
+      "release": "2.1.1"
+    }
+  }
+}

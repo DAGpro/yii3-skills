@@ -32,8 +32,11 @@ const repoRoot = resolve(root, '..');
  * Builds the prompt for the LLM judge.
  * INVARIANT: Must be strictly blind — no mention of "with-skill", "baseline",
  * or the extension source repo is allowed into the judge prompt.
+ * inputMode 'transcript' (default) includes the candidate transcript; 'diff'
+ * grades the changed files only — campaign-recommended, because transcripts
+ * carry arm-distinguishable skill vocabulary that word-redaction cannot hide.
  */
-export function buildJudgePrompt({ scenarioDir, dir, base, transcript }) {
+export function buildJudgePrompt({ scenarioDir, dir, base, transcript, inputMode = 'transcript' }) {
   const promptText = existsSync(join(scenarioDir, 'prompt.md'))
     ? read(join(scenarioDir, 'prompt.md')).trim()
     : 'No prompt description provided.';
@@ -68,10 +71,11 @@ export function buildJudgePrompt({ scenarioDir, dir, base, transcript }) {
     'You are an expert, impartial code evaluation judge for modern PHP and Yii 3 software engineering benchmarks.',
     '',
     '# INVARIANTS & EVALUATION RULES',
-    '1. Blind evaluation: You do not know what tools, skills, or model variants the agent had access to. Grade strictly based on the provided diff/files, transcript, and rubric.',
-    '2. Evidence-based: Every point awarded or deducted must cite concrete evidence (file names, code snippets, quotes).',
+    '1. Blind evaluation: You do not know what tools, skills, or model variants the agent had access to. Grade strictly based on the provided diff/files, transcript (when present), and rubric.',
+    '2. Evidence-based: Every point awarded or deducted must cite concrete evidence (file names, code snippets, quotes). A criterion without concrete evidence must be marked "unverifiable" - do not guess.',
     '3. Strict Yii 3 standards: Yii 3 is decoupled and strict (PSR-7, PSR-11, PSR-14). No Yii 2 legacy facades (Yii::$app), no fat controllers, no SQL in HTTP actions.',
     '4. Output format: You MUST return ONLY a single valid JSON object matching the requested schema. No conversational prose or markdown formatting outside the JSON.',
+    '5. Completeness: Evaluate EVERY criterion in the rubric. When the provided input cannot verify a criterion (e.g. no transcript in diff-only mode), mark its status "unverifiable" and still supply the reason as evidence.',
     '',
     '# 1. TASK ASSIGNMENT PROMPT',
     promptText,
@@ -83,8 +87,9 @@ export function buildJudgePrompt({ scenarioDir, dir, base, transcript }) {
     '## Modified / Created Files',
     fileSections.length > 0 ? fileSections.join('\n\n') : 'No files were created or modified.',
     '',
-    '## Candidate Transcript / Final Response',
-    cleanTranscript ? cleanTranscript : 'No transcript was produced.',
+    inputMode === 'diff'
+      ? '## Candidate Transcript / Final Response\n\nNot provided (diff-only evaluation): grade the changed files only. Rubric criteria that can only be verified from the workflow report must be marked "unverifiable".'
+      : `## Candidate Transcript / Final Response\n${cleanTranscript ? cleanTranscript : 'No transcript was produced.'}`,
     '',
     '# 4. JSON RESPONSE SCHEMA',
     'Respond with a single JSON object structured as follows:',
@@ -103,7 +108,7 @@ export function buildJudgePrompt({ scenarioDir, dir, base, transcript }) {
     '  "weaknesses": ["..."]',
     '}',
     '',
-    'Verdict must be one of: "pass" (score >= 0.8), "partial" (0.5 <= score < 0.8), or "fail" (score < 0.5).'
+    'Verdict must be one of: "pass" (score >= 0.8), "partial" (0.5 <= score < 0.8), "fail" (score < 0.5), or "inconclusive" (the provided input does not allow reliable grading, e.g. diff-only mode with report-only criteria).'
   ].join('\n');
 
   return fullPrompt;
@@ -145,12 +150,28 @@ export function parseJudgeResponse(rawText) {
     }
   }
 
-  if (!['pass', 'partial', 'fail'].includes(data.verdict)) {
+  if (!['pass', 'partial', 'fail', 'inconclusive'].includes(data.verdict)) {
     data.verdict = data.score >= 0.8 ? 'pass' : data.score >= 0.5 ? 'partial' : 'fail';
   }
 
   if (!Array.isArray(data.criteria)) {
     data.criteria = [];
+  }
+
+  // Evidence completeness (audit P2): a verdict is only as good as its evidence.
+  // An empty criteria list or any criterion without concrete evidence downgrades
+  // the verdict to "inconclusive" instead of letting it stand as pass/fail.
+  if (data.verdict !== 'inconclusive') {
+    const missingEvidence = data.criteria
+      .filter((c) => !c || typeof c.evidence !== 'string' || c.evidence.trim().length === 0)
+      .length;
+    if (data.criteria.length === 0) {
+      data.verdict = 'inconclusive';
+      data.summary = `${data.summary || 'Evaluation completed.'} [inconclusive: no criteria evaluated]`.trim();
+    } else if (missingEvidence > 0) {
+      data.verdict = 'inconclusive';
+      data.summary = `${data.summary || 'Evaluation completed.'} [inconclusive: ${missingEvidence} criterion(a) without evidence]`.trim();
+    }
   }
 
   if (!Array.isArray(data.strengths)) data.strengths = [];
@@ -163,9 +184,11 @@ export function parseJudgeResponse(rawText) {
 // --- 3. Judge Execution Engine ----------------------------------------------
 
 export async function evaluateWithJudge(prompt, options = {}) {
+  const meta = options.meta; // optional { provider, model } collector for run metadata
   const isDryRun = options.dryRun || process.env.EVAL_JUDGE_DRY_RUN === '1' || process.env.EVAL_JUDGE_DRY_RUN === 'true';
 
   if (isDryRun) {
+    if (meta) { meta.provider = 'dry-run'; meta.model = 'mock'; }
     return {
       score: 1.0,
       verdict: 'pass',
@@ -181,6 +204,7 @@ export async function evaluateWithJudge(prompt, options = {}) {
   // 1. External Command via EVAL_JUDGE_CMD
   const judgeCmd = options.cmd || process.env.EVAL_JUDGE_CMD;
   if (judgeCmd) {
+    if (meta) { meta.provider = 'cmd'; meta.model = 'EVAL_JUDGE_CMD'; }
     const p = spawnSync(judgeCmd, {
       shell: true,
       input: prompt,
@@ -198,6 +222,7 @@ export async function evaluateWithJudge(prompt, options = {}) {
   if (openAiKey) {
     const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
     const model = options.model || process.env.EVAL_JUDGE_MODEL || 'gpt-4o';
+    if (meta) { meta.provider = 'openai'; meta.model = model; }
     const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -222,7 +247,8 @@ export async function evaluateWithJudge(prompt, options = {}) {
   // 3. Anthropic API
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (anthropicKey) {
-    const model = options.model || process.env.EVAL_JUDGE_MODEL || 'claude-3-5-sonnet-latest';
+    const model = options.model || process.env.EVAL_JUDGE_MODEL || 'claude-sonnet-4-5';
+    if (meta) { meta.provider = 'anthropic'; meta.model = model; }
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -251,11 +277,69 @@ export async function evaluateWithJudge(prompt, options = {}) {
 
 // --- 4. Workflow Operations -------------------------------------------------
 
+/**
+ * Aggregates N independent judge runs (audit P2): verdict by strict majority,
+ * score by median, agreement = share of runs matching the majority verdict.
+ * Tie-breaks: adjacent grades resolve to the stricter/middle one (pass+partial ->
+ * partial, partial+fail -> fail); polar disagreement (pass+fail, three-way) yields
+ * "inconclusive" - the runs carry no reliable signal, which must not be masked by
+ * an arbitrary pick. Inconclusive always wins a tie it belongs to.
+ */
+export function aggregateJudgeRuns(runs) {
+  if (!Array.isArray(runs) || runs.length === 0) throw new Error('no judge runs to aggregate');
+  if (runs.length === 1) return { ...runs[0], agreement: 1, allRuns: runs };
+  const counts = {};
+  for (const r of runs) counts[r.verdict] = (counts[r.verdict] ?? 0) + 1;
+  const maxCount = Math.max(...Object.values(counts));
+  const top = Object.keys(counts).filter((v) => counts[v] === maxCount);
+  let verdict;
+  if (top.length === 1) verdict = top[0];
+  else if (top.length === 2 && top.includes('pass') && top.includes('partial')) verdict = 'partial';
+  else if (top.length === 2 && top.includes('partial') && top.includes('fail')) verdict = 'fail';
+  else verdict = 'inconclusive';
+  const scores = runs.map((r) => r.score).sort((a, b) => a - b);
+  const mid = Math.floor(scores.length / 2);
+  const median = scores.length % 2 ? scores[mid] : (scores[mid - 1] + scores[mid]) / 2;
+  const majorityRun = runs.find((r) => r.verdict === verdict) ?? runs[0];
+  return { ...majorityRun, score: median, verdict, agreement: maxCount / runs.length, allRuns: runs };
+}
+
 export async function judgeSingleWork({ scenarioDir, workDir, transcript, options = {} }) {
   const base = join(scenarioDir, 'fixture');
   const tContent = transcript ?? (existsSync(join(workDir, 'transcript.txt')) ? read(join(workDir, 'transcript.txt')) : '');
-  const prompt = buildJudgePrompt({ scenarioDir, dir: workDir, base, transcript: tContent });
-  return await evaluateWithJudge(prompt, options);
+  const inputMode = options.inputMode ?? process.env.EVAL_JUDGE_INPUT ?? 'transcript';
+  const runs = Math.max(1, Number(options.runs ?? process.env.EVAL_JUDGE_RUNS ?? 1));
+
+  if (inputMode === 'diff') {
+    // Diff-only grading with nothing to grade cannot produce pass/fail evidence.
+    const ignored = new Set(['transcript.txt', 'AGENTS.md', 'tokens.json', 'usage.json', 'telemetry.json']);
+    const changed = changedFiles(workDir, base).filter((c) => !ignored.has(c.path));
+    if (changed.length === 0) {
+      return {
+        score: 0,
+        verdict: 'inconclusive',
+        summary: '[diff-only] no changed files relative to the fixture - nothing to grade',
+        criteria: [],
+        strengths: [],
+        weaknesses: [],
+        provider: null,
+        model: null,
+        inputMode,
+        requestedRuns: runs,
+        agreement: 1,
+        allRuns: []
+      };
+    }
+  }
+
+  const prompt = buildJudgePrompt({ scenarioDir, dir: workDir, base, transcript: tContent, inputMode });
+  const meta = {};
+  const results = [];
+  for (let i = 0; i < runs; i++) {
+    results.push(await evaluateWithJudge(prompt, { ...options, meta }));
+  }
+  const aggregated = aggregateJudgeRuns(results);
+  return { ...aggregated, provider: meta.provider ?? null, model: meta.model ?? null, inputMode, requestedRuns: runs };
 }
 
 export async function judgeResultDirectory(resultsDir, options = {}) {
@@ -383,7 +467,79 @@ export async function runSelfTest() {
   }
   console.log('  PASS: Dry-run evaluation returned valid evaluation structure.');
 
-  console.log('\nAll LLM Judge self-tests passed successfully! (4/4 passed)');
+  // Test 5: diff-only input mode (audit P2): the transcript must not leak into the prompt
+  console.log('Test 5: Testing diff-only input mode...');
+  const diffPrompt = buildJudgePrompt({
+    scenarioDir: testScDir,
+    dir: join(testScDir, 'positive-sample'),
+    base: join(testScDir, 'fixture'),
+    transcript: 'Secret transcript mentioning with-skill mode and Mission State.',
+    inputMode: 'diff'
+  });
+  if (diffPrompt.includes('Secret transcript') || diffPrompt.includes('Mission State')) {
+    throw new Error('diff-only prompt leaked the transcript!');
+  }
+  if (!diffPrompt.includes('diff-only evaluation')) {
+    throw new Error('diff-only prompt missing the grading-scope notice!');
+  }
+  console.log('  PASS: diff-only prompt excludes the transcript.');
+
+  // Test 6: inconclusive semantics (audit P2): evidence completeness downgrades pass/fail
+  console.log('Test 6: Testing inconclusive semantics...');
+  const noCriteria = parseJudgeResponse('{"score": 0.95, "verdict": "pass", "criteria": []}');
+  if (noCriteria.verdict !== 'inconclusive') {
+    throw new Error(`empty criteria should be inconclusive, got ${noCriteria.verdict}`);
+  }
+  const noEvidence = parseJudgeResponse('{"score": 0.95, "verdict": "pass", "criteria": [{"criterion": "A", "status": "met", "evidence": ""}]}');
+  if (noEvidence.verdict !== 'inconclusive') {
+    throw new Error(`missing evidence should be inconclusive, got ${noEvidence.verdict}`);
+  }
+  const explicitInconclusive = parseJudgeResponse('{"score": 0.4, "verdict": "inconclusive", "criteria": [{"criterion": "A", "status": "unverifiable", "evidence": "diff-only, report-only criterion"}]}');
+  if (explicitInconclusive.verdict !== 'inconclusive') {
+    throw new Error(`explicit inconclusive was overwritten to ${explicitInconclusive.verdict}`);
+  }
+  console.log('  PASS: evidence completeness downgrades to inconclusive; explicit inconclusive preserved.');
+
+  // Test 7: multi-run aggregation (audit P2): majority verdict, median score, agreement
+  console.log('Test 7: Testing multi-run aggregation...');
+  const agg = aggregateJudgeRuns([
+    { score: 0.9, verdict: 'pass', summary: 'a', criteria: [{ criterion: 'c', status: 'met', evidence: 'e' }] },
+    { score: 0.7, verdict: 'pass', summary: 'b', criteria: [{ criterion: 'c', status: 'met', evidence: 'e' }] },
+    { score: 0.3, verdict: 'fail', summary: 'c', criteria: [{ criterion: 'c', status: 'unmet', evidence: 'e' }] }
+  ]);
+  if (agg.verdict !== 'pass' || agg.agreement !== 2 / 3 || agg.score !== 0.7) {
+    throw new Error(`aggregation mismatch: verdict=${agg.verdict} agreement=${agg.agreement} score=${agg.score}`);
+  }
+  const tie = aggregateJudgeRuns([
+    { score: 0.9, verdict: 'pass', summary: '', criteria: [{ criterion: 'c', status: 'met', evidence: 'e' }] },
+    { score: 0.6, verdict: 'partial', summary: '', criteria: [{ criterion: 'c', status: 'met', evidence: 'e' }] },
+    { score: 0.3, verdict: 'fail', summary: '', criteria: [{ criterion: 'c', status: 'unmet', evidence: 'e' }] }
+  ]);
+  if (tie.verdict !== 'inconclusive') {
+    throw new Error(`polar disagreement should be inconclusive, got ${tie.verdict}`);
+  }
+  const adjacentTie = aggregateJudgeRuns([
+    { score: 0.85, verdict: 'pass', summary: '', criteria: [{ criterion: 'c', status: 'met', evidence: 'e' }] },
+    { score: 0.75, verdict: 'partial', summary: '', criteria: [{ criterion: 'c', status: 'met', evidence: 'e' }] }
+  ]);
+  if (adjacentTie.verdict !== 'partial') {
+    throw new Error(`pass+partial tie should resolve to partial, got ${adjacentTie.verdict}`);
+  }
+  console.log('  PASS: majority verdict, median score, conservative tie-break.');
+
+  // Test 8: diff-only with an empty diff is inconclusive without a provider call
+  console.log('Test 8: Testing diff-only empty-diff guard...');
+  const emptyDiff = await judgeSingleWork({
+    scenarioDir: testScDir,
+    workDir: join(testScDir, 'fixture'),
+    options: { dryRun: true, inputMode: 'diff' }
+  });
+  if (emptyDiff.verdict !== 'inconclusive' || emptyDiff.criteria.length !== 0) {
+    throw new Error(`empty-diff diff-only should be inconclusive, got ${emptyDiff.verdict}`);
+  }
+  console.log('  PASS: empty diff in diff-only mode returns inconclusive without a provider call.');
+
+  console.log('\nAll LLM Judge self-tests passed successfully! (8/8 passed)');
   return true;
 }
 
@@ -417,7 +573,7 @@ async function main() {
     const result = await judgeSingleWork({
       scenarioDir: sDir,
       workDir,
-      options: { dryRun }
+      options: { dryRun, inputMode: args.input, runs: args.runs ? Number(args.runs) : undefined }
     });
     console.log(JSON.stringify(result, null, 2));
     process.exit(0);
@@ -425,8 +581,11 @@ async function main() {
 
   console.log('Usage:');
   console.log('  node evals/runner/judge.mjs --selftest');
-  console.log('  node evals/runner/judge.mjs --scenario <id> [--work <dir>] [--dry-run]');
+  console.log('  node evals/runner/judge.mjs --scenario <id> [--work <dir>] [--dry-run] [--input diff|transcript] [--runs N]');
   console.log('  node evals/runner/judge.mjs --result-dir evals/results/<timestamp> [--dry-run]');
+  console.log('');
+  console.log('Env: EVAL_JUDGE_INPUT (diff|transcript, default transcript), EVAL_JUDGE_RUNS (default 1),');
+  console.log('     EVAL_JUDGE_MODEL (pin the judge model version), EVAL_JUDGE_CMD / OPENAI_API_KEY / ANTHROPIC_API_KEY.');
   process.exit(0);
 }
 

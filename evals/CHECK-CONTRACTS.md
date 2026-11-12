@@ -93,6 +93,10 @@ mutation-pinned); specificity = does not reject valid alternatives (now alt-pinn
 
 Known residual weaknesses (P2 candidates): `conflict-escalated` (06) and `plan-resolved`
 (55) remain transcript-regex checks — semantic escalation/resolution detection needs the
-judge layer, not more regex; stub-body survivors (method bodies replaced with throws)
+judge layer, not more regex. Their deterministic checks stay as cheap gates; the judge is
+the **second channel** for these two scenarios: campaign protocol grades them with
+`--input diff --runs 3` (diff-only hides the skill vocabulary; majority-of-3 guards
+run-to-run noise) and treats `partial`/`fail` on the report-quality criteria as a
+calibration signal, not a gate. Stub-body survivors (method bodies replaced with throws)
 are only provable at L3 and are delegated to the runtime harness and hidden acceptance
 tests (roadmap).

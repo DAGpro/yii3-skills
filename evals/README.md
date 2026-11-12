@@ -216,12 +216,16 @@ npm run judge:selftest
 node evals/runner/judge.mjs --selftest
 ```
 
-- **Blind Evaluation Invariant:** The judge prompt strictly redacts mode indicators (`with-skill`, `baseline`) to prevent LLM grading bias. Internal harness artifacts (`AGENTS.md`, `result.json`) are excluded.
+- **Blind Evaluation Invariant:** The judge prompt strictly redacts mode indicators (`with-skill`, `baseline`) to prevent LLM grading bias. Internal harness artifacts (`AGENTS.md`, `result.json`) are excluded. **Diff-only mode** (`--input diff` or `EVAL_JUDGE_INPUT=diff`) grades the changed files without the transcript — the campaign-recommended mode, because transcripts carry arm-distinguishable skill vocabulary that word-redaction cannot hide.
+- **Evidence completeness:** every criterion must carry concrete evidence; an empty criteria list or any evidence-free criterion downgrades the verdict to `inconclusive` instead of letting it stand as pass/fail. Diff-only grading of an empty diff is `inconclusive` without a provider call.
+- **Multi-run majority:** `--runs N` (or `EVAL_JUDGE_RUNS=N`, default 1) invokes the judge N times independently; verdict by strict majority (adjacent-grade ties resolve stricter: pass+partial→partial, partial+fail→fail; polar disagreement → `inconclusive`), score by median, plus an `agreement` ratio. Judge calibration (κ against hand-labeled solutions) is pending; until calibrated, treat judge scores as a second channel, never as the pass/fail arbiter over deterministic gates.
 - **Structured Scoring Contract:** Outputs a typed `judge.json` artifact containing:
-  - `score`: Normalized score between 0.0 and 1.0.
-  - `verdict`: `"pass"` | `"fail"` | `"inconclusive"`.
-  - `summary`: Concise synthesis of model performance.
-  - `criteria`: Array of per-rubric-criterion items `[{ id, name, passed, weight, note }]`.
+  - `score`: Normalized score between 0.0 and 1.0 (median across runs).
+  - `verdict`: `"pass"` | `"partial"` | `"fail"` | `"inconclusive"`.
+  - `agreement`: share of runs matching the majority verdict (1 for single runs).
+  - `provider` / `model` / `inputMode` / `requestedRuns`: provenance metadata (pin the model via `EVAL_JUDGE_MODEL`; the Anthropic default is `claude-sonnet-4-5`).
+  - `criteria`: Array of per-rubric-criterion items `[{ criterion, status: met|unmet|unverifiable, evidence }]`.
+  - `allRuns`: the raw per-run results when N > 1.
   - `strengths` / `weaknesses`: Specific concrete observations.
 
 ## Telemetry & Cost Tracking (Tokens & Cost)

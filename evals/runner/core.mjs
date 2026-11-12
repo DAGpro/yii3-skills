@@ -77,14 +77,17 @@ export async function runChecks(scenarioDir, ctx) {
   return out;
 }
 
+/** Check status with legacy-result compatibility (pre-status artifacts carry only `pass`/`skipped`). */
+const statusOf = (r) => r.status ?? (r.skipped === true ? 'skipped' : r.pass === true ? 'passed' : 'failed');
+
 /** Share of non-skipped checks that passed. Skipped checks are excluded from the denominator. */
 export const passRate = (results) => {
-  const counted = results.filter((r) => r.status !== 'skipped');
-  return counted.length ? counted.filter((r) => r.status === 'passed').length / counted.length : 1;
+  const counted = results.filter((r) => statusOf(r) !== 'skipped');
+  return counted.length ? counted.filter((r) => statusOf(r) === 'passed').length / counted.length : 1;
 };
 
 /** Required checks that failed (the gates). Skipped checks are never required. */
-export const requiredFailed = (results) => results.filter((r) => r.required && r.status === 'failed');
+export const requiredFailed = (results) => results.filter((r) => r.required && statusOf(r) === 'failed');
 
 /** Gate verdict: pass only when every required check passed (headline metric, not a check-average). */
 export const gatesPassed = (results) => requiredFailed(results).length === 0;

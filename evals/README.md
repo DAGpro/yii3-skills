@@ -163,6 +163,26 @@ scenario whose baseline mean stays >= 80% (delta < ~10 pp) must be hardened (ind
 distractors, extra gates) or retired; in composites, harden or retire individual checks instead.
 Headline metric of the suite = delta on composite scenarios; unit scenarios are the diagnostic layer.
 
+## Calibration & campaigns (audit P2/P3 protocol)
+
+1. **Baseline measurement (all 69).** Solve every scenario without the skill (the chat-run
+   protocol above, one run per scenario to start), grade with
+   `evaluate.mjs --scenario <id> --work <dir> --mode baseline-manual-chat`, then apply the
+   policy mechanically: `node evals/audit/calibration.mjs --results <dir> --mode baseline-manual-chat`
+   → scenarios with baseline mean >= 80% print `HARDEN OR RETIRE`. Re-run after prompt or
+   check changes (a prompt rewrite resets comparability for that scenario).
+2. **Campaign (n >= 5).** Both arms, 2–3 model tiers, judge as the second channel with
+   diff-only majority grading (`EVAL_JUDGE_INPUT=diff`, `EVAL_JUDGE_RUNS=3`), then compute
+   uncertainty with `node evals/audit/stats.mjs --results <dir> --arms with-skill,baseline`
+   → per-scenario deltas, arm means, scenario-level bootstrap 95% CIs. Publish per-run
+   results, not only means. Re-baseline whenever `checksVersion` or a prompt changes.
+
+De-leaking note (2026-11-12): prompts of 18 and 22 were rewritten from solution-dictating
+phrasing ("read-through cache entry", "OffsetPaginator from yiisoft/data") to user-level
+requirements; 57 and the runner scenarios (58–61) keep their literal thresholds/package
+names because for configuration tasks those ARE the requirements. Their pre-rewrite
+campaign results are not comparable.
+
 ## Runtime Verification Layer (L4/L5)
 
 The harness includes a runtime verification module (`evals/lib/runtime.mjs`) supporting PHP syntax linting (`php -l`), `composer validate`, and strict `phpunit` test execution:

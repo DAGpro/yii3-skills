@@ -26,7 +26,7 @@
   - [4.3. Dependency Combinators (AllDependencies vs AnyDependency)](#43-dependency-combinators-alldependencies-vs-anydependency)
   - [4.4. Worker Runtime Invariant (Resetting Static Pool)](#44-worker-runtime-invariant-resetting-static-pool)
 - [5. View Fragment Caching & Dynamic Content (Hole-Punching)](#5-view-fragment-caching--dynamic-content-hole-punching)
-  - [5.1. ViewRenderer Trap: Fatal Closure Serialization](#51-viewrenderer-trap-fatal-closure-serialization)
+  - [5.1. WebViewRenderer Trap: Fatal Closure Serialization](#51-webviewrenderer-trap-fatal-closure-serialization)
   - [5.2. Fragment Caching with Hole-Punching (CachedContent & DynamicContent)](#52-fragment-caching-with-hole-punching-cachedcontent--dynamiccontent)
 - [6. HTTP Response Caching (ETag & Conditional Requests)](#6-http-response-caching-etag--conditional-requests) — full reference in the [HTTP Response Caching (ETag) Guide](http-cache-etag.md)
 - [7. Unit Testing Caching & Fault Injection](#7-unit-testing-caching--fault-injection)
@@ -533,26 +533,26 @@ final class WorkerStateResetMiddleware implements MiddlewareInterface
 
 ## 5. View Fragment Caching & Dynamic Content (Hole-Punching)
 
-### 5.1. ViewRenderer Trap: Fatal Closure Serialization
+### 5.1. WebViewRenderer Trap: Fatal Closure Serialization
 
 > [!NOTE]
-> **Deprecation:** `Yiisoft\Yii\View\Renderer\ViewRenderer` is `@deprecated` since `yiisoft/yii-view-renderer` 7.4.0 — use `WebViewRenderer` instead. The closure-serialization trap applies equally to `WebViewRenderer`: its `render()` / `renderPartial()` methods return a deferred `ViewResponse` object, so caching the returned response instance triggers the same fatal error. Always use `renderAsString()` / `renderPartialAsString()` regardless of which renderer is installed.
+> **Deprecation:** The legacy `Yiisoft\Yii\View\Renderer\ViewRenderer` (which returned `Yiisoft\DataResponse\DataResponse`) is `@deprecated` since `yiisoft/yii-view-renderer` 7.4.0 — always use `WebViewRenderer` in new code. Both share the exact same closure-serialization trap documented below.
 
-In `yiisoft/yii-view-renderer`, methods `render()` and `renderPartial()` return a `Yiisoft\DataResponse\DataResponse` object that wraps an unexecuted closure:
+In `yiisoft/yii-view-renderer`, `WebViewRenderer::render()` and `WebViewRenderer::renderPartial()` return a `ViewResponse` (`Psr\Http\Message\ResponseInterface`) containing a deferred body stream closure:
 
 ```php
-$this->responseFactory->createResponse(fn(): string => $this->renderProxy(...))
+fn(): StreamInterface => $this->streamFactory->createStream($this->renderProxy(...))
 ```
 
-This closure captures `$this` (the entire `ViewRenderer` instance, containing references to DI services and response factories). Attempting to cache the output of `renderPartial()` causes PHP to halt with a fatal error:
+This closure captures `$this` (the entire `WebViewRenderer` instance, containing references to DI services, stream/response factories, and `WebView`). Attempting to cache the output of `renderPartial()` causes PHP to halt with a fatal error:
 
 ```
 Exception: Serialization of 'Closure' is not allowed
 ```
 
 **The Solution:** Always use string rendering methods for fragment caching:
-- `ViewRenderer::renderPartialAsString(string $view, array $parameters = []): string` (renders template without layout directly to HTML string)
-- `ViewRenderer::renderAsString(string $view, array $parameters = []): string` (renders template with layout directly to HTML string)
+- `WebViewRenderer::renderPartialAsString(string $view, array $parameters = []): string` (renders template without layout directly to HTML string)
+- `WebViewRenderer::renderAsString(string $view, array $parameters = []): string` (renders template with layout directly to HTML string)
 
 ### 5.2. Fragment Caching with Hole-Punching (CachedContent & DynamicContent)
 
@@ -570,13 +570,13 @@ use Yiisoft\Cache\Dependency\TagDependency;
 use Yiisoft\Cache\Ttl;
 use Yiisoft\View\Cache\CachedContent;
 use Yiisoft\View\Cache\DynamicContent;
-use Yiisoft\Yii\View\Renderer\ViewRenderer;
+use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
 final readonly class SidebarWidget
 {
     public function __construct(
         private CacheInterface $cache,
-        private ViewRenderer $viewRenderer,
+        private WebViewRenderer $viewRenderer,
     ) {}
 
     public function render(string $currentUser, string $locale): string
@@ -689,7 +689,7 @@ public function testGetFeaturedProductsIsCached(): void
 | Forgetting `Dependency::resetReusableData()` in worker runtimes | Reusable dependency results stored in static `Dependency::$reusableData` leak across requests in RoadRunner/Swoole/FrankenPHP. | Invoke `Dependency::resetReusableData()` in worker loops or PSR-15 terminal reset middleware. |
 | String cache keys containing `{ } ( ) / \ @ :` or longer than 64 characters | PSR-16 reserves these characters; all bundled drivers throw `InvalidArgumentException` on raw key violations. | Use safe flat strings (letters, digits, dots, dashes, underscores) or array keys (normalized to MD5). |
 | Expecting array keys like `['catalog', $id]` to be human-readable strings | `CacheKeyNormalizer` deterministically converts array keys to `md5(json_encode($key))`. | Use explicit prefixed string keys (`catalog.product.10`) when manual inspection in storage is required. |
-| Caching `ViewRenderer::renderPartial()` output directly | Returns `DataResponse` wrapping an unexecuted closure capturing `$this`; serialization throws fatal `Serialization of 'Closure' is not allowed`. | Cache string output using `renderPartialAsString()` (no layout) or `renderAsString()` (with layout). |
+| Caching `WebViewRenderer::renderPartial()` output directly | Returns `ViewResponse` (or `DataResponse` on legacy `ViewRenderer`) wrapping an unexecuted closure capturing `$this`; serialization throws fatal `Serialization of 'Closure' is not allowed`. | Cache string output using `renderPartialAsString()` (no layout) or `renderAsString()` (with layout). |
 | Setting `$gcProbability` as a percentage (e.g. `1` for 1%) | Parameter is parts per million (PPM); `1` means 0.0001% (1 in 1,000,000 writes), effectively disabling garbage collection. | Use proper PPM scale: `FileCache` default `10` (0.001%), `DbCache` default `100` (0.01%), `10_000` (1.0%). |
 | Invalidating cache tags before committing database transaction | Concurrent requests read uncommitted/stale DB state and re-populate cache, locking stale data under new tag timestamp. | Commit database transactions first, then call `TagDependency::invalidate()` in the post-commit phase. |
 | Writing values via raw `psr()->set()` expecting dependencies to work | Raw PSR-16 writes store values directly without the `CacheItem` metadata envelope; dependencies are never validated. | Always use `getOrSet()` when attaching `TagDependency`, `FileDependency`, or `CallbackDependency`. |

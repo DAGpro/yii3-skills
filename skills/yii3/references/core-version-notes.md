@@ -79,8 +79,8 @@ Single catalog of version-gated behavior referenced across the skill. Every entr
 
 ### R9 yii-middleware legacy classes deprecated (→ http-middleware)
 
-- **Behavior/API:** `Yiisoft\Yii\Middleware\CorsAllowAll`, `ForceSecureConnection`, `HttpCache`, `TagRequest` (and `IpFilter`, to be removed in 2.0 in favor of `Yiisoft\NetworkUtilities\IpRanges`).
-- **Changed in:** `yiisoft/yii-middleware` **1.1.0** (Chg #132 — the four middlewares marked deprecated); only the `IpFilter` removal-in-2.0 deprecation is vendor-docblock-only (no changelog pin).
+- **Behavior/API:** `Yiisoft\Yii\Middleware\CorsAllowAll`, `ForceSecureConnection`, `HttpCache`, `TagRequest` (and only the `ValidatorInterface $validator` constructor parameter on `IpFilter`, to be removed in 2.0 in favor of `Yiisoft\NetworkUtilities\IpRanges` — `IpFilter` itself is not deprecated).
+- **Changed in:** `yiisoft/yii-middleware` **1.1.0** (Chg #132 — the four middlewares marked deprecated); only `IpFilter::__construct()`'s `$validator` parameter removal-in-2.0 deprecation is vendor-docblock-only (no changelog pin).
 - **Replacement:** full FQCNs from `yiisoft/http-middleware` — `Yiisoft\HttpMiddleware\CorsAllowAllMiddleware`, `Yiisoft\HttpMiddleware\ForceSecureConnection\ForceSecureConnectionMiddleware`, `Yiisoft\HttpMiddleware\HttpCache\HttpCacheMiddleware`, `Yiisoft\HttpMiddleware\TagRequest\TagRequestMiddleware` (three of the four live in sub-namespaces, not the package root).
 - **Verify:** `composer.lock` → `yiisoft/yii-middleware` `version` (1.1.0+); vendor discriminator: `@deprecated` docblocks in `vendor/yiisoft/yii-middleware/src/*.php`.
 - **Grounding:** cloned sources — `src/CorsAllowAll.php` line 16 et al. See [Middlewares Guide anti-pattern table](http-middlewares.md).

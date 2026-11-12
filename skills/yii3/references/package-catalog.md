@@ -43,10 +43,10 @@
 | `input` | Request -> DTO Mapping | `yiisoft/input-http` | — | `RequestInputInterface`, `#[Body]`, `#[Query]`, `#[Request]`, `#[UploadedFiles]` |
 | `validation` | Validation & Rules | `yiisoft/validator` | — | `ValidatorInterface`, `Result`, `RuleInterface`, rule attributes (`#[Required]`, `#[Length]`, `#[StringValue]`) |
 | `hydrator` | Object Hydration | `yiisoft/hydrator`, `yiisoft/hydrator-validator` | — | `HydratorInterface`, `TypeCasterInterface` |
-| `response` | Data & Download Responses | `yiisoft/data-response`, `yiisoft/response-download` | — | `ResponseFactory\DataResponseFactoryInterface`, `DataResponse`, `DownloadResponseFactory`, `ByteRangeStream` |
+| `response` | Data & Download Responses | `yiisoft/data-response`, `yiisoft/response-download` | — | `ResponseFactory\DataResponseFactoryInterface`, `DataStream\DataStream`, `ResponseFactory\JsonResponseFactory`, `DownloadResponseFactory`, `ByteRangeStream` |
 | `download` | PSR-7 File Downloads | `yiisoft/response-download` | — | `DownloadResponseFactory`, `ByteRangeStream` (resumable file downloads with byte range and content disposition) |
 | `forms` | HTML Forms & Widgets | `yiisoft/form`, `yiisoft/form-model`, `yiisoft/html` | — | `FormModel`, `Form`, `Field`, `Html` |
-| `view` | Templates & Rendering | `yiisoft/view`, `yiisoft/yii-view-renderer` | native PHP templates (default) \| `yiisoft/view-twig` + `yiisoft/yii-twig` (Twig templates) | `ViewRenderer`, `WebView`, `ViewInterface` |
+| `view` | Templates & Rendering | `yiisoft/view`, `yiisoft/yii-view-renderer` | native PHP templates (default) \| `yiisoft/view-twig` + `yiisoft/yii-twig` (Twig templates) | `WebViewRenderer`, `WebView`, `ViewInterface` |
 | `widgets` | UI Components | `yiisoft/widget`, `yiisoft/yii-widgets` | `yiisoft/bootstrap5` (Bootstrap 5) \| `yiisoft/yii-bulma` (Bulma) | `Widget`, `Block` |
 | `assets` | Asset Bundles (CSS/JS) | `yiisoft/assets` | — | `AssetManager`, `AssetBundle` |
 | `dataview` | Grids, Lists, Paging UI | `yiisoft/yii-dataview`, `yiisoft/data` | — | `GridView`, `ListView`, `DetailView` |

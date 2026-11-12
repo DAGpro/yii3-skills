@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Console\Command;
 
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -28,10 +29,12 @@ use function file_put_contents;
 use function implode;
 use function sprintf;
 
+#[AsCommand(
+    name: 'swagger/generate',
+    description: 'Scans PHP attributes and compiles openapi.json offline',
+)]
 final class SwaggerGenerateCommand extends Command
 {
-    protected static $defaultName = 'swagger/generate';
-    protected static $defaultDescription = 'Scans PHP attributes and compiles openapi.json offline';
 
     /**
      * @param string[] $defaultPaths

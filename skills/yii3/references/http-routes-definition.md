@@ -152,7 +152,7 @@ Yii3 route actions are resolved via `Yiisoft\Middleware\Dispatcher\MiddlewareFac
 > **Status: Experimental / Not Recommended for Production.**
 > - The package `yiisoft/router-composer-attribute-collector` requires `"yiisoft/router": "dev-add-attributes as 4"` in its `composer.json`. In stable releases of `yiisoft/router` (`^3.0` or `^4.0`), attribute classes (`Yiisoft\Router\Attribute\*`) and `RoutesProviderInterface` **do not exist**.
 > - Route discovery depends entirely on the Composer plugin `olvlvl/composer-attribute-collector` (`^2.0`). If your continuous integration (CI) pipeline or deployment environment executes `composer install --no-plugins`, the attribute map is **never generated**, causing route registration to silently fail.
-> - **Autoload Dump Invalidation Trap:** Attribute discovery occurs strictly at **`composer dump-autoload` time**. Newly added or modified controller attributes remain completely invisible until `composer dump-autoload` is re-run.
+> - **Autoload Dump Invalidation Trap:** Attribute discovery occurs strictly at **`composer dump-autoload` time**. Newly added or modified controller attributes remain completely unregistered until `composer dump-autoload` is re-run.
 
 The package provides `Yiisoft\Router\ComposerAttributeCollector\AttributeRoutesProvider` — a `final` class implementing `Yiisoft\Router\Provider\RoutesProviderInterface`. To allow the plugin, configure `composer.json`:
 

@@ -155,7 +155,7 @@ A listener is a single-purpose class focused on one specific side-effect (e.g., 
 
 Listeners should implement `__invoke(EventClass $event): void`.
 
-- When registering **programmatically** via `ListenerCollection::add()`, the event argument type-hint is auto-inferred from the listener's first parameter when no event class names are passed (see [Section 7](persistence-db-readers-and-drivers.md#7-php-8-named-arguments--signatures-reference)).
+- When registering **programmatically** via `ListenerCollection::add()`, the event argument type-hint is auto-inferred from the listener's first parameter when no event class names are passed (see [Section 7](core-events-reference.md#7-php-8-named-arguments--signatures-reference)).
 - When registering **declaratively** in config arrays, `ListenerCollectionFactory::create()` always registers each listener under the **explicit event class name used as the config array key** — no inference happens in the factory (`vendor/yiisoft/yii-event/src/ListenerCollectionFactory.php`).
 
 ```php

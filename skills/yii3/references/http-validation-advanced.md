@@ -105,8 +105,8 @@ $result = $this->validator->validate(
 ```
 
 > [!IMPORTANT]
-> `validate($uploaded, ['document' => [...]])` — a bare upload under a string-keyed rules map — always fails
-> `Required`: the validator reads a non-existent `document` property (`null`) from the wrapped upload object.
+> `validate($uploaded, ['document' => [...]])` — passing a bare `UploadedFileInterface` with a string-keyed rules map — always fails
+> `Required`: the validator reads a non-existent `document` property (`null`) from the wrapped object.
 
 > [!TIP]
 > **Post-Validation File Persistence Reference:**

@@ -605,7 +605,7 @@ return [
 > Constructor signature: `public function __construct(private readonly string $layout, object ...$injections)`
 > 1. The first parameter is named `$layout` (not `$layoutFile`).
 > 2. Variadic parameters are typed `object ...$injections`. Unlike `WebViewRenderer::withInjections()`, which accepts string class names, `LayoutSpecificInjections` requires instantiated objects. Passing a raw class string like `AdminNavigationInjection::class` throws a fatal `TypeError: LayoutSpecificInjections::__construct(): Argument #2 must be of type object, string given`.
-> 3. Do NOT nest `Reference::to(...)` inside the variadic arguments. A `Reference` object passes the `object` type check, but `WebViewRenderer` matches injections with `instanceof` against the injection interfaces (`LinkTagsInjectionInterface`, etc.) — a `Reference` matches none and is **silently dropped** at render time. If the injection has constructor dependencies, register the injection via DI and build `LayoutSpecificInjections` around the resolved instance (e.g. a closure definition), or construct it directly when it has no dependencies.
+> 3. Do NOT nest `Reference::to(...)` inside the variadic arguments. A `Reference` object passes the `object` type check, but `WebViewRenderer` matches injections with `instanceof` against the injection interfaces (`LinkTagsInjectionInterface`, etc.) — a `Reference` matches none and is **ignored** at render time. If the injection has constructor dependencies, register the injection via DI and build `LayoutSpecificInjections` around the resolved instance (e.g. a closure definition), or construct it directly when it has no dependencies.
 
 ### 5.5. CSRF Token Object (`Csrf`) & Injected Security
 

@@ -42,14 +42,14 @@ Yii3 separates email composition, transport implementations, and lifecycle event
 | **`MessageInterface`** | `Yiisoft\Mailer\MessageInterface` | Immutable contract for message metadata (recipients, subject, charset, dates, headers). |
 | **`Message`** | `Yiisoft\Mailer\Message` | Concrete immutable message implementation with fluent `with*()` methods. |
 | **`BaseMailer`** | `Yiisoft\Mailer\BaseMailer` | Abstract base implementing the send pipeline: applies `MessageSettings` defaults, dispatches `BeforeSend`/`AfterSend`, delegates delivery to `sendMessage()`. |
-| **`MessageSettings`** | `Yiisoft\Mailer\MessageSettings` | Default message settings applied at send time (plain keys fill `null` fields, `add*` keys always append). |
+| **`MessageSettings`** | `Yiisoft\Mailer\MessageSettings` | Default message settings applied on delivery (plain keys fill `null` fields, `add*` keys always append). |
 | **`File`** | `Yiisoft\Mailer\File` | Value object for file attachments and embedded inline media. |
 | **`SendResults`** | `Yiisoft\Mailer\SendResults` | DTO returned by `sendMultiple()` containing public `$successMessages` and `$failMessages`. |
 | **`Priority`** | `Yiisoft\Mailer\Priority` | Backed integer enum (`HIGHEST = 1`, `HIGH = 2`, `NORMAL = 3`, `LOW = 4`, `LOWEST = 5`) for email priority. |
 | **`Symfony\Mailer`** | `Yiisoft\Mailer\Symfony\Mailer` | Official bridge adapter executing sends over `symfony/mailer` transport. |
 | **`FileMailer`** | `Yiisoft\Mailer\FileMailer` | Development mailer writing `.eml` files to disk without external network calls. |
 | **`StubMailer`** | `Yiisoft\Mailer\StubMailer` | In-memory testing mailer storing sent messages for unit test assertions (`getMessages()`). |
-| **`NullMailer`** | `Yiisoft\Mailer\NullMailer` | Discarding mailer silently dropping all messages without sending. |
+| **`NullMailer`** | `Yiisoft\Mailer\NullMailer` | Discarding mailer that ignores all outgoing messages without delivery. |
 | **`BeforeSend`** | `Yiisoft\Mailer\Event\BeforeSend` | PSR-14 event dispatched before message delivery; can cancel delivery via `$preventSendingMessage`. |
 | **`AfterSend`** | `Yiisoft\Mailer\Event\AfterSend` | PSR-14 event dispatched immediately after successful message delivery. |
 

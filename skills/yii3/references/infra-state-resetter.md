@@ -78,7 +78,7 @@ return $mainResetter;
 
 #### The Catastrophic Result:
 1. When `$this->useResettersFromMeta === false`, the container skips the entire `$this->useResettersFromMeta` block.
-2. The compiled `$this->resetters` array—which contains all the `'reset' => function ()` callbacks contributed by vendor packages—is **silently dropped**.
+2. The compiled `$this->resetters` array—which contains all the `'reset' => function ()` callbacks contributed by vendor packages—is **ignored and skipped**.
 3. **ALL built-in package resetters are completely disabled!**
    - `CurrentUser` authentication leaks across requests (User B inherits User A's identity and privileges).
    - `SessionInterface` keeps previous session IDs open.

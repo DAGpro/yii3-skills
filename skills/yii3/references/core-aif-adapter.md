@@ -119,7 +119,7 @@ Across AI Factory workflows, independent agents run in separate conversational c
 - **Concrete Target Paths:** Every task must specify the exact target file path (in ultra plans: in the phase's `Files to Change`) and architectural layer/role. Generic tasks without paths (e.g. "create controller and service") are strictly prohibited.
 - **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task & Intent Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/<topic>.md`. Tasks lacking an assigned guide are prohibited.
 - **Prior Dependency Installation:** Every missing capability from `references/package-catalog.md` must be planned as an explicit `composer require` task scheduled *before* any implementation tasks that import its namespace.
-- **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task in `config/**/di/*.php`, and every Action an explicit route task in `config/**/routes.php`.
+- **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task (`config/**/di/*.php` default, or the project's active service provider), and every Action an explicit route wiring task (`config/**/routes.php` default, or the active `FileRouter` convention).
 - **Initialized Execution State:** The plan must conclude with an initialized `### Execution State` block template setting `Stage 1` as pending and all wiring gates as `PENDING`.
 
 ### 6.2. Handoff: `aif-implement` → `aif-verify` (Self-Contained Implementation Handoff)

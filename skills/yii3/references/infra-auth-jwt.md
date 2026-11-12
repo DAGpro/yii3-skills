@@ -21,7 +21,7 @@ composer require yiisoft/auth-jwt
 
 ---
 
-For stateless REST APIs, avoid session cookies entirely. Clients send `Authorization: Bearer <token>` on every request.
+For stateless REST APIs, avoid session cookies entirely. Clients include the `Authorization: Bearer <token>` header on every request.
 
 ## 1. DI Binding for JWT Authenticator
 

@@ -747,9 +747,9 @@ TimeoutStopSec=3600
 WantedBy=multi-user.target
 ```
 
-Enable and start 4 worker instances:
+Enable and start 4 worker instances (as root):
 ```bash
-sudo systemctl enable --now yii-queue@{1..4}.service
+systemctl enable --now yii-queue@{1..4}.service
 ```
 
 ---

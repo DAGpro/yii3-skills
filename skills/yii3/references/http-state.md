@@ -414,7 +414,7 @@ rendering. Two state-side facts to keep in sync:
 - There is no built-in integration with `yiisoft/form-model` / `yiisoft/form` — the token is rendered manually in
   templates, not through form-model attributes.
 
-For AJAX: send the token via the `X-CSRF-Token` header, or use one of the two official client flows:
+For AJAX: pass the CSRF value in the `X-CSRF-Token` header, or use one of the two official client flows:
 
 - **Token endpoint:** an **OPTIONS** route — `new \Yiisoft\Router\Route\Options('/csrf-token')` (the static
   factory `Route::options()` is deprecated) — responding with the token in the
@@ -458,7 +458,7 @@ Under long-running runners (RoadRunner, FrankenPHP — see [Package Catalog](pac
 | CSRF middleware without session storage | Synchronizer token has nowhere to persist → new token per request, forms always fail | Register `SessionMiddleware` **before** CSRF, or switch to `HmacCsrfToken` (§1, §5.1) |
 | Using deprecated `CsrfMiddleware` | Marked `@deprecated` in favor of `CsrfTokenMiddleware` | Use `CsrfTokenMiddleware` ([Middlewares Guide §3.2](http-middlewares.md#32-csrf-middleware-behavior)) |
 | Copying `'withSafeMethods()' => [[Method::OPTIONS]]` from SPA recipes into a server-rendered app | `withSafeMethods()` **replaces** the whole default list — GET and HEAD become CSRF-checked and forms start failing with 422 | Keep the default safe methods `[GET, HEAD, OPTIONS]` for server-rendered forms; the OPTIONS-only definition is for any-origin JavaScript SPAs ([Middlewares Guide §3.2](http-middlewares.md#32-csrf-middleware-behavior)) |
-| Expecting `_csrf` in JSON body without `RequestBodyParser` | Parsed body is `null`; token never found → 422 | Parse JSON bodies upstream or send `X-CSRF-Token` header (§5.3) |
+| Expecting `_csrf` in JSON body without `RequestBodyParser` | Parsed body is `null`; token never found → 422 | Parse JSON bodies upstream or pass the `X-CSRF-Token` header (§5.3) |
 | Regenerating the session id only at login setup, never after privilege change | Session fixation remains possible | Call `$session->regenerateId()` after every privilege escalation (general security practice — OWASP-style guidance, not prescribed by the packages) (§2.5) |
 | Keeping `cookie_secure: 0` in production | Session cookie travels over HTTP | Set `'cookie_secure' => 1` for HTTPS deployments (the middleware enforces scheme consistency) (§2.2; [Middlewares Guide §3.1](http-middlewares.md#31-sessionmiddleware-behavior)) |
 | Rendering CSRF hidden inputs with a wrong parameter name after renaming the middleware | Token mismatch → every POST is 422 | Keep name and middleware config in sync — read the name via `CsrfTokenMiddleware::PARAMETER_NAME` / `$middleware->getParameterName()` and the value via `$csrfToken->getValue()` (`_csrf` default) (§5.3) |

@@ -314,7 +314,7 @@ The checker accepts an array of requirement specifications (or a filepath return
 
 | Rule Key | Type | Requirement Level | Description & Semantics |
 |---|---|---|---|
-| `'condition'` | `bool\|string` | **Mandatory** | Boolean result or expression. If prefixed with `'eval:'`, evaluated in the context of the checker via `eval()`. |
+| `'condition'` | `bool\|string` | **Mandatory** | Boolean result or expression. If prefixed with `'eval:'`, evaluated dynamically in the checker context. |
 | `'name'` | `string` | Optional | Descriptive label. Defaults to `'Requirement #N'`. |
 | `'mandatory'` | `bool` | Optional | If `true`, failure increments `errors` count. If `false`, increments `warnings`. Defaults to `false`. |
 | `'by'` | `string` | Optional | Component or feature requiring this setting (e.g. `'Framework Core'`, `'RBAC'`). Defaults to `'Unknown'`. |

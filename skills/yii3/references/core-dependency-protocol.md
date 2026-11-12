@@ -42,7 +42,7 @@ Before issuing any command or proposing modifications:
 When entering an existing codebase, detect the provisioned driver without guessing:
 
 1. **Step 1: Check `composer.json`:** Look for installed driver packages in `require` (e.g. `yiisoft/db-pgsql` vs `yiisoft/db-mysql`).
-2. **Step 2: Check DI Container Definitions:** Inspect `config/common/di/db.php`, `config/common/di/cache.php`, and `config/common/di/rbac.php` to see which concrete class implements the interface.
+2. **Step 2: Check DI Container Definitions:** Inspect `config/common/di/db.php`, `config/common/di/cache.php`, and `config/common/di/rbac.php` (or the project's active DI configuration files / service providers) to see which concrete class implements the interface.
 3. **Step 3: Check Configuration Parameters:** Inspect `config/**/params.php` for driver-specific keys such as `yiisoft/db-mysql`, `yiisoft/cache-file`, or `yiisoft/db-migration`.
 4. **Step 4: Check Environment & Infrastructure Files:** Inspect `.env` or `.env.example` for DSN prefixes (`mysql:`, `pgsql:`, `sqlite:`) and `docker-compose.yml` for database images (e.g. `postgres:16-alpine`, `mysql:8.0`, `redis:7`).
 
@@ -215,13 +215,13 @@ Once installed, a dependency must be correctly integrated into the application's
 | Category | `composer.json` marker | Examples | Wiring Behavior | Verification |
 | :--- | :--- | :--- | :--- | :--- |
 | **A — Auto-Configured** | `extra.config-plugin` present | `yiisoft/router`, `yiisoft/view`, `yiisoft/db`, `yiisoft/active-record`, `yiisoft/yii-cycle`, `yiisoft/cache-file`, `yiisoft/log-target-file`, `yiisoft/rbac-rules-container`, `yiisoft/yii-console` | The `yiisoft/config` plugin scans the package's config files and merges them into `config/.merge-plan.php` automatically | Confirm the package name is present in the respective configuration group (`params`, `di-web`, `di-console`, ...) of `config/.merge-plan.php` |
-| **B — Pure Library** | `extra.config-plugin` absent | DB drivers (`yiisoft/db-mysql`, `yiisoft/db-pgsql`, `yiisoft/db-sqlite`, `yiisoft/db-mssql`, `yiisoft/db-oracle`), cache backends (`yiisoft/cache-redis`, `yiisoft/cache-db`), `yiisoft/log-target-db`, RBAC storages (`yiisoft/rbac-php`, `yiisoft/rbac-db`) | Ships pure classes and interfaces only, **no config files** | Write a manual DI definition in `config/**/di/*.php` |
+| **B — Pure Library** | `extra.config-plugin` absent | DB drivers (`yiisoft/db-mysql`, `yiisoft/db-pgsql`, `yiisoft/db-sqlite`, `yiisoft/db-mssql`, `yiisoft/db-oracle`), cache backends (`yiisoft/cache-redis`, `yiisoft/cache-db`), `yiisoft/log-target-db`, RBAC storages (`yiisoft/rbac-php`, `yiisoft/rbac-db`) | Ships pure classes and interfaces only, **no config files** | Register a manual DI definition (`config/**/di/*.php` default, or active service provider) |
 
 > [!WARNING]
 > **CRITICAL ARCHITECTURAL PITFALL — Database Drivers and `.merge-plan.php`:**
 > Database driver packages (`yiisoft/db-mysql`, `yiisoft/db-pgsql`, `yiisoft/db-sqlite`) **NEVER APPEAR IN `config/.merge-plan.php`**!
 > Expecting them in `.merge-plan.php` is a false failure alarm.
-> Database drivers MUST be configured manually by creating a DI definition in `config/common/di/db.php`.
+> Database drivers MUST be configured manually via a DI definition (`config/common/di/db.php` default, or the project's active DI config / service provider).
 
 > [!NOTE]
 > **`yiisoft/di` itself is NOT a Category A package:** its `composer.json` has no `extra.config-plugin` key. It is a pure library — the PSR-11 container implementation that **consumes** the configuration merged by `yiisoft/config` — and therefore never appears in `config/.merge-plan.php` under its own name.
@@ -253,10 +253,10 @@ All definitions must be written in strict PHP without missing dependencies or pl
 
 | Wiring Topic | Canonical Recipe Location |
 | :--- | :--- |
-| Database connection (`config/common/di/db-<driver>.php`) + DSN params | [Definition Syntax Recipes Guide, §4.9](core-di-definitions.md) |
+| Database connection (`config/common/di/db-<driver>.php` or DI provider) + DSN params | [Definition Syntax Recipes Guide, §4.9](core-di-definitions.md) |
 | Cache storage binding (`CacheInterface` → driver) | [DI & Config Guide](core-di-and-config.md) |
 | Logger & multiple targets | [Logging Guide, §2](infra-logging.md) |
-| RBAC storages (`config/common/di/rbac.php`) | [Auth & RBAC Guide, §8](infra-auth-and-rbac.md) |
+| RBAC storages (`config/common/di/rbac.php` or DI provider) | [Auth & RBAC Guide, §8](infra-auth-and-rbac.md) |
 | Console command registration (`config/console/params.php`) | [Console Commands Guide, §4](infra-commands.md) |
 | Vendor migration `sourcePaths` (`yiisoft/db-migration`) | [Migrations Guide](persistence-migrations.md) |
 | Bootstrap callbacks (`config/common/bootstrap.php`) | [DI & Config Guide](core-di-and-config.md), [Runners & Runtimes Guide](infra-runners-and-runtimes.md) |

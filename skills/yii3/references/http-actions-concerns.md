@@ -158,7 +158,7 @@ final readonly class ListPostsAction
 ```
 
 **Key Traps & Recommendations:**
-- `Sort::only(['col1', 'col2'])` acts as a **field whitelist**: sort field names submitted by clients that are not in the list are silently dropped. This guarantees sorting happens only on configured fields — it is a whitelist, not a general SQL-injection protection mechanism.
+- `Sort::only(['col1', 'col2'])` acts as a **field whitelist**: sort field names submitted by clients that are not in the list are ignored without raising an error. This guarantees sorting happens only on configured fields — it is a whitelist, not a general SQL-injection protection mechanism.
 - `$paginator->read()` returns an `iterable` (a generator): `Yiisoft\Data\Paginator\PageNotFoundException` is thrown lazily on the first iteration, not at the `read()` call itself. Keep the consumption (`foreach` or `iterator_to_array()`) inside the `try` block, as in the example above. Note that `getTotalPages(): int` can legitimately be `0` for an empty data set.
 
 **Large Datasets & List Filtering:**

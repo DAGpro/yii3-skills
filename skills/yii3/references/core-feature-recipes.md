@@ -322,8 +322,7 @@ final readonly class SignupAction
 <!-- Fragment of templates/user/signup.php -->
 <?php use Yiisoft\FormModel\Field; use Yiisoft\Html\Html; ?>
 <form method="post">
-    <!-- CSRF: the `csrf` view parameter (masked token) is injected by CsrfViewInjection;
-         the middleware reads the token from the `_csrf` body param or the `X-CSRF-Token` header. -->
+    <?php // $csrf (masked token) is injected by CsrfViewInjection; middleware reads _csrf body param or X-CSRF-Token header. ?>
     <input type="hidden" name="_csrf" value="<?= Html::encode((string) $csrf) ?>">
     <?= Field::text($form, 'login') ?>
     <?= Field::password($form, 'password') ?>

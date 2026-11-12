@@ -54,7 +54,19 @@ scenarios/NN-slug/
   rubric.md          criteria for a model judge (what cannot be checked by code)
   positive-sample/   overlay with a good solution + transcript.txt
   negative-sample/   overlay with a deliberately bad solution + transcript.txt
+  near-miss-*/       (optional) near-correct variants; see `nearMiss` below
+  positive-alt-*/    (optional) valid alternative styles; see `positiveAlt` below
 ```
+
+Two optional per-scenario sample arrays extend the two-point positive/negative validation
+into precision/recall measurement (validated by `selftest.mjs`, reported in its
+`sample-metrics` line; contracts in [CHECK-CONTRACTS.md](CHECK-CONTRACTS.md)):
+
+- `"nearMiss": [{ "dir": "near-miss-di-stdClass", "mustFail": ["interface-bound"] }]` —
+  a realistic near-correct variant that must be caught by **exactly** the listed checks:
+  every `mustFail` id fails (recall) and no other required check fails (precision).
+- `"positiveAlt": [{ "dir": "positive-alt-layered" }]` — a valid implementation style
+  outside the canonical sample that must pass all required checks (no false rejections).
 
 `ctx` in checks: `{ dir, base, changed, transcript, mode }`, where `changed` is the set of files
 added or modified relative to the fixture (`{path, abs, added}`). Dot-entries are never scanned
@@ -90,8 +102,8 @@ docblock mentions and string contents no longer trigger, and whitespace variants
 (`declare( strict_types = 1 );`) are accepted.
 
 Meta-tests for the grading machinery itself (parser regression probes, do-nothing floor
-measurement) live in [`evals/audit/`](audit/); the parser probes run as a permanent phase
-of `selftest.mjs`.
+measurement, targeted mutation control of the checks) live in [`evals/audit/`](audit/);
+the parser probes run as a permanent phase of `selftest.mjs`.
 
 ## The two runner entry points
 
@@ -256,8 +268,12 @@ node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-0
    Import the shared hygiene checks (`noYii2Check`, `strictTypesCheck`, …) from
    `evals/lib/shared-checks.mjs` instead of copying regexes.
 3. Create `positive-sample` and `negative-sample`; list in `negativeMustFail` the check ids
-   the bad sample must fail.
+   the bad sample must fail. For checks guarding semantic invariants, also add `nearMiss`
+   (near-correct variants caught by exactly the listed checks) and, where the check must
+   tolerate alternative valid styles, `positiveAlt` samples — see "Scenario layout".
 4. `node evals/runner/selftest.mjs` must be green (it also asserts the do-nothing floor
-   control: an empty attempt fails the attempt gate).
+   control and validates all `nearMiss` / `positiveAlt` samples).
+5. `node evals/audit/mutation.mjs` — add a targeted mutant for every new semantic
+   invariant guard (the defect it exists to catch must be provably caught).
 
 Rule: every agent failure found on a real project becomes a new scenario.

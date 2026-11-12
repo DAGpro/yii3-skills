@@ -1,5 +1,6 @@
-import { check, ok, fail, read, matchParen, methodBody } from '../../lib/checks.mjs';
+import { check, ok, fail, read, methodBody } from '../../lib/checks.mjs';
 import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
+import { extractCalls, resolveScalar } from '../../lib/semantic.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const migrationChanges = (changed) => php(changed).filter((c) => /^migrations\/.*\.php$/.test(c.path));
@@ -7,33 +8,19 @@ const newMigrations = (changed) => changed.filter((c) => c.added && /^migrations
 
 const EXISTING_MIGRATION = 'migrations/M260101010101CreateUsersTable.php';
 
-/** Argument substring of the call at the given match index. */
-const callArgs = (t, nameIdx) => {
-  const open = t.indexOf('(', nameIdx);
-  const close = matchParen(t, open);
-  return close === -1 ? t.slice(nameIdx, nameIdx + 800) : t.slice(nameIdx, close);
-};
+const normTable = (t) => (t ?? '').replace(/^\{\{%/, '').replace(/%\}\}$/, '');
 
-const USERS = /['"](?:\{\{%users\}\}|users)['"]/;
-const LAST_LOGIN = /['"]last_login_at['"]/;
-const NAMED_USERS = /table\s*:\s*['"](?:\{\{%users\}\}|users)['"]/;
-const NAMED_LAST_LOGIN = /column\s*:\s*['"]last_login_at['"]/;
-
-/** A `-><fn>(...)` call on the users.last_login_at pair: named args in any order,
- *  or positional with the table name before the column name (order-sensitive). */
-const callsOperation = (body, fn) => {
+/** A `-><fn>(...)` call on the users.last_login_at pair: positional, named, or
+ *  class-constant form (constants are resolved against the file's const definitions). */
+const callsOperation = (body, fileText, fn, table, column) => {
   if (body === null) return false;
-  let hit = false;
-  for (const m of body.matchAll(new RegExp(`->\\s*${fn}\\s*\\(`, 'g'))) {
-    const args = callArgs(body, m.index);
-    if (NAMED_USERS.test(args) && NAMED_LAST_LOGIN.test(args)) hit = true;
-    else if (USERS.test(args) && LAST_LOGIN.test(args)) {
-      const tableIdx = args.search(USERS);
-      const columnIdx = args.search(LAST_LOGIN);
-      if (tableIdx !== -1 && columnIdx !== -1 && tableIdx < columnIdx) hit = true;
-    }
+  for (const c of extractCalls(body)) {
+    if (c.fn !== fn) continue;
+    const t = normTable(resolveScalar(c.positional[0] ?? c.named.table, fileText));
+    const col = resolveScalar(c.positional[1] ?? c.named.column, fileText);
+    if (t === table && col === column) return true;
   }
-  return hit;
+  return false;
 };
 
 /** implements RevertibleMigrationInterface (use-import + short name, or FQCN). */
@@ -54,17 +41,17 @@ export default [
     return bad.length ? fail(`not implementing RevertibleMigrationInterface: ${bad.map((b) => b.path)}`) : ok(m.map((x) => x.path).join(', '));
   }),
 
-  check('up-addcolumn', 'up() of the new migration adds the column: addColumn("users", "last_login_at", ...) in that order', ({ changed }) => {
+  check('up-addcolumn', 'up() of the new migration adds the column: addColumn(users, last_login_at, ...) (positional, named, or class-constant form)', ({ changed }) => {
     const m = newMigrations(changed);
     if (!m.length) return fail('no new migration files');
-    const good = m.filter((f) => callsOperation(methodBody(read(f.abs), 'up'), 'addColumn'));
+    const good = m.filter((f) => callsOperation(methodBody(read(f.abs), 'up'), read(f.abs), 'addColumn', 'users', 'last_login_at'));
     return good.length ? ok(good.map((x) => x.path).join(', ')) : fail('no addColumn(users, last_login_at, ...) call found in any new migration up()');
   }),
 
-  check('down-drops-column', 'down() of the new migration reverts: dropColumn("users", "last_login_at")', ({ changed }) => {
+  check('down-drops-column', 'down() of the new migration reverts exactly that column: dropColumn(users, last_login_at)', ({ changed }) => {
     const m = newMigrations(changed);
     if (!m.length) return fail('no new migration files');
-    const good = m.filter((f) => callsOperation(methodBody(read(f.abs), 'down'), 'dropColumn'));
+    const good = m.filter((f) => callsOperation(methodBody(read(f.abs), 'down'), read(f.abs), 'dropColumn', 'users', 'last_login_at'));
     return good.length ? ok(good.map((x) => x.path).join(', ')) : fail('no dropColumn(users, last_login_at) call found in any new migration down()');
   }),
 

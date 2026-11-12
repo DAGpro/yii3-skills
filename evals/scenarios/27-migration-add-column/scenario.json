@@ -20,5 +20,18 @@
   "layer": "unit",
   "guides": [
     "references/persistence-migrations.md"
+  ],
+  "nearMiss": [
+    {
+      "dir": "near-miss-wrong-column-drop",
+      "mustFail": [
+        "down-drops-column"
+      ]
+    }
+  ],
+  "positiveAlt": [
+    {
+      "dir": "positive-alt-const"
+    }
   ]
 }

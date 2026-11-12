@@ -35,5 +35,36 @@
     "references/core-events-design.md",
     "references/testing-core.md",
     "references/testing-psr-doubles.md"
+  ],
+  "nearMiss": [
+    {
+      "dir": "near-miss-di-stdClass",
+      "mustFail": [
+        "interface-bound"
+      ]
+    },
+    {
+      "dir": "near-miss-di-comment",
+      "mustFail": [
+        "interface-bound"
+      ]
+    },
+    {
+      "dir": "near-miss-dispatch-before",
+      "mustFail": [
+        "event-after-commit"
+      ]
+    },
+    {
+      "dir": "near-miss-migration-wrong-drop",
+      "mustFail": [
+        "migration-reversible"
+      ]
+    }
+  ],
+  "positiveAlt": [
+    {
+      "dir": "positive-alt-layered"
+    }
   ]
 }

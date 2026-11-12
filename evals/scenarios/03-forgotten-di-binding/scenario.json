@@ -19,5 +19,13 @@
     "references/core-di-definitions.md",
     "references/persistence-db-connection-and-queries.md",
     "references/http-actions-core.md"
+  ],
+  "nearMiss": [
+    {
+      "dir": "near-miss-di-stdClass",
+      "mustFail": [
+        "interface-bound"
+      ]
+    }
   ]
 }

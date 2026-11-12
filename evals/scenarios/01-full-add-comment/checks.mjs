@@ -1,32 +1,26 @@
-import { check, ok, fail, read, filesMatching, matchParen, methodBody } from '../../lib/checks.mjs';
-import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
+import { check, ok, fail, read, matchParen } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck, interfaceBoundCheck, migrationReversibleCheck, dispatchAfterCommitCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
 
 export default [
-  check('migration-reversible', 'New migration in migrations/ with a non-empty down()', ({ changed }) => {
-    const m = added(changed, /^migrations\/.*\.php$/);
-    if (!m.length) return fail('no new migration');
-    const bad = m.filter((f) => {
-      const body = methodBody(read(f.abs), 'down');
-      return !body || !/\b(drop|delete)\w*\(/i.test(body);
-    });
-    return bad.length ? fail(`down() empty or missing: ${bad.map((b) => b.path)}`) : ok(m.map((x) => x.path).join(', '));
-  }),
+  migrationReversibleCheck(),
 
-  check('interface-bound', 'Every new *Interface is bound in config/**/di/*.php', ({ changed, dir }) => {
-    const ifaces = added(changed, /^src\/.*Interface\.php$/).map((f) => f.path.split('/').pop().replace('.php', ''));
-    if (!ifaces.length) return fail('no new interfaces found (a repository is expected)');
-    const di = filesMatching(dir, /^config\/.*\/di\/.*\.php$|^config\/.*\/di\.php$/).map(read).join('\n');
-    const unbound = ifaces.filter((i) => !new RegExp(`\\b${i}::class`).test(di));
-    return unbound.length ? fail(`not bound: ${unbound}`) : ok(ifaces.join(', '));
-  }),
+  interfaceBoundCheck({ stemMatch: true, noInterfacesMessage: 'no new interfaces found (a repository is expected)' }),
 
-  check('route-ctor-style', 'The POST comments route is declared via new Route\\Post(...), without Route::post()/Group::create()', ({ changed }) => {
+  check('route-ctor-style', 'The POST comments route is declared via new Route\\Post(...) wired to the added Action (no Route::post()/Group::create())', ({ changed }) => {
     const routes = changed.filter((c) => /^config\/.*routes.*\.php$/.test(c.path)).map((c) => read(c.abs)).join('\n');
     if (/Route::(get|post|put|delete|patch)\s*\(|Group::create\s*\(/.test(routes)) return fail('legacy static router API used');
-    return /new\s+\\?(?:Yiisoft\\Router\\Route\\)?Post\s*\(\s*['"][^'"]*comments/.test(routes) ? ok() : fail('no new Post(\'.../comments\')');
+    const m = /new\s+\\?(?:Yiisoft\\Router\\Route\\)?Post\s*\(/.exec(routes);
+    if (!m) return fail("no new Post('...') route declared");
+    const open = routes.indexOf('(', m.index);
+    const close = matchParen(routes, open);
+    if (close === -1) return fail('unterminated Post(...) call');
+    const args = routes.slice(open, close);
+    if (!/['"][^'"]*comments['"]/.test(args)) return fail('the Post route does not target /comments');
+    if (!/action\s*:\s*\\?[\w\\]*Action::class/.test(args)) return fail('the Post route is not wired to an Action class (action: ...::class)');
+    return ok();
   }),
 
   check('action-thin', 'New Actions contain no SQL, createCommand, transaction()', ({ changed }) => {
@@ -36,27 +30,7 @@ export default [
     return bad.length ? fail(bad.map((b) => b.path).join(', ')) : ok();
   }),
 
-  check('event-after-commit', 'dispatch() is called after transaction() returns, not inside the closure', ({ changed }) => {
-    const changedPhp = php(changed);
-    const hasDispatch = changedPhp.some((c) => /->dispatch\s*\(/.test(read(c.abs)));
-    if (!hasDispatch) return fail('no domain event dispatch() call found in changed files');
-    const offenders = [];
-    for (const c of changedPhp) {
-      const t = read(c.abs);
-      if (!/->dispatch\s*\(/.test(t)) continue;
-      const txRe = /->transaction\s*\(/g;
-      let m;
-      while ((m = txRe.exec(t)) !== null) {
-        const open = t.indexOf('(', m.index);
-        const close = matchParen(t, open);
-        if (close === -1) continue;
-        if (/->dispatch\s*\(/.test(t.slice(open, close))) {
-          offenders.push(`${c.path}: dispatch inside the transaction() closure`);
-        }
-      }
-    }
-    return offenders.length ? fail(offenders.join('; ')) : ok();
-  }),
+  dispatchAfterCommitCheck(),
 
   noYii2Check(),
   overrideAdvisoryCheck(),

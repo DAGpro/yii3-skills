@@ -13,6 +13,7 @@ import { runParserProbes } from '../audit/parser-probes.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const runtimeFlag = process.argv.includes('--runtime');
 let bad = 0;
+const metrics = { nearMissTotal: 0, nearMissCaught: 0, altTotal: 0, altPassed: 0 };
 
 // Validate telemetry extraction
 try {
@@ -363,21 +364,25 @@ try {
   if (tmpMissingDir) rmSync(tmpMissingDir, { recursive: true, force: true });
 }
 
-async function evalSample(id, sDir, kind) {
-  const sample = join(sDir, `${kind}-sample`);
-  const work = mkdtempSync(join(tmpdir(), `selftest-${id}-`));
+async function evalOverlay(sDir, overlayDir, label) {
+  const work = mkdtempSync(join(tmpdir(), `selftest-${label}-`));
   copyDir(join(sDir, 'fixture'), work);
-  if (existsSync(sample)) copyDir(sample, work);
+  const overlay = join(sDir, overlayDir);
+  if (existsSync(overlay)) copyDir(overlay, work);
   const tPath = join(work, 'transcript.txt');
   const transcript = existsSync(tPath) ? readFileSync(tPath, 'utf8') : '';
   const changed = changedFiles(work, join(sDir, 'fixture')).filter((c) => c.path !== 'transcript.txt');
   const ctx = { dir: work, base: join(sDir, 'fixture'), transcript, changed, mode: 'selftest' };
   const checks = await runChecks(sDir, ctx);
-  if (runtimeFlag && kind === 'positive') {
+  if (runtimeFlag && overlayDir === 'positive-sample') {
     const runtimeChecks = runRuntimeEvaluation(work, changed);
     checks.push(...runtimeChecks);
   }
   return checks;
+}
+
+async function evalSample(id, sDir, kind) {
+  return evalOverlay(sDir, `${kind}-sample`, `${id}-${kind}`);
 }
 
 for (const id of listScenarios(root)) {
@@ -389,12 +394,58 @@ for (const id of listScenarios(root)) {
   const neg = await evalSample(id, sDir, 'negative');
   const negFailedIds = neg.filter((r) => r.status === 'failed').map((r) => r.id);
   const missing = (sc.negativeMustFail ?? []).filter((x) => !negFailedIds.includes(x));
+
+  // Near-miss samples (audit P1): each must be CAUGHT by exactly the listed checks -
+  // every mustFail id fails (recall) and no other required check fails (precision).
+  const nearMissProblems = [];
+  for (const nm of sc.nearMiss ?? []) {
+    if (!existsSync(join(sDir, nm.dir))) {
+      nearMissProblems.push(`${nm.dir}: sample directory missing`);
+      continue;
+    }
+    const res = await evalOverlay(sDir, nm.dir, `${id}-nearmiss`);
+    const failedReq = requiredFailed(res).map((r) => r.id);
+    const mustFail = nm.mustFail ?? [];
+    metrics.nearMissTotal++;
+    if (failedReq.includes('attempt-gate')) {
+      nearMissProblems.push(`${nm.dir}: sample has no changes (attempt gate)`);
+      continue;
+    }
+    const notCaught = mustFail.filter((x) => !failedReq.includes(x));
+    const collateral = failedReq.filter((x) => !mustFail.includes(x));
+    if (notCaught.length) nearMissProblems.push(`${nm.dir}: NOT caught, mustFail missed: ${notCaught.join(', ')}`);
+    if (collateral.length) nearMissProblems.push(`${nm.dir}: collateral failures: ${collateral.join(', ')}`);
+    if (!notCaught.length && !collateral.length) metrics.nearMissCaught++;
+  }
+
+  // Alternative-positive samples (audit P1): a valid implementation style outside the
+  // canonical sample must pass all required checks (no false rejections).
+  const altProblems = [];
+  for (const alt of sc.positiveAlt ?? []) {
+    if (!existsSync(join(sDir, alt.dir))) {
+      altProblems.push(`${alt.dir}: sample directory missing`);
+      continue;
+    }
+    const res = await evalOverlay(sDir, alt.dir, `${id}-alt`);
+    const failedReq = requiredFailed(res).map((r) => r.id);
+    metrics.altTotal++;
+    if (failedReq.length) altProblems.push(`${alt.dir}: valid alternative rejected: ${failedReq.join(', ')}`);
+    else metrics.altPassed++;
+  }
+
   const okPos = posFailed.length === 0;
   const okNeg = missing.length === 0;
   const okGuides = missingGuides.length === 0;
-  console.log(`${okPos && okNeg && okGuides ? 'OK  ' : 'FAIL'} ${id}  positive-required-failed=[${posFailed.map((r) => `${r.id}: ${r.evidence}`)}]  negative-not-caught=[${missing}]  guides-missing=[${missingGuides}]`);
-  if (!okPos || !okNeg || !okGuides) bad++;
+  const okNearMiss = nearMissProblems.length === 0;
+  const okAlt = altProblems.length === 0;
+  const ok = okPos && okNeg && okGuides && okNearMiss && okAlt;
+  console.log(`${ok ? 'OK  ' : 'FAIL'} ${id}  positive-required-failed=[${posFailed.map((r) => `${r.id}: ${r.evidence}`)}]  negative-not-caught=[${missing}]  guides-missing=[${missingGuides}]`);
+  for (const p of nearMissProblems) console.log(`     near-miss ${p}`);
+  for (const p of altProblems) console.log(`     alt-positive ${p}`);
+  if (!ok) bad++;
 }
+
+console.log(`sample-metrics: near-miss caught=${metrics.nearMissCaught}/${metrics.nearMissTotal} (recall+precision)  alt-positive pass=${metrics.altPassed}/${metrics.altTotal}`);
 
 // Parser & canonical-check probes (meta-tests, evals/audit/parser-probes.mjs)
 try {

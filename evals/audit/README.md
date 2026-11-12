@@ -17,8 +17,16 @@ the metric scale.
   enforced permanently by the selftest floor control); the pass-rate quantifies how much
   of the check scale remains free on an empty diff (historically 35.2% mean, concentrated
   in the hygiene slice). Usage: `node evals/audit/floor.mjs [--json]`.
+- `mutation.mjs` — targeted mutation control of the checks themselves (audit P1): each
+  mutant applies a specific defect edit to a scenario's positive sample (wrong DI target,
+  comment-only binding, dispatch before/inside the transaction, wrong-table migration
+  revert, docblock-only validation attributes, unwired DTO) and the grading run must fail
+  exactly the checks guarding that invariant; behavior-preserving control mutants
+  (spaced `strict_types`, docblock Yii2 mentions, class-constant migrations) must fail
+  nothing. Usage: `node evals/audit/mutation.mjs [--json]`. Current: targeted 10/10
+  caught, controls 3/3 clean.
 
-Planned (P1, per the audits): mutation control of the checks themselves (stub-method
-survivors, wrong-DI-target, comment-instead-of-code mutants must be caught), and
-near-miss sample sets per critical check (precision/recall instead of two-point
-positive/negative validation).
+Scenario-level precision/recall fixtures (near-miss negatives and alternative-positive
+samples, declared per scenario as `nearMiss` / `positiveAlt`) are validated permanently
+by `runner/selftest.mjs`; contracts for the semantically upgraded checks live in
+[`../CHECK-CONTRACTS.md`](../CHECK-CONTRACTS.md).

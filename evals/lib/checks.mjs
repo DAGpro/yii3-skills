@@ -39,7 +39,7 @@ export function changedFiles(dir, base) {
 export const filesMatching = (dir, re) => walk(dir).filter((p) => re.test(rel(dir, p)));
 
 /** Index where a PHP heredoc/nowdoc starting at `i` (`<<<LABEL`) ends (past the closing label), or null. */
-function phpHeredocEnd(text, i) {
+export function phpHeredocEnd(text, i) {
   if (text[i] !== '<' || text[i + 1] !== '<' || text[i + 2] !== '<') return null;
   const m = /^<<<[ \t]*(?:'([A-Za-z_][A-Za-z0-9_]*)'|"([A-Za-z_][A-Za-z0-9_]*)"|([A-Za-z_][A-Za-z0-9_]*))/.exec(text.slice(i, i + 96));
   if (!m) return null;
@@ -51,7 +51,7 @@ function phpHeredocEnd(text, i) {
 }
 
 /** Skips a PHP single/double-quoted string starting at the opening quote; returns the index past the closing quote. */
-function skipQuotedString(text, start) {
+export function skipQuotedString(text, start) {
   let i = start + 1;
   const n = text.length;
   while (i < n) {
@@ -67,7 +67,7 @@ function skipQuotedString(text, start) {
 }
 
 /** State-machine based delimiter matcher ignoring PHP comments, string literals, and heredocs. */
-function matchDelimiter(text, openIdx, openChar, closeChar) {
+export function matchDelimiter(text, openIdx, openChar, closeChar) {
   let depth = 0;
   let i = openIdx;
   const n = text.length;

@@ -20,5 +20,13 @@
     "references/http-validation-rules.md",
     "references/http-actions-core.md",
     "references/http-routes-definition.md"
+  ],
+  "nearMiss": [
+    {
+      "dir": "near-miss-dto-docblock-attr",
+      "mustFail": [
+        "input-dto-validated"
+      ]
+    }
   ]
 }

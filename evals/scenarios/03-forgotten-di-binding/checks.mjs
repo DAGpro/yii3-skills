@@ -1,5 +1,5 @@
-import { check, ok, fail, read, filesMatching, methodBody } from '../../lib/checks.mjs';
-import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
+import { check, ok, fail, read } from '../../lib/checks.mjs';
+import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck, interfaceBoundCheck, migrationReversibleCheck } from '../../lib/shared-checks.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
@@ -37,15 +37,7 @@ export default [
   }),
 
   // The core gate: a freshly added interface is useless until it is bound to its implementation.
-  check('interface-bound', 'Every added interface is bound in config/**/di/*.php (<Name>::class => <implementation>)', ({ dir, changed }) => {
-    const ifs = addedInterfaces(changed);
-    if (!ifs.length) return fail('no interface added under src/');
-    const di = diConfig(dir);
-    const unbound = ifs.filter((i) => !new RegExp(i.name + "::class['\"]?\\s*=>").test(di));
-    return unbound.length
-      ? fail(`DI binding missing for: ${unbound.map((i) => i.name).join(', ')} (a fresh interface must be bound to its implementation)`)
-      : ok(ifs.map((i) => i.name).join(', '));
-  }),
+  interfaceBoundCheck(),
 
   check('di-injected-not-newed', 'Consumers type-hint the added interface; discovered implementations are never `new`-ed outside tests', ({ changed }) => {
     const ifs = addedInterfaces(changed);
@@ -61,15 +53,7 @@ export default [
       : ok();
   }),
 
-  check('migration-reversible', 'New migration in migrations/ with a non-empty down()', ({ changed }) => {
-    const m = added(changed, /^migrations\/.*\.php$/);
-    if (!m.length) return fail('no new migration');
-    const bad = m.filter((f) => {
-      const body = methodBody(read(f.abs), 'down');
-      return !body || !/\b(drop|delete)\w*\(/i.test(body);
-    });
-    return bad.length ? fail(`down() empty or missing: ${bad.map((b) => b.path)}`) : ok(m.map((x) => x.path).join(', '));
-  }),
+  migrationReversibleCheck(),
 
   noYii2Check(),
   overrideAdvisoryCheck(),

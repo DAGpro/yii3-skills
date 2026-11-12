@@ -1,21 +1,45 @@
 import { check, ok, fail, read } from '../../lib/checks.mjs';
 import { noYii2Check, strictTypesCheck, overrideAdvisoryCheck } from '../../lib/shared-checks.mjs';
+import { ruleAttributeAttachment, stripPhpComments } from '../../lib/semantic.mjs';
 
 const php = (changed) => changed.filter((c) => c.path.endsWith('.php'));
 const added = (changed, re) => changed.filter((c) => c.added && re.test(c.path));
 const actions = (changed) => php(changed).filter((c) => /Action\.php$/.test(c.path));
 
 export default [
-  check('input-dto-validated', 'A typed input DTO (AbstractInput + #[FromBody] or typed DTO) with validator rule attributes (#[Validate(new ...)] or rule attributes)', ({ changed }) => {
+  check('input-dto-validated', 'A typed input DTO (AbstractInput + #[FromBody] or typed DTO) with validator rule attributes attached to properties, wired into the Action - not merely declared', ({ changed }) => {
     const dtos = added(changed, /^src\/.*\.php$/).map((c) => ({ path: c.path, t: read(c.abs) }))
       .filter(({ t }) => /class\s+\w*(Input|Dto)\b/i.test(t)
         || /use\s+Yiisoft\\Input\\Http\\AbstractInput;/.test(t)
         || /extends\s+\\?AbstractInput\b/.test(t)
         || /#\[FromBody\]/.test(t));
     if (!dtos.length) return fail('no new typed input DTO class created');
-    const validated = dtos.filter(({ t }) => /#\[Validate\(\s*new\s+(Length|Integer|Required|Number|StringValue|Count|Email)\(/.test(t)
-      || /#\[(Length|Integer|Required|Number|StringValue|Count|Email)\b/.test(t));
-    return validated.length ? ok(validated.map((v) => v.path).join(', ')) : fail('no validator rule attributes on the input DTO');
+    const problems = [];
+    const validated = [];
+    for (const d of dtos) {
+      const attach = ruleAttributeAttachment(stripPhpComments(d.t));
+      if (!attach.total) {
+        problems.push(`${d.path}: no validator rule attributes (docblock mentions do not count)`);
+        continue;
+      }
+      if (attach.detached.length) {
+        problems.push(`${d.path}: rule attribute(s) not attached to a property: ${attach.detached.join(', ')}`);
+        continue;
+      }
+      const short = d.path.split('/').pop().replace(/\.php$/, '');
+      // wired = referenced outside import lines in a changed non-test file (a bare
+      // `use X;` import does not count as usage - audit mutant probe)
+      const wired = php(changed).some((c) => !c.path.endsWith(short + '.php') && !/^tests\//.test(c.path)
+        && stripPhpComments(read(c.abs)).split('\n').filter((l) => !/^\s*use\s+[\w\\]+;\s*$/.test(l)).join('\n').includes(short));
+      if (!wired) {
+        problems.push(`${d.path}: DTO is not referenced by any changed non-test file (declared but not wired)`);
+        continue;
+      }
+      validated.push(d.path);
+    }
+    return validated.length && !problems.length
+      ? ok(validated.join(', '))
+      : fail(problems.length ? problems.join('; ') : 'no validated input DTO');
   }),
 
   check('action-typed-input', 'The Action receives or resolves typed input (type-hinted parameter or injected hydrator/validator)', ({ changed }) => {

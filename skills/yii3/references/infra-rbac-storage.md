@@ -4,17 +4,29 @@
 
 > Reference guide for persisting RBAC items (roles, permissions) and assignments: relational database storage with `yiisoft/rbac-db`, version-controlled PHP file storage with `yiisoft/rbac-php`, Cycle database storage with `yiisoft/rbac-cycle-db`, and hybrid storage architectures that combine drivers.
 
-**Scope & Ownership:** This guide is the single source of truth for RBAC storage drivers; it was extracted from the [Authentication & RBAC Guide, §8.4–8.7](infra-auth-and-rbac.md#84-relational-database-storage-yiisoftrbac-db). Exactly **one storage driver is installed per project**: `yiisoft/rbac-db` XOR `yiisoft/rbac-php` XOR `yiisoft/rbac-cycle-db` — resolve which driver is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). The RBAC manager, dynamic business rules, and the rules container that sit on top of these storages are owned by the [Authentication & RBAC Guide, §8.1–8.3](infra-auth-and-rbac.md#81-rbac-items-roles-permissions-and-managerinterface).
+**Scope & Ownership:** This guide is the single source of truth for RBAC storage drivers; it was extracted from the [Authentication & RBAC Guide, §8.4–8.7](infra-auth-and-rbac.md#84-relational-database-storage-yiisoftrbac-db). Select the RBAC storage topology matching your persistence stack: relational DB (`yiisoft/rbac-db`), file-based (`yiisoft/rbac-php`), Cycle DB (`yiisoft/rbac-cycle-db`), or a hybrid combination (e.g. PHP file items + DB assignments) — see [Choosing an RBAC Storage Strategy](#choosing-an-rbac-storage-strategy). The RBAC manager, dynamic business rules, and the rules container that sit on top of these storages are owned by the [Authentication & RBAC Guide, §8.1–8.3](infra-auth-and-rbac.md#81-rbac-items-roles-permissions-and-managerinterface).
 
 ---
 
 ## Table of Contents
+- [Choosing an RBAC Storage Strategy](#choosing-an-rbac-storage-strategy)
 - [1. Relational Database Storage (`yiisoft/rbac-db`)](#1-relational-database-storage-yiisoftrbac-db)
 - [2. PHP File Storage (`yiisoft/rbac-php`)](#2-php-file-storage-yiisoftrbac-php)
 - [3. Cycle Database Storage (`yiisoft/rbac-cycle-db`)](#3-cycle-database-storage-yiisoftrbac-cycle-db)
 - [4. Hybrid Storage Architectures](#4-hybrid-storage-architectures)
 - [5. Anti-Patterns & Common Traps](#5-anti-patterns--common-traps)
 - [Related Topic Guides](#related-topic-guides)
+
+---
+
+## Choosing an RBAC Storage Strategy
+
+| RBAC Storage Topology | Items (Roles & Permissions) | Assignments (User-to-Role) | Storage Backend | Version Control & GitOps | Best For |
+|---|---|---|---|---|---|
+| **PHP File Storage (`yiisoft/rbac-php`)** | `items.php` | `assignments.php` | PHP array files on disk | Full (committed in git) | Static role hierarchies, microservices, small teams, developer-managed permissions with zero DB overhead. |
+| **Relational DB (`yiisoft/rbac-db`)** | `yii_rbac_item` table | `yii_rbac_assignment` table | SQL via `yiisoft/db` | Migrations for seed data | Dynamic permissions managed via admin panels, multi-node clusters with shared DB, runtime role creation. |
+| **Cycle DB (`yiisoft/rbac-cycle-db`)** | `yii_rbac_item` table | `yii_rbac_assignment` table | SQL via `cycle/database` | Cycle schema migrations | Applications using Cycle ORM / `cycle/database` as their primary persistence layer. |
+| **Hybrid Storage Architecture** | `items.php` (`rbac-php`) | `yii_rbac_assignment` (`rbac-db`) | PHP file + SQL table | Partial (items in git, assignments in DB) | Enterprise SaaS: roles and permissions are fixed in code/deployment, while tenant user assignments are dynamic. |
 
 ---
 

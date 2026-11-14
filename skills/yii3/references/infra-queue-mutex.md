@@ -10,6 +10,7 @@
 
 ## Table of Contents
 - [1. The `MutexInterface::acquire()` Invariant](#1-the-mutexinterfaceacquire-invariant)
+  - [Choosing Mutex Concurrency Approach: Explicit vs Synchronizer](#choosing-mutex-concurrency-approach-explicit-vs-synchronizer)
 - [2. Approach A: Explicit Mutex with `MutexFactoryInterface`](#2-approach-a-explicit-mutex-with-mutexfactoryinterface)
 - [3. Approach B: Callback Execution with `Synchronizer`](#3-approach-b-callback-execution-with-synchronizer)
 - [4. Mutex Driver Packages & DI Configuration Recipes (`config/common/di/*.php`)](#4-mutex-driver-packages--di-configuration-recipes-configcommondiphp)
@@ -27,6 +28,13 @@ When multiple background workers run concurrently, use `yiisoft/mutex` to preven
 > In Yii 3, `MutexInterface` represents an **individual, already-named lock instance**.
 > Calling `$mutex->acquire($name, 5)` is **invalid**: PHP silently ignores the surplus second argument, and the lock-name string binds to `int $timeout` — under `strict_types` this throws a `TypeError` (catch `\TypeError`, not `ArgumentCountError`). The signature is strictly `public function acquire(int $timeout = 0): bool`.
 > To dynamically acquire locks by name or ID, inject **`Yiisoft\Mutex\MutexFactoryInterface`** or use **`Yiisoft\Mutex\Synchronizer`**.
+
+### Choosing Mutex Concurrency Approach: Explicit vs Synchronizer
+
+| Concurrency Approach | Injected Service | Release Guarantee | Failure Handling | Best For |
+|---|---|---|---|---|
+| **Approach A: Explicit Mutex** | `MutexFactoryInterface` | Manual inside `try-finally` block via `$mutex->release()` | Evaluates `if (!$mutex->acquire($timeout))` boolean check | Custom retry loops, conditional acquisition, non-blocking polling, or long-lived multi-step procedures. |
+| **Approach B: Synchronizer Callback** | `Synchronizer` | Automatic RAII release when callback exits (normal or exception) | Catches `MutexLockedException` if lock cannot be acquired | Critical sections, business command executions, preventing duplicate queue job runs, idiomatic clean code. |
 
 ## 2. Approach A: Explicit Mutex with `MutexFactoryInterface`
 

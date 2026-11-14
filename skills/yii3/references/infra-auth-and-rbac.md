@@ -11,6 +11,7 @@
 
 ## Table of Contents
 - [1. Authentication Architecture & Core Contracts](#1-authentication-architecture--core-contracts)
+  - [Choosing Authentication & Identity Architecture](#choosing-authentication--identity-architecture)
 - [2. Identity & Identity Repository Implementation](#2-identity--identity-repository-implementation)
   - [2.1. Identity Model with Auto-Login Support](#21-identity-model-with-auto-login-support)
   - [2.2. Web Identity Repository](#22-web-identity-repository)
@@ -59,6 +60,19 @@ In Yii3, user authentication, session state management, and hierarchical access 
 | `yiisoft/rbac-php` | `Yiisoft\Rbac\Php\ItemsStorage`<br>`Yiisoft\Rbac\Php\AssignmentsStorage`<br>`Yiisoft\Rbac\Php\ConcurrentItemsStorageDecorator`<br>`Yiisoft\Rbac\Php\ConcurrentAssignmentsStorageDecorator` | PHP file storage driver for RBAC items and assignments (version-controlled roles, no database). See the [RBAC Storage Drivers Guide](infra-rbac-storage.md). |
 | `yiisoft/rbac-cycle-db` | `Yiisoft\Rbac\Cycle\ItemsStorage`<br>`Yiisoft\Rbac\Cycle\AssignmentsStorage`<br>`Yiisoft\Rbac\Cycle\TransactionalManagerDecorator` | Database persistence driver for RBAC using `cycle/database` (Cycle migrations included). See the [RBAC Storage Drivers Guide](infra-rbac-storage.md). |
 | `yiisoft/rbac-rules-container` | `Yiisoft\Rbac\Rules\Container\RulesContainer` | Rule factory resolving custom `RuleInterface` implementations via a PSR-11 container. |
+
+### Choosing Authentication & Identity Architecture
+
+Authentication mechanisms in Yii3 are **modular and complementary**, not strictly mutually exclusive. An application typically selects **one primary session/state mechanism** for each client surface (or combines them in a hybrid dual-auth setup), augmented by **complementary intake mechanisms**:
+
+| Authentication Mechanism | Role in System | Key Packages | State Storage | Typical Target & Transport |
+|---|---|---|---|---|
+| **Stateful Web Session** | **Primary** for HTML Apps | `yiisoft/user`, `yiisoft/session` | Server-side session store (`PHPSESSID` cookie) | Traditional multi-page web applications (SSR), admin panels. Uses `CurrentUser`, CSRF tokens, and 302 redirects. |
+| **Stateless Bearer / JWT** | **Primary** for APIs / SPAs | `yiisoft/auth-jwt`, `yiisoft/auth` | Client-side signed token (cryptographic claims) | Single-page apps (React/Vue), mobile clients, public REST APIs. Uses `Authorization: Bearer <jwt>` and 401 challenges. |
+| **External OAuth2 / OIDC SSO** | **Complementary Intake** | `yiisoft/yii-auth-client` | Delegated to external IdP (Google, GitHub, Keycloak) | Social login and enterprise federated SSO. **Bridges into primary auth**: on callback, calls `$currentUser->login()` for Web or mints a JWT for API. |
+| **Persistent Cookie Login** | **Complementary Intake** | `yiisoft/user` (`CookieLogin`) | Signed HMAC cookie (`autoLogin`) | Long-lived "Remember Me" authentication for stateful web apps. Restores session without prompting password. |
+| **API Key / Static Token** | **Complementary Intake** | `yiisoft/auth` (`HttpBearer` / `HttpHeader`) | Stored in DB / hashed secret | Machine-to-machine integrations, webhooks, internal services. |
+| **Hybrid Dual-Auth Architecture** | **Coexistence Architecture** | `yiisoft/user` + `yiisoft/auth-jwt` | Session for Web, JWT for API | Web routes (`/web/*`, `/admin/*`) use `LoginMiddleware`; API routes (`/api/*`) use `Authentication` middleware with `JwtMethod`. Both share `UserIdentity`. |
 
 ---
 
@@ -341,7 +355,7 @@ The `Yiisoft\User\CurrentUser` service manages the user session, guest state, an
 
 ## 5. Stateless REST API Authentication (JWT / Bearer Token)
 
-> **Login-method selection note:** The login method is **picked per project**: stateful sessions ([§4](#4-stateful-session-authentication-lifecycle-yiisoftuser)), stateless JWT / Bearer tokens (this section — `yiisoft/auth-jwt`), or external OAuth2/OIDC login ([§6](#6-external-oauth2--oidc-login-yiisoftyii-auth-client) — `yiisoft/yii-auth-client`). Resolve which method is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). RBAC authorization (§8) layers on top of any of them.
+> **Authentication Architecture Note:** Stateless JWT (`yiisoft/auth-jwt`) is the primary authentication mechanism for headless APIs and SPAs. It can operate standalone or coexist with stateful web sessions in a hybrid dual-auth architecture (where `/api/*` routes use `JwtMethod` and `/web/*` routes use `LoginMiddleware`). External OAuth2/OIDC login ([§6](#6-external-oauth2--oidc-login-yiisoftyii-auth-client)) is a complementary federated intake that bridges into either mechanism.
 >
 > One-line trap summary: the factory method is `TokenFactoryInterface::create()` (not `createToken()`), and its second `$format` parameter is mandatory — pass `CompactSerializer::NAME` / `'jws_compact'` explicitly.
 >
@@ -351,7 +365,7 @@ The `Yiisoft\User\CurrentUser` service manages the user session, guest state, an
 
 ## 6. External OAuth2 / OIDC Login (`yiisoft/yii-auth-client`)
 
-> **Login-method selection note:** The login method is **picked per project**: stateful sessions ([§4](#4-stateful-session-authentication-lifecycle-yiisoftuser)), stateless JWT / Bearer tokens ([§5](#5-stateless-rest-api-authentication-jwt--bearer-token) — `yiisoft/auth-jwt`), or external OAuth2/OIDC login (this section — `yiisoft/yii-auth-client`). Resolve which method is installed via the project's `composer.json` or the [Package Catalog, §3 "Pick Exactly ONE per Family"](package-catalog.md#3-driver--storage-selection-rules-pick-exactly-one-per-family). RBAC authorization (§8) layers on top of any of them.
+> **External Login Architecture Note:** `yiisoft/yii-auth-client` is a complementary federated authentication flow, not a competing session store. It handles authorization code handshakes with external Identity Providers (Google, GitHub, Keycloak), extracts user attributes, and delegates to your application's primary authentication mechanism — calling `$currentUser->login()` to start a web session or issuing a signed JWT token.
 >
 > **For the complete reference on external OAuth2/OIDC login** — the package architecture and `AuthClientInterface` contracts, wiring the `AuthAction` callback middleware (with the uninitialized `$successUrl`/`$cancelUrl` fatal-crash trap), configuring provider clients via `Collection` params, OpenID Connect, the `AuthChoice` button widget, and mapping provider attributes to your identity — **see the** [OAuth2/OIDC Login Guide](infra-auth-oauth2.md).
 

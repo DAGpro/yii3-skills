@@ -17,6 +17,7 @@
   - [3.2. Listener Dependency Injection Rules](#32-listener-dependency-injection-rules)
   - [3.3. Listener Ordering (No Priority Mechanism)](#33-listener-ordering-no-priority-mechanism)
 - [4. Event Configuration (`yiisoft/config` & `yiisoft/yii-event`)](#4-event-configuration-yiisoftconfig--yiisoftyii-event)
+  - [Choosing Event Listener Registration Style](#choosing-event-listener-registration-style)
   - [4.1. Configuration Architecture & Scopes](#41-configuration-architecture--scopes)
   - [4.2. Declarative Event Mapping & Supported Listener Formats](#42-declarative-event-mapping--supported-listener-formats)
   - [4.3. Verifying Event Configurations Ahead-of-Time](#43-verifying-event-configurations-ahead-of-time)
@@ -24,6 +25,7 @@
   - [Why the Rule Holds: the `transaction()` API](#why-the-rule-holds-the-transaction-api)
   - [Recommended Aggregate Event-Recording Pattern](#recommended-aggregate-event-recording-pattern)
   - [Enterprise Upgrade Path: Transactional Outbox](#enterprise-upgrade-path-transactional-outbox)
+  - [Choosing How to Decouple System Actions & Side-Effects](#choosing-how-to-decouple-system-actions--side-effects)
 
 ## 1. PSR-14 Event Architecture in Yii3
 
@@ -269,12 +271,15 @@ final readonly class LogOrderPlacementListener
 
 ## 4. Event Configuration (`yiisoft/config` & `yiisoft/yii-event`)
 
+### Choosing Event Listener Registration Style
+
 Choose **one** listener-registration style per project/library (apps default to declarative `yiisoft/yii-event`; continue the existing project setup on feature work):
 
 | Wiring Style | Package | Choose when… | Notes |
 |---|---|---|---|
 | **1. Declarative Config Groups** *(app default)* | `yiisoft/yii-event` (`config/**/events*.php`) | Yii3 web/console applications wired with `yiisoft/config`. | Event FQCN is the config array key (§4.1–§4.2). Run `ListenerConfigurationChecker::check()` in dev/tests (§4.3). |
 | **2. Programmatic `ListenerCollection`** | `yiisoft/event-dispatcher` (`Provider` + `ListenerCollection`) | Standalone libraries, isolated modules without `yiisoft/yii-event`, or unit tests. | `$listeners = (new ListenerCollection())->add($callable); $dispatcher = new Dispatcher(new Provider($listeners));` (`add()` infers the event type from the parameter and returns a cloned instance). |
+| **3. Composite Dispatcher & Provider** | `yiisoft/event-dispatcher` (`CompositeDispatcher` + `CompositeProvider`) | Modular monoliths, plugin architectures, or combining isolated sub-system providers. | Aggregates multiple `ListenerProviderInterface` instances into a single dispatcher without coupling modules. |
 
 ### 4.1. Configuration Architecture & Scopes
 
@@ -553,5 +558,14 @@ final readonly class PlaceOrderUseCase
 ### Enterprise Upgrade Path: Transactional Outbox
 
 Post-commit dispatch prevents dispatching events for rolled-back transactions, but still leaves a crash window if the PHP process or downstream broker fails right after `commit()`. For Enterprise workloads requiring at-least-once delivery across process crashes (financial transactions, order fulfillment, external webhooks), persist outbox rows inside `$db->transaction()` and relay them asynchronously via a mutex-guarded worker — see the [Transactional Outbox & Reliable Messaging Guide](infra-transactional-outbox.md).
+
+### Choosing How to Decouple System Actions & Side-Effects
+
+| Decoupling Pattern | Execution Timing | Atomicity with DB | Request Latency | Failure & Crash Resilience | Best For |
+|---|---|---|---|---|---|
+| **1. Synchronous In-Memory (PSR-14)** | Immediate, inline during execution | No boundary (runs inside or outside transaction) | High (delays HTTP response) | Vulnerable: exception rolls back transaction or leaves ghost side-effects; unrecoverable process crash | Pure in-memory mutations, logging, metric increments, domain event subscribers modifying memory state. |
+| **2. Post-Commit In-Memory (`releaseEvents()`)** | Synchronous, strictly after `$db->transaction()` commit | Strong boundary: never fires if transaction fails/rolls back | High (delays HTTP response) | Partial: no ghost events on rollback, but process crash before dispatch loses events | Sending notifications or cache flushes when queue infrastructure is absent and side-effects are fast. |
+| **3. Asynchronous Queue Job (`yiisoft/queue`)** | Deferred background execution via worker CLI | Separate: message pushed to broker, processed detached | Negligible (sub-millisecond `$producer->push()`) | High: broker durability, automatic retries (`ExponentialDelayMiddleware`), memory isolation | Long-running operations: external API webhooks, bulk PDF rendering, email dispatching via `yiisoft/mailer`. |
+| **4. Transactional Outbox Pattern** | Asynchronous, 2-phase: DB table -> relay worker -> broker | Absolute: outbox row committed atomically in same SQL transaction | Minimal (local DB insert in existing transaction) | Highest: guaranteed at-least-once delivery across broker outages, network partitions, and process crashes | Enterprise, audit-critical events, financial transactions, multi-system integration. See [`infra-transactional-outbox.md`](infra-transactional-outbox.md). |
 
 ---

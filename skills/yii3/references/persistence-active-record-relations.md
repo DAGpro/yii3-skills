@@ -9,10 +9,12 @@
 
 - [1. Architecture & Relation Philosophy](#1-architecture--relation-philosophy)
 - [2. Relation Definitions: `relationQuery()` vs `MagicRelationsTrait`](#2-relation-definitions-relationquery-vs-magicrelationstrait)
+  - [Choosing How to Declare Relations](#choosing-how-to-declare-relations)
   - [2.1. Canonical Explicit Pattern (No Magic Traits)](#21-canonical-explicit-pattern-no-magic-traits)
   - [2.2. Magic Relations Trait Alternative (`MagicRelationsTrait`)](#22-magic-relations-trait-alternative-magicrelationstrait)
 - [3. Link Syntax for `hasOne` and `hasMany`](#3-link-syntax-for-hasone-and-hasmany)
 - [4. Many-to-Many via `via()` and `viaTable()`](#4-many-to-many-via-via-and-viatable)
+  - [Choosing Many-to-Many: via() vs viaTable()](#choosing-many-to-many-via-vs-viatable)
   - [4.1. Intermediate Active Record Model (`via()`)](#41-intermediate-active-record-model-via)
   - [4.2. Direct Junction Table (`viaTable()`)](#42-direct-junction-table-viatable)
 - [5. Filtering & Sorting Relations with `joinWith()`](#5-filtering--sorting-relations-with-joinwith)
@@ -39,6 +41,13 @@ Key architectural rules:
 ---
 
 ## 2. Relation Definitions: `relationQuery()` vs `MagicRelationsTrait`
+
+### Choosing How to Declare Relations
+
+| Declaration Method | Implementation Mechanism | Choose when… | Trade-offs & Invariants |
+|---|---|---|---|
+| **1. Explicit `relationQuery()`** *(canonical default)* | Override `relationQuery(string $name): ActiveQueryInterface` using a PHP 8 `match` expression | Modern Yii 3 applications, strict type safety, static analysis tools (Psalm/PHPStan), zero magic. | Pure explicit dispatch; unhandled relations must delegate to `parent::relationQuery($name)`. |
+| **2. `MagicRelationsTrait`** | `use MagicRelationsTrait;`<br>Define `public function getProfileQuery(): ActiveQueryInterface` | Migrating legacy Yii 2 codebases, or teams preferring isolated getter methods per relation. | Relies on `__call` magic interception; method names **mandate** the `Query` suffix (e.g. `getProfileQuery()`, NOT `getProfile()`). |
 
 ### 2.1. Canonical Explicit Pattern (No Magic Traits)
 

@@ -39,6 +39,7 @@ const ALLOWLIST = [
   { match: 'CurrentRoute::getRoute()', reason: 'phantom method quoted in warnings; CurrentRoute exposes getName()/getPattern()/getArguments() (verified in src)' },
   { match: 'Yiisoft\\Router\\Attribute', reason: 'attribute classes exist only on the yiisoft/router dev-add-attributes branch required by router-composer-attribute-collector; the guide explains the version constraint in the same section' },
   { match: 'Yiisoft\\Router\\Provider\\RoutesProviderInterface', reason: 'interface lives on the yiisoft/router dev-add-attributes branch (imported by AttributeRoutesProvider), not in the stable router clone' },
+  { match: 'Yiisoft\\Db\\Query\\Query::each()', reason: 'anti-pattern row quoting wrong arity call to each(100); each() accepts 0 arguments in Yii 3' },
   { match: 'Query::cache()', reason: 'the guide documents the ABSENCE of query result caching (§3.5); the method intentionally does not exist' },
   { match: 'Query::noCache()', reason: 'same — absence documented in §3.5' },
   { match: 'ActiveQuery::cache()', reason: 'same — absence documented in §3.5 warning rows' },

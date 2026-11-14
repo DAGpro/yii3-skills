@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [5. Paginated Queries & Data Readers (`yiisoft/data-db`, `yiisoft/data`)](#5-paginated-queries--data-readers-yiisoftdata-db-yiisoftdata)
+  - [Choosing How to Paginate Data: OffsetPaginator vs KeysetPaginator](#choosing-how-to-paginate-data-offsetpaginator-vs-keysetpaginator)
   - [5.1. `QueryDataReader` & Sorting (`Sort::only()`, `Sort::any()`)](#51-querydatareader--sorting-sortonly-sortany)
   - [5.2. Offset Pagination (`OffsetPaginator`)](#52-offset-pagination-offsetpaginator)
   - [5.3. Filtering in `QueryDataReader` (`withFilter()`)](#53-filtering-in-querydatareader-withfilter)
@@ -23,6 +24,13 @@
 > **Critical FQCN Notice:**
 > The data reader for `yiisoft/db` is `Yiisoft\Data\Db\QueryDataReader` (package `yiisoft/data-db`).
 > Do **NOT** use `Yiisoft\DataDb\DataReader\QueryDataReader` (hallucinated namespace).
+
+### Choosing How to Paginate Data: OffsetPaginator vs KeysetPaginator
+
+| Pagination Style | Paginator Class | Query Mechanism | Choose when… | Caveats & Limitations |
+|---|---|---|---|---|
+| **Offset Pagination** *(default)* | `Yiisoft\Data\Paginator\OffsetPaginator` | `LIMIT :limit OFFSET :offset` | UI requires discrete numbered pages (`1, 2, 3...`), jumping to arbitrary pages, or datasets < 100,000 rows. | Performance degrades on deep pages (`OFFSET 500000` scans and discards 500k rows); unstable under concurrent inserts. |
+| **Keyset (Cursor) Pagination** | `Yiisoft\Data\Paginator\KeysetPaginator` | `WHERE id > :cursor ORDER BY id ASC LIMIT :limit` | Mobile infinite scroll feeds, real-time activity streams, large tables (> 100k rows), high-throughput REST APIs. | Cannot jump to arbitrary page numbers; **requires** strict monotonic ordering on unique indexed columns (e.g. sequential integer ID or UUIDv7). |
 
 ### 5.1. `QueryDataReader` & Sorting (`Sort::only()`, `Sort::any()`)
 

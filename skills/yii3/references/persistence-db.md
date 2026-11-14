@@ -13,6 +13,31 @@ This topic is split into two focused guides — load the one that matches the ta
 
 Read this file for the anti-pattern matrix (§8) and related guides (§9).
 
+### Choosing Your Persistence Paradigm: Active Record vs Cycle ORM vs DBAL Query Builder
+
+- **Feature / patch work:** Never mix persistence engines within the same bounded context. Inspect `composer.json` and follow the active engine (`yiisoft/active-record`, `cycle/orm`, or raw `yiisoft/db`).
+- **New project / `/aif-architecture`:** Choose strictly one primary persistence paradigm based on domain complexity and operational runtime:
+
+| Persistence Strategy | Primary Packages | Architectural Sweet Spot | Choose when… | Trade-offs & Caveats |
+|---|---|---|---|---|
+| **1. Active Record** | `yiisoft/active-record`<br>`yiisoft/db` | **Pragmatic** (`layers`) & **Balanced** (`structured*`) | Standard web apps, rapid CRUD, admin panels, teams transitioning from Yii 2/Laravel, where entity models closely match database tables. | Coupling between DB schema and model; no Unit of Work (each `save()` executes SQL immediately); higher memory than DBAL; requires `LazyLoadGuard` to avoid N+1 queries. |
+| **2. Cycle ORM Data Mapper** | `cycle/orm`<br>`cycle/annotated`<br>`yiisoft/yii-cycle`<br>`yiisoft/data-cycle` | **Strict** (`explicit*`) & **Balanced** (`structured*`) | Complex business domains, strict DDD (pure POPO entities), rich object graphs, multi-entity atomic transactions via Unit of Work. | Higher conceptual complexity; uses external `cycle/*` ecosystem; requires compiled schema in production (`php yii cycle:schema:php`); **mandatory** `$entityManager->clean()` in long-running workers (RoadRunner/FrankenPHP) to prevent heap leaks. |
+| **3. Raw DBAL & Query Builder** | `yiisoft/db`<br>`yiisoft/data-db`<br>`yiisoft/hydrator` | **Strict** (`explicit*`) or **High-Throughput Services** | High-performance APIs, microservices, read-heavy reporting/dashboards, CQRS read-sides, or batch data ingestion pipelines. | Maximum execution speed and minimal memory footprint; zero ORM overhead; requires explicit manual SQL mapping or `yiisoft/hydrator` boilerplate; no automatic relationship resolution. |
+
+### Query Engines Comparison: Hydration, Performance & Memory
+
+| Metric / Feature | `Yiisoft\Db\Query\Query` | `Yiisoft\ActiveRecord\ActiveQuery` | `Cycle\ORM\Select` |
+|---|---|---|---|
+| **Return Type (`one()`)** | `array<string, mixed>\|null` | `ActiveRecordInterface\|null` (or array with `asArray()`) | Entity POPO / Proxy `object\|null` |
+| **Return Type (`all()`)** | `list<array<string, mixed>>` | `list<ActiveRecordInterface>` | `list<object>` |
+| **Hydration Mechanism** | None (raw PDO rows) or via `yiisoft/hydrator` | Instantiates model class, assigns attributes, tracks old state | Cycle Hydrator assigns properties directly or via reflection |
+| **Identity Map (Deduplication)** | ❌ No | ❌ No (queries instantiate duplicate objects) | ✅ Yes (`Cycle\ORM\Heap` deduplicates by PK) |
+| **Change Tracking** | ❌ None | Attribute array diff (`getDirtyAttributes()`) | Unit of Work state engine |
+| **Eager Loading Relations** | Manual SQL `JOIN` | `->with('relation1', 'relation2')` | `->load('relation1')` |
+| **Memory Footprint (10k rows)**| **Minimal (~2–4 MB)** | **Moderate (~15–25 MB)** | **High (~30–50 MB)** |
+| **Data Reader Package** | `yiisoft/data-db` (`QueryDataReader`) | `yiisoft/data-db` (`QueryDataReader`) | `yiisoft/data-cycle` (`EntityReader`) |
+| **Worker Safety Requirement** | Safe (stateless) | Call `LazyLoadGuard::resetCounters()` if strict | **Mandatory** `$entityManager->clean()` |
+
 ---
 ## 8. Anti-Pattern Matrix: Database & Query Builder
 

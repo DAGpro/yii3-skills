@@ -9,6 +9,17 @@ This topic is split into two focused guides — load the one that matches the ta
 - [Schema Construction & Data Seeding](persistence-migrations-schema.md) — migration architecture & interface contracts, class/file naming, modern `ColumnBuilder` schema construction, foreign keys & cross-DBMS portability, DDL alterations, data migrations & streaming seeds (§1–§6).
 - [Configuration & Console Commands](persistence-migrations-operations.md) — `config/params.php` for the migration tool, the full console command catalog, namespaces, multi-database targets, CI/Docker automation (§7–§8).
 
+### Choosing Your Schema Migration Strategy
+
+| Migration Tooling | Ecosystem Coupling | Migration Base Contract | Schema Definition Mechanism | Choose when… | CLI Commands & Automation |
+|---|---|---|---|---|---|
+| **`yiisoft/db-migration`** *(default)* | `yiisoft/db`<br>`yiisoft/active-record` | Implements `MigrationInterface` or `RevertibleMigrationInterface` | Imperative PHP code via `MigrationBuilder $b` and `ColumnBuilder` | Application uses `yiisoft/db` or `yiisoft/active-record`. Requires explicit versioned schema changes with fine-grained DBMS control. | `./yii migrate:up`<br>`./yii migrate:create`<br>`./yii migrate:down`<br>CI flag: `-y` (`--force-yes`) |
+| **`cycle/migrations`** | `cycle/orm`<br>`yiisoft/yii-cycle` | Extends `Cycle\Migrations\Migration` | Declarative code-first diffing via `cycle/schema-migrations-generator` from `#[Entity]` attributes or `Table` schema | Application uses Cycle ORM. Desires automatic schema diff calculation directly from PHP entity definitions. | `./yii migrate:generate`<br>`./yii cycle:migrate`<br>`./yii migrate:up` |
+
+> [!CAUTION]
+> **Strict Tool Isolation Invariant:**
+> Never install or run both migration tools simultaneously in the same database. `yiisoft/db-migration` tracks history in `{{%migration}}`, while `cycle/migrations` uses its own tracking table. Mixing them leads to divergent schema states and migration lockups.
+
 ## Anti-Pattern Matrix (Module-Wide: Migrations)
 
 Audited at Stage 6 (Config Audit & Consolidation) and the Finale Code-to-Reference audit. The child guides carry no separate matrices — this is the single migrations module matrix.

@@ -25,6 +25,7 @@ This guide is the authority for **project conventions** (layout, layer placement
 - [4. Package Placement Matrix by Pattern](#4-package-placement-matrix-by-pattern)
 - [5. Quality Gate Checklist](#5-quality-gate-checklist)
 - [6. Stage-by-Tier Execution Matrix](#6-stage-by-tier-execution-matrix)
+  - [Repository & Persistence Patterns Across Architectural Tiers](#repository--persistence-patterns-across-architectural-tiers)
 
 ---
 
@@ -197,10 +198,18 @@ When reviewing code (`aif-review`) or verifying changes (`aif-verify`), apply ch
 
 | Mission Stage | Pragmatic Tier (`layers`) | Balanced Tier (`structured*`) | Strict Tier (`explicit*`) |
 |---|---|---|---|
-| **Stage 1 — Migration & Schema** | `yiisoft/db-migration` with reversible `down()` | `yiisoft/db-migration` with reversible `down()` | `yiisoft/db-migration` with reversible `down()` |
+| **Stage 1 — Migration & Schema** | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` |
 | **Stage 2 — Domain / Model & Repository Boundary** | Validated Model / Entity (POPO, Active Record, or Cycle entity); repository only when needed (no mandatory port interface) | Module Entity / Rich Model (Active Record / Cycle permitted); module-boundary interfaces | Pure Aggregate + Value Objects (zero vendor imports); PSR-14 domain events; explicit `*RepositoryInterface` |
 | **Stage 3 — Repository / Persistence Implementation** | Concrete Repository (`yiisoft/db`) or Active Record finder/query methods directly (if Active Record handles persistence directly, mark Stage 3 skipped or satisfied by model) | Module Repository or Active Record / Cycle mapper | Infrastructure adapter implementing `*RepositoryInterface` (`Sql*Repository`) |
 | **Stage 4 — Use Case Handler & Events** | Cohesive Application Service orchestrating transactions & persistence | Module Service or Use Case Handler + transaction boundary | Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`) + post-commit PSR-14 events |
 | **Stage 5 — Input DTO & Action / Command** | Typed Input DTO + thin Action delegating to Application Service | Typed Input DTO + thin Action delegating to Module Service / Use Case | Typed Input DTO + thin Action delegating to Use Case Handler |
 | **Stage 6 — Config Audit & Wiring Gate** | Root `config/` (DI, routes, console commands, events) | Root `config/` (or module config) | Root `config/` (port interface bindings, routes, commands, events) |
 | **Stage 7 — Tests** | Unit tests (Service) + functional/HTTP tests | Module unit & functional tests | Domain/Use Case unit tests + adapter integration + HTTP tests |
+
+### Repository & Persistence Patterns Across Architectural Tiers
+
+| Architecture Tier | Active Record Pattern | Cycle ORM Pattern | DBAL Query Builder Pattern |
+|---|---|---|---|
+| **Pragmatic Tier** (`layers`) | Rich `UserRecord extends ActiveRecord` in `src/Models/` with static finders (`RepositoryTrait`) or concrete `UserRepository` (no interface). | Annotated `User` entity (`#[Entity]`) in `src/Models/` with concrete `UserRepository` injecting `EntityManagerInterface`. | Concrete `UserRepository` in `src/Repositories/` using `Query` and returning associative arrays or DTOs. |
+| **Balanced Tier** (`structured*`) | Module model in `src/<Module>/Models/UserRecord.php`. Encapsulated in module `UserRepository` without cross-module leakage. | Module entity in `src/<Module>/Entities/User.php` with `#[Entity]`. Persistence handled by module service/repository. | Module persistence adapter in `src/<Module>/Infrastructure/DbUserRepository.php`. |
+| **Strict Tier** (`explicit*`) | Pure POPO `Domain\Model\User` + `Domain\Repository\UserRepositoryInterface`. Adapter `ArUserRepository` in `Infrastructure/` maps to/from `UserRecord`. | Pure POPO `User` in `Domain/` with external compiled schema in `Infrastructure/` (or pure annotated entity if attributes allowed). | Pure POPO `Domain\Model\User` + `UserRepositoryInterface`. Adapter `DbUserRepository` in `Infrastructure/` hydrates via `HydratorInterface`. |

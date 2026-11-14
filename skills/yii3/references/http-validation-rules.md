@@ -13,6 +13,7 @@
   - [2.3. Exhaustive Built-In Rules Catalog](#23-exhaustive-built-in-rules-catalog)
   - [2.4. Lenient HTTP Input Rules vs. Strict Domain Type Rules](#24-lenient-http-input-rules-vs-strict-domain-type-rules)
 - [3. Declaring Rules & Validation Flow Modifiers](#3-declaring-rules--validation-flow-modifiers)
+  - [Choosing How to Declare Validation Rules](#choosing-how-to-declare-validation-rules)
   - [3.1. Repeatable PHP Attributes](#31-repeatable-php-attributes)
   - [3.2. Ad-Hoc Rules, Class Strings & RulesProviderInterface](#32-ad-hoc-rules-class-strings--rulesproviderinterface)
   - [3.3. Execution Modifiers: skipOnEmpty, skipOnError, when](#33-execution-modifiers-skiponempty-skiponerror-when)
@@ -263,6 +264,18 @@ Pick rules intentionally based on the architectural layer:
 ---
 
 ## 3. Declaring Rules & Validation Flow Modifiers
+
+### Choosing How to Declare Validation Rules
+
+| Rule Declaration Archetype | Syntax / API | Dynamic Evaluation | Separation of Concerns | Best For |
+|---|---|---|---|---|
+| **1. PHP 8 Attributes** | `#[Required]`, `#[Length(min: 3)]` | Static (compile-time constants) | High (inline on DTO / FormModel properties) | Standard DTOs, API request models, static forms; idiomatic Yii3 default. |
+| **2. Dynamic Rules Provider** | `implements RulesProviderInterface` -> `getRules(): iterable` | Dynamic (evaluated per request/state) | High (encapsulated inside model class) | Conditional forms, tenant-specific field requirements, DB-driven rules. |
+| **3. Standalone Rules Array** | `$validator->validate($data, ['name' => [new Required()]])` | Full runtime construction | Low (rules coupled to validation caller) | Ad-hoc validation, untyped webhook payloads, migrations, one-off scripts. |
+| **4. Class-String Reference** | `$validator->validate($rawArray, CreatePostInput::class)` | Static extraction without instantiation | High (validates raw data against DTO rules) | Pre-hydration validation gates, performance-critical input checks. |
+| **5. Inline Callback Rule** | `new Callback(fn($v, $c) => ...)` | Dynamic runtime closure | Low (inline business logic) | One-off cross-field comparisons that do not warrant a dedicated rule class. |
+| **6. Custom Rule & Handler** | `MyRule` + `MyRuleHandler implements RuleHandlerInterface` | Full DI injection in handler | Maximum (reusable, testable, translated) | Domain-specific business rules, reusable package validation components. |
+| **7. Combinator Rules** | `Composite`, `StopOnError`, `AnyRule` | Controlled pipeline flow | High (rule execution control) | Short-circuiting expensive checks, grouping shared modifiers (`when`, `skipOnEmpty`). |
 
 ### 3.1. Repeatable PHP Attributes
 

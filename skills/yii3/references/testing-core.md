@@ -12,18 +12,16 @@
 ## Table of Contents
 - [1. Testing Pyramid & Layer Boundaries](#1-testing-pyramid--layer-boundaries)
 - [2. Test Runner Ecosystem & Quality Gates](#2-test-runner-ecosystem--quality-gates)
+  - [Choosing Your Test Runner Ecosystem](#choosing-your-test-runner-ecosystem)
   - [2.1. PHPUnit (PHPUnit 10 and 11)](#21-phpunit-phpunit-10-and-11)
 - [3. Ready-Made PSR Test Doubles (`yiisoft/test-support`)](#3-ready-made-psr-test-doubles-yiisofttest-support)
 - [4. Mocking Strategies, PHPUnit 10/11 Rules & AI Pitfalls](#4-mocking-strategies-phpunit-1011-rules--ai-pitfalls)
+  - [Choosing Test Doubling Implementation](#choosing-test-doubling-implementation)
   - [4.1. Core Philosophy: What to Mock vs. What NOT to Mock](#41-core-philosophy-what-to-mock-vs-what-not-to-mock)
   - [4.2. Common AI Model Hallucinations in PHPUnit 10/11 (Dead APIs)](#42-common-ai-model-hallucinations-in-phpunit-1011-dead-apis)
   - [4.3. Idiomatic PHPUnit 10/11 Mocking Patterns](#43-idiomatic-phpunit-1011-mocking-patterns)
   - [4.4. Mocking in Testo via Mockery (`php-testo/bridge-mockery`)](#44-mocking-in-testo-via-mockery-php-testobridge-mockery)
-- [5. Unit Testing Use Cases, Validation, Fixtures & State Isolation](#5-unit-testing-use-cases-validation-fixtures--state-isolation)
-  - [5.1. Unit Testing Application Use Cases (Zero-Shot Compilable)](#51-unit-testing-application-use-cases-zero-shot-compilable)
-  - [5.2. Unit Testing Domain Validation (`yiisoft/validator`)](#52-unit-testing-domain-validation-yiisoftvalidator)
-  - [5.3. Test Fixture Assembly via `yiisoft/factory`](#53-test-fixture-assembly-via-yiisoftfactory)
-  - [5.4. Container State Isolation via `yiisoft/di` (`StateResetter`)](#54-container-state-isolation-via-yiisoftdi-stateresetter)
+- [5. Unit Testing Recipes (`testing-unit-recipes.md`)](testing-unit-recipes.md)
 - [6. Testing Console Commands (`yiisoft/yii-console`)](#6-testing-console-commands-yiisoftyii-console)
 - [7. Master PHP 8 Named Arguments & Signatures Reference](#7-master-php-8-named-arguments--signatures-reference)
 - [8. Comprehensive Anti-Pattern Matrix](#8-comprehensive-anti-pattern-matrix)
@@ -67,6 +65,15 @@ Yii3 projects support modern PHP test runners: `phpunit/phpunit` serves as the e
 - **PHPUnit vs. Testo = mutually exclusive.** A project uses `phpunit/phpunit` XOR `testo/testo` — never both (binary/plugin conflicts; `yiisoft/yii-testing` requires PHPUnit). The full exclusive-runner rule is owned by the [Testo Runner Guide, §1](testing-testo.md#1-the-exclusive-runner-rule-phpunit-xor-testo); PHPUnit is covered in [§2.1](#21-phpunit-phpunit-10-and-11) below.
 - **Codeception = alternative actor-driven test framework**, mutually exclusive with plain PHPUnit/Testo suite setups — owned by the [Codeception Testing Guide](testing-codeception.md).
 - **Infection = optional mutation-testing quality gate** layered on top of the chosen runner (not an alternative runner) — owned by the [Mutation Testing Guide](testing-infection.md).
+
+### Choosing Your Test Runner Ecosystem
+
+| Test Runner | Package | Primary Philosophy | Yii3 Integration | Best For |
+|---|---|---|---|---|
+| **PHPUnit 10 / 11** *(Standard)* | `phpunit/phpunit` | Industry standard, comprehensive assertions, XML suite config | Full native integration (`yiisoft/yii-testing`) | Official standard across all `yiisoft/*` packages, team codebases, CI/CD. |
+| **Testo** *(Alternative)* | `testo/testo` | Ultra-fast parallel execution, lightweight `testo.php` | Independent runner with Mockery bridge | Projects prioritizing speed and minimal config; mutually exclusive with PHPUnit. |
+| **Codeception** *(BDD / Functional)* | `codeception/codeception` | High-level actor-driven testing (`$I->amOnPage()`) | Module-based (`module-yii3`) | Acceptance testing, browser automation, multi-step user scenarios. |
+| **Infection** *(Quality Gate)* | `infection/infection` | AST-based mutation testing | Runs on top of PHPUnit / Testo | Verifying test suite assertion strength and catching untested edge cases. |
 
 ### 2.1. PHPUnit (PHPUnit 10 and 11)
 

@@ -9,6 +9,7 @@
 ---
 
 ## Table of Contents
+- [Choosing a Cache Storage Driver](#choosing-a-cache-storage-driver)
 - [1. Redis Cache (yiisoft/cache-redis)](#1-redis-cache-yiisoftcache-redis)
 - [2. Database Cache (yiisoft/cache-db)](#2-database-cache-yiisoftcache-db)
 - [3. APCu Cache (yiisoft/cache-apcu)](#3-apcu-cache-yiisoftcache-apcu)
@@ -16,6 +17,18 @@
 - [5. WinCache (yiisoft/cache-wincache)](#5-wincache-yiisoftcache-wincache)
 - [6. Anti-Patterns](#6-anti-patterns)
 - [Related Topic Guides](#related-topic-guides)
+
+---
+
+## Choosing a Cache Storage Driver
+
+| Cache Driver | Package | Storage Backend | Multi-Node Sharing | Persistent Across Restarts | Best For |
+|---|---|---|---|---|---|
+| **Filesystem Cache** | `yiisoft/cache-file` | Local disk (`@runtime/cache`) | No (node-local unless NFS) | Yes | Local development, single-server VPS, zero external dependencies. |
+| **Redis Cache** | `yiisoft/cache-redis` | Redis in-memory store (`predis/predis`) | Yes (distributed cluster) | Configurable (RDB / AOF) | High-throughput web clusters, microservices, shared cache across nodes. |
+| **Database Cache** | `yiisoft/cache-db` | Relational DB table (`yii_cache`) | Yes (shared SQL database) | Yes | Shared hosting, environments without Redis where DB is already available. |
+| **APCu Cache** | `yiisoft/cache-apcu` | Shared memory (`ext-apcu`) | No (server/SAPI local only) | No (cleared on PHP restart) | Ultra-fast read latency on single PHP-FPM servers; **not shared with CLI workers**. |
+| **Memcached** | `yiisoft/cache-memcached` | Memcached daemon (`ext-memcached`) | Yes (distributed hash ring) | No (volatile in-memory) | High-concurrency read-heavy caching with simple memory reclamation. |
 
 ---
 

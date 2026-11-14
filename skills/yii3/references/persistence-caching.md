@@ -8,6 +8,7 @@
 
 ## Table of Contents
 - [1. Caching Architecture: PSR-16 vs Yii CacheInterface](#1-caching-architecture-psr-16-vs-yii-cacheinterface)
+  - [Choosing Your Caching Strategy Across System Layers](#choosing-your-caching-strategy-across-system-layers)
   - [1.1. Cache Contracts & Responsibilities](#11-cache-contracts--responsibilities)
   - [1.2. Cache Key Rules (CacheKeyNormalizer)](#12-cache-key-rules-cachekeynormalizer)
   - [1.3. Value Object Ttl (cache 3.2.0+)](#13-value-object-ttl-cache-320)
@@ -36,6 +37,15 @@
 ---
 
 ## 1. Caching Architecture: PSR-16 vs Yii CacheInterface
+
+### Choosing Your Caching Strategy Across System Layers
+
+| Caching Layer | Implementation Mechanism | Invalidation Strategy | Overhead & Latency | Best For |
+|---|---|---|---|---|
+| **HTTP 304 / Conditional Caching** | ETag / Last-Modified headers via middleware/actions | Header recalculation / Weak ETags | Zero bandwidth, minimal compute | Public API responses, static assets, heavy web pages. See [`http-cache-etag.md`](http-cache-etag.md). |
+| **Application Data Caching** | `Yiisoft\Cache\CacheInterface::getOrSet()` | `TagDependency`, TTL expiration, XFetch | Sub-millisecond (Redis / DB / File) | Heavy DB queries, aggregated analytics, third-party API results. |
+| **View Fragment Caching** | `CachedContent` with `DynamicContent` hole-punching | Fragment keys, TTL, tag dependencies | In-memory / file fragment read | Server-rendered HTML pages with static layouts and dynamic user widgets. |
+| **Direct PSR-16 Key-Value** | `$cache->psr()->get()` / `set()` | Explicit key deletion, TTL | Lowest layer overhead | Session storage, rate limiter counters, raw key-value state without stampede protection. |
 
 ### 1.1. Cache Contracts & Responsibilities
 

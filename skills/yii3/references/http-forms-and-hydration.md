@@ -7,6 +7,8 @@
 ## Table of Contents
 
 - [8. Form Models & Web Form Lifecycle (`yiisoft/form-model` & `yiisoft/form`)](#8-form-models--web-form-lifecycle-yiisoftform-model--yiisoftform)
+  - [Choosing Between Typed DTO and FormModel](#choosing-between-typed-dto-and-formmodel)
+  - [Choosing Hydrator Engine: Hydrator vs ValidatingHydrator vs FormHydrator](#choosing-hydrator-engine-hydrator-vs-validatinghydrator-vs-formhydrator)
   - [8.1. FormModel Base Class & FormModelInterface Contract](#81-formmodel-base-class--formmodelinterface-contract)
   - [8.2. FormHydrator: Population, GET/POST Scoping, and Mass-Assignment Protection](#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection)
   - [8.3. Web Form Architecture & Presentation Boundaries](#83-web-form-architecture--presentation-boundaries)
@@ -19,6 +21,25 @@
 - [10. HTTP Request Inputs Mapping (`yiisoft/input-http`)](#10-http-request-inputs-mapping-yiisoftinput-http)
 
 ## 8. Form Models & Web Form Lifecycle (`yiisoft/form-model` & `yiisoft/form`)
+
+### Choosing Between Typed DTO and FormModel
+
+| Architectural Dimension | Typed DTO (`App\Application\*\Dto\*`) | FormModel (`App\Form\*` extends `FormModel`) |
+|---|---|---|
+| **Primary Domain / Target** | REST APIs, JSON payloads, CLI commands, Use Case Input/Output | Server-rendered HTML forms (SSR), Blade/PHP views, HTML5 form widgets |
+| **Class Contract & Base** | Pure PHP class (`final readonly class ...Dto`) | Extends `Yiisoft\FormModel\FormModel` (`FormModelInterface`) |
+| **Mutability State** | Immutable (`readonly`), initialized once | Mutable, properties populated and validated across request lifecycle |
+| **Presentation Metadata** | None: domain/transport pure data | Rich: labels (`#[Label]`), hints (`#[Hint]`), placeholders, form scopes |
+| **Form Widget Integration** | None: rendered manually or serialised to JSON | First-class: binds to `Field::text($form, 'property')` with automatic errors |
+| **Hydrator Engine** | `Yiisoft\Hydrator\HydratorInterface` or `ValidatingHydrator` | `Yiisoft\FormModel\FormHydrator` |
+
+### Choosing Hydrator Engine: Hydrator vs ValidatingHydrator vs FormHydrator
+
+| Hydrator Engine | Package | Target Object | Validation Integration | Form Scoping & Widgets |
+|---|---|---|---|---|
+| **`Hydrator`** | `yiisoft/hydrator` | Any PHP object (DTOs, domain models) | None (pure hydration and type casting) | No scoping; direct array-to-object mapping |
+| **`ValidatingHydrator`** | `yiisoft/hydrator-validator` | Typed DTOs (`#[Validate]`, rules) | 2-stage (pre-cast on raw data, post-cast on object) | No scoping; throws exception or returns validation errors |
+| **`FormHydrator`** | `yiisoft/form-model` | `FormModelInterface` instances | Automated: populates and validates via injected `ValidatorInterface` | Full: handles `$_POST['ModelName']` scoping, maps errors to model fields |
 
 ### 8.1. FormModel Base Class & FormModelInterface Contract
 

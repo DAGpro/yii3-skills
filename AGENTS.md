@@ -162,6 +162,10 @@ Any addition or modification to topic reference guides MANDATES synchronizing de
 
    - If a new skill directory or standalone manifest is introduced, register it in `extension.json`.
 
+5. **Conceptual & Cross-Document Alignment:**
+
+   - When modifying core concepts, execution models, architectural taxonomies, or API guidelines, proactively analyze and update all dependent documentation, constitution rules, skill entry points, injections, and tests. Never leave contradictory, orphaned, or stale concepts in other files.
+
 > [!IMPORTANT]
 
 > A task is NOT complete if dependent registries (skills, package catalogs, injections) are left out of sync.
@@ -243,12 +247,12 @@ The Yii3 skill and the AI Factory workflows exchange results through explicit ar
 3. **Blocked tasks.** When the skill cannot proceed safely (unknown activation state, high-impact dependency decision without a user, mandatory offline install), it reports the task `blocked` with an explicit reason instead of silently choosing; the workflow surfaces the `blocked` status as-is.
 4. **Plan artifacts.** The workflow owns the plan location (`paths.plans` from the target `.ai-factory/config.yaml`); the skill never invents one in AI Factory mode. Plans follow the 6-phase contract, and the SKILL.md phase → stage table is the only mapping.
 
-### 4.8. Task Execution Modes & Architectural Tiers Contract
+### 4.8. Task Execution Modes & Architecture Patterns Contract
 
-The execution workflow separates the task's scope from the target project's structural constraints into two independent axes:
+The execution workflow separates the task's operational scope from the target project's structural constraints into two independent axes:
 1. **Execution Mode (`Mode: Patch | Feature | Enterprise`)** — determines the scope, depth, and workflow rigor of the agent:
    - **Patch Mode (`Mode: Patch`):**
-     - **Scope:** Targeted surgical micro-tasks (isolated 1–3 files), single route addition, typo/config/DI adjustments, docs updates.
+     - **Scope:** Targeted surgical micro-tasks (isolated 1–3 files), single route addition, typo/config/DI adjustments, docs updates, defect remediation.
      - **Discipline:** Executes touched stages only; bypasses domain layer overhead; skips schema migrations ONLY when the patch does not require schema changes (if a bugfix or patch alters the database schema, a reversible migration is mandatory); skips extended Definition of Done.
    - **Feature Mode (`Mode: Feature`) — Canonical Default (~80%):**
      - **Scope:** Standard business features, CRUD endpoints, queries, data listings, and Active Record / Cycle flows.
@@ -256,7 +260,17 @@ The execution workflow separates the task's scope from the target project's stru
      - **Anti-Collapsing Invariant:** Agents must **NEVER** collapse this bottom-up graph into 1–2 generic monolithic controller actions. Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero SQL, direct persistence, or transaction management in presentation.
    - **Enterprise Mode (`Mode: Enterprise`):**
      - **Scope:** Mission-critical, high-throughput systems, multi-step transactions, event-driven pipelines, auth/security cores, or modular architecture slices.
-     - **Discipline:** Production-grade engineering rigor: atomic transactions, domain event publishing, idempotency, comprehensive integration tests, and complete Production Readiness Gate (`references/core-definition-of-done.md` §3). Concrete structural decomposition is governed strictly by the project's Architectural Tier (Pragmatic: Validated Model / Entity + Application Service + Explicit Repository; Balanced: Module Aggregate + Module Use Case Handler + Module Repository Interface; Strict: Pure Aggregate + Value Objects + Repository Interfaces + Dedicated Use Case Handler).
-2. **Architectural Tier (`Pragmatic | Balanced | Strict`)** — determined by the target project (`.ai-factory/ARCHITECTURE.md` or dominant `src/` layout):
-   - All 9 combinations (Mode × Tier) are valid. An Enterprise task in a Balanced project enforces enterprise-grade reliability, event publishing, and comprehensive tests while respecting the project's existing modular service/repository conventions without unilaterally rewriting the project into Strict Clean Architecture. A Feature task in a Strict project complies with Strict ports & adapters conventions.
+     - **Discipline:** Production-grade engineering rigor: atomic transactions, domain event publishing, idempotency, comprehensive integration tests, and complete Production Readiness Gate (`references/core-definition-of-done.md` §3). Concrete structural decomposition is governed strictly by the project's Architecture Pattern (Explicit Architecture, Structured Modules, Layered Architecture) and Decision Matrices.
+2. **Architecture Patterns & Decision Matrices** — determined by the target project (`.ai-factory/ARCHITECTURE.md` or dominant `src/` layout):
+   - Rather than forcing projects into an artificial "tier" hierarchy, Yii 3 applications are governed by their canonical Architecture Pattern (`/aif-architecture` patterns: `Explicit Architecture`, `Structured Modules`, `Layered Architecture`) and concrete Decision Matrices (`references/` decision guides for routing, config organization, persistence paradigms, and decoupling styles).
+   - An Enterprise task in a Layered or Modular project enforces enterprise-grade reliability, event publishing, and comprehensive tests while respecting the project's existing modular/layered conventions without unilaterally rewriting the project into Clean Architecture. A Feature task in an Explicit Clean project complies with pure domain and port/adapter conventions.
+
+### 4.9. Mandatory Cross-File Impact Analysis & Consistency Gate
+
+Whenever modifying contracts, reference guides, architectural rules, or core skill behaviors, agents **MUST NOT** make localized edits in isolation.
+
+Agents MUST execute an explicit **Cross-File Impact Analysis**:
+1. **Impact Discovery:** Search the codebase (`grep` / search tools) for all citations, usages, and related conceptual mentions across the repository (`AGENTS.md`, `SKILL.md`, `injections/*.md`, `skills/yii3/references/*.md`, `.ai-factory/rules/`, `README.md`, `scripts/`, `evals/`).
+2. **Cascading Synchronization:** Update all referencing and dependent files in the same work unit so that conceptual shifts, deprecations, or contract changes are uniformly reflected across all layers.
+3. **Zero-Drift Invariant:** A task is strictly **INCOMPLETE** if a concept or term is changed in one file while leaving stale, contradictory, or orphaned references in another. Agents must proactively verify cross-file semantic and referential consistency before concluding.
 

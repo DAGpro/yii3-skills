@@ -33,7 +33,7 @@ console.log('=== AI Factory Workflow Contract Test Suite ===\n');
 // ---------------------------------------------------------------------------
 // 1. Injections Canonical Guard & Structure Contract
 // ---------------------------------------------------------------------------
-console.log('1. Validating Injection Skill Deference (AGENTS.md §4.6)...');
+console.log('1. Validating Injection Skill Deference & Contracts (AGENTS.md §4.6)...');
 const manifest = JSON.parse(readFileSync(join(root, 'extension.json'), 'utf8'));
 
 for (const inj of manifest.injections) {
@@ -42,7 +42,35 @@ for (const inj of manifest.injections) {
 
   assert(text.includes('`yii3` skill'), `${inj.file} must defer to yii3 skill as SSOT`);
   assert(!/^Guard:/m.test(text), `${inj.file} must not gate on project-environment classification (no Guard: line)`);
+  assert(text.includes('references/core-aif-adapter.md'), `${inj.file} must reference core-aif-adapter.md operating context`);
+
+  // Verify all references/*.md paths resolve physically to skills/yii3/references/
+  const refMatches = text.match(/references\/[a-zA-Z0-9_\-\.]+\.md/g) || [];
+  for (const ref of refMatches) {
+    const targetFile = join(root, 'skills', 'yii3', ref);
+    assert(existsSync(targetFile), `${inj.file} reference ${ref} must exist at ${targetFile}`);
+  }
 }
+
+// Check specific workflow domain contracts
+const planText = readFileSync(join(root, 'injections/plan.md'), 'utf8');
+assert(planText.includes('Category A') && planText.includes('Category B'), 'injections/plan.md must differentiate Category A and Category B packages');
+assert(planText.includes('### Execution State'), 'injections/plan.md must mandate ### Execution State block');
+
+const implementText = readFileSync(join(root, 'injections/implement.md'), 'utf8');
+assert(implementText.includes('StateResetter'), 'injections/implement.md must govern StateResetter for persistent runtimes');
+assert(implementText.includes('NEVER write new test files unless explicitly scheduled'), 'injections/implement.md must enforce test scope discipline');
+
+const verifyText = readFileSync(join(root, 'injections/verify.md'), 'utf8');
+assert(verifyText.includes('aif-gate-result'), 'injections/verify.md must specify aif-gate-result format');
+assert(verifyText.includes('affected_files') && verifyText.includes('blockers'), 'injections/verify.md must separate affected_files and blockers');
+
+const fixText = readFileSync(join(root, 'injections/fix.md'), 'utf8');
+assert(fixText.includes('FunctionalTestCase') || fixText.includes('testing-psr-doubles.md'), 'injections/fix.md must specify lightweight regression doubles');
+assert(fixText.includes('[FIX]'), 'injections/fix.md must mandate [FIX] logging prefix');
+
+const reviewText = readFileSync(join(root, 'injections/review.md'), 'utf8');
+assert(reviewText.includes('Critical Issues') && reviewText.includes('Suggestions'), 'injections/review.md must align output severity with aif-review format');
 
 // ---------------------------------------------------------------------------
 // 2. AI Factory Config Resolution Contract (.ai-factory/config.yaml)

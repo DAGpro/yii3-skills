@@ -5,6 +5,16 @@
 
 > Part of the [Internationalization & Translation Guide](http-i18n-translation.md) split — this file owns §1–§3 (Translation API & Formatters); [Message Storage, Extraction & Locale Handling](http-i18n-storage-and-locale.md) owns §4–§9 (§4.2 = DB message source, §5 = extraction, §6.2 = locale middleware, §7 = missing-translation events); the anti-pattern matrix and related guides live in the hub.
 
+## Table of Contents
+
+- [1. Package Map & Installation](#1-package-map--installation)
+- [2. Core Translation API (`yiisoft/translator`)](#2-core-translation-api-yiisofttranslator)
+  - [2.1. TranslatorInterface](#21-translatorinterface)
+  - [2.2. DI Wiring](#22-di-wiring)
+  - [2.3. Category Sources](#23-category-sources)
+  - [2.4. Quick Start (End-to-End Slice)](#24-quick-start-end-to-end-slice)
+- [3. Formatters](#3-formatters)
+
 ## 1. Package Map & Installation
 
 | Package | Role |

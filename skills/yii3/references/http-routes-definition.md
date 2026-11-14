@@ -5,6 +5,28 @@
 
 > Part of the [HTTP Routing Guide](http-routes.md) split — worker-environment caveats, the anti-pattern matrix, and related guides live there.
 
+## Table of Contents
+
+- [1. Route Definition Architecture & Modern Syntax](#1-route-definition-architecture--modern-syntax)
+  - [Choosing How to Route HTTP Requests](#choosing-how-to-route-http-requests)
+  - [1.1. Dedicated HTTP Verb Classes](#11-dedicated-http-verb-classes)
+  - [1.2. Type-Safe Route Names with Backed Enums](#12-type-safe-route-names-with-backed-enums)
+  - [1.3. Supported Action Handler Formats](#13-supported-action-handler-formats)
+  - [1.4. Attribute-Based Route Collection (`yiisoft/router-composer-attribute-collector`)](#14-attribute-based-route-collection-yiisoftrouter-composer-attribute-collector)
+- [2. FastRoute Argument Patterns, Constraints, Defaults & Caching](#2-fastroute-argument-patterns-constraints-defaults--caching)
+  - [2.1. Parameter Constraints & Regex Rules](#21-parameter-constraints--regex-rules)
+  - [2.2. Parameter Defaults (Matching vs. Generation)](#22-parameter-defaults-matching-vs-generation)
+  - [2.3. Host-Based Matching & Subdomains](#23-host-based-matching--subdomains)
+  - [2.4. FastRoute Dispatch Caching (`enableCache` & PSR-16)](#24-fastroute-dispatch-caching-enablecache--psr-16)
+- [3. Route Groups & Nested Routing (`Yiisoft\Router\Group`)](#3-route-groups--nested-routing-yiisoftroutergroup)
+  - [3.1. Defining Nested Groups](#31-defining-nested-groups)
+  - [3.2. Selective Middleware Exclusion (`->disableMiddleware(...)`)](#32-selective-middleware-exclusion--disablemiddleware)
+  - [3.3. Built-In CORS Support (`->withCors(...)`)](#33-built-in-cors-support--withcors)
+- [4. Accessing Route Arguments in Actions & Middlewares](#4-accessing-route-arguments-in-actions--middlewares)
+  - [4.1. The Injected `CurrentRoute` Service](#41-the-injected-currentroute-service)
+  - [4.2. Hydrator Parameter Resolution (`#[RouteArgument]`)](#42-hydrator-parameter-resolution-routeargument)
+  - [4.3. Critical Traps & Ingress Caveats](#43-critical-traps--ingress-caveats)
+
 ## 1. Route Definition Architecture & Modern Syntax
 
 Routing in Yii3 connects incoming PSR-7 HTTP requests (`Method` + `URI path`) to a dedicated PSR-15 middleware pipeline terminating in an action handler.

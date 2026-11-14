@@ -5,6 +5,20 @@
 
 > Part of the [Internationalization & Translation Guide](http-i18n-translation.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [4. Message Storage Backends](#4-message-storage-backends)
+  - [4.1. PHP Files (`translator-message-php`)](#41-php-files-translator-message-php)
+  - [4.2. Database (`translator-message-db`)](#42-database-translator-message-db)
+  - [4.3. Gettext (`translator-message-gettext`)](#43-gettext-translator-message-gettext)
+- [5. Message Extraction (`translator-extractor`)](#5-message-extraction-translator-extractor)
+- [6. Locale Handling](#6-locale-handling)
+  - [6.1. Locale Value Object (`yiisoft/i18n`)](#61-locale-value-object-yiisofti18n)
+  - [6.2. Locale Middleware (`yii-middleware`)](#62-locale-middleware-yii-middleware)
+- [7. Missing Translation Events](#7-missing-translation-events)
+- [8. Ecosystem Integration Boundaries](#8-ecosystem-integration-boundaries)
+- [9. Testing the Translator](#9-testing-the-translator)
+
 ## 4. Message Storage Backends
 
 As a documentation-level rule of thumb (not a package-enforced mechanism): pick **one primary reader** per

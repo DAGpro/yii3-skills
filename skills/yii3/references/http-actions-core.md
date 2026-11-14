@@ -5,6 +5,16 @@
 
 > Part of the [Actions & Controllers Guide](http-actions-and-controllers.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [1. Core Action Principles in Yii3](#1-core-action-principles-in-yii3)
+- [2. Action Concern → Package Quick Matrix](#2-action-concern--package-quick-matrix)
+- [3. Detailed Package Usage in Actions](#3-detailed-package-usage-in-actions)
+  - [3.1. Route Parameters & Redirects (`yiisoft/router`, `yiisoft/http`)](#31-route-parameters--redirects-yiisoftrouter-yiisofthttp)
+  - [3.2. Request Parsing & DTO Hydration (`yiisoft/hydrator`, `yiisoft/input-http`, `yiisoft/validator`)](#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator)
+  - [3.3. Validation Handling (`yiisoft/validator`)](#33-validation-handling-yiisoftvalidator)
+  - [3.4. REST API Responses (`yiisoft/data-response`, `yiisoft/http`)](#34-rest-api-responses-yiisoftdata-response-yiisofthttp)
+
 ## 1. Core Action Principles in Yii3
 
 1. **Strict PSR-7 Contract:**

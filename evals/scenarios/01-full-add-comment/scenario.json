@@ -25,16 +25,18 @@
   "guides": [
     "SKILL.md",
     "references/core-definition-of-done.md",
-    "references/core-feature-recipes.md",
-    "references/persistence-migrations-schema.md",
-    "references/persistence-migrations-operations.md",
     "references/core-di-and-config.md",
-    "references/http-routes-definition.md",
+    "references/core-events-design.md",
+    "references/core-feature-archetypes.md",
+    "references/core-feature-recipes.md",
     "references/core-version-notes.md",
     "references/http-actions-core.md",
-    "references/core-events-design.md",
+    "references/http-routes-definition.md",
+    "references/persistence-migrations-operations.md",
+    "references/persistence-migrations-schema.md",
     "references/testing-core.md",
-    "references/testing-psr-doubles.md"
+    "references/testing-psr-doubles.md",
+    "references/testing-unit-recipes.md"
   ],
   "nearMiss": [
     {

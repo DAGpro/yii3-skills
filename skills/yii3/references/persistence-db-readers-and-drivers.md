@@ -5,6 +5,19 @@
 
 > Part of the [Database Persistence Guide](persistence-db.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [5. Paginated Queries & Data Readers (`yiisoft/data-db`, `yiisoft/data`)](#5-paginated-queries--data-readers-yiisoftdata-db-yiisoftdata)
+  - [5.1. `QueryDataReader` & Sorting (`Sort::only()`, `Sort::any()`)](#51-querydatareader--sorting-sortonly-sortany)
+  - [5.2. Offset Pagination (`OffsetPaginator`)](#52-offset-pagination-offsetpaginator)
+  - [5.3. Filtering in `QueryDataReader` (`withFilter()`)](#53-filtering-in-querydatareader-withfilter)
+  - [5.4. High-Performance Keyset (Cursor) Pagination (`KeysetPaginator`)](#54-high-performance-keyset-cursor-pagination-keysetpaginator)
+- [6. Driver Packages: MySQL, PostgreSQL, SQLite, MSSQL & Oracle](#6-driver-packages-mysql-postgresql-sqlite-mssql--oracle)
+  - [6.1. Driver Specifications Matrix](#61-driver-specifications-matrix)
+  - [6.2. Canonical Connection Configuration](#62-canonical-connection-configuration)
+  - [6.3. Driver-Specific Nuances & Version Support](#63-driver-specific-nuances--version-support)
+- [7. PHP 8 Named Arguments & Signatures Reference](#7-php-8-named-arguments--signatures-reference)
+
 ## 5. Paginated Queries & Data Readers (`yiisoft/data-db`, `yiisoft/data`)
 
 > [!IMPORTANT]

@@ -142,7 +142,7 @@ lifecycle in the HTTP pipeline: it restores the session id from the request cook
 > **SessionMiddleware Behavior Reference:**
 > For the complete behavioral contract — conditional `setId()`, discard-on-`Throwable`, the `SessionException` thrown
 > when `cookie_secure` is enabled without HTTPS, and route-group placement for token-authenticated APIs — see the
-> [PSR-15 Middlewares Guide, §3.1](http-middlewares.md#31-sessionmiddleware-behavior).
+> [PSR-15 Middlewares Guide, §3.1](http-middlewares-protocol.md#31-sessionmiddleware-behavior).
 
 State-owned notes: the `Set-Cookie` attributes come from `Session::getCookieParameters()` (§2.1); keep the `reset`
 closure of the shipped DI definition — it matters for long-running workers (§6); outside the HTTP pipeline the
@@ -380,7 +380,7 @@ Shipped companions: `RandomCsrfTokenGenerator(int $length = 32)`, `SessionCsrfTo
 
 The three PSR-15 CSRF middlewares (`CsrfTokenMiddleware`, `CsrfHeaderMiddleware`, `CsrfTokenCookieMiddleware`) — their
 constructors, configuration (including the `withSafeMethods()` replacement trap), failure handling, and pipeline
-ordering — are cataloged in the [PSR-15 Middlewares Guide, §3.2](http-middlewares.md#32-csrf-middleware-behavior).
+ordering — are cataloged in the [PSR-15 Middlewares Guide, §3.2](http-middlewares-protocol.md#32-csrf-middleware-behavior).
 This section owns only the state-side wiring.
 
 Shipped DI (`config/di-web.php`): `CsrfTokenInterface::class` → `MaskedCsrfToken` wrapping
@@ -398,7 +398,7 @@ Shipped DI (`config/di-web.php`): `CsrfTokenInterface::class` → `MaskedCsrfTok
 > middleware stack yourself (ordering: §1). There are also **no** `headerName`/`parameterName`/`csrfToken` DI param
 > keys — middleware names and safe methods are configured with the immutable `with*()` methods in the DI definition,
 > e.g. `CsrfTokenMiddleware::class => ['withHeaderName()' => ['X-CSRF-PROTECTION']]`
-> (configuration patterns in the [PSR-15 Middlewares Guide, §3.2](http-middlewares.md#32-csrf-middleware-behavior)).
+> (configuration patterns in the [PSR-15 Middlewares Guide, §3.2](http-middlewares-protocol.md#32-csrf-middleware-behavior)).
 
 ### 5.3. Forms & AJAX Usage
 
@@ -456,11 +456,11 @@ Under long-running runners (RoadRunner, FrankenPHP — see [Package Catalog](pac
 | Writing cookies by manually building `Set-Cookie` strings | Easy to break encoding/attributes | Use `Cookie::addToResponse()` / `CookieCollection::setToResponse()` (§4) |
 | Storing secrets in unsigned cookies | Client can read and tamper | Sign with `CookieSigner` or encrypt with `CookieEncryptor`; validate on read (§4.3) |
 | CSRF middleware without session storage | Synchronizer token has nowhere to persist → new token per request, forms always fail | Register `SessionMiddleware` **before** CSRF, or switch to `HmacCsrfToken` (§1, §5.1) |
-| Using deprecated `CsrfMiddleware` | Marked `@deprecated` in favor of `CsrfTokenMiddleware` | Use `CsrfTokenMiddleware` ([Middlewares Guide §3.2](http-middlewares.md#32-csrf-middleware-behavior)) |
-| Copying `'withSafeMethods()' => [[Method::OPTIONS]]` from SPA recipes into a server-rendered app | `withSafeMethods()` **replaces** the whole default list — GET and HEAD become CSRF-checked and forms start failing with 422 | Keep the default safe methods `[GET, HEAD, OPTIONS]` for server-rendered forms; the OPTIONS-only definition is for any-origin JavaScript SPAs ([Middlewares Guide §3.2](http-middlewares.md#32-csrf-middleware-behavior)) |
+| Using deprecated `CsrfMiddleware` | Marked `@deprecated` in favor of `CsrfTokenMiddleware` | Use `CsrfTokenMiddleware` ([Middlewares Guide §3.2](http-middlewares-protocol.md#32-csrf-middleware-behavior)) |
+| Copying `'withSafeMethods()' => [[Method::OPTIONS]]` from SPA recipes into a server-rendered app | `withSafeMethods()` **replaces** the whole default list — GET and HEAD become CSRF-checked and forms start failing with 422 | Keep the default safe methods `[GET, HEAD, OPTIONS]` for server-rendered forms; the OPTIONS-only definition is for any-origin JavaScript SPAs ([Middlewares Guide §3.2](http-middlewares-protocol.md#32-csrf-middleware-behavior)) |
 | Expecting `_csrf` in JSON body without `RequestBodyParser` | Parsed body is `null`; token never found → 422 | Parse JSON bodies upstream or pass the `X-CSRF-Token` header (§5.3) |
 | Regenerating the session id only at login setup, never after privilege change | Session fixation remains possible | Call `$session->regenerateId()` after every privilege escalation (general security practice — OWASP-style guidance, not prescribed by the packages) (§2.5) |
-| Keeping `cookie_secure: 0` in production | Session cookie travels over HTTP | Set `'cookie_secure' => 1` for HTTPS deployments (the middleware enforces scheme consistency) (§2.2; [Middlewares Guide §3.1](http-middlewares.md#31-sessionmiddleware-behavior)) |
+| Keeping `cookie_secure: 0` in production | Session cookie travels over HTTP | Set `'cookie_secure' => 1` for HTTPS deployments (the middleware enforces scheme consistency) (§2.2; [Middlewares Guide §3.1](http-middlewares-protocol.md#31-sessionmiddleware-behavior)) |
 | Rendering CSRF hidden inputs with a wrong parameter name after renaming the middleware | Token mismatch → every POST is 422 | Keep name and middleware config in sync — read the name via `CsrfTokenMiddleware::PARAMETER_NAME` / `$middleware->getParameterName()` and the value via `$csrfToken->getValue()` (`_csrf` default) (§5.3) |
 
 ---

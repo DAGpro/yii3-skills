@@ -5,6 +5,19 @@
 
 > Part of the [DI & Configuration Guide](core-di-and-config.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [2. Configuration Architecture & Scopes (`yiisoft/config`)](#2-configuration-architecture--scopes-yiisoftconfig)
+  - [2.1. The Configuration Layer Hierarchy](#21-the-configuration-layer-hierarchy)
+  - [2.2. Directory Structure](#22-directory-structure)
+  - [2.3. Root Configuration Map (`config/configuration.php`)](#23-root-configuration-map-configconfigurationphp)
+  - [2.4. File Syntax Markers in Config Groups](#24-file-syntax-markers-in-config-groups)
+  - [2.5. Booting the Application: Runners and `Config`](#25-booting-the-application-runners-and-config)
+  - [2.6. Choosing How to Organize Application Configs](#26-choosing-how-to-organize-application-configs)
+- [3. Parameter Management (`params.php`)](#3-parameter-management-paramsphp)
+  - [3.1. Rules for Parameters](#31-rules-for-parameters)
+  - [3.2. Example Parameter Configuration (`config/common/params.php`)](#32-example-parameter-configuration-configcommonparamsphp)
+
 ## 2. Configuration Architecture & Scopes (`yiisoft/config`)
 
 `yiisoft/config` manages modular configurations distributed across Composer packages and your application. It consists of two distinct components:

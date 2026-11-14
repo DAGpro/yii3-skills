@@ -5,6 +5,19 @@
 
 > Part of the [DI & Configuration Guide](core-di-and-config.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [4. Definition Syntax Recipes (`yiisoft/definitions`)](#4-definition-syntax-recipes-yiisoftdefinitions)
+  - [4.1. Interface-to-Implementation Binding (Autowiring)](#41-interface-to-implementation-binding-autowiring)
+  - [4.2. Array Definition (`class`, `__construct()`, Method Calls, Properties)](#42-array-definition-class-__construct-method-calls-properties)
+  - [4.3. Service References (`Reference::to` and `Reference::optional`)](#43-service-references-referenceto-and-referenceoptional)
+  - [4.4. References Array (`ReferencesArray::from`)](#44-references-array-referencesarrayfrom)
+  - [4.5. Dynamic References (`DynamicReference::to` & `DynamicReferencesArray::from`)](#45-dynamic-references-dynamicreferenceto--dynamicreferencesarrayfrom)
+  - [4.6. Path Aliases in DI (`Yiisoft\Aliases\AliasReference`)](#46-path-aliases-in-di-yiisoftaliasesaliasreference)
+  - [4.7. Factory Closures & Callable Definitions](#47-factory-closures--callable-definitions)
+  - [4.8. Raw Values under an Identifier](#48-raw-values-under-an-identifier)
+  - [4.9. Database Connection Recipe (`yiisoft/db` 2.x)](#49-database-connection-recipe-yiisoftdb-2x)
+
 ## 4. Definition Syntax Recipes (`yiisoft/definitions`)
 
 DI definition files return an array mapping identifiers (typically interface FQCNs or string aliases) to definitions.

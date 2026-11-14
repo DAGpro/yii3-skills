@@ -14,7 +14,9 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-commands.md",
-    "references/core-di-and-config.md"
+    "references/core-di-and-config.md",
+    "references/infra-commands-definition.md",
+    "references/infra-commands-execution.md",
+    "references/infra-commands.md"
   ]
 }

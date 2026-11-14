@@ -5,6 +5,32 @@
 
 > Part of the [Views, Layouts & Widgets Guide](http-views-and-widgets.md) split — the anti-pattern matrix, related guides, and the child guides (Twig, Bootstrap 5, Bulma, DataView) live there.
 
+## Table of Contents
+
+- [6. Asset Bundles & Publishing Pipeline (`Yiisoft\Assets`)](#6-asset-bundles--publishing-pipeline-yiisoftassets)
+  - [6.1. Declaring an Asset Bundle (`AssetBundle` Properties & CDN with SRI)](#61-declaring-an-asset-bundle-assetbundle-properties--cdn-with-sri)
+  - [6.2. Registering Asset Bundles (Layout vs Page-Specific)](#62-registering-asset-bundles-layout-vs-page-specific)
+  - [6.3. Asset Publishing (`AssetPublisher`, Symlinks vs Copying)](#63-asset-publishing-assetpublisher-symlinks-vs-copying)
+  - [6.4. Directory Hashing & URL Timestamp Cache-Busting (`appendTimestamp`)](#64-directory-hashing--url-timestamp-cache-busting-appendtimestamp)
+  - [6.5. Asset Compilation On-the-Fly (`AssetConverter`: SCSS, Less, TypeScript)](#65-asset-compilation-on-the-fly-assetconverter-scss-less-typescript)
+  - [6.6. Asset Exporting (`JsonAssetExporter`, `WebpackAssetExporter`)](#66-asset-exporting-jsonassetexporter-webpackassetexporter)
+  - [6.7. Overriding & Disabling Bundles (`customizedBundles` in `params.php`)](#67-overriding--disabling-bundles-customizedbundles-in-paramsphp)
+- [7. Custom Widgets, Core Widgets & CSS-Framework Drivers](#7-custom-widgets-core-widgets--css-framework-drivers)
+  - [7.1. Creating a Custom Widget (`Yiisoft\Widget\Widget` & Container Pattern)](#71-creating-a-custom-widget-yiisoftwidgetwidget--container-pattern)
+  - [7.2. Widget Life Cycle, Factory & Themes (`WidgetFactory` in 2.2+)](#72-widget-life-cycle-factory--themes-widgetfactory-in-22)
+  - [7.3. Built-in Core Widgets (`yiisoft/yii-widgets`: Breadcrumbs, FragmentCache, Menu, Alert, Dropdown)](#73-built-in-core-widgets-yiisoftyii-widgets-breadcrumbs-fragmentcache-menu-alert-dropdown)
+  - [7.4. CSS-Framework Widget Drivers: Bootstrap 5 (`yiisoft/bootstrap5`)](#74-css-framework-widget-drivers-bootstrap-5-yiisoftbootstrap5)
+  - [7.5. CSS-Framework Widget Drivers: Bulma (`yiisoft/yii-bulma`)](#75-css-framework-widget-drivers-bulma-yiisoftyii-bulma)
+- [8. HTML Form Rendering (`yiisoft/html`, `yiisoft/form-model`, `yiisoft/form`)](#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform)
+  - [8.1. Form Architecture: Tag Builders vs Field Binding](#81-form-architecture-tag-builders-vs-field-binding)
+  - [8.2. Form Model Definition for Widgets (`FormModel` & UI Attributes)](#82-form-model-definition-for-widgets-formmodel--ui-attributes)
+  - [8.3. Form Template Example](#83-form-template-example)
+  - [8.4. Comprehensive Field Catalog (`Yiisoft\FormModel\Field`)](#84-comprehensive-field-catalog-yiisoftformmodelfield)
+  - [8.5. Automatic Validation Rules Enrichment (`ValidationRulesEnricher`)](#85-automatic-validation-rules-enrichment-validationrulesenricher)
+  - [8.6. Pure Fields (Ad-Hoc Forms Without `FormModel`)](#86-pure-fields-ad-hoc-forms-without-formmodel)
+  - [8.7. Centralized Form Theming (`ThemeContainer`, `ThemePath`, `params.php`)](#87-centralized-form-theming-themecontainer-themepath-paramsphp)
+- [9. DataView Widgets: GridView, ListView & DetailView (`yiisoft/yii-dataview`)](#9-dataview-widgets-gridview-listview--detailview-yiisoftyii-dataview)
+
 ## 6. Asset Bundles & Publishing Pipeline (`Yiisoft\Assets`)
 
 Asset bundles manage CSS, JavaScript, images, and fonts, publishing web-inaccessible resources to the public web root.

@@ -405,7 +405,7 @@ The exact global middleware sequence is a middleware-layer concern: route defini
 
 > [!TIP]
 > **Middleware Pipeline Reference:**
-> For the canonical authenticated-pipeline order (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`), the complete `Application::class` DI wiring, and all ordering constraints, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
+> For the canonical authenticated-pipeline order (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`), the complete `Application::class` DI wiring, and all ordering constraints, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares-protocol.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 ### 7.2. Protecting Routes with RBAC Permissions
 
@@ -413,7 +413,7 @@ For coarse-grained, endpoint-level authorization (e.g. "only users with the `adm
 
 > [!TIP]
 > **RBAC Permission Guard Reference:**
-> For the complete reference on the `AccessCheckerMiddleware` guard implementation and attaching it to route groups and single routes, see the [PSR-15 Middlewares Guide, §2.6 "RBAC Permission Guard"](http-middlewares.md#26-rbac-permission-guard-accesscheckermiddleware).
+> For the complete reference on the `AccessCheckerMiddleware` guard implementation and attaching it to route groups and single routes, see the [PSR-15 Middlewares Guide, §2.6 "RBAC Permission Guard"](http-middlewares-recipes.md#26-rbac-permission-guard-accesscheckermiddleware).
 
 Where the permissions, roles, assignments, and dynamic rules evaluated by such guards are defined and stored — the RBAC layer itself — see §8 (Role-Based Access Control Architecture); for fine-grained, object-level permission checks inside actions and services, see §9.
 

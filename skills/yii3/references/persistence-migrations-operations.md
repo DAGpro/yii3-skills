@@ -5,6 +5,20 @@
 
 > Part of the [Database Migrations Guide](persistence-migrations.md) split — the index hosts the module-wide Anti-Pattern Matrix.
 
+## Table of Contents
+
+- [7. Application Configuration (`config/params.php`)](#7-application-configuration-configparamsphp)
+  - [7.1. Namespaces vs Paths Configuration](#71-namespaces-vs-paths-configuration)
+  - [7.2. Vendor Migrations Scanning Invariant](#72-vendor-migrations-scanning-invariant)
+  - [7.3. Multi-Database Configuration (`DatabaseConfig`)](#73-multi-database-configuration-databaseconfig)
+- [8. Console Migration Commands & Automation](#8-console-migration-commands--automation)
+  - [8.1. Scaffolding New Migrations (`migrate:create`)](#81-scaffolding-new-migrations-migratecreate)
+  - [8.2. Applying Migrations (`migrate:up` & CI/CD)](#82-applying-migrations-migrateup--cicd)
+  - [8.3. Rolling Back & Redoing Migrations (`migrate:down` & `migrate:redo`)](#83-rolling-back--redoing-migrations-migratedown--migrateredo)
+  - [8.4. Inspection Commands (`migrate:history` & `migrate:new`)](#84-inspection-commands-migratehistory--migratenew)
+  - [8.5. History Synchronization (`migrate:mark`)](#85-history-synchronization-migratemark)
+- [9. Related Topic Guides](#9-related-topic-guides)
+
 ## 7. Application Configuration (`config/params.php`)
 
 Configure migration paths, namespaces, and databases in `config/params.php` under the `'yiisoft/db-migration'` key:

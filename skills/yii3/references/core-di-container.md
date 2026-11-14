@@ -5,6 +5,28 @@
 
 > Part of the [DI & Configuration Guide](core-di-and-config.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [1. Core DI Architecture & Philosophy in Yii3](#1-core-di-architecture--philosophy-in-yii3)
+- [5. Advanced DI Features (`yiisoft/di`)](#5-advanced-di-features-yiisoftdi)
+  - [5.1. Service Tagging (`TagReference`)](#51-service-tagging-tagreference)
+  - [5.2. State Resetting for Persistent Runtimes (`StateResetter`)](#52-state-resetting-for-persistent-runtimes-stateresetter)
+  - [5.3. Service Providers (`ServiceProviderInterface`)](#53-service-providers-serviceproviderinterface)
+  - [5.4. Composite Containers & Delegates](#54-composite-containers--delegates)
+- [6. Dynamic Invocation & Factories (`yiisoft/injector` & `yiisoft/factory`)](#6-dynamic-invocation--factories-yiisoftinjector--yiisoftfactory)
+  - [6.1. `Yiisoft\Injector\Injector`](#61-yiisoftinjectorinjector)
+  - [6.2. `Yiisoft\Factory\Factory` & `StrictFactory`](#62-yiisoftfactoryfactory--strictfactory)
+- [7. Common Pitfalls](#7-common-pitfalls)
+  - [7.1. Array Definition Property Syntax Error](#71-array-definition-property-syntax-error)
+  - [7.2. Using `'__class'` Instead of `'class'`](#72-using-__class-instead-of-class)
+  - [7.3. Unresolved Path Aliases](#73-unresolved-path-aliases)
+  - [7.4. Modifying Container at Runtime](#74-modifying-container-at-runtime)
+  - [7.5. Persistent Worker Memory Leakage](#75-persistent-worker-memory-leakage)
+  - [7.6. PHP 8 Named Arguments — Exact Parameter Names](#76-php-8-named-arguments--exact-parameter-names)
+  - [7.7. Missing Scalar Arguments for `Injector`](#77-missing-scalar-arguments-for-injector)
+  - [7.8. Overriding `StateResetter` Kills Definition Resetters](#78-overriding-stateresetter-kills-definition-resetters)
+  - [7.9. Resolution Exception Map](#79-resolution-exception-map)
+
 ## 1. Core DI Architecture & Philosophy in Yii3
 
 Yii3 completely departs from the Yii2 service locator pattern (`Yii::$app->service`) and static container registries:

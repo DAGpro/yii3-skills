@@ -307,7 +307,7 @@ In authenticated web pipelines, register `CookieLoginMiddleware` after `SessionM
 
 > [!TIP]
 > **Global Middleware Pipeline Reference:**
-> For the complete `Application::class` DI wiring and the canonical authenticated-pipeline order (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`), see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
+> For the complete `Application::class` DI wiring and the canonical authenticated-pipeline order (`ErrorCatcher → SessionMiddleware → CsrfTokenMiddleware → CookieLoginMiddleware → Authentication → LoginMiddleware → Router`), see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares-protocol.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 ---
 
@@ -349,7 +349,7 @@ Login endpoints are the primary target of credential-stuffing and brute-force di
 
 > [!TIP]
 > **Rate Limiting Reference:**
-> For the complete reference on `yiisoft/rate-limiter` — DI configuration (`Counter`, `SimpleCacheStorage`, `LimitPerIp`), route-level attachment, custom per-user policies, and automatic `X-Rate-Limit-*` headers with HTTP 429 mapping — see the [PSR-15 Middlewares Guide, §4.4 "Rate Limiting Recipes"](http-middlewares.md#44-rate-limiting-recipes-yiisoftrate-limiter).
+> For the complete reference on `yiisoft/rate-limiter` — DI configuration (`Counter`, `SimpleCacheStorage`, `LimitPerIp`), route-level attachment, custom per-user policies, and automatic `X-Rate-Limit-*` headers with HTTP 429 mapping — see the [PSR-15 Middlewares Guide, §4.4 "Rate Limiting Recipes"](http-middlewares-protocol.md#44-rate-limiting-recipes-yiisoftrate-limiter).
 
 ---
 

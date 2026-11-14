@@ -5,6 +5,20 @@
 
 > Part of the [Validation & Forms Guide](http-validation-and-forms.md) split — the index, decision matrix, anti-pattern matrix, and related guides live there.
 
+## Table of Contents
+
+- [8. Form Models & Web Form Lifecycle (`yiisoft/form-model` & `yiisoft/form`)](#8-form-models--web-form-lifecycle-yiisoftform-model--yiisoftform)
+  - [8.1. FormModel Base Class & FormModelInterface Contract](#81-formmodel-base-class--formmodelinterface-contract)
+  - [8.2. FormHydrator: Population, GET/POST Scoping, and Mass-Assignment Protection](#82-formhydrator-population-getpost-scoping-and-mass-assignment-protection)
+  - [8.3. Web Form Architecture & Presentation Boundaries](#83-web-form-architecture--presentation-boundaries)
+  - [8.4. Validation Rules HTML5 Enrichment (ValidationRulesEnricher)](#84-validation-rules-html5-enrichment-validationrulesenricher)
+- [9. Typed DTO Hydration & ValidatingHydrator (`yiisoft/hydrator`, `yiisoft/hydrator-validator`)](#9-typed-dto-hydration--validatinghydrator-yiisofthydrator-yiisofthydrator-validator)
+  - [9.1. Hydrator Architecture, Built-in EnumTypeCaster & Composite Type Casting](#91-hydrator-architecture-built-in-enumtypecaster--composite-type-casting)
+  - [9.2. Two-Stage Validation via ValidatingHydrator & #[Validate]](#92-two-stage-validation-via-validatinghydrator--validate)
+  - [9.3. Nested DTOs & Collections (OrderDto & OrderItemDto)](#93-nested-dtos--collections-orderdto--orderitemdto)
+  - [9.4. Parameter Attributes Catalog & Custom TypeCasters](#94-parameter-attributes-catalog--custom-typecasters)
+- [10. HTTP Request Inputs Mapping (`yiisoft/input-http`)](#10-http-request-inputs-mapping-yiisoftinput-http)
+
 ## 8. Form Models & Web Form Lifecycle (`yiisoft/form-model` & `yiisoft/form`)
 
 ### 8.1. FormModel Base Class & FormModelInterface Contract

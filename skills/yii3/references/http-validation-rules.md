@@ -5,6 +5,20 @@
 
 > Part of the [Validation & Forms Guide](http-validation-and-forms.md) split — the index, decision matrix, anti-pattern matrix, and related guides live there.
 
+## Table of Contents
+
+- [1. Package Architecture & Responsibilities](#1-package-architecture--responsibilities)
+- [2. Core Validation Engine (`yiisoft/validator`)](#2-core-validation-engine-yiisoftvalidator)
+  - [2.1. ValidatorInterface Contract](#21-validatorinterface-contract)
+  - [2.2. Result API & Mutable Accumulator](#22-result-api--mutable-accumulator)
+  - [2.3. Exhaustive Built-In Rules Catalog](#23-exhaustive-built-in-rules-catalog)
+  - [2.4. Lenient HTTP Input Rules vs. Strict Domain Type Rules](#24-lenient-http-input-rules-vs-strict-domain-type-rules)
+- [3. Declaring Rules & Validation Flow Modifiers](#3-declaring-rules--validation-flow-modifiers)
+  - [3.1. Repeatable PHP Attributes](#31-repeatable-php-attributes)
+  - [3.2. Ad-Hoc Rules, Class Strings & RulesProviderInterface](#32-ad-hoc-rules-class-strings--rulesproviderinterface)
+  - [3.3. Execution Modifiers: skipOnEmpty, skipOnError, when](#33-execution-modifiers-skiponempty-skiponerror-when)
+  - [3.4. Flow Control Combinators: StopOnError, AnyRule, Composite](#34-flow-control-combinators-stoponerror-anyrule-composite)
+
 ## 1. Package Architecture & Responsibilities
 
 In Yii 3, validation, object hydration, form modeling, and HTTP request parsing are deliberately decoupled into dedicated, focused packages. Applications install only what their architecture requires (see [Dependency Protocol](core-dependency-protocol.md)).

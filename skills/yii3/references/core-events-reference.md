@@ -5,6 +5,23 @@
 
 > Part of the [Events & Listeners Guide](core-events-and-listeners.md) split — design rules, configuration, the post-commit rule, and the anti-pattern matrix live in the parent and [core-events-design.md](core-events-design.md).
 
+## Table of Contents
+
+- [6. Official Yii3 Framework Events Reference](#6-official-yii3-framework-events-reference)
+  - [6.1. HTTP Application Lifecycle (`yiisoft/yii-http`)](#61-http-application-lifecycle-yiisoftyii-http)
+  - [6.2. Console Application Lifecycle (`yiisoft/yii-console`)](#62-console-application-lifecycle-yiisoftyii-console)
+  - [6.3. User Authentication Lifecycle (`yiisoft/user`)](#63-user-authentication-lifecycle-yiisoftuser)
+  - [6.4. Middleware Dispatcher Lifecycle (`yiisoft/middleware-dispatcher`)](#64-middleware-dispatcher-lifecycle-yiisoftmiddleware-dispatcher)
+  - [6.5. Mailer Lifecycle (`yiisoft/mailer`)](#65-mailer-lifecycle-yiisoftmailer)
+  - [6.6. Active Record Lifecycle (`yiisoft/active-record`)](#66-active-record-lifecycle-yiisoftactive-record)
+  - [6.7. View Template Lifecycle (`yiisoft/view`, `View`)](#67-view-template-lifecycle-yiisoftview-view)
+  - [6.8. Web View Lifecycle (`yiisoft/view`, `WebView`)](#68-web-view-lifecycle-yiisoftview-webview)
+- [7. PHP 8 Named Arguments & Signatures Reference](#7-php-8-named-arguments--signatures-reference)
+- [8. Testing Events & Listeners](#8-testing-events--listeners)
+  - [8.1. SimpleEventDispatcher](#81-simpleeventdispatcher)
+  - [8.2. Testing Active Record Event Semantics](#82-testing-active-record-event-semantics)
+  - [8.3. SimpleContainer for Listener Resolution](#83-simplecontainer-for-listener-resolution)
+
 ## 6. Official Yii3 Framework Events Reference
 
 Official packages emit standard PSR-14 events. Listeners can be attached in the event configuration groups described in [Section 4.1](core-events-design.md#41-configuration-architecture--scopes).

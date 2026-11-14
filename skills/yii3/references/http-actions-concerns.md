@@ -5,6 +5,16 @@
 
 > Part of the [Actions & Controllers Guide](http-actions-and-controllers.md) split — §3.5–§3.11 of 'Detailed Package Usage in Actions'; the anti-pattern matrix and related guides live in the parent.
 
+## Table of Contents
+
+- [3.5. HTML Web Views & Form Models (`yiisoft/yii-view-renderer`, `yiisoft/form-model`)](#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model)
+- [3.6. File Downloads & Binary Responses (`yiisoft/response-download`, `yiisoft/http`)](#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp)
+- [3.7. Data Listing, Pagination & Sorting (`yiisoft/data`)](#37-data-listing-pagination--sorting-yiisoftdata)
+- [3.8. Authentication & Authorization (`yiisoft/user`, `yiisoft/auth-jwt`)](#38-authentication--authorization-yiisoftuser-yiisoftauth-jwt)
+- [3.9. Cookies & Sessions (`yiisoft/cookies`, `yiisoft/session`)](#39-cookies--sessions-yiisoftcookies-yiisoftsession)
+- [3.10. Internationalization & Localization (`yiisoft/translator`)](#310-internationalization--localization-yiisofttranslator)
+- [3.11. Action Resolution & Dispatching (`yiisoft/middleware-dispatcher`)](#311-action-resolution--dispatching-yiisoftmiddleware-dispatcher)
+
 ### 3.5. HTML Web Views & Form Models (`yiisoft/yii-view-renderer`, `yiisoft/form-model`)
 
 For full-page web applications, inject `Yiisoft\Yii\View\Renderer\WebViewRenderer` — the current renderer (the older `ViewRenderer` is `@deprecated`, see the note at the end of this section) — for template rendering, and `FormHydrator` for populating and validating HTML forms.

@@ -5,6 +5,20 @@
 
 > Part of the [Error Handling Guide](infra-error-handling.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [1. Error Handling Architecture & Core Contracts](#1-error-handling-architecture--core-contracts)
+- [2. ErrorCatcher Middleware & Pipeline Ordering](#2-errorcatcher-middleware--pipeline-ordering)
+- [3. Exception Mapping with ExceptionResponder](#3-exception-mapping-with-exceptionresponder)
+- [4. DI Configuration & Renderer Providers](#4-di-configuration--renderer-providers)
+- [5. Custom Error Renderers](#5-custom-error-renderers)
+  - [5.1. HTML Error Renderer (`HtmlRenderer` Configuration & Custom Templates)](#51-html-error-renderer-htmlrenderer-configuration--custom-templates)
+  - [5.2. JSON Error Renderer (RFC 7807 Problem Details with `ThrowableRendererInterface`)](#52-json-error-renderer-rfc-7807-problem-details-with-throwablerendererinterface)
+- [6. Friendly Exceptions (`FriendlyExceptionInterface`)](#6-friendly-exceptions-friendlyexceptioninterface)
+- [7. User Exceptions & Information Disclosure (`UserException` & `#[UserException]`)](#7-user-exceptions--information-disclosure-userexception--userexception)
+  - [7.1. Extending `UserException`](#71-extending-userexception)
+  - [7.2. Using PHP 8 `#[UserException]` Attribute](#72-using-php-8-userexception-attribute)
+
 ## 1. Error Handling Architecture & Core Contracts
 
 In Yii3, HTTP errors and unhandled exceptions are caught through a PSR-15 middleware boundary rather than legacy global exception handlers or static error actions. There is no error-action mechanism in `yiisoft/error-handler`: HTTP exceptions are handled by the `ErrorCatcher` middleware, PHP fatals/warnings/notices outside the HTTP pipeline by the low-level `ErrorHandler`, and unmatched pipeline ends by a fallback request handler.
@@ -99,10 +113,10 @@ return [
 > **Pipeline Wiring Reference:**
 > For the complete `Application::class` global-pipeline DI definition — the `fallbackHandler`, application
 > middlewares (`SessionMiddleware`, auth, CORS), `Router`, and all ordering constraints — see the
-> [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
+> [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares-protocol.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 > [!NOTE]
-> The `MiddlewareDispatcher::withMiddlewares()` deprecation (`yiisoft/middleware-dispatcher` >= 5.5.0) and the dispatcher-reversal ordering fact (first-listed definition = outermost middleware) are canonicalized in the [PSR-15 Middlewares Guide, §4.1](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp).
+> The `MiddlewareDispatcher::withMiddlewares()` deprecation (`yiisoft/middleware-dispatcher` >= 5.5.0) and the dispatcher-reversal ordering fact (first-listed definition = outermost middleware) are canonicalized in the [PSR-15 Middlewares Guide, §4.1](http-middlewares-protocol.md#41-global-application-pipeline-configwebdiapplicationphp).
 
 **Fallback request handlers.** When no middleware produces a response, the pipeline falls back to the `fallbackHandler` configured on `Application`:
 
@@ -110,7 +124,7 @@ return [
 - `yiisoft/yii-http` ships `Yiisoft\Yii\Http\Handler\NotFoundHandler`, a bare fallback returning a 404 response with the body `We were unable to find the page "$path".` It requires a `Psr\Http\Message\ResponseFactoryInterface` and renders nothing else — it is not an error renderer.
 - The canonical app template wires its own `App\Web\NotFound\NotFoundHandler`, which renders a full 404 view via the view renderer.
 
-**Session behavior on errors.** An unhandled downstream exception means **no `Set-Cookie` on the error response** — uncommitted session state is discarded instead of committed. The full commit/discard lifecycle of `Yiisoft\Session\SessionMiddleware` is owned by the [PSR-15 Middlewares Guide, §3.1 "SessionMiddleware Behavior"](http-middlewares.md#31-sessionmiddleware-behavior).
+**Session behavior on errors.** An unhandled downstream exception means **no `Set-Cookie` on the error response** — uncommitted session state is discarded instead of committed. The full commit/discard lifecycle of `Yiisoft\Session\SessionMiddleware` is owned by the [PSR-15 Middlewares Guide, §3.1 "SessionMiddleware Behavior"](http-middlewares-protocol.md#31-sessionmiddleware-behavior).
 
 ---
 

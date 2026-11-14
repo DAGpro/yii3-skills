@@ -5,6 +5,25 @@
 
 > Part of the [OpenAPI & Swagger Guide](http-openapi-swagger.md) split — anti-patterns and related guides live there.
 
+## Table of Contents
+
+- [1. Overview & Architecture](#1-overview--architecture)
+  - [1.1. Core Architectural Components](#11-core-architectural-components)
+  - [1.2. Architecture & Data Flow Diagram](#12-architecture--data-flow-diagram)
+- [2. Installation & Dependency Protocol](#2-installation--dependency-protocol)
+  - [2.1. Core Package Installation](#21-core-package-installation)
+  - [2.2. Web, Presentation & Companion Packages](#22-web-presentation--companion-packages)
+- [3. Built-in DI Configuration & `params.php`](#3-built-in-di-configuration--paramsphp)
+  - [3.1. Zero-Boilerplate DI Architecture (`di-web.php`)](#31-zero-boilerplate-di-architecture-di-webphp)
+  - [3.2. Comprehensive Parameters Configuration](#32-comprehensive-parameters-configuration)
+  - [3.3. Generator Scanner Options (7 Supported Options)](#33-generator-scanner-options-7-supported-options)
+  - [3.4. Mandatory Path Aliases for Static Asset Publishing](#34-mandatory-path-aliases-for-static-asset-publishing)
+- [4. Route Integration & Serving Documentation](#4-route-integration--serving-documentation)
+  - [4.1. Route Group Registration](#41-route-group-registration)
+  - [4.2. Why `Group::create('/swagger', [...])` Silently Fails](#42-why-groupcreateswagger--silently-fails)
+  - [4.3. The JSON Response Middleware Contract](#43-the-json-response-middleware-contract)
+  - [4.4. Swagger UI Route & Redundant HTML Middleware Removal](#44-swagger-ui-route--redundant-html-middleware-removal)
+
 ## 1. Overview & Architecture
 
 The `yiisoft/yii-swagger` package provides OpenAPI v3 specification generation and interactive Swagger UI rendering for Yii 3 applications. Unlike legacy frameworks that relied on runtime reflection hacks or docblock parsing, Yii 3 pairs native PHP 8 attributes with [zircote/swagger-php](https://github.com/zircote/swagger-php) (composer constraint `^5.0`) and client assets from [swagger-api/swagger-ui](https://swagger.io/tools/swagger-ui/).

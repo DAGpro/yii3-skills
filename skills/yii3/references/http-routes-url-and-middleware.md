@@ -5,6 +5,26 @@
 
 > Part of the [HTTP Routing Guide](http-routes.md) split — worker-environment caveats, the anti-pattern matrix, and related guides live there.
 
+## Table of Contents
+
+- [5. Middleware Pipeline & Execution Order](#5-middleware-pipeline--execution-order)
+  - [5.1. Execution Order Hierarchy (The Onion Model)](#51-execution-order-hierarchy-the-onion-model)
+  - [5.2. Routing Middleware Pipeline: 404 vs. 405 Architecture](#52-routing-middleware-pipeline-404-vs-405-architecture)
+  - [5.3. Canonical Middleware Sequence](#53-canonical-middleware-sequence)
+  - [5.4. `middleware()` vs. `prependMiddleware()` & Smart Splice Insertion](#54-middleware-vs-prependmiddleware--smart-splice-insertion)
+  - [5.5. Route Access Control & RBAC Protection](#55-route-access-control--rbac-protection)
+- [6. URL Generation & Reverse Routing (`UrlGeneratorInterface`)](#6-url-generation--reverse-routing-urlgeneratorinterface)
+  - [6.1. Relative and Absolute URL Generation (RFC 3986 & CLI)](#61-relative-and-absolute-url-generation-rfc-3986--cli)
+  - [6.2. Mutating Current Route (`generateFromCurrent()`)](#62-mutating-current-route-generatefromcurrent)
+  - [6.3. Ingress Subfolder Handling & URL Prefixing (`Yiisoft\Yii\Middleware\Subfolder`)](#63-ingress-subfolder-handling--url-prefixing-yiisoftyiimiddlewaresubfolder)
+  - [6.4. Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)](#64-multilingual-routing--locale-management-yiisoftyiimiddlewarelocale)
+  - [6.5. Declarative Route Redirects (`Yiisoft\Yii\Middleware\Redirect`)](#65-declarative-route-redirects-yiisoftyiimiddlewareredirect)
+  - [6.6. URL Generation Exceptions](#66-url-generation-exceptions)
+- [7. Alternative & Convention-Based Routing (`yiisoft/file-router`)](#7-alternative--convention-based-routing-yiisoftfile-router)
+  - [7.1. FileRouter Architecture & Conventions](#71-filerouter-architecture--conventions)
+  - [7.2. Creating a FileRouter Controller](#72-creating-a-filerouter-controller)
+  - [7.3. Pipeline Integration & Fallback Router Pattern](#73-pipeline-integration--fallback-router-pattern)
+
 ## 5. Middleware Pipeline & Execution Order
 
 Route middleware execution follows the standard PSR-15 **onion / pipeline model (FIFO on Request Ingress, LIFO on Response Egress)**.
@@ -18,7 +38,7 @@ The routing-specific aspect of the onion model is the nesting depth of the match
 
 > [!TIP]
 > **Onion Model Reference:**
-> For the complete pipeline diagram, the three middleware functional roles (pre-processing, post-processing, short-circuiting), and `MiddlewareDispatcher` mechanics, see the [PSR-15 Middlewares Guide, §1.1 "Pipeline Flow (The Onion Model)"](http-middlewares.md#11-pipeline-flow-the-onion-model).
+> For the complete pipeline diagram, the three middleware functional roles (pre-processing, post-processing, short-circuiting), and `MiddlewareDispatcher` mechanics, see the [PSR-15 Middlewares Guide, §1.1 "Pipeline Flow (The Onion Model)"](http-middlewares-protocol.md#11-pipeline-flow-the-onion-model).
 
 ### 5.2. Routing Middleware Pipeline: 404 vs. 405 Architecture
 
@@ -38,7 +58,7 @@ When no declared route matches the incoming URI path (`!$result->isSuccess()` an
 
 ### 5.3. Canonical Middleware Sequence
 
-The canonical ordering of common middlewares (CORS → response formatting → body parsing → session → CSRF → authentication → guards → action) is owned by the [PSR-15 Middlewares Guide](http-middlewares.md): see [§4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp) — including the authenticated-pipeline invariant — and [§4.2 "Route Group Pipeline"](http-middlewares.md#42-route-group-pipeline-configwebroutesphp). From the routing side, middlewares are attached to a group (executing for every route inside it) and optionally refined per route:
+The canonical ordering of common middlewares (CORS → response formatting → body parsing → session → CSRF → authentication → guards → action) is owned by the [PSR-15 Middlewares Guide](http-middlewares.md): see [§4.1 "Global Application Pipeline"](http-middlewares-protocol.md#41-global-application-pipeline-configwebdiapplicationphp) — including the authenticated-pipeline invariant — and [§4.2 "Route Group Pipeline"](http-middlewares-protocol.md#42-route-group-pipeline-configwebroutesphp). From the routing side, middlewares are attached to a group (executing for every route inside it) and optionally refined per route:
 
 ```php
 declare(strict_types=1);
@@ -96,7 +116,7 @@ Route and group level authorization chains `Yiisoft\Auth\Middleware\Authenticati
 
 > [!TIP]
 > **RBAC Permission Guard Reference:**
-> For the canonical `AccessCheckerMiddleware` recipe — group and single-route attachment, container-closure construction, and the `Authentication → LoginMiddleware → AccessCheckerMiddleware` ordering invariant — see the [PSR-15 Middlewares Guide, §2.6 "RBAC Permission Guard (`AccessCheckerMiddleware`)"](http-middlewares.md#26-rbac-permission-guard-accesscheckermiddleware). For identity storage, token authentication, and defining role/permission hierarchies in `yiisoft/rbac`, see the [Authentication & RBAC Guide](infra-auth-and-rbac.md).
+> For the canonical `AccessCheckerMiddleware` recipe — group and single-route attachment, container-closure construction, and the `Authentication → LoginMiddleware → AccessCheckerMiddleware` ordering invariant — see the [PSR-15 Middlewares Guide, §2.6 "RBAC Permission Guard (`AccessCheckerMiddleware`)"](http-middlewares-recipes.md#26-rbac-permission-guard-accesscheckermiddleware). For identity storage, token authentication, and defining role/permission hierarchies in `yiisoft/rbac`, see the [Authentication & RBAC Guide](infra-auth-and-rbac.md).
 
 ---
 
@@ -262,7 +282,7 @@ The routing-relevant placement invariant is:
 
 > [!TIP]
 > **Canonical Global Pipeline Wiring:**
-> For the canonical `Application::class` / `MiddlewareDispatcher` wiring with the full middleware stack, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares.md#41-global-application-pipeline-configwebdiapplicationphp). For the outermost `ErrorCatcher` layer and pipeline ordering, see the [Error Handling Guide, §2](infra-error-handling-web.md#2-errorcatcher-middleware--pipeline-ordering).
+> For the canonical `Application::class` / `MiddlewareDispatcher` wiring with the full middleware stack, see the [PSR-15 Middlewares Guide, §4.1 "Global Application Pipeline"](http-middlewares-protocol.md#41-global-application-pipeline-configwebdiapplicationphp). For the outermost `ErrorCatcher` layer and pipeline ordering, see the [Error Handling Guide, §2](infra-error-handling-web.md#2-errorcatcher-middleware--pipeline-ordering).
 
 ### 6.4. Multilingual Routing & Locale Management (`Yiisoft\Yii\Middleware\Locale`)
 

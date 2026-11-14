@@ -5,6 +5,22 @@
 
 > Part of the [OpenAPI & Swagger Guide](http-openapi-swagger.md) split — anti-patterns and related guides live there.
 
+## Table of Contents
+
+- [7. Offline CLI Specification Generator](#7-offline-cli-specification-generator)
+  - [7.1. Command Implementation](#71-command-implementation)
+  - [7.2. Console DI Wiring (`config/common/di/swagger.php`)](#72-console-di-wiring-configcommondiswaggerphp)
+- [8. Swagger UI Customization & Asset Management](#8-swagger-ui-customization--asset-management)
+  - [8.1. UI Configuration Parameters (`ui-params`)](#81-ui-configuration-parameters-ui-params)
+  - [8.2. Customizing the HTML View Template via `Theme::$pathMap`](#82-customizing-the-html-view-template-via-themepathmap)
+  - [8.3. Custom CSS Theme & Dark Mode](#83-custom-css-theme--dark-mode)
+  - [8.4. CDN Asset Serving for Serverless Deployments](#84-cdn-asset-serving-for-serverless-deployments)
+- [9. Environment Protection & Performance Caching](#9-environment-protection--performance-caching)
+  - [9.1. Caching Mechanics & The Infinite Dev Cache Trap](#91-caching-mechanics--the-infinite-dev-cache-trap)
+  - [9.2. Conditional Production Caching Configuration](#92-conditional-production-caching-configuration)
+  - [9.3. Restricting Access in Production (IP Filtering & Authentication)](#93-restricting-access-in-production-ip-filtering--authentication)
+  - [9.4. Cache Invalidation Strategies](#94-cache-invalidation-strategies)
+
 ## 7. Offline CLI Specification Generator
 
 For continuous integration (CI/CD) pipelines or deploying static documentation, generate the OpenAPI specification file directly via a Symfony Console command without launching the web server.

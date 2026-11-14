@@ -100,7 +100,7 @@ Yii3 exit codes return constants from `Yiisoft\Yii\Console\ExitCode`, conforming
 
 > [!TIP]
 > **Exit Code Palette Reference:**
-> The complete 17-code `ExitCode` palette with FreeBSD sysexits semantics and `ExitCode::getReason()` inspection is owned by the [Console Commands Guide, §6 Standard Exit Codes](infra-commands.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode).
+> The complete 17-code `ExitCode` palette with FreeBSD sysexits semantics and `ExitCode::getReason()` inspection is owned by the [Console Commands Guide, §6 Standard Exit Codes](infra-commands-execution.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode).
 
 ---
 

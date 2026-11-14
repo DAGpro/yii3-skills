@@ -5,6 +5,29 @@
 
 > Part of the [Database Persistence Guide](persistence-db.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [1. Clean Architecture Persistence with `yiisoft/db`](#1-clean-architecture-persistence-with-yiisoftdb)
+  - [1.1. Domain Value Object (`src/Domain/Model/UserId.php`)](#11-domain-value-object-srcdomainmodeluseridphp)
+  - [1.2. Pure Domain Entity (`src/Domain/Model/User.php`)](#12-pure-domain-entity-srcdomainmodeluserphp)
+  - [1.3. Domain Repository Contract (`src/Domain/Repository/UserRepositoryInterface.php`)](#13-domain-repository-contract-srcdomainrepositoryuserrepositoryinterfacephp)
+  - [1.4. Low-Level Database Repository (`src/Infrastructure/Persistence/Db/DbUserRepository.php`)](#14-low-level-database-repository-srcinfrastructurepersistencedbdbuserrepositoryphp)
+  - [1.5. Hydration via `yiisoft/hydrator` & Nested Value Objects](#15-hydration-via-yiisofthydrator--nested-value-objects)
+- [2. Connection, Commands & Mutations (`CommandInterface`)](#2-connection-commands--mutations-commandinterface)
+  - [2.1. Parameterized Queries & Table Prefix Syntax](#21-parameterized-queries--table-prefix-syntax)
+  - [2.2. Atomic Mutations: Insert, Update, Delete & Batch Insert](#22-atomic-mutations-insert-update-delete--batch-insert)
+  - [2.3. Primary Key Retrieval & Generated IDs](#23-primary-key-retrieval--generated-ids)
+- [3. Query Builder (`Yiisoft\Db\Query\Query`)](#3-query-builder-yiisoftdbqueryquery)
+  - [3.1. Building Select Queries & Conditions](#31-building-select-queries--conditions)
+  - [3.2. Advanced Conditions, Subqueries, Joins & Aggregations](#32-advanced-conditions-subqueries-joins--aggregations)
+  - [3.3. Fetching Results & Strict Null Return Semantics](#33-fetching-results--strict-null-return-semantics)
+  - [3.4. Memory-Safe Cursor Streaming: `each()` & `batch()`](#34-memory-safe-cursor-streaming-each--batch)
+- [4. Transaction Management, Boundaries & Resilience](#4-transaction-management-boundaries--resilience)
+  - [4.1. Idiomatic Closure Transactions (`transaction()`)](#41-idiomatic-closure-transactions-transaction)
+  - [4.2. Manual Transactions & Savepoints](#42-manual-transactions--savepoints)
+  - [4.3. Isolation Levels & Post-Commit Event Rule](#43-isolation-levels--post-commit-event-rule)
+  - [4.4. Deadlock Retries & Serialization Failures (`SerializationFailureException`)](#44-deadlock-retries--serialization-failures-serializationfailureexception)
+
 ## 1. Clean Architecture Persistence with `yiisoft/db`
 
 In Yii3 Clean Architecture, business rules and domain logic are decoupled from persistence engines. Persistence details belong strictly in the **Infrastructure Layer**:

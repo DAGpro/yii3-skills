@@ -5,6 +5,23 @@
 
 > Part of the [Validation & Forms Guide](http-validation-and-forms.md) split — the index, decision matrix, anti-pattern matrix, and related guides live there. Dedicated custom-rules walkthrough: [Custom Validation Rules Guide](http-validation-custom-rules.md).
 
+## Table of Contents
+
+- [4. Custom Rules & Rule Handlers](#4-custom-rules--rule-handlers)
+- [5. File & Image Validation](#5-file--image-validation)
+  - [5.1. File Rule & Safe Post-Validation Storage](#51-file-rule--safe-post-validation-storage)
+  - [5.2. Image & Aspect Ratio Rules (`Rule\Image\Image`, `ImageAspectRatio`)](#52-image--aspect-ratio-rules-ruleimageimage-imageaspectratio)
+  - [5.3. Validating PSR-7 UploadedFileInterface & Multi-File Collections](#53-validating-psr-7-uploadedfileinterface--multi-file-collections)
+- [6. Cross-Property Validation & Contextual Comparison](#6-cross-property-validation--contextual-comparison)
+  - [6.1. Comparison Rules: targetProperty vs. targetValue](#61-comparison-rules-targetproperty-vs-targetvalue)
+  - [6.2. Cross-Property Cardinality: FilledAtLeast, FilledOnlyOneOf](#62-cross-property-cardinality-filledatleast-filledonlyoneof)
+  - [6.3. Dynamic Context Inspection via ValidationContext](#63-dynamic-context-inspection-via-validationcontext)
+- [7. Messages, Labels, Placeholders & Internationalization](#7-messages-labels-placeholders--internationalization)
+  - [7.1. Translation Category 'yii-validator' & TranslatorMessagePhp Requirement](#71-translation-category-yii-validator--translatormessagephp-requirement)
+  - [7.2. Placeholder Substitution: {Property}, {value}, and Parameter Tokens](#72-placeholder-substitution-property-value-and-parameter-tokens)
+  - [7.3. Property Labels via #[Label] and Property Translators](#73-property-labels-via-label-and-property-translators)
+  - [7.4. Message Formatters: SimpleMessageFormatter vs. IntlMessageFormatter](#74-message-formatters-simplemessageformatter-vs-intlmessageformatter)
+
 ## 4. Custom Rules & Rule Handlers
 
 In Yii 3, custom validation rules follow a decoupled architecture separating configuration (`RuleInterface`, PHP 8 `#[Attribute]`) from execution services (`RuleHandlerInterface`). Handlers are resolved through a `RuleHandlerResolverInterface` implementation; the default `SimpleRuleHandlerContainer` works out of the box with no DI configuration, and the PSR-container-based `RuleHandlerContainer` is an opt-in alternative.

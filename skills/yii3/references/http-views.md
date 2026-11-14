@@ -5,6 +5,35 @@
 
 > Part of the [Views, Layouts & Widgets Guide](http-views-and-widgets.md) split — the anti-pattern matrix, related guides, and the child guides (Twig, Bootstrap 5, Bulma, DataView) live there.
 
+## Table of Contents
+
+- [1. Action-to-View Rendering Pipeline (`WebViewRenderer`)](#1-action-to-view-rendering-pipeline-webviewrenderer)
+  - [1.1. Single-Action Injection and Deferred PSR-7 Response](#11-single-action-injection-and-deferred-psr-7-response)
+  - [1.2. Key `WebViewRenderer` API Methods](#12-key-webviewrenderer-api-methods)
+  - [1.3. Template Placement: Colocation (Style A) vs Centralized (Style B)](#13-template-placement-colocation-style-a-vs-centralized-style-b)
+- [2. PHP Template Anatomy & Typing (`WebView`)](#2-php-template-anatomy--typing-webview)
+  - [2.1. Standard PHP Template Anatomy](#21-standard-php-template-anatomy)
+  - [2.2. Page Title, Meta Tags & Script Registration API](#22-page-title-meta-tags--script-registration-api)
+  - [2.3. Parameter Exchange (`setParameter` / `getParameter` / `addToParameter` / `removeParameter`)](#23-parameter-exchange-setparameter--getparameter--addtoparameter--removeparameter)
+  - [2.4. Application View Theming (`Yiisoft\View\Theme`)](#24-application-view-theming-yiisoftviewtheme)
+  - [2.5. PSR-14 View Lifecycle Events](#25-psr-14-view-lifecycle-events)
+- [3. Alternative Template Engine: Twig (`yiisoft/view-twig` & `yiisoft/yii-twig`)](#3-alternative-template-engine-twig-yiisoftview-twig--yiisoftyii-twig)
+- [4. Mandatory XSS Escaping & Safe HTML (`Yiisoft\Html\Html`)](#4-mandatory-xss-escaping--safe-html-yiisofthtmlhtml)
+  - [4.1. Escaping Primitives (`Html::encode`, `encodeAttribute`, `escapeJavaScriptStringValue`)](#41-escaping-primitives-htmlencode-encodeattribute-escapejavascriptstringvalue)
+  - [4.2. Tag Builders & `NoEncodeStringableInterface`](#42-tag-builders--noencodestringableinterface)
+  - [4.3. Disabling Tag Builder Escaping (`->encode(false)`)](#43-disabling-tag-builder-escaping--encodefalse)
+  - [4.4. Essential HTML Tag Factory Catalog](#44-essential-html-tag-factory-catalog)
+  - [4.5. CSS Class, Style & Attribute Manipulation Utilities](#45-css-class-style--attribute-manipulation-utilities)
+- [5. Layouts, Page Lifecycle & View Injections](#5-layouts-page-lifecycle--view-injections)
+  - [5.1. Main Layout Structure & Lifecycle Sequence](#51-main-layout-structure--lifecycle-sequence)
+  - [5.2. View Injections Architecture (The 4 Canonical Contracts)](#52-view-injections-architecture-the-4-canonical-contracts)
+  - [5.3. Custom View Injection Implementation (`SiteThemeInjection`)](#53-custom-view-injection-implementation-sitethemeinjection)
+  - [5.4. Layout-Specific Injections (`LayoutSpecificInjections`)](#54-layout-specific-injections-layoutspecificinjections)
+  - [5.5. CSRF Token Object (`Csrf`) & Injected Security](#55-csrf-token-object-csrf--injected-security)
+  - [5.6. Partial View Rendering (`$this->render()`)](#56-partial-view-rendering-this-render)
+  - [5.7. Content Blocks (`Yiisoft\Yii\Widgets\Block`)](#57-content-blocks-yiisoftyiiwidgetsblock)
+  - [5.8. Nested Layouts with `ContentDecorator`](#58-nested-layouts-with-contentdecorator)
+
 ## 1. Action-to-View Rendering Pipeline (`WebViewRenderer`)
 
 In Yii3, controllers and actions do not have their own internal rendering engine. Views are rendered by injecting `Yiisoft\Yii\View\Renderer\WebViewRenderer` into the Action handler.

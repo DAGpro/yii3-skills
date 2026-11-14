@@ -5,6 +5,27 @@
 
 > Part of the [Events & Listeners Guide](core-events-and-listeners.md) split — the anti-pattern matrix lives there.
 
+## Table of Contents
+
+- [1. PSR-14 Event Architecture in Yii3](#1-psr-14-event-architecture-in-yii3)
+- [2. Designing Domain & Application Events](#2-designing-domain--application-events)
+  - [2.1. Idiomatic Immutable Domain Event](#21-idiomatic-immutable-domain-event)
+  - [2.2. Stoppable Guard Event (`StoppableEventInterface`)](#22-stoppable-guard-event-stoppableeventinterface)
+  - [2.3. Context-Enriching Event (Mutable State Pattern)](#23-context-enriching-event-mutable-state-pattern)
+  - [2.4. What Belongs in Events vs What is Forbidden](#24-what-belongs-in-events-vs-what-is-forbidden)
+- [3. Designing Event Listeners](#3-designing-event-listeners)
+  - [3.1. Invokable Class Listener](#31-invokable-class-listener)
+  - [3.2. Listener Dependency Injection Rules](#32-listener-dependency-injection-rules)
+  - [3.3. Listener Ordering (No Priority Mechanism)](#33-listener-ordering-no-priority-mechanism)
+- [4. Event Configuration (`yiisoft/config` & `yiisoft/yii-event`)](#4-event-configuration-yiisoftconfig--yiisoftyii-event)
+  - [4.1. Configuration Architecture & Scopes](#41-configuration-architecture--scopes)
+  - [4.2. Declarative Event Mapping & Supported Listener Formats](#42-declarative-event-mapping--supported-listener-formats)
+  - [4.3. Verifying Event Configurations Ahead-of-Time](#43-verifying-event-configurations-ahead-of-time)
+- [5. Mandatory Post-Commit Event Dispatching Rule](#5-mandatory-post-commit-event-dispatching-rule)
+  - [Why the Rule Holds: the `transaction()` API](#why-the-rule-holds-the-transaction-api)
+  - [Recommended Aggregate Event-Recording Pattern](#recommended-aggregate-event-recording-pattern)
+  - [Enterprise Upgrade Path: Transactional Outbox](#enterprise-upgrade-path-transactional-outbox)
+
 ## 1. PSR-14 Event Architecture in Yii3
 
 Yii3 completely replaces the legacy Yii2 `Component::trigger()` mechanism with the standard **PSR-14 Event Dispatcher**:

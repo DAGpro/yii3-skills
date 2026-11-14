@@ -5,6 +5,15 @@
 
 > Part of the [Error Handling Guide](infra-error-handling.md) split — the anti-pattern matrix and related guides live there.
 
+## Table of Contents
+
+- [8. Logging & Sentry Monitoring (`yiisoft/yii-sentry`)](#8-logging--sentry-monitoring-yiisoftyii-sentry)
+  - [8.1. PSR-14 Event Listener (`ApplicationError`)](#81-psr-14-event-listener-applicationerror)
+  - [8.2. Sentry Web Integration (`SentryMiddleware`)](#82-sentry-web-integration-sentrymiddleware)
+  - [8.3. Sentry Console Integration & Cron Monitoring](#83-sentry-console-integration--cron-monitoring)
+- [9. Console Error Handling Architecture](#9-console-error-handling-architecture)
+- [10. Low-Level PHP Error Handling (`ErrorHandler`)](#10-low-level-php-error-handling-errorhandler)
+
 ## 8. Logging & Sentry Monitoring (`yiisoft/yii-sentry`)
 
 ### 8.1. PSR-14 Event Listener (`ApplicationError`)

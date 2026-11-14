@@ -11,6 +11,7 @@
   - [1.2. Key `WebViewRenderer` API Methods](#12-key-webviewrenderer-api-methods)
   - [1.3. Template Placement: Colocation (Style A) vs Centralized (Style B)](#13-template-placement-colocation-style-a-vs-centralized-style-b)
 - [2. PHP Template Anatomy & Typing (`WebView`)](#2-php-template-anatomy--typing-webview)
+  - [Choosing How to Render Template Markup](#choosing-how-to-render-template-markup)
   - [2.1. Standard PHP Template Anatomy](#21-standard-php-template-anatomy)
   - [2.2. Page Title, Meta Tags & Script Registration API](#22-page-title-meta-tags--script-registration-api)
   - [2.3. Parameter Exchange (`setParameter` / `getParameter` / `addToParameter` / `removeParameter`)](#23-parameter-exchange-setparameter--getparameter--addtoparameter--removeparameter)
@@ -120,6 +121,42 @@ The layout is independent of both styles and shared by them: configure it once i
 
 View templates in Yii3 are standard PHP scripts executed in the context of `Yiisoft\View\WebView`.
 Every template must start with strict typing, IDE annotations, and explicit parameter definitions.
+
+### Choosing How to Render Template Markup
+
+Yii 3 templates combine three complementary rendering approaches depending on the UI element's dynamism and complexity:
+
+| Rendering Approach | Mechanism & Syntax | Choose when… | Safety & Escaping Rule |
+|---|---|---|---|
+| **1. Plain HTML** | HTML5 tags + `<?= Html::encode($var) ?>` | Static page layout, scaffolding (grid, containers), design markup without logic. | **Manual escaping required:** every dynamic variable must be wrapped in `Html::encode()`. |
+| **2. HTML Helpers** | `Yiisoft\Html\Html` (`Html::a()`, `Html::tag()`, `Html::div()`) | Single dynamic tags where attributes (`class`, `data-*`, `disabled`) or URLs are computed in PHP. | **Auto-escaping:** returns `Tag` implementing `NoEncodeStringableInterface`. Never pass `Html::encode()` into it (double-escaping). Use `->encode(false)` for nested trusted HTML. |
+| **3. Reusable Widgets** | `Yiisoft\Widget\Widget` (`Alert::widget()`, `GridView::widget()`, `Field::text()`) | Reusable, self-contained UI components with internal state, DI dependencies, asset bundle registration, or model data binding. | **Full encapsulation:** handles markup, styles, scripts, and escaping internally. Form fields use `Field::*` (`yiisoft/form`), NOT plain inputs. |
+
+**Comparison: Rendering an alert banner via all three approaches:**
+
+```php
+// 1. Plain HTML (scaffolding & layouts; manual attribute & content encoding)
+<div class="alert alert-info alert-dismissible" role="alert">
+    <strong><?= Html::encode($title) ?></strong>: <?= Html::encode($message) ?>
+</div>
+
+// 2. HTML Helper (programmatic attributes & class logic without widget overhead)
+<?= Html::div(
+    content: Html::tag('strong', $title) . ': ' . Html::encode($message),
+    attributes: [
+        'class' => ['alert', 'alert-' . $type, $isDismissible ? 'alert-dismissible' : null],
+        'role' => 'alert',
+    ],
+)->encode(false) ?>
+
+// 3. Reusable Widget (self-contained component with assets & state)
+<?= \Yiisoft\Yii\Widgets\Alert::widget()
+    ->body(Html::tag('strong', $title) . ': ' . Html::encode($message))
+    ->class('alert-' . $type) ?>
+```
+
+> [!TIP]
+> **Form Inputs Selection:** When rendering web forms, never use plain `<input>` tags or `Html::textInput()` for models — always use `Yiisoft\FormModel\Field` widgets to preserve automatic validation error binding and CSRF protection. See the [Widgets & Assets Guide, §8.1](http-widgets-and-assets.md#choosing-form-field-rendering-approach).
 
 ### 2.1. Standard PHP Template Anatomy
 

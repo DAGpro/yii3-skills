@@ -11,6 +11,16 @@ This topic is split into two focused guides — load the one that matches the ta
 
 Read this file for the anti-pattern matrix (§10) and related guides (§11).
 
+### Choosing How to Render Template Markup: Plain HTML vs HTML Helpers vs Widgets
+
+| Rendering Layer | Preferred Approach | Key Tool / Class | Use Case & Invariant |
+|---|---|---|---|
+| **Page Scaffolding** | Plain HTML | Native HTML5 + `<?= Html::encode($var) ?>` | Layouts, grids, containers, static markup. All dynamic text must be manually encoded. |
+| **Dynamic Tags** | Fluent Tag Helpers | `Yiisoft\Html\Html` (`Html::a`, `Html::tag`, `Html::div`) | Programmatic attributes, dynamic classes, URLs. Automatically escaped. Never double-encode. |
+| **Complex Components** | Reusable Widgets | `Yiisoft\Widget\Widget` (`Alert`, `GridView`, `Breadcrumbs`) | Self-contained UI components with state, asset bundles, and DI dependencies. |
+| **Model Web Forms** | FormModel Widgets | `Yiisoft\FormModel\Field` (`Field::text`, `Field::select`) | Forms backed by `FormModelInterface`. Automatically binds labels, hints, errors, and themes. |
+| **Ad-Hoc Forms** | PureField Widgets | `Yiisoft\Form\PureField\Field` (`PureField::text`) | Simple search bars or GET filters without a `FormModel` class. |
+
 ---
 ## 10. Anti-Pattern Matrix
 
@@ -50,6 +60,7 @@ Read this file for the anti-pattern matrix (§10) and related guides (§11).
 | **Calling `->enrichFromValidationRules()` without enricher** | `ValidationRulesEnricher` is `null` by default in `yiisoft/form`; produces no HTML5 attributes. | Register it as an instance in a theme config under `$params['yiisoft/form']['themes']` (e.g. `'validationRulesEnricher' => new \Yiisoft\FormModel\ValidationRulesEnricher()` — `defaultTheme` is only a string selector naming the theme), or pass it to a field via `->validationRulesEnricher()`. |
 | **Widening `Widget::render()` to `string\|Stringable`** | Base contract requires strictly `abstract public function render(): string;`. Widening causes compile-time fatal error. | Declare return type strictly as `: string`. |
 | **Calling repositories or SQL inside Views** | Breaks MVC, makes templates non-cacheable and side-effectful. | Prepare all domain data in Action/Handler and pass into view parameters. |
+| **Hand-rolling `<input name="Model[prop]">` for `FormModel`** | Loses automatic label, hint, error summary, theme wrapping, and validation rules enrichment. | Always use `Yiisoft\FormModel\Field::*` (`Field::text($model, 'prop')`). |
 
 ---
 

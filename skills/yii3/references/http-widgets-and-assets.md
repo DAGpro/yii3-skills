@@ -22,6 +22,7 @@
   - [7.5. CSS-Framework Widget Drivers: Bulma (`yiisoft/yii-bulma`)](#75-css-framework-widget-drivers-bulma-yiisoftyii-bulma)
 - [8. HTML Form Rendering (`yiisoft/html`, `yiisoft/form-model`, `yiisoft/form`)](#8-html-form-rendering-yiisofthtml-yiisoftform-model-yiisoftform)
   - [8.1. Form Architecture: Tag Builders vs Field Binding](#81-form-architecture-tag-builders-vs-field-binding)
+    - [Choosing Form Field Rendering Approach](#choosing-form-field-rendering-approach)
   - [8.2. Form Model Definition for Widgets (`FormModel` & UI Attributes)](#82-form-model-definition-for-widgets-formmodel--ui-attributes)
   - [8.3. Form Template Example](#83-form-template-example)
   - [8.4. Comprehensive Field Catalog (`Yiisoft\FormModel\Field`)](#84-comprehensive-field-catalog-yiisoftformmodelfield)
@@ -508,6 +509,33 @@ In Yii3, forms are divided into two distinct components:
 - `ActiveForm::begin()` and `Yiisoft\Form\Widget\Form` do **NOT** exist in Yii3.
 - Forms are opened via `Html::form($action)->post()->csrf($csrf)->open()`.
 - Form fields are generated via static factory methods on `Yiisoft\FormModel\Field`.
+
+#### Choosing Form Field Rendering Approach
+
+When rendering form controls in Yii 3 templates, choose the strategy matching the form's data contract:
+
+| Form Control Strategy | Mechanism & Syntax | Choose when… | Safety & Bound Features |
+|---|---|---|---|
+| **1. Model Widget (`Field::*`)** *(canonical SSOT)* | `Field::text($form, 'name')` | Web forms backed by `FormModelInterface` (CRUD, login, register, settings). | **Full automation:** extracts value, derives scoped name (`FormName[prop]`), binds `#[Label]`, `#[Hint]`, error messages, `is-invalid` class, theme wrappers, and HTML5 validation attributes. |
+| **2. Pure Field (`PureField::*`)** | `PureField::text('q', $query)` | Ad-hoc forms without a model: quick search bars, simple GET query filters. | Renders standard field wrapper, label, and input without requiring a `FormModel` class. |
+| **3. Tag Helper (`Html::textInput`)** | `Html::textInput('q', $query)` | Bare HTML inputs without container/label/hint/error wrappers or theme decoration. | Produces bare `<input>`. Does NOT bind model errors or attributes. |
+| **4. Plain HTML (`<input>`)** | `<input name="q" value="<?= Html::encode($q) ?>">` | Highly specialized custom frontend markup bypassing framework theming. | **Manual overhead:** requires manual attribute encoding, CSRF tokens, and error handling. Forbidden for `FormModel`. |
+
+**Comparison: Form field rendering options:**
+
+```php
+// ✅ 1. Canonical: Field widget automatically binds FormModel, errors, labels, hints & theme:
+<?= Field::text($formModel, 'name')->autofocus() ?>
+
+// ✅ 2. Model-less: PureField renders standard theme wrappers for simple ad-hoc GET forms:
+<?= \Yiisoft\Form\PureField\Field::text('q', $query)->placeholder('Search...') ?>
+
+// ❌ 3. Anti-pattern: Hand-rolling FormModel inputs via plain HTML or tag helpers loses validation:
+<div class="mb-3">
+    <label for="contact-name" class="form-label">Name</label>
+    <input type="text" id="contact-name" name="ContactForm[name]" value="<?= Html::encode($formModel->name) ?>" class="form-control">
+</div>
+```
 
 ### 8.2. Form Model Definition for Widgets (`FormModel` & UI Attributes)
 

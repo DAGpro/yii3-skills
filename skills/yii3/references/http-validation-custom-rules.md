@@ -1,7 +1,6 @@
 # Yii3 Custom Validation Rules & Testing Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical architecture guide and testing reference for authoring custom validation rules (`RuleInterface`), service handlers (`RuleHandlerInterface`), dependency injection configuration (`RuleHandlerContainer`), compound rules, and isolated unit and integration testing strategies in Yii 3 with `yiisoft/validator`.
 

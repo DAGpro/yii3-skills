@@ -1,7 +1,6 @@
 # Yii3 OpenAPI & Swagger Integration Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Comprehensive architectural and usage guide for `yiisoft/yii-swagger`: generating OpenAPI v3 specifications from PHP 8 attributes (`zircote/swagger-php`), serving interactive Swagger UI documentation, configuring performance caching, managing multi-version APIs, and securing documentation endpoints in Yii 3 applications.
 

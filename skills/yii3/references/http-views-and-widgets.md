@@ -1,7 +1,6 @@
 # Yii3 Views, Layouts & Widgets Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Comprehensive guide for template rendering, XSS protection, layouts, view injections, asset bundles, custom widgets, and HTML forms using `yiisoft/view`, `yiisoft/yii-view-renderer`, `yiisoft/html`, `yiisoft/widget`, `yiisoft/assets`, `yiisoft/yii-widgets`, `yiisoft/form`, and `yiisoft/form-model`. Package-specific material is split out into on-demand child guides owned by this one: the Twig template engine ([Twig Template Engine Guide](http-views-twig.md)), the CSS-framework widget drivers ([Bootstrap 5 Guide](http-views-bootstrap5.md), [Bulma Guide](http-views-bulma.md)), and the DataView widgets ([DataView Widgets Guide](http-dataview-widgets.md)).
 

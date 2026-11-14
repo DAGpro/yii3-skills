@@ -1,7 +1,6 @@
 # Yii3 HTTP Routing Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide for route definitions, route groups, middleware stacks, URL generation, FastRoute caching, and alternative routing using `yiisoft/router`, `yiisoft/router-fastroute`, `yiisoft/file-router`, `yiisoft/yii-middleware`, and official Yii3 components.
 

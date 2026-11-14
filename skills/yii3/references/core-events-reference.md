@@ -1,7 +1,6 @@
 # Yii3 Events Reference: Framework Events, Signatures & Testing
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Part of the [Events & Listeners Guide](core-events-and-listeners.md) split — design rules, configuration, the post-commit rule, and the anti-pattern matrix live in the parent and [core-events-design.md](core-events-design.md).
 

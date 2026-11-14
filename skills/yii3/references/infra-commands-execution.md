@@ -1,7 +1,6 @@
 # Yii3 Console Commands: Terminal UX, Exit Codes & Execution
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Interactive terminal user experience with `SymfonyStyle`, standard exit code constants (`Yiisoft\Yii\Console\ExitCode`), friendly exceptions, `CommandTester` unit testing recipes, and built-in ecosystem commands (`./yii serve`).
 

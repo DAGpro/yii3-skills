@@ -1,7 +1,6 @@
 # Yii3 Testing: Architecture, Runners, PSR Doubles & Quality Gates
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide for Yii3 test architecture, the PHPUnit test runner, PSR test doubles from `yiisoft/test-support`, modern mocking rules, domain validation testing, fixture generation, and unit test suites. Alternative runners (Testo, Codeception), Infection mutation testing, and console command testing are owned by dedicated companion guides — see the runner-selection note in [§2](#2-test-runner-ecosystem--quality-gates).
 

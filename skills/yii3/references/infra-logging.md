@@ -1,7 +1,6 @@
 # Yii3 Logging Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide for PSR-3 logging with `yiisoft/log`, target packages (`log-target-file`, `log-target-db`,
 > `log-target-email`, `log-target-syslog`), message placeholders, context providers, custom formats, testing,

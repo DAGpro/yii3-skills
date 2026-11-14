@@ -1,7 +1,6 @@
 # Yii3 Infrastructure: Stateful Web Session Authentication (`yiisoft/user`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide for stateful session-based web authentication in Yii3: `CurrentUser` service configuration, login/logout lifecycles, session ID regeneration (anti-fixation), web authenticator (`WebAuth`), remember-me cookies (`CookieLogin`), CSRF form protection, rate limiting, and PSR-14 authentication events.
 >

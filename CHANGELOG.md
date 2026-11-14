@@ -6,6 +6,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-11-14
+
+### Added
+- Standard Agent Skills metadata (`license: MIT`, `metadata.author`, `metadata.version`) in `skills/yii3/SKILL.md` frontmatter.
+- Modular splits for 7 oversized reference guides (`http-middlewares`, `core-feature-recipes`, `persistence-active-record`, `infra-commands`, `testing-core`, `persistence-migrations-schema`, `http-openapi-endpoints`), keeping all 97 topic guides strictly under 600 lines and 35KB.
+- Standardized `## Table of Contents` across all 23 reference guides >250 lines.
+
+### Changed
+- Deduplicated 4-line `Grounding rule` callout block across 94 reference guides into a concise 1-line note, saving ~2,800 tokens of preamble context.
+- Compressed `skills/yii3/SKILL.md`: eliminated prose walls >300 chars, structured Mode Selection into a clean table, added 4th column `Audit Index` with all 11 split-indexes, and surfaced all 24 leaf guides in `Secondary / Variants`.
+- Synchronized single source of truth configuration and routing paths across all core guides.
+- Fixed 15 critical and 4 warning false-positive security scanner triggers in code samples.
+
+### Version
+- `0.4.0` → `0.5.0`
+
 ## [0.4.0] — 2026-11-11
 
 ### Added

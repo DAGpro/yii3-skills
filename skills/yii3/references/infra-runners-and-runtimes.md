@@ -1,7 +1,6 @@
 # Yii3 Application Runners & Runtimes Architecture Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Architecture guide for Yii3 application entry points, the standard HTTP and console runners (`yii-runner-http`, `yii-runner-console`), PSR-14 application lifecycle events, and the runtime selection matrix. The worker runtimes and worker-mode state safety are owned by dedicated child guides: the [RoadRunner Worker Runtime Guide](infra-runtime-roadrunner.md) (§4), the [FrankenPHP Worker Runtime Guide](infra-runtime-frankenphp.md) (§5), and the [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md) (§6).
 

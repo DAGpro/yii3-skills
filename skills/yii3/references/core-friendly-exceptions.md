@@ -1,7 +1,6 @@
 # Yii3 Friendly Exceptions Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Reference guide for `yiisoft/friendly-exception`: the `FriendlyExceptionInterface` contract that lets domain, infrastructure, and configuration exceptions carry a human-readable title (`getName()`) and actionable remediation steps (`getSolution()`), together with the automatic rendering behavior of the web error handler and the console application runner.
 

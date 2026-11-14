@@ -1,7 +1,6 @@
 # Yii3 Testing: Mutation Testing with Infection (`infection/infection`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for Infection mutation testing in Yii3 projects: role and architecture, installation, canonical `infection.json.dist` configuration, the Testo runner bridge (`testo/bridge-infection`), and execution with MSI thresholds.
 

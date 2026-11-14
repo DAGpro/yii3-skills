@@ -1,7 +1,6 @@
 # Yii3 Bulma Widgets Guide (`yiisoft/yii-bulma`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for the `yiisoft/yii-bulma` widget driver: the 11-widget catalog, associative-array item configuration, string class-constant styling, and the Bulma asset bundles (`BulmaAsset` plus per-widget JS bundles).
 

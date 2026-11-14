@@ -1,7 +1,6 @@
 # Yii3 Definition of Done — Architecture Checks, Production Readiness Gate, Verification Report
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 Finale extension for the `yii3` skill: the checks that run only when they earn their cost.
 Load this guide at the Finale for **Feature and Enterprise** tasks (Feature: §1–§2, `production readiness gate: n/a`; Enterprise: all sections including the Production Readiness Gate, §3). Patch-mode tasks stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.

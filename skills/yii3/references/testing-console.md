@@ -1,7 +1,6 @@
 # Yii3 Testing: Console Commands (`yiisoft/yii-console`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for testing Yii3 console commands: modern `#[AsCommand]` command definitions, `Symfony\Component\Console\Tester\CommandTester` execution with `ExitCode::*` codes, output assertion with line-ending normalization, failure scenarios, interactive prompt simulation, autocompletion testing, and container-aware command resolution.
 

@@ -1,7 +1,6 @@
 # Yii3 Distributed Mutex & Concurrency Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Reference guide for distributed locking with `yiisoft/mutex`: the `MutexInterface::acquire()` invariant, explicit named locks via `MutexFactoryInterface` (Approach A), callback execution with guaranteed release via `Synchronizer` (Approach B), and the mutex driver packages (`mutex-file`, `mutex-redis`, `mutex-pdo-pgsql`, `mutex-pdo-mysql`, `mutex-pdo-oracle`) with their `config/common/di/*.php` wiring recipes.
 

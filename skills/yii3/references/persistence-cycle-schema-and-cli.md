@@ -1,7 +1,6 @@
 # Yii3 Persistence: Cycle Schema Configuration & CLI (`yiisoft/yii-cycle`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide for Cycle ORM Yii3 integration via `yiisoft/yii-cycle`: DBAL driver configuration, multi-provider schema pipeline, production compilation caching, Cycle migrations (`cycle/migrations`, `cycle/schema-migrations-generator`), CLI commands reference, and RBAC storage integration (`yiisoft/rbac-cycle-db`).
 >

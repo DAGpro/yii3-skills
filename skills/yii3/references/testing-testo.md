@@ -1,7 +1,6 @@
 # Yii3 Testing: Testo Runner (`testo/testo`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for the `testo/testo` runner path in Yii3 projects: the mandatory exclusive runner rule (PHPUnit XOR Testo), installation, `testo.php` configuration, `#[Test]` classes with `Testo\Assert`, in-memory functional HTTP testing without PHPUnit, and Mockery integration via `php-testo/bridge-mockery`.
 

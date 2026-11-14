@@ -1,7 +1,6 @@
 # Yii3 Middlewares: Pipeline Architecture, Catalog & Registration Scopes
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Architectural mechanics of the PSR-15 onion pipeline in Yii3, official ecosystem middleware catalog, registration scopes (global, group, single-route), rate-limiting configurations, and supported definition formats.
 

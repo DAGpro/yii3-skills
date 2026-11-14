@@ -1,7 +1,6 @@
 # Yii3 Version-Dependent Behavior Notes
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 Single catalog of version-gated behavior referenced across the skill. Every entry names the behavior, the package version that changed it, how to verify the installed version in the target project, and where it was verified in the package sources. Guides keep their grounded per-topic deprecation notes; this file is the cross-topic index — when a guide gains a new version-gated statement, add an entry here and link the guide.
 

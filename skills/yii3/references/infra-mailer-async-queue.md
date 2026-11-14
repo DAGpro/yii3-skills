@@ -1,7 +1,6 @@
 # Yii3 Mailer Async Sending & Lifecycle Events Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Optional background email delivery through `yiisoft/queue` (domain event → PSR-14 listener → queue message → consumer handler) and the `BeforeSend`/`AfterSend` mailer lifecycle events dispatched by `BaseMailer`.
 

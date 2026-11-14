@@ -1,7 +1,6 @@
 # Yii3 Long-Running Worker Safety & StateResetter Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Reference guide for state safety in long-running PHP worker processes: the state bleeding and memory accumulation problem, the catastrophic `StateResetter::class` definition trap, idiomatic per-service `'reset'` declarations, the ground-truth catalog of built-in package resetters, and closure scope binding via `Closure::bindTo`.
 

@@ -1,7 +1,6 @@
 # Yii3 Twig Template Engine Guide (`yiisoft/view-twig` & `yiisoft/yii-twig`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for rendering Yii3 views with Twig: renderer registration, Twig layout and page lifecycle, the `WebViewExtension` function boundary, and the restrictions on static widget/helper invocation inside Twig templates.
 

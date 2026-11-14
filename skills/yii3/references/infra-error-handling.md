@@ -1,7 +1,6 @@
 # Yii3 Error Handling & Exception Management Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide and configuration recipes for error catching pipelines, custom HTML/JSON renderers, Friendly Exceptions, and Sentry monitoring using `yiisoft/error-handler`, `yiisoft/friendly-exception`, `yiisoft/yii-sentry`, and `yiisoft/yii-event`.
 

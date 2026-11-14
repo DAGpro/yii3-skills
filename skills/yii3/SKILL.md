@@ -13,6 +13,10 @@ description: >-
   Accepts --mode=patch|feature|enterprise.
   Runs as an AI Factory extension by default (aif-* workflows, .ai-factory/ projects);
   standalone when the project has no AI Factory.
+license: MIT
+metadata:
+  author: Yii 3 AI Factory Team
+  version: 0.5.0
 ---
 
 # Yii3 development

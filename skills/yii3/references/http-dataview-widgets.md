@@ -1,7 +1,6 @@
 # Yii3 DataView Widgets Guide: GridView, ListView & DetailView (`yiisoft/yii-dataview`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for the `yiisoft/yii-dataview` widget family: `GridView` table rendering and its column catalog, column filtering, `ListView` item lists, `DetailView` single-record display, and the standalone pagination and page-size widgets.
 

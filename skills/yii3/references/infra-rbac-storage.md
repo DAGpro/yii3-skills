@@ -1,7 +1,6 @@
 # Yii3 RBAC Storage Drivers Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Reference guide for persisting RBAC items (roles, permissions) and assignments: relational database storage with `yiisoft/rbac-db`, version-controlled PHP file storage with `yiisoft/rbac-php`, Cycle database storage with `yiisoft/rbac-cycle-db`, and hybrid storage architectures that combine drivers.
 

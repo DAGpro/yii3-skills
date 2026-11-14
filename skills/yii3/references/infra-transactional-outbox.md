@@ -1,7 +1,6 @@
 # Yii3 Transactional Outbox & Reliable Messaging Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Enterprise implementation guide for atomic database + event/message persistence (**Transactional Outbox**), mutex-guarded relay workers, exponential retry & dead-letter recovery, and idempotent consumer deduplication (**Inbox pattern**) in Yii 3 using `yiisoft/db`, `yiisoft/db-migration`, `yiisoft/json`, `yiisoft/mutex`, `yiisoft/queue`, and `yiisoft/yii-console`.
 

@@ -1,7 +1,6 @@
 # Yii3 PSR-15 Middlewares Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Comprehensive guide to PSR-15 middleware architecture, official ecosystem middlewares, custom middleware recipes, registration pipelines, and security best practices in Yii3.
 

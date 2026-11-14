@@ -1,7 +1,6 @@
 # Yii3 Utility Packages Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Comprehensive guide to the core Yii3 standalone utility packages used in almost every application: array manipulation (`yiisoft/arrays`), string, inflector and regex helpers (`yiisoft/strings`), and exception-safe JSON (`yiisoft/json`). These packages are pure, framework-independent libraries — zero DI container wiring, no configuration plugins, and no static facades. The niche, rarely-needed standalone helpers (`yiisoft/var-dumper`, `yiisoft/classifier`, `yiisoft/network-utilities`, `yiisoft/requirements`) are owned by the [Niche Utility Packages Guide](core-utilities-niche.md), and the Friendly Exception contract (`yiisoft/friendly-exception`) by the [Friendly Exceptions Guide](core-friendly-exceptions.md) — load those child guides on demand.
 

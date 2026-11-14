@@ -1,7 +1,6 @@
 # Yii3 Bootstrap 5 Guide: Widgets, Assets & Form Theming (`yiisoft/bootstrap5`)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for the `yiisoft/bootstrap5` package: the 16-widget driver catalog with its value-object item factories and backed-enum styling constants, Bootstrap-flavored flash messages, the `BootstrapAsset` / `BootstrapCdnAsset` bundles with SRI, the `customizedBundles` override recipe, and the `ThemePath::BOOTSTRAP5_*` form-theme presets.
 

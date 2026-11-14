@@ -1,7 +1,6 @@
 # Yii3 FrankenPHP Worker Runtime Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Reference guide for the FrankenPHP worker runtime (`yiisoft/yii-runner-frankenphp`): the Caddy CGO threading model and operating modes, `worker.php` implementation with `ignore_user_abort`, worker recycling via `MAX_REQUESTS`, production and development `Caddyfile` configurations, in-memory functional testing, and scoped request access with `yiisoft/request-provider`.
 

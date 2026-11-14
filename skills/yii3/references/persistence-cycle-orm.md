@@ -1,7 +1,6 @@
 # Yii3 Persistence: Cycle ORM Guide
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Practical guide for Cycle ORM Data Mapper persistence, PHP 8 entity attributes (`cycle/annotated`), Unit of Work (`cycle/orm`), DBAL & connection management (`cycle/database`), CLI schema migrations (`cycle/migrations`, `cycle/schema-migrations-generator`), Yii3 DI bridge (`yiisoft/yii-cycle`), paginated data readers and batch writers (`yiisoft/data-cycle`), entity behaviors (`cycle/entity-behavior`), and RBAC storage integration (`yiisoft/rbac-cycle-db`).
 >

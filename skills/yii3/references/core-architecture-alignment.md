@@ -1,7 +1,6 @@
 # Framework & Vendor Boundary Alignment
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Architectural contract governing where third-party vendor code (`yiisoft/*`, PSR implementations, database drivers) lives in a Yii 3 application.  
 > Adjusts boundary strictness proportionally to the project's chosen architecture pattern across AI Factory workflows (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`).

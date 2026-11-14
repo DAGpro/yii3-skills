@@ -1,7 +1,6 @@
 # Yii3 Testing: Unit Testing Use Cases, Validation, Fixtures & State Isolation
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Idiomatic unit testing recipes for Yii3 applications: zero-shot compilable application use case tests, domain validation tests (`yiisoft/validator`), test fixture assembly via `yiisoft/factory`, and container state isolation with `StateResetter`.
 

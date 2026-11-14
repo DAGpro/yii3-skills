@@ -1,7 +1,6 @@
 # Yii3 Testing: Codeception (`codeception/codeception` ^5)
 
-> [!IMPORTANT]
-> **Grounding rule:** sources of truth are split by question type — API: installed `vendor/yiisoft/<pkg>/src/` (versions via `composer.lock`); implementation patterns: this guide; project conventions: the project's architecture artifact or dominant `src/` style. Full table and conflict rule: SKILL.md Core rule 2.
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Complete reference for Codeception 5 testing in Yii3 projects: installation, root and suite configuration, actor roles (`ConsoleTester`, `ApiTester`, `UnitTester`, `FunctionalTester`), Cest implementation, and REST API testing with the REST module.
 

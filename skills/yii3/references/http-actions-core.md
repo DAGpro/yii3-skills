@@ -12,7 +12,7 @@
   - [3.1. Route Parameters & Redirects (`yiisoft/router`, `yiisoft/http`)](#31-route-parameters--redirects-yiisoftrouter-yiisofthttp)
   - [3.2. Request Parsing & DTO Hydration (`yiisoft/hydrator`, `yiisoft/input-http`, `yiisoft/validator`)](#32-request-parsing--dto-hydration-yiisofthydrator-yiisoftinput-http-yiisoftvalidator)
   - [3.3. Validation Handling (`yiisoft/validator`)](#33-validation-handling-yiisoftvalidator)
-  - [3.4. REST API Responses (`yiisoft/data-response`, `yiisoft/http`)](#34-rest-api-responses-yiisoftdata-response-yiisofthttp)
+  - [3.4. Choosing How to Return an HTTP Response](#34-choosing-how-to-return-an-http-response)
 
 ## 1. Core Action Principles in Yii3
 
@@ -524,15 +524,18 @@ if (!$result->isValid()) {
 
 ---
 
-### 3.4. REST API Responses (`yiisoft/data-response`, `yiisoft/http`)
+### 3.4. Choosing How to Return an HTTP Response
 
-Match the project's existing response convention on feature/patch work, or pick one API response mechanism at architecture/bootstrap time:
+In Yii 3, actions have no monolithic base class with `$this->render()` or `$this->asJson()`. Every action explicitly injects and returns a PSR-7 `ResponseInterface`. Match the existing project style, or choose the response mechanism tailored to the endpoint's payload:
 
-| Response Approach | Service / Class | Choose when… | Notes |
+| Response Mechanism | Service / Contract | Choose when… | Trade-offs & Caveats |
 |---|---|---|---|
-| **1. `DataResponseFactory` + Middleware** | `DataResponseFactoryInterface` (`DataResponseFactory`) + `DataResponseMiddleware` / `ContentNegotiatorDataResponseMiddleware` | Multi-format REST APIs (`Accept`-based JSON/XML) or centralized response envelope middleware. | Default DI binding in `yiisoft/data-response` maps `DataResponseFactoryInterface::class => DataResponseFactory::class`. |
-| **2. Self-Contained Formatted Factory** | `JsonResponseFactory`, `XmlResponseFactory`, `HtmlResponseFactory`, `PlainTextResponseFactory`, or `ContentNegotiatorResponseFactory` | JSON-only APIs or per-endpoint formatting **without** adding response-formatting middleware to the pipeline. | Concrete factories extend `AbstractFormattedResponseFactory` (implements `DataResponseFactoryInterface`; constructor `(ResponseFactoryInterface, <Formatter>)`). `ContentNegotiatorResponseFactory` selects JSON/XML/HTML by `Accept` header directly. |
-| **3. Raw PSR-17 Factory** | `Psr\Http\Message\ResponseFactoryInterface` (optionally `StreamFactoryInterface`) | Redirects (`Status::FOUND`/`Status::SEE_OTHER`), `204 No Content`, or minimal endpoints without `yiisoft/data-response`. | Also used for HTML (`WebViewRenderer`, [§3.5](http-actions-concerns.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model)) and binary downloads (`DownloadResponseFactory`, [§3.6](http-actions-concerns.md#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp)). |
+| **1. DataResponse + Pipeline Formatting** *(REST API default)* | `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` | Multi-format REST APIs supporting content negotiation (`Accept: application/json` or `application/xml`), or APIs utilizing centralized response envelope middlewares. | Wraps payload in a lazy `DataStream`. **Requires** `DataResponseMiddleware` or `ContentNegotiatorDataResponseMiddleware` in the pipeline; otherwise stream emission throws `LogicException: Formatter is not set.` |
+| **2. Self-Contained Formatted Factory** | `Yiisoft\DataResponse\ResponseFactory\JsonResponseFactory` (or `XmlResponseFactory`, `ContentNegotiatorResponseFactory`) | JSON-only or XML-only microservices and webhooks where you want immediate formatting **without** registering formatting middlewares in the pipeline. | Factory directly sets headers and serializes body upon invocation. Bypasses pipeline content negotiation. Extends `AbstractFormattedResponseFactory`. |
+| **3. Server-Rendered HTML View** | `Yiisoft\Yii\View\Renderer\WebViewRenderer` (`render()`) | Traditional server-rendered web pages, admin dashboards, and forms requiring complete HTML layout, CSS/JS asset bundles, and CSRF meta tags ([§3.5](http-actions-concerns.md#35-html-web-views--form-models-yiisoftyii-view-renderer-yiisoftform-model)). | Returns `ViewResponse` (PSR-7 `ResponseInterface`). Status codes must be set on the returned response: `$this->webViewRenderer->render(...)->withStatus(Status::BAD_REQUEST)`. Legacy `ViewRenderer` is `@deprecated`. |
+| **4. Partial HTML / AJAX Fragment** | `Yiisoft\Yii\View\Renderer\WebViewRenderer` (`renderPartial()`) | HTMX, Turbo Drive, AJAX modal dialogs, or inline dynamic component updates where no HTML `<head>` or outer layout should be rendered. | Renders only the specified template file. Automatically sets `Content-Type: text/html; charset=UTF-8`. |
+| **5. Binary File Download / Stream** | `Yiisoft\ResponseDownload\DownloadResponseFactory` | File downloads (PDF reports, CSV exports, media streaming), supporting inline viewing or attachment headers, byte ranges, and server `X-Sendfile` / `X-Accel-Redirect` ([§3.6](http-actions-concerns.md#36-file-downloads--binary-responses-yiisoftresponse-download-yiisofthttp)). | Methods: `sendFile()`, `sendStreamAsFile()`, `sendContentAsFile()`, `xSendFile()`. Caveat: `$mimeType` is non-nullable in `sendStreamAsFile()`. Do NOT call phantom methods `send()` or `sendStream()`. |
+| **6. Raw PSR-17 Response** | `Psr\Http\Message\ResponseFactoryInterface` | Empty success responses (`204 No Content`), HTTP redirects (`302 Found`, `303 See Other`) with `Header::LOCATION`, or minimal endpoints without extra dependencies. | Status-only: `$responseFactory->createResponse(Status::NO_CONTENT)`. For redirects, pair with `UrlGeneratorInterface::generate()`. |
 
 > [!IMPORTANT]
 > Always inject `Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface` or the concrete `Yiisoft\DataResponse\ResponseFactory\*` factories (`JsonResponseFactory`, etc.). The legacy interface `Yiisoft\DataResponse\DataResponseFactoryInterface` and the old middleware `Yiisoft\DataResponse\Middleware\ContentNegotiator` are deprecated.

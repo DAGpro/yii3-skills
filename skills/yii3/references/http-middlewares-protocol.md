@@ -12,6 +12,7 @@
   - [3.1. SessionMiddleware Behavior](#31-sessionmiddleware-behavior)
   - [3.2. CSRF Middleware Behavior](#32-csrf-middleware-behavior)
 - [4. Registration Scopes & Pipelines](#4-registration-scopes--pipelines)
+  - [Choosing Middleware Registration Scope](#choosing-middleware-registration-scope)
   - [4.1. Global Application Pipeline (`config/web/di/application.php`)](#41-global-application-pipeline-configwebdiapplicationphp)
   - [4.2. Route Group Pipeline (`config/web/routes.php`)](#42-route-group-pipeline-configwebroutesphp)
   - [4.3. Single Route Pipeline (`config/web/routes.php`)](#43-single-route-pipeline-configwebroutesphp)

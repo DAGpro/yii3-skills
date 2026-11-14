@@ -22,6 +22,7 @@
   - [3.2. Selective Middleware Exclusion (`->disableMiddleware(...)`)](#32-selective-middleware-exclusion--disablemiddleware)
   - [3.3. Built-In CORS Support (`->withCors(...)`)](#33-built-in-cors-support--withcors)
 - [4. Accessing Route Arguments in Actions & Middlewares](#4-accessing-route-arguments-in-actions--middlewares)
+  - [Choosing How to Extract Route Arguments](#choosing-how-to-extract-route-arguments)
   - [4.1. The Injected `CurrentRoute` Service](#41-the-injected-currentroute-service)
   - [4.2. Hydrator Parameter Resolution (`#[RouteArgument]`)](#42-hydrator-parameter-resolution-routeargument)
   - [4.3. Critical Traps & Ingress Caveats](#43-critical-traps--ingress-caveats)
@@ -561,6 +562,17 @@ return [
 ---
 
 ## 4. Accessing Route Arguments in Actions & Middlewares
+
+### Choosing How to Extract Route Arguments
+
+Yii 3 does **not** push matched route arguments into PSR-7 request attributes (`$request->getAttribute('id')` evaluates to `null`). Choose one of the following verified extraction techniques:
+
+| Extraction Method | Mechanism & Syntax | Choose when… | Trade-offs & Caveats |
+|---|---|---|---|
+| **1. Injected `CurrentRoute` Service** *(Standard / Flexible)* | Constructor or method injection: `CurrentRoute $currentRoute`<br>`$id = $currentRoute->getArgument('id');` | Standard controllers, PSR-15 `RequestHandlerInterface`, middlewares, or when route metadata (`getName()`, `getPattern()`, `getUri()`, `getMethods()`) is required alongside arguments. | Returns `?string` (safe; missing argument returns `null` or default). In persistent worker modes (RoadRunner/Swoole), never cache argument values in singleton properties. |
+| **2. Method Parameter Attribute `#[RouteArgument]`** *(Thin Invokable Actions)* | Action parameter decoration: `public function __invoke(#[RouteArgument('id')] int $id)` | Single-action invokable controllers where clean signatures and automatic scalar type casting (`int`, `string`) are preferred. | Requires `HydratorAttributeParametersResolver` in `CompositeParametersResolver`. Fails if parameter has no default and argument is missing. Does **not** work with `RequestHandlerInterface` or `FileRouter`. |
+| **3. DTO Property Attribute `#[RouteArgument]`** *(Unified CQRS / Command Models)* | DTO constructor property: `public function __construct(#[RouteArgument('id')] public int $id, #[FromBody] ...)` | Complex mutation endpoints (PUT/PATCH/POST) where path parameters, query parameters, and body payloads should be unified and validated in a single typed DTO. | Cleanest encapsulation for Application Use Cases. Hydrated via `HydratorInterface::create(Dto::class, $data)` or `RequestInputParametersResolver`. |
+| **4. Raw PSR-7 Attributes (Anti-Pattern / Trap)** | ❌ `$request->getAttribute('id')` | **Never** for route arguments in standard `yiisoft/router`. | Returns `null`. `Router` middleware populates `CurrentRoute`, not request attributes. Only custom middlewares push data to `$request->getAttribute()`. |
 
 ### 4.1. The Injected `CurrentRoute` Service
 

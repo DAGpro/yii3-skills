@@ -10,6 +10,16 @@ This topic is split into three focused guides — load the one that matches the 
 - [Documenting Endpoints with Attributes](http-openapi-endpoints.md) — PHP 8 attribute annotations for endpoints & schemas, multi-version API documentation (§5–§6).
 - [Swagger UI, CLI Generation & Operations](http-openapi-ui-and-ops.md) — offline CLI specification generator, Swagger UI customization & asset management, environment protection & performance caching (§7–§9).
 
+### Choosing OpenAPI Serving & Generation Strategy
+
+Depending on deployment environment, performance requirements, and security restrictions, choose between dynamic runtime serving and offline static generation:
+
+| Strategy | Implementation | Choose when… | Trade-offs & Caveats |
+|---|---|---|---|
+| **1. Dynamic Runtime Serving** | Routes `SwaggerUi` + `SwaggerJson` with PSR-16 cache configured in `params.php`. | Local development, staging environments, internal APIs, or rapid prototyping where documentation must instantly reflect code changes. | Zero manual build steps. In production, requires PSR-16 cache (`cacheTTL => 86400`). **Critical Caveat**: Never set `'cacheTTL' => null` in development (triggers infinite cache). |
+| **2. Offline CLI Generation (CI/CD)** | `SwaggerGenerateCommand` (`php yii swagger/generate --format=json`) writing to `@public/openapi.json`. | Production web servers, high-throughput APIs, air-gapped deployments, or automated SDK client code generation pipelines. | Zero runtime PHP overhead for documentation. Immutable static artifact. Static file must be rebuilt upon code deployment. |
+| **3. CDN / Serverless Static Docs** | CLI generation + CDN asset hosting (`SwaggerUiAsset::$cdnUrl` or static HTML bucket). | Serverless deployments (AWS Lambda, Bref) or microservices where OpenAPI docs are served from centralized developer portals. | Completely offloads documentation traffic from application compute instances. Requires static asset pipeline configuration. |
+
 Read this file for the anti-pattern table (§10) and related guides (§11).
 
 ---

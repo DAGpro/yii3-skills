@@ -7,11 +7,23 @@
 ## Table of Contents
 
 - [1. DTO Schemas & Dual Attributes (OpenAPI + `yiisoft/validator`)](#1-dto-schemas--dual-attributes-openapi--yiisoftvalidator)
+  - [Choosing OpenAPI Schema Definition Strategy](#choosing-openapi-schema-definition-strategy)
   - [5.7. File Uploads (`multipart/form-data`)](#57-file-uploads-multipartform-data)
   - [5.8. Standardized Error Models: RFC 7807 / RFC 9457 Problem Details](#58-standardized-error-models-rfc-7807--rfc-9457-problem-details)
 - [6. Multi-Version API Documentation (`/swagger/v1` & `/swagger/v2`)](#6-multi-version-api-documentation-swaggerv1--swaggerv2)
 
 ## 1. DTO Schemas & Dual Attributes (OpenAPI + `yiisoft/validator`)
+
+### Choosing OpenAPI Schema Definition Strategy
+
+Yii 3 applications can document data schemas using three distinct approaches depending on architectural tier and separation-of-concerns requirements:
+
+| Schema Strategy | Implementation | Choose when… | Trade-offs & Caveats |
+|---|---|---|---|
+| **1. Dual-Attributed DTO** *(Pragmatic Default)* | Single class combining `OpenApi\Attributes\Property` and `Yiisoft\Validator\Rule\*` on constructor-promoted properties. | Standard CRUD endpoints and REST APIs where public API schema exactly mirrors internal validation rules (Pragmatic / Balanced architectural tiers). | Eliminates duplicate field declarations. Single source of truth. Couples presentation/documentation attributes to DTO classes. |
+| **2. Decoupled OpenAPI Schema** *(Clean / Enterprise Architecture)* | Dedicated schema class under `App\Presentation\Api\Schema` with `#[OA\Schema]`, separate from Domain / Application DTOs. | Strict Clean Architecture, modular monoliths, or when the internal domain model differs from external API representations (e.g. hidden internal fields, versioned API transformations). | Strict separation of concerns: domain models stay pure PHP with zero OpenAPI dependencies. Requires mapping code between domain entities and API schemas. |
+| **3. Inline Schema Definition** | Anonymous schema defined directly inside `#[OA\JsonContent(...)]` on action methods. | Simple one-off responses (e.g. `['status' => 'ok']`), generic error envelopes (`ProblemDetails`), or standard pagination envelopes. | Quick to write; avoids creating dedicated PHP classes for trivial payloads. Not reusable across multiple endpoints. |
+
 Yii 3 applications achieve clean single-source-of-truth DTOs by pairing `OpenApi\Attributes` with `Yiisoft\Validator\Rule\*` attributes on constructor-promoted properties.
 
 #### 5.6.1. BackedEnum for Type Safety

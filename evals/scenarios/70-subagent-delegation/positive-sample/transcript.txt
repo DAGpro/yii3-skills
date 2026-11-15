@@ -46,7 +46,7 @@ Subagent created `src/User/Profile/UpdateBioAction.php` and updated `config/rout
   - config/routes.php (Transport Wiring)
 - **Governing Guides Consulted:** references/packages/http-actions-core.md
 - **Verified API Signatures:**
-  - Yiisoft\DataResponse\DataResponseFactoryInterface::createResponse()
+  - Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface::createResponse()
 - **Verified Wiring Gates:** DI: NA, Routes/CLI: PASS, Events/Migrations: NA
 - **Open Issues / Residual Assumptions:** None
 

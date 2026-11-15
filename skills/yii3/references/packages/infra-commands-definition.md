@@ -7,12 +7,11 @@
 ## Table of Contents
 
 - [1. Console Architecture & Presentation Layer Principle](#1-console-architecture--presentation-layer-principle)
-  - [Layer Responsibilities](#layer-responsibilities)
+  - [Command Responsibilities](#command-responsibilities)
   - [Console Lifecycle Events](#console-lifecycle-events)
   - [Subscribing to Lifecycle Events](#subscribing-to-lifecycle-events)
 - [2. Command Class Anatomy & Constructor Injection](#2-command-class-anatomy--constructor-injection)
-  - [Zero-Shot Compilable Domain & Use Case Companion Classes](#zero-shot-compilable-domain--use-case-companion-classes)
-  - [Zero-Shot Compilable Command Example](#zero-shot-compilable-command-example)
+  - [Complete Compilable Command Example](#complete-compilable-command-example)
 - [3. Arguments & Options Specification](#3-arguments--options-specification)
   - [3.1. Input Arguments (`InputArgument`)](#31-input-arguments-inputargument)
   - [3.2. Input Options (`InputOption`)](#32-input-options-inputoption)

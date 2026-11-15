@@ -4,6 +4,16 @@ All notable changes to the `yii3-skills` AI Factory extension and its `yii3` ski
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/) — pre-1.0, minor = contract/behavior changes. The version lives in [`extension.json`](extension.json); every release is tagged `v<version>`.
 
+## [0.9.1] — 2026-11-15
+
+### Fixed
+- Fixed unconfirmed method signatures in `core-aif-adapter.md` (§7.5 receipt schema) and `infra-payments.md` by using canonical `ResponseFactory\DataResponseFactoryInterface::createResponse()` and `HydratorInterface::create()`, resolving CI `--manifest-mode` failure in `check-symbols.mjs`.
+- Fixed 3 dead TOC anchor links in `infra-commands-definition.md`.
+- Synchronized AI Factory role-binding matrix in `core-aif-adapter.md` to cover all 13 workflow injections registered in `extension.json` and documented unhooked workflow boundaries.
+- Mandated Phase 6 test strategy (or justified N/A) in `injections/plan.md` to prevent unbacked implementations.
+- Refined `SKILL.md` tone by adding technical rationale ("why") to framework invariants and clarifying repository interface optionality in Layered Architecture.
+- Strengthened Subagent Receipt verification gate with independent filesystem and git diff evidence auditing.
+
 ## [0.9.0] — 2026-11-15
 
 ### Added

@@ -15,7 +15,7 @@ description: >-
 license: MIT
 metadata:
   author: Yii 3 AI Factory Team
-  version: 0.9.0
+  version: 0.9.1
 ---
 
 # Yii3 development
@@ -30,7 +30,7 @@ metadata:
 Run first on every invocation:
 - **Scope & Progressive Disclosure:** Apply this skill to the extent the task touches Yii 3 / `yiisoft/*` packages (zero-Yii3 tasks: note non-applicability briefly and follow project conventions). For surgical tasks (single bug fix, patch, DI binding, migration), load only `SKILL.md` and the governing guide from `references/packages/`; full architectural instructions (`references/instructions/core-*.md`) are required only for multi-layer planning, feature decomposition, or bootstrapping.
 1. **Package Check:** Check `composer.json` + `composer.lock` against [`package-catalog.md`](references/package-catalog.md) (skip items already resolved by caller).
-2. **Stack Invariants:** Strictly one DB driver, persistence branch (Active Record xor Cycle), queue/cache/mutex driver, RBAC storage, and test runner per [`package-catalog.md`](references/package-catalog.md) §3 ("Pick Exactly ONE per Family").
+2. **Stack Invariants:** One DB driver, persistence branch (Active Record xor Cycle), queue/cache/mutex driver, RBAC storage, and test runner per [`package-catalog.md`](references/package-catalog.md) §3 ("Pick Exactly ONE per Family") to prevent competing abstractions and runtime split-brain.
 3. **Lifecycle Position:**
    - (a) Plan task: resolve active plan per adapter §4 and execute its contract.
    - (b) Standalone feature: execute Mission Workflow.
@@ -48,9 +48,9 @@ Every Yii 3 implementation executes in two phases:
 - **Dependency Ripple (Intra-Context):** Trace missing dependencies downward: Transport → Logic (Use Case) → Persistence (Repository) → Schema (Migration).
 
 ### 2. Bottom-Up Assembly (Assemble Code)
-Assemble components strictly in dependency order so no class references missing symbols:
+Assemble components in dependency order so no class references missing symbols at runtime:
 1. **Schema & Migration:** Tables, indexes, FKs (`yiisoft/db-migration`) implementing `RevertibleMigrationInterface` with working `down()` and table prefix `{{%table}}` ([`persistence-migrations.md`](references/packages/persistence-migrations.md)).
-2. **Persistence & Boundary:** Repository port interface and concrete storage implementation ([`core-architecture-alignment.md §6`](references/instructions/core-architecture-alignment.md#6-step-by-pattern-execution-matrix)).
+2. **Persistence & Boundary:** Repository port interface and concrete storage implementation (or concrete repository in Layered Architecture when port decoupling is omitted per pattern; see [`core-architecture-alignment.md §6`](references/instructions/core-architecture-alignment.md#6-step-by-pattern-execution-matrix)).
 3. **Application & Domain:** Use case handler with `$db->transaction()` and post-commit events ([`core-events-design.md §5`](references/packages/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)) or Transactional Outbox ([`infra-transactional-outbox.md`](references/packages/infra-transactional-outbox.md)).
 4. **Transport & Entry Point:** Thin Action returning PSR-7 `ResponseInterface` with typed DTO (`yiisoft/validator` attributes `#[Required]`) or CLI Command (`SymfonyStyle`, `ExitCode`).
 5. **Immediate Wiring:** Wire DI binding (`config/**/di/*.php` default, or service provider per [`core-config-tree.md`](references/packages/core-config-tree.md#26-choosing-how-to-organize-application-configs)), route (`config/**/routes.php` default, or `FileRouter` per [`http-routes-definition.md`](references/packages/http-routes-definition.md#choosing-how-to-route-http-requests)), command (`config/console/params.php`), or event (`config/**/events.php`) immediately upon creating each class.
@@ -58,13 +58,13 @@ Assemble components strictly in dependency order so no class references missing 
 
 ## Framework Invariants
 
-- **Presentation Isolation:** Actions and commands are thin transport adapters. **Zero SQL, direct persistence, or transactions in presentation.**
-- **Category B Manual DI:** Pure libraries (`yiisoft/db-*`, cache, RBAC) mandate manual DI in `config/**/di/*.php` ([`core-dependency-protocol.md`](references/instructions/core-dependency-protocol.md)); Category A packages configure via `.merge-plan.php`.
-- **Post-Commit Dispatch:** External side-effects dispatch after `$db->transaction()` commit ([`core-events-design.md §5`](references/packages/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)).
-- **Worker Safety:** Register `'reset'` in DI (`StateResetter` provider) for stateful singletons under RoadRunner/FrankenPHP ([`infra-state-resetter.md`](references/packages/infra-state-resetter.md)).
-- **Test Scope Discipline:** In AI Factory (`aif-implement`), write tests ONLY if explicitly scheduled in plan tasks. In Standalone, execute project test runner.
-- **Subagent Context Preservation:** When delegating tasks to subagents, the delegation prompt MUST enforce the Context Readiness Gate, mandate loading the `yii3` skill, explicitly specify the architecture pattern, assign governing topic guides (`references/packages/<guide-name>.md`), and require the structured Subagent Execution Receipt ([`core-aif-adapter.md §7`](references/instructions/core-aif-adapter.md#7-subagent-delegation--context-preservation-protocol)).
-- **Adaptive Root-Cause Analysis:** When addressing bugs or defects, trace upstream along the call graph from the symptom's entry point (e.g. Action/Worker → Hydration/Validation → Use Case/Handler → Repository/Query → Schema/Driver) and stop as soon as the defect is confirmed with concrete evidence. Do not force an exhaustive schema trace when the fault lies in middleware, transport, serialization, or worker state.
+- **Presentation Isolation:** Actions and commands are thin transport adapters to ensure business logic is reusable and testable without HTTP/CLI runtimes. **Zero direct SQL, persistence, or transactions in presentation.**
+- **Category B Manual DI:** Pure libraries (`yiisoft/db-*`, cache, RBAC) require manual DI in `config/**/di/*.php` ([`core-dependency-protocol.md`](references/instructions/core-dependency-protocol.md)) because they lack auto-configuration; Category A packages configure automatically via `.merge-plan.php`.
+- **Post-Commit Dispatch:** External side-effects (emails, queue pushes) must dispatch only after `$db->transaction()` commit ([`core-events-design.md §5`](references/packages/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)) to prevent phantom background operations when transactions roll back.
+- **Worker Safety:** Register `'reset'` in DI (`StateResetter` provider) for stateful singletons under RoadRunner/FrankenPHP ([`infra-state-resetter.md`](references/packages/infra-state-resetter.md)) to prevent cross-request memory leaks and state contamination.
+- **Test Scope Discipline:** In AI Factory (`aif-implement`), implement tests scheduled in the active plan to prevent unauthorized scope creep; in Standalone, execute project test runners to confirm regression safety.
+- **Subagent Context Preservation:** When delegating tasks to subagents, the delegation prompt must enforce the Context Readiness Gate, mandate loading the `yii3` skill, explicitly specify the architecture pattern, assign governing topic guides (`references/packages/<guide-name>.md`), and require the structured Subagent Execution Receipt ([`core-aif-adapter.md §7`](references/instructions/core-aif-adapter.md#7-subagent-delegation--context-preservation-protocol)) to prevent subagent isolation and missing-context hallucinations.
+- **Adaptive Root-Cause Analysis:** When addressing bugs or defects, trace upstream along the call graph from the symptom's entry point (e.g. Action/Worker → Hydration/Validation → Use Case/Handler → Repository/Query → Schema/Driver) and stop as soon as the defect is confirmed with concrete evidence. Avoid forcing an exhaustive schema trace when the defect resides in middleware, transport, serialization, or worker state.
 
 ## Finale — Definition of Done
 

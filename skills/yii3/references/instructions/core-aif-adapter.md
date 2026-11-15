@@ -23,12 +23,13 @@ The standard feature lifecycle follows a strict state-machine protocol:
 
 ### Role Binding (One Role per Invocation)
 
-Each skill invocation inside the automation loop executes **exactly the role of the calling `aif-*` workflow** — plan, implement, verify, fix, review, improve, roadmap, architecture. The role is detected from the invoking `aif-*` command or the loaded workflow injection. The matrix below is the authority for what that role may modify and must output; per-role duties are anchored in the matching workflow injection. Only the `aif-implement` role runs the full Mission Workflow implementation path; `aif-plan`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, and `aif-architecture` execute only their scoped duties and hand off per the matrix. Invocations without an `aif-*` role signal do not enter this role-binding protocol; they route by operating context per §1 — AI Factory mode when a `.ai-factory/` directory is present, and the standalone fallback (`core-standalone-adapter.md`) only when neither an `aif-*` invocation nor a `.ai-factory/` directory exists.
+Each skill invocation inside the automation loop executes **exactly the role of the calling `aif-*` workflow** — roadmap, architecture, plan, implement, verify, fix, review, improve, or tooling workflows (`aif`, `build-automation`, `ci`, `dockerize`, `security-checklist`). The role is detected from the invoking `aif-*` command or the loaded workflow injection. The matrix below is the authority for what that role may modify and must output; per-role duties are anchored in the matching workflow injection. Only the `aif-implement` role runs the full Mission Workflow implementation path; `aif-plan`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, and `aif-architecture` execute only their scoped duties and hand off per the matrix. Invocations without an `aif-*` role signal do not enter this role-binding protocol; they route by operating context per §1 — AI Factory mode when a `.ai-factory/` directory is present, and the standalone fallback (`core-standalone-adapter.md`) only when neither an `aif-*` invocation nor a `.ai-factory/` directory exists.
 
 ### Workflow Responsibility & Boundary Matrix
 
 | Workflow | Role & Phase | Input Artifacts | Allowed Modifications | Output Artifacts | Next Handoff |
 |---|---|---|---|---|---|
+| **`aif`** | Project initialization & agent context setup | Project directory, `composer.json` | `.ai-factory/` scaffolding, agent skills config | Configured AI Factory project context with Yii 3 awareness | `/aif-architecture` or `/aif-plan` |
 | **`aif-roadmap`** | Milestone sequencing & stack invariants | Project vision, requirements, package manifest | Roadmap file ONLY (`ROADMAP.md`) | Structured roadmap with stack invariants, driver choices, and architecture milestones | `/aif-architecture` or `/aif-plan` |
 | **`aif-architecture`** | Architectural guideline synthesis & pattern alignment | Tech stack, project requirements, existing code | Architecture artifact ONLY (`paths.architecture`) | Canonical `ARCHITECTURE.md` defining directory structure, architecture patterns, and legacy strategies | `/aif-plan` |
 | **`aif-plan`** | Feature decomposition & planning | Prompt / user requirements, project architecture (`paths.architecture`) | Plan file ONLY (no application code) | Active plan artifact with 6 canonical phases + initial `### Execution State` | `/aif-implement` |
@@ -37,6 +38,15 @@ Each skill invocation inside the automation loop executes **exactly the role of 
 | **`aif-fix`** | Defect resolution | `aif-gate-result`, active plan, failing tests | Bug fixes in affected files (`src/`, `config/`), plan `### Execution State` | Fixed application code + updated plan state | `/aif-verify` (re-verification) |
 | **`aif-review`** | Quality & architecture audit | Changed files, git diff, rules | Review report ONLY (read-only audit) | Structured code review report with findings & suggestions | User / developer |
 | **`aif-improve`** | Plan refinement | Draft plan, project codebase | Plan file ONLY (re-orders tasks, adds missing wiring steps) | Refined plan artifact | User / `/aif-implement` |
+| **`aif-build-automation`** | Build tool configuration (Makefile, Taskfile) | Project runner, composer scripts, toolchain | Build automation files (`Makefile`, `Taskfile.yml`, etc.) | Tested build targets for Yii 3 runtime, migrations, and quality gates | Developer / CI |
+| **`aif-ci`** | CI pipeline configuration | Project test runners, PHP version, linters | CI workflow files (`.github/workflows/`, etc.) | Hardened CI pipeline executing lint, static analysis, and runtime tests | Developer / Git push |
+| **`aif-dockerize`** | Containerization & production hardening | Runtime stack (SAPI, RoadRunner, FrankenPHP) | Dockerfile, compose files, `.dockerignore` | Multi-stage Docker setup matching Yii 3 runner requirements | Developer / Deployment |
+| **`aif-security-checklist`** | Security audit & vulnerability gate | Application code, auth/session configs, inputs | Security audit report (`.ai-factory/SECURITY.md`) | Structured security findings against Yii 3 anti-patterns | Developer / `/aif-fix` |
+
+### Integration Scope & Unhooked Workflows
+
+- **Hooked Workflows (13 injections registered in `extension.json`):** Deeply integrate with Yii 3 idioms, enforcing signature verification, architecture patterns, and wiring gates across project setup, architecture, planning, coding, verification, and operations.
+- **Unhooked Workflows:** Generic AI Factory lifecycle utilities (e.g. `aif-explore`, `aif-warmup`, `aif-commit`, `aif-rules-check`, `aif-qa`, `aif-archive`) do not require specialized Yii 3 injections. They operate as framework-agnostic commands, interacting with the project through standard filesystem artifacts, git operations, and generic AI Factory contracts without modifying Yii 3 invariants.
 
 ### The `aif-verify` Code-Read-Only Invariant
 
@@ -261,8 +271,8 @@ Subagents must return their execution summary using this machine-verifiable form
   - config/common/routes.php (Transport Wiring)
 - **Governing Guides Consulted:** references/packages/http-actions-core.md, references/packages/http-forms-and-hydration.md
 - **Verified API Signatures:**
-  - Yiisoft\DataResponse\DataResponseFactoryInterface::createResponse()
-  - Yiisoft\Hydrator\Validator\ValidatingHydrator::create()
+  - Yiisoft\DataResponse\ResponseFactory\DataResponseFactoryInterface::createResponse()
+  - Yiisoft\Hydrator\HydratorInterface::create()
 - **Verified Wiring Gates:** DI: PASS, Routes/CLI: PASS, Events/Migrations: NA
 - **Open Issues / Residual Assumptions:** None
 ````
@@ -272,7 +282,7 @@ Subagents must return their execution summary using this machine-verifiable form
 The parent agent retains full responsibility for the task outcome and must never accept subagent artifacts blindly:
 
 1. **Receipt Verification:** Confirm the presence and completeness of the `### Subagent Execution Receipt`. If missing or incomplete, mandate re-submission before proceeding.
-2. **Perimeter Audit:** Verify that the subagent modified only the authorized target files and did not alter `config/.merge-plan.php` or `vendor/`.
+2. **Evidence-Based Perimeter Audit:** Independently inspect filesystem changes (e.g. `git status`, `git diff --name-only`, file existence checks) rather than accepting textual claims at face value. Verify that the subagent actually created or modified the authorized target files and did not alter `config/.merge-plan.php` or `vendor/`.
 3. **Anti-Pattern Gate:** Audit the subagent's code against the governing guide's `## Anti-Pattern Matrix` (e.g. no direct SQL in action, no uncommitted event dispatch).
 4. **AST & Signature Compliance:** Verify that all invoked methods and parameter types match the installed package sources in `vendor/yiisoft/<pkg>/src/`.
 5. **State Reconciliation:** Upon successful audit, integrate the created artifacts into the active plan's `### Execution State` (or `### Mission State`), record passing wiring gates, and advance the workflow. If defects are found, reject the output and issue a scoped fix prompt or re-assign to `/aif-fix`.

@@ -13,7 +13,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-version-notes.md",
-    "references/http-routes-definition.md"
+    "references/instructions/core-version-notes.md",
+    "references/packages/http-routes-definition.md"
   ]
 }

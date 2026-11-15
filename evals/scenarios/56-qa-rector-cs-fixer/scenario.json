@@ -24,8 +24,8 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-definition-of-done.md",
-    "references/core-dependency-protocol.md",
-    "references/core-version-notes.md"
+    "references/instructions/core-definition-of-done.md",
+    "references/instructions/core-dependency-protocol.md",
+    "references/instructions/core-version-notes.md"
   ]
 }

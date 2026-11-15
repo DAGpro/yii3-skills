@@ -20,6 +20,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-friendly-exceptions.md"
+    "references/packages/core-friendly-exceptions.md"
   ]
 }

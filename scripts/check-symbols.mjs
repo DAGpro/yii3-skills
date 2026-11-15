@@ -14,7 +14,7 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join, relative, resolve, dirname } from 'node:path';
+import { join, relative, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -367,7 +367,19 @@ function countCallArguments(callArgsText) {
 // --- Main -------------------------------------------------------------------
 
 const classMap = buildClassMap();
-const guideFiles = readdirSync(guidesDir).filter((f) => f.endsWith('.md')).sort();
+function walkGuides(dir) {
+  const res = [];
+  for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, ent.name);
+    if (ent.isDirectory()) res.push(...walkGuides(full));
+    else if (ent.isFile() && ent.name.endsWith('.md')) {
+      res.push(relative(guidesDir, full).replace(/\\/g, '/'));
+    }
+  }
+  return res.sort();
+}
+
+const guideFiles = walkGuides(guidesDir);
 const unconfirmed = [];
 let checkedClasses = 0;
 let checkedPairs = 0;

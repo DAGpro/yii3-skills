@@ -15,8 +15,8 @@
   "layer": "unit",
   "guides": [
     "SKILL.md",
-    "references/http-forms-and-hydration.md",
-    "references/http-validation-rules.md",
-    "references/http-actions-core.md"
+    "references/packages/http-forms-and-hydration.md",
+    "references/packages/http-validation-rules.md",
+    "references/packages/http-actions-core.md"
   ]
 }

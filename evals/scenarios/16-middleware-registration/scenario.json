@@ -15,8 +15,8 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-middlewares-protocol.md",
-    "references/http-middlewares-recipes.md",
-    "references/http-middlewares.md"
+    "references/packages/http-middlewares-protocol.md",
+    "references/packages/http-middlewares-recipes.md",
+    "references/packages/http-middlewares.md"
   ]
 }

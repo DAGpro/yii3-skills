@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-cache-etag.md"
+    "references/packages/http-cache-etag.md"
   ]
 }

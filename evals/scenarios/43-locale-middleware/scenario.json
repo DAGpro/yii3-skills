@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-i18n-storage-and-locale.md"
+    "references/packages/http-i18n-storage-and-locale.md"
   ]
 }

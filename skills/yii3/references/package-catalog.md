@@ -190,7 +190,7 @@ composer require yiisoft/queue yiisoft/queue-db yiisoft/mutex yiisoft/mutex-pdo-
 composer require yiisoft/scheduler yiisoft/mutex yiisoft/cache-file
 ```
 
-> **Transactional Outbox Composition:** Enterprise outbox delivery composes existing ecosystem packages (`yiisoft/db`, `yiisoft/db-migration`, `yiisoft/json`, `yiisoft/mutex`, `yiisoft/queue`, `yiisoft/yii-console`) — see the [Transactional Outbox Guide](infra-transactional-outbox.md). There is no standalone `yiisoft/outbox` package.
+> **Transactional Outbox Composition:** Enterprise outbox delivery composes existing ecosystem packages (`yiisoft/db`, `yiisoft/db-migration`, `yiisoft/json`, `yiisoft/mutex`, `yiisoft/queue`, `yiisoft/yii-console`) — see the [Transactional Outbox Guide](packages/infra-transactional-outbox.md). There is no standalone `yiisoft/outbox` package.
 
 ### 4.8. HTML Web Form with Widgets
 ```bash
@@ -225,10 +225,10 @@ composer require yiisoft/payments
 
 ## 5. Package Verification Rules
 
-The full dependency gate — existing-installation check, install authorization, wiring verification, and package source inspection — lives in the [Dependency Protocol](core-dependency-protocol.md). When working from this catalog, additionally:
+The full dependency gate — existing-installation check, install authorization, wiring verification, and package source inspection — lives in the [Dependency Protocol](instructions/core-dependency-protocol.md). When working from this catalog, additionally:
 
 1. Resolve every capability through §1 of this catalog first, and never propose `composer require` for a package already present in `composer.json`.
-2. Mind the Category A/B distinction from [Dependency Protocol §4](core-dependency-protocol.md) when deciding whether a package needs manual DI wiring (the merge-plan mechanics behind it are owned by the [Config Tree Guide](core-config-tree.md), sections 2 and 2.3).
+2. Mind the Category A/B distinction from [Dependency Protocol §4](instructions/core-dependency-protocol.md) when deciding whether a package needs manual DI wiring (the merge-plan mechanics behind it are owned by the [Config Tree Guide](packages/core-config-tree.md), sections 2 and 2.3).
 3. Before overriding a package's parameters, read its shipped defaults in `vendor/yiisoft/<pkg>/config/params.php`.
 4. **Package status taxonomy** — every package in this catalog is one of:
    - **Stable** (default) — tagged releases; install per the Dependency Protocol.

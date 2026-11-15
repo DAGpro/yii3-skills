@@ -15,7 +15,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/persistence-caching.md",
-    "references/persistence-cache-drivers.md"
+    "references/packages/persistence-caching.md",
+    "references/packages/persistence-cache-drivers.md"
   ]
 }

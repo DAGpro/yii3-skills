@@ -14,11 +14,11 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-di-and-config.md",
-    "references/core-di-container.md",
-    "references/core-di-definitions.md",
-    "references/persistence-db-connection-and-queries.md",
-    "references/http-actions-core.md"
+    "references/packages/core-di-and-config.md",
+    "references/packages/core-di-container.md",
+    "references/packages/core-di-definitions.md",
+    "references/packages/persistence-db-connection-and-queries.md",
+    "references/packages/http-actions-core.md"
   ],
   "nearMiss": [
     {

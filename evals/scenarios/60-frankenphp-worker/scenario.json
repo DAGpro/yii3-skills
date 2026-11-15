@@ -18,7 +18,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-runtime-frankenphp.md",
-    "references/infra-runners-and-runtimes.md"
+    "references/packages/infra-runtime-frankenphp.md",
+    "references/packages/infra-runners-and-runtimes.md"
   ]
 }

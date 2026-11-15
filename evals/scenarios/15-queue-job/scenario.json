@@ -20,7 +20,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-queue-jobs.md",
-    "references/infra-queue-brokers.md"
+    "references/packages/infra-queue-jobs.md",
+    "references/packages/infra-queue-brokers.md"
   ]
 }

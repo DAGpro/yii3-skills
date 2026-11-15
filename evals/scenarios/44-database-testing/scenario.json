@@ -21,6 +21,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/testing-database.md"
+    "references/packages/testing-database.md"
   ]
 }

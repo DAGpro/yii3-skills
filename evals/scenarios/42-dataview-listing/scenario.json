@@ -20,6 +20,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-dataview-widgets.md"
+    "references/packages/http-dataview-widgets.md"
   ]
 }

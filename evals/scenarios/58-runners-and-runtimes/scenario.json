@@ -18,6 +18,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-runners-and-runtimes.md"
+    "references/packages/infra-runners-and-runtimes.md"
   ]
 }

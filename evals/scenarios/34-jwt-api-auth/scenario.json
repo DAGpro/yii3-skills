@@ -20,6 +20,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-auth-jwt.md"
+    "references/packages/infra-auth-jwt.md"
   ]
 }

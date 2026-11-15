@@ -13,7 +13,7 @@
   "layer": "unit",
   "guides": [
     "SKILL.md",
-    "references/infra-commands.md",
-    "references/core-dependency-protocol.md"
+    "references/packages/infra-commands.md",
+    "references/instructions/core-dependency-protocol.md"
   ]
 }

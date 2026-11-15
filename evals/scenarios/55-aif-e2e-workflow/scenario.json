@@ -26,16 +26,16 @@
   "layer": "composite",
   "guides": [
     "SKILL.md",
-    "references/core-aif-adapter.md",
-    "references/core-config-tree.md",
-    "references/core-definition-of-done.md",
-    "references/core-feature-recipes.md",
-    "references/core-architecture-alignment.md",
-    "references/persistence-migrations-schema.md",
-    "references/core-di-and-config.md",
-    "references/http-routes-definition.md",
-    "references/http-actions-core.md",
-    "references/core-events-design.md",
-    "references/testing-core.md"
+    "references/instructions/core-aif-adapter.md",
+    "references/packages/core-config-tree.md",
+    "references/instructions/core-definition-of-done.md",
+    "references/instructions/core-feature-recipes.md",
+    "references/instructions/core-architecture-alignment.md",
+    "references/packages/persistence-migrations-schema.md",
+    "references/packages/core-di-and-config.md",
+    "references/packages/http-routes-definition.md",
+    "references/packages/http-actions-core.md",
+    "references/packages/core-events-design.md",
+    "references/packages/testing-core.md"
   ]
 }

@@ -23,7 +23,7 @@
   ],
   "layer": "composite",
   "guides": [
-    "references/infra-mailer-async-queue.md",
-    "references/infra-queue-jobs.md"
+    "references/packages/infra-mailer-async-queue.md",
+    "references/packages/infra-queue-jobs.md"
   ]
 }

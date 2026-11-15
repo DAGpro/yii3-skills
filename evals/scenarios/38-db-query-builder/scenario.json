@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/persistence-db.md"
+    "references/packages/persistence-db.md"
   ]
 }

@@ -18,7 +18,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-auth-and-rbac.md",
-    "references/infra-rbac-storage.md"
+    "references/packages/infra-auth-and-rbac.md",
+    "references/packages/infra-rbac-storage.md"
   ]
 }

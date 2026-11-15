@@ -14,12 +14,12 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-di-and-config.md",
-    "references/http-routes-definition.md",
-    "references/persistence-active-record-model.md",
-    "references/persistence-active-record-queries.md",
-    "references/persistence-active-record-relations.md",
-    "references/persistence-active-record.md",
-    "references/persistence-migrations-schema.md"
+    "references/packages/core-di-and-config.md",
+    "references/packages/http-routes-definition.md",
+    "references/packages/persistence-active-record-model.md",
+    "references/packages/persistence-active-record-queries.md",
+    "references/packages/persistence-active-record-relations.md",
+    "references/packages/persistence-active-record.md",
+    "references/packages/persistence-migrations-schema.md"
   ]
 }

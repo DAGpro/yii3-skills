@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-utilities.md"
+    "references/packages/core-utilities.md"
   ]
 }

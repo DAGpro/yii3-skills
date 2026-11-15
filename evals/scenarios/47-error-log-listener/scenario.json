@@ -20,6 +20,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-error-handling-ops.md"
+    "references/packages/infra-error-handling-ops.md"
   ]
 }

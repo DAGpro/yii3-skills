@@ -24,19 +24,19 @@
   "layer": "composite",
   "guides": [
     "SKILL.md",
-    "references/core-definition-of-done.md",
-    "references/core-di-and-config.md",
-    "references/core-events-design.md",
-    "references/core-feature-archetypes.md",
-    "references/core-feature-recipes.md",
-    "references/core-version-notes.md",
-    "references/http-actions-core.md",
-    "references/http-routes-definition.md",
-    "references/persistence-migrations-operations.md",
-    "references/persistence-migrations-schema.md",
-    "references/testing-core.md",
-    "references/testing-psr-doubles.md",
-    "references/testing-unit-recipes.md"
+    "references/instructions/core-definition-of-done.md",
+    "references/packages/core-di-and-config.md",
+    "references/packages/core-events-design.md",
+    "references/instructions/core-feature-archetypes.md",
+    "references/instructions/core-feature-recipes.md",
+    "references/instructions/core-version-notes.md",
+    "references/packages/http-actions-core.md",
+    "references/packages/http-routes-definition.md",
+    "references/packages/persistence-migrations-operations.md",
+    "references/packages/persistence-migrations-schema.md",
+    "references/packages/testing-core.md",
+    "references/packages/testing-psr-doubles.md",
+    "references/packages/testing-unit-recipes.md"
   ],
   "nearMiss": [
     {

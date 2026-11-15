@@ -22,7 +22,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/testing-infection.md",
-    "references/testing-core.md"
+    "references/packages/testing-infection.md",
+    "references/packages/testing-core.md"
   ]
 }

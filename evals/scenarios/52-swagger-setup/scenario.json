@@ -23,10 +23,10 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-openapi-endpoints.md",
-    "references/http-openapi-schemas.md",
-    "references/http-openapi-setup.md",
-    "references/http-openapi-swagger.md",
-    "references/http-openapi-ui-and-ops.md"
+    "references/packages/http-openapi-endpoints.md",
+    "references/packages/http-openapi-schemas.md",
+    "references/packages/http-openapi-setup.md",
+    "references/packages/http-openapi-swagger.md",
+    "references/packages/http-openapi-ui-and-ops.md"
   ]
 }

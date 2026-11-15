@@ -23,9 +23,9 @@
   ],
   "layer": "composite",
   "guides": [
-    "references/infra-transactional-outbox.md",
-    "references/core-events-design.md",
-    "references/infra-queue-jobs.md",
-    "references/infra-queue-mutex.md"
+    "references/packages/infra-transactional-outbox.md",
+    "references/packages/core-events-design.md",
+    "references/packages/infra-queue-jobs.md",
+    "references/packages/infra-queue-mutex.md"
   ]
 }

@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-routes.md"
+    "references/packages/http-routes.md"
   ]
 }

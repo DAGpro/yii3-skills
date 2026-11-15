@@ -106,7 +106,7 @@ Covers the complete official Yii 3 ecosystem (PHP 8.2+):
 ## What is Inside
 
 - **`skills/yii3/SKILL.md`** — Core workflow contract, invariants, and the task routing matrix.
-- **`skills/yii3/references/`** — 100 specialized reference guides and recipes covering every subsystem and the runtime package catalog.
+- **`skills/yii3/references/`** — 100 specialized reference guides (structured into `instructions/` for architectural rules and `packages/` for component recipes) and the runtime package catalog.
 - **`injections/`** — Automated workflow hooks for AI Factory projects.
 
 ## Known Limitations

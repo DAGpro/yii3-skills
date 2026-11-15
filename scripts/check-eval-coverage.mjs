@@ -4,16 +4,26 @@
 // Usage: node scripts/check-eval-coverage.mjs [--allow-unbound] [--markdown]
 
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const referencesDir = join(root, 'skills', 'yii3', 'references');
 const scenariosDir = join(root, 'evals', 'scenarios');
 
-const allGuides = readdirSync(referencesDir)
-  .filter((f) => f.endsWith('.md'))
-  .sort();
+function walkGuides(dir) {
+  const res = [];
+  for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, ent.name);
+    if (ent.isDirectory()) res.push(...walkGuides(full));
+    else if (ent.isFile() && ent.name.endsWith('.md')) {
+      res.push(relative(referencesDir, full).replace(/\\/g, '/'));
+    }
+  }
+  return res.sort();
+}
+
+const allGuides = walkGuides(referencesDir);
 
 const scenarios = readdirSync(scenariosDir)
   .filter((d) => statSync(join(scenariosDir, d)).isDirectory())

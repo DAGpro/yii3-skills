@@ -18,6 +18,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-queue-mutex.md"
+    "references/packages/infra-queue-mutex.md"
   ]
 }

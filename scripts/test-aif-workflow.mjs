@@ -42,10 +42,10 @@ for (const inj of manifest.injections) {
 
   assert(text.includes('`yii3` skill'), `${inj.file} must defer to yii3 skill as SSOT`);
   assert(!/^Guard:/m.test(text), `${inj.file} must not gate on project-environment classification (no Guard: line)`);
-  assert(text.includes('references/core-aif-adapter.md'), `${inj.file} must reference core-aif-adapter.md operating context`);
+  assert(text.includes('references/instructions/core-aif-adapter.md'), `${inj.file} must reference core-aif-adapter.md operating context`);
 
   // Verify all references/*.md paths resolve physically to skills/yii3/references/
-  const refMatches = text.match(/references\/[a-zA-Z0-9_\-\.]+\.md/g) || [];
+  const refMatches = text.match(/references\/(?:(?:instructions|packages)\/)?[a-zA-Z0-9_\-\.]+\.md/g) || [];
   for (const ref of refMatches) {
     const targetFile = join(root, 'skills', 'yii3', ref);
     assert(existsSync(targetFile), `${inj.file} reference ${ref} must exist at ${targetFile}`);
@@ -827,18 +827,18 @@ assert(
 
 const skillMdText = readFileSync(join(root, 'skills', 'yii3', 'SKILL.md'), 'utf8');
 assert(
-  skillMdText.includes('references/core-aif-adapter.md'),
-  'SKILL.md links to references/core-aif-adapter.md for progressive disclosure'
+  skillMdText.includes('references/instructions/core-aif-adapter.md'),
+  'SKILL.md links to references/instructions/core-aif-adapter.md for progressive disclosure'
 );
 
-const aifAdapterText = readFileSync(join(root, 'skills', 'yii3', 'references', 'core-aif-adapter.md'), 'utf8');
+const aifAdapterText = readFileSync(join(root, 'skills', 'yii3', 'references', 'instructions', 'core-aif-adapter.md'), 'utf8');
 assert(
   /### Execution State/i.test(aifAdapterText),
-  'references/core-aif-adapter.md documents the durable ### Execution State format'
+  'references/instructions/core-aif-adapter.md documents the durable ### Execution State format'
 );
 assert(
   /Code-Read-Only/i.test(aifAdapterText),
-  'references/core-aif-adapter.md details the aif-verify Code-Read-Only invariant'
+  'references/instructions/core-aif-adapter.md details the aif-verify Code-Read-Only invariant'
 );
 
 console.log(`\nAll AI Factory Workflow contract tests passed! (${testsPassed} passed, ${testsFailed} failed)\n`);

@@ -19,8 +19,8 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/persistence-migrations-alterations.md",
-    "references/persistence-migrations.md"
+    "references/packages/persistence-migrations-alterations.md",
+    "references/packages/persistence-migrations.md"
   ],
   "nearMiss": [
     {

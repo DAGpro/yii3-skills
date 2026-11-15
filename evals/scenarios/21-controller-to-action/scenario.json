@@ -15,7 +15,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-actions-and-controllers.md",
-    "references/http-routes-definition.md"
+    "references/packages/http-actions-and-controllers.md",
+    "references/packages/http-routes-definition.md"
   ]
 }

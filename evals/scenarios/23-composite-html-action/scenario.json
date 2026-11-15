@@ -19,11 +19,11 @@
   ],
   "layer": "composite",
   "guides": [
-    "references/http-actions-concerns.md",
-    "references/http-views.md",
-    "references/http-state.md",
-    "references/http-forms-and-hydration.md",
-    "references/http-file-handling.md",
-    "references/http-middlewares.md"
+    "references/packages/http-actions-concerns.md",
+    "references/packages/http-views.md",
+    "references/packages/http-state.md",
+    "references/packages/http-forms-and-hydration.md",
+    "references/packages/http-file-handling.md",
+    "references/packages/http-middlewares.md"
   ]
 }

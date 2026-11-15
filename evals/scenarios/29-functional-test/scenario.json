@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/testing-http.md"
+    "references/packages/testing-http.md"
   ]
 }

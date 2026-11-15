@@ -190,8 +190,8 @@ function collectHeadingAnchors(text) {
 function checkAnchors(absPath, text, anchorsCache) {
   const dir = dirname(absPath);
   const combined = [
-    ...text.matchAll(/\]\(((?:references\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[^)\s]+)\)/g),
-    ...text.matchAll(/`((?:references\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[A-Za-z0-9._-]+)`/g),
+    ...text.matchAll(/\]\(((?:(?:references\/|\.\.\/)+)?(?:(?:instructions|packages)\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[^)\s]+)\)/g),
+    ...text.matchAll(/`((?:(?:references\/|\.\.\/)+)?(?:(?:instructions|packages)\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)(#[A-Za-z0-9._-]+)`/g),
   ];
   const seen = new Set();
   for (const match of combined) {
@@ -342,8 +342,8 @@ function checkReferencesInventory(skillDir, skillMdPath, text) {
     err(displayPath(targetPath), lineOf(targetText, 0), 'references-inventory', 'references/ directory not found');
     return;
   }
-  const bulletPattern = /^- `(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)` — /;
-  const tokenPattern = /`(?:references\/)?([A-Za-z0-9][A-Za-z0-9._-]*\.md)`/g;
+  const bulletPattern = /^- `(?:references\/)?((?:(?:instructions|packages)\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)` — /;
+  const tokenPattern = /`(?:references\/)?((?:(?:instructions|packages)\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)`/g;
   const mentioned = new Set();
   for (let i = 0; i < sectionLines.length; i++) {
     const line = sectionLines[i];
@@ -362,16 +362,16 @@ function checkReferencesInventory(skillDir, skillMdPath, text) {
     }
   }
   for (const absPath of walkMarkdownFiles(guidesDir)) {
-    const name = displayPath(absPath).split('/').pop();
-    if (name === 'INDEX.md') continue;
-    if (mentioned.has(name)) {
-      const occurrences = [...sectionText.matchAll(new RegExp(`(?<![A-Za-z0-9._-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9._-])`, 'g'))].length;
+    const rel = relative(guidesDir, absPath).replace(/\\/g, '/');
+    if (rel === 'INDEX.md') continue;
+    if (mentioned.has(rel)) {
+      const occurrences = [...sectionText.matchAll(new RegExp(`(?<![A-Za-z0-9._-])(?:references\\/)?${rel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9._-])`, 'g'))].length;
       if (occurrences !== 1) {
-        err(displayPath(targetPath), start + 1, 'references-inventory', `references/${name} is mentioned ${occurrences} times in the References section (must be exactly once)`);
+        err(displayPath(targetPath), start + 1, 'references-inventory', `references/${rel} is mentioned ${occurrences} times in the References section (must be exactly once)`);
       }
-      mentioned.delete(name);
+      mentioned.delete(rel);
     } else {
-      err(displayPath(targetPath), start + 1, 'references-inventory', `references/${name} is not listed in the References section`);
+      err(displayPath(targetPath), start + 1, 'references-inventory', `references/${rel} is not listed in the References section`);
     }
   }
   for (const name of mentioned) {
@@ -425,7 +425,7 @@ function checkSkill(skillEntry) {
   }
 
   const mentioned = new Set();
-  for (const match of text.matchAll(/references\/([A-Za-z0-9][A-Za-z0-9._-]*\.md)/g)) {
+  for (const match of text.matchAll(/references\/((?:(?:instructions|packages)\/)?[A-Za-z0-9][A-Za-z0-9._-]*\.md)/g)) {
     const name = match[1];
     if (mentioned.has(name)) continue;
     mentioned.add(name);

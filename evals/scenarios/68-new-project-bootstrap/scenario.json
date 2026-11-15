@@ -20,6 +20,6 @@
   "layer": "unit",
   "guides": [
     "SKILL.md",
-    "references/core-dependency-protocol.md"
+    "references/instructions/core-dependency-protocol.md"
   ]
 }

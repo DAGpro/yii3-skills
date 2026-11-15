@@ -73,7 +73,7 @@ yii3-skills/
 ├── skills/               # [DELIVERABLE] Agent skills directory (entry points & topic guides)
 │   └── yii3/             # Canonical production skill package
 │       ├── SKILL.md      # Entry point (YAML frontmatter + Task Routing Matrix + TOC)
-│       └── references/   # Specialized topic guides, recipes, and runtime package-catalog.md
+│       └── references/   # Specialized topic guides (instructions/ and packages/) and package-catalog.md
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
 ├── evals/                # [Internal Quality Tooling] 69 benchmark test scenarios, L5 runtime-harness, runner, and baseline metrics
 ├── scripts/              # [Internal Dev Tooling] Quality gates (validate.mjs, check-symbols.mjs, check-ast.mjs, check-manifest-freshness.mjs, test-aif-workflow.mjs)
@@ -162,7 +162,7 @@ All workflow injections (`injections/*.md`) must follow one canonical structure 
 
 1. **Load-first opening (first content line of the body).** Every injection opens by instructing the workflow to load the `yii3` skill and defer to it, with the workflow-specific verb (e.g. "Load the `yii3` skill and verify per its ... — the skill is the single source of gates").
 2. **Single source of rules.** After the opening, every injection defers to the skill ("the skill is the single source of rules") and references concrete SKILL.md / `references/` sections instead of duplicating Yii 3 rules.
-3. **Structure.** Operating context (default AI Factory extension mode, contract `references/core-aif-adapter.md`; standalone fallback `references/core-standalone-adapter.md` out of scope here) → load the skill → per-workflow duties (each anchored to a skill section) → handoff/output requirements.
+3. **Structure.** Operating context (default AI Factory extension mode, contract `references/instructions/core-aif-adapter.md`; standalone fallback `references/instructions/core-standalone-adapter.md` out of scope here) → load the skill → per-workflow duties (each anchored to a skill section) → handoff/output requirements.
 4. **Sync check.** `scripts/validate.mjs` verifies the structure contract: SKILL.md section references from README/injections resolve to real headings. `scripts/test-aif-workflow.mjs` verifies injection deference: every injection defers to the `yii3` skill as the single source of rules without gating on environment classification (no `Guard:` line).
 
 ### 4.7. Workflow Handoff & Artifact Contract

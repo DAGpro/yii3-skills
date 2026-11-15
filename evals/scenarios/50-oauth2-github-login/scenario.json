@@ -21,6 +21,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-auth-oauth2.md"
+    "references/packages/infra-auth-oauth2.md"
   ]
 }

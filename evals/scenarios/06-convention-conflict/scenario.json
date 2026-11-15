@@ -15,6 +15,6 @@
   "layer": "unit",
   "guides": [
     "SKILL.md",
-    "references/core-events-design.md"
+    "references/packages/core-events-design.md"
   ]
 }

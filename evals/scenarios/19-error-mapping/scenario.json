@@ -18,7 +18,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-error-handling.md",
-    "references/infra-error-handling-web.md"
+    "references/packages/infra-error-handling.md",
+    "references/packages/infra-error-handling-web.md"
   ]
 }

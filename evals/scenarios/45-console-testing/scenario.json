@@ -20,6 +20,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/testing-console.md"
+    "references/packages/testing-console.md"
   ]
 }

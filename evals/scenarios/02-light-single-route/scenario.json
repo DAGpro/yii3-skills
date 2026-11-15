@@ -16,7 +16,7 @@
   "layer": "unit",
   "guides": [
     "SKILL.md",
-    "references/http-actions-core.md",
-    "references/http-routes-definition.md"
+    "references/packages/http-actions-core.md",
+    "references/packages/http-routes-definition.md"
   ]
 }

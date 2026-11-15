@@ -21,11 +21,11 @@
   "layer": "composite",
   "guides": [
     "SKILL.md",
-    "references/core-aif-adapter.md",
-    "references/core-feature-recipes.md",
-    "references/core-di-and-config.md",
-    "references/http-routes-definition.md",
-    "references/http-actions-core.md",
-    "references/persistence-migrations-schema.md"
+    "references/instructions/core-aif-adapter.md",
+    "references/instructions/core-feature-recipes.md",
+    "references/packages/core-di-and-config.md",
+    "references/packages/http-routes-definition.md",
+    "references/packages/http-actions-core.md",
+    "references/packages/persistence-migrations-schema.md"
   ]
 }

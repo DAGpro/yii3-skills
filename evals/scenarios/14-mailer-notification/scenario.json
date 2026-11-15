@@ -19,7 +19,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-mailer.md",
-    "references/infra-mailer-transports.md"
+    "references/packages/infra-mailer.md",
+    "references/packages/infra-mailer-transports.md"
   ]
 }

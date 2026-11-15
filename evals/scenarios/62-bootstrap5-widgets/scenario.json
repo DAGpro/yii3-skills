@@ -18,6 +18,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-views-bootstrap5.md"
+    "references/packages/http-views-bootstrap5.md"
   ]
 }

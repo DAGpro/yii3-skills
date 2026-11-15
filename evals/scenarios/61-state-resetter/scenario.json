@@ -17,6 +17,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/infra-state-resetter.md"
+    "references/packages/infra-state-resetter.md"
   ]
 }

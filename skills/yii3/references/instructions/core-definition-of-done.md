@@ -1,0 +1,153 @@
+# Yii3 Definition of Done — Architecture Checks, Production Readiness Gate, Verification Report
+
+> **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
+
+Finale extension for the `yii3` skill: the checks that run only when they earn their cost.
+Load this guide at the Finale for architecture and code compliance verification (§1–§2); run the Production Readiness Gate (§3) for production release readiness. Surgical tasks verify against the Chain Integrity checklist in `SKILL.md`.
+
+---
+
+## Contents
+- [1. Architecture & Code-to-Reference Compliance Checks](#1-architecture--code-to-reference-compliance-checks)
+- [2. Multi-Dimensional Quality Evaluation Matrix](#2-multi-dimensional-quality-evaluation-matrix)
+- [3. Production Readiness Gate](#3-production-readiness-gate)
+  - [3.1. Code Quality & Formatting Toolchain (`yiisoft/code-style`)](#31-code-quality--formatting-toolchain-yiisoftcode-style)
+- [4. Verification Report Format](#4-verification-report-format)
+
+---
+
+## 1. Architecture & Code-to-Reference Compliance Checks
+
+Before sign-off, every newly created or modified artifact MUST be audited against its governing topic guide in `references/`:
+
+1. **Resolve Governing Guide:** Identify the specific topic guide (`references/<topic>.md`) governing the artifact via the active plan, the Task & Intent Routing Matrix in `SKILL.md`, or `references/INDEX.md` (e.g. actions → `http-actions-core.md`, middlewares → `http-middlewares.md`, DI → `core-di-and-config.md`, queue → `infra-queue-jobs.md`, events → `core-events-and-listeners.md`, migrations → `persistence-migrations.md`).
+2. **Anti-Pattern Audit [BLOCKER]:** Inspect the `## Anti-Pattern Matrix` (or `## Anti-Patterns & Common Traps`) in that governing guide. Every forbidden pattern is a hard failure (`[BLOCKER]`). If the code reproduces any forbidden pattern from that guide's matrix, verification fails.
+3. **Core Invariants [BLOCKER]:**
+   - **Thin Actions:** zero direct SQL, persistence, `$db->transaction()`, hashing, or notifications; strictly return `Psr\Http\Message\ResponseInterface`; input via typed DTO + validator.
+   - **Post-Commit Events:** domain events dispatched strictly after database transaction commit, never inside an open transaction.
+   - **SQL Injection Safety:** all dynamic SQL values use parameterized binding; collection queries enforce pagination (`OffsetPaginator`) or explicit SQL `limit`.
+   - **Validator Grounding:** rules use modern PHP 8 attributes from installed `yiisoft/validator` (never Yii 2 `rules()`).
+   - **CSRF Order:** `CsrfTokenMiddleware` after `SessionMiddleware`, before `Router`; stateless APIs exempt.
+   - **PSR-3 Logging:** `LoggerInterface` DI-bound with explicit targets; never concrete `Yiisoft\Log\Logger` or static facades.
+   - **Constructor DI:** dependencies injected via `__construct()`; never inject `ContainerInterface` into services.
+4. **Defect Severity Classification:** Hard architectural bans (Yii::$app, static facades, controller base class, SQL in actions, uncommitted event dispatch) are strict blocking gate failures (`BLOCKER`). Tooling and code-style rules (such as `#[Override]` omission per `yiisoft/code-style`) are non-blocking convention suggestions (`SUGGESTION`), unless explicitly enforced by the project's own Rector preset or CI rules.
+
+## 2. Multi-Dimensional Quality Evaluation Matrix
+
+In addition to technical compilation and DI wiring, every delivered feature is evaluated against six independent quality dimensions before sign-off:
+
+| Dimension | Scope & Verification Invariants | Grounding / Source |
+|---|---|---|
+| **1. Functional Correctness** | All requested business invariants and user flows are implemented. Proper HTTP status codes (`200`, `201`, `400`, `404`, `422`) or console `ExitCode` (`OK`, `UNSPECIFIED_ERROR`) returned. Validation errors surfaced cleanly in response bodies. | Feature specification, `references/packages/http-actions-core.md`, `references/packages/infra-commands.md` |
+| **2. Architectural Correctness** | Presentation handlers follow the project's action/controller style (invokable `__invoke()`, PSR-15 `RequestHandlerInterface`, or plain constructor-DI controller methods per `references/packages/http-actions-core.md` §1), return `ResponseInterface`, and remain strictly thin (zero SQL or direct persistence in actions). Domain isolation aligns with the project's architecture pattern: **Explicit Architecture (Strict)** mandates pure domain aggregates isolated from persistence and explicit repository interfaces; **Structured Modules (Balanced)** organizes code by domain modules, allows Active Record or concrete repositories, and introduces interfaces at module boundaries or for swappable components; **Layered Architecture (Pragmatic)** allows application services directly consuming concrete repositories or Active Record models. Across all three patterns: Presentation remains decoupled from persistence (zero direct SQL or persistence in actions). Placement strictly follows architecture source (`references/instructions/core-architecture-alignment.md`). | `references/instructions/core-feature-recipes.md`, `references/instructions/core-architecture-alignment.md` |
+| **3. API & Signature Correctness** | Every invoked method, constructor, and parameter type verified against installed package sources in `vendor/yiisoft/*/src/`. Zero deprecated Yii2 facades or static helpers (`Yii::$app`, `ActiveRecord::find()`). Version-gated syntax respected. | `references/instructions/core-version-notes.md`, Mandatory Signature Lookup Protocol |
+| **4. Integration & Wiring Correctness** | Every new interface has a DI binding (`config/**/di/*.php` default or active service provider). Actions are wired to routes (`config/**/routes.php` default or active `FileRouter` path). Commands registered in `config/console/params.php`. Domain events subscribed (`config/**/events.php` default or programmatic `ListenerCollection`). All packages declared in `composer.json`. | SKILL.md per-step wiring gates, `references/packages/core-di-and-config.md` |
+| **5. Security & Safety** | Typed input DTOs validate all untrusted user data. Mutating HTML routes protected by `CsrfTokenMiddleware` preceded by `SessionMiddleware`. Route-level authentication and RBAC permissions (`CurrentUser::can()`) verified before execution. Views escape dynamic data via `Html::encode()`. | `references/packages/http-validation-rules.md`, `references/packages/http-state.md`, `references/packages/infra-auth-and-rbac.md`, `references/packages/http-views.md` |
+| **6. Reliability & Performance** | Multi-step database persistence wrapped in explicit transactions (`ConnectionInterface::transaction()`). Domain event and queue dispatching deferred until after database transaction commit (post-commit rule), or persisted atomically via Transactional Outbox in Enterprise workflows with mutex-guarded relay and consumer idempotency. Pagination (`OffsetPaginator`) or SQL limits enforced on listings. Worker state safely cleared via `StateResetter`. | `references/packages/persistence-db-connection-and-queries.md`, `references/packages/core-events-design.md`, `references/packages/infra-transactional-outbox.md`, `references/packages/infra-state-resetter.md` |
+
+## 3. Production Readiness Gate
+
+The difference between "milestone closed" and "product ready". Every item is grounded in an existing guide:
+
+- runner & entry point configured; long-running workers reset state via `Yiisoft\Di\StateResetter` (ships with `yiisoft/di`) (`references/packages/infra-runners-and-runtimes.md`, `references/packages/infra-state-resetter.md`);
+- ErrorCatcher + API error rendering configured, no debug output in production (HTML/JSON renderers ship with `yiisoft/error-handler`; ProblemDetails is a userland renderer recipe — `references/packages/infra-error-handling.md`, `references/packages/infra-error-handling-web.md`);
+- `LoggerInterface` bound in DI with explicit targets (`references/packages/infra-logging.md`);
+- CSRF on state-changing routes (`references/packages/http-state.md`) + DTO validation (`references/packages/http-validation-and-forms.md`);
+- auth/RBAC on protected routes (`references/packages/infra-auth-and-rbac.md`);
+- reversible migrations, one persistence branch, transactions in use cases (`references/packages/persistence-migrations.md`, `references/packages/persistence-db.md`);
+- atomic Transactional Outbox + mutex-guarded relay + consumer idempotency when zero lost events/messages across DB commit / broker crashes is required (`references/packages/infra-transactional-outbox.md`);
+- `yii-debug` / `yii-gii` / `code-style` only in `require-dev` (stack invariant via `references/package-catalog.md`);
+- cache on hot paths (`references/packages/persistence-caching.md`) + pagination limits (`references/packages/persistence-db.md`);
+- unit + HTTP tests and static analysis green (`references/packages/testing-core.md`).
+
+Execute the gate in Standalone mode; in AI Factory mode verify the checklist and hand it to the verify workflow (see `references/instructions/core-aif-adapter.md`).
+
+### 3.1. Code Quality & Formatting Toolchain (`yiisoft/code-style`)
+
+When setting up automated code quality, linting, and refactoring, use `yiisoft/code-style` (dev dependency only):
+
+```bash
+composer require --dev yiisoft/code-style rector/rector
+```
+
+#### 1. PHP-CS-Fixer (`.php-cs-fixer.dist.php`)
+Use `Yiisoft\CodeStyle\ConfigBuilder::build()` to register `@Yiisoft/Core` and `@Yiisoft/Core:risky` rule sets:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use PhpCsFixer\Finder;
+use Yiisoft\CodeStyle\ConfigBuilder;
+
+$finder = (new Finder())->in([
+    __DIR__ . '/src',
+    __DIR__ . '/tests',
+]);
+
+return ConfigBuilder::build()
+    ->setRiskyAllowed(true)
+    ->setRules([
+        '@Yiisoft/Core' => true,
+        '@Yiisoft/Core:risky' => true,
+    ])
+    ->setFinder($finder);
+```
+
+#### 2. Rector (`rector.php`)
+Use `Yiisoft\CodeStyle\Rector\SetList::YII_CORE` (enforces Yii conventions, including removing `#[Override]` attributes):
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Rector\Config\RectorConfig;
+use Yiisoft\CodeStyle\Rector\SetList;
+
+return RectorConfig::configure()
+    ->withPaths([
+        __DIR__ . '/src',
+        __DIR__ . '/tests',
+    ])
+    ->withSets([
+        SetList::YII_CORE,
+    ]);
+```
+
+#### 3. Composer Helper Scripts
+Register shortcuts in `composer.json`:
+```json
+"scripts": {
+    "cs-check": "php-cs-fixer fix --dry-run",
+    "cs-fix": "php-cs-fixer fix",
+    "rector": "rector"
+}
+```
+
+## 4. Verification Report Format
+
+Bind the verification report to the Finale and extend it with added packages, changed config files, and the Production Readiness Gate status:
+
+```
+Architecture: <source>
+fixes applied: <list | none>
+tests: pass | fail | not run | blocked (<reason>) | n/a
+static analysis (Psalm/PHPStan, Rector): pass | fail | not run | blocked (<reason>) | n/a
+packages added: <list | none>
+config files changed: <list | none>
+production readiness gate: pass | fail (<items>) | n/a
+```
+
+### Canonical Status Vocabulary
+
+All automated gates and check lines strictly adhere to one unified 5-state vocabulary:
+
+| Status | Meaning & Machine Interpretation |
+|---|---|
+| **`pass`** / `PASS` | Check was executed and completed cleanly with zero errors/violations. |
+| **`fail`** / `FAIL` | Check was executed and detected concrete failures or defects. |
+| **`not run`** / `NOT RUN` | Check was not executed (e.g. offline environment, test runner or `vendor/` not present). Never conflate with `fail` or `blocked`. |
+| **`blocked (<reason>)`** / `BLOCKED` | Check could not run due to an environmental or external dependency blocker (e.g. missing database container, network boundary). |
+| **`n/a`** / `N/A` | Check is not applicable to the current task scope (e.g. Production Readiness Gate on surgical tasks). |

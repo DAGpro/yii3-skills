@@ -21,7 +21,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-actions-core.md",
-    "references/http-actions-and-controllers.md"
+    "references/packages/http-actions-core.md",
+    "references/packages/http-actions-and-controllers.md"
   ]
 }

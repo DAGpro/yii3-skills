@@ -21,6 +21,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-views-twig.md"
+    "references/packages/http-views-twig.md"
   ]
 }

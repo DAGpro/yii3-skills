@@ -14,7 +14,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-events-design.md",
-    "references/core-events-reference.md"
+    "references/packages/core-events-design.md",
+    "references/packages/core-events-reference.md"
   ]
 }

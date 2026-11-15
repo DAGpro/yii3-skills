@@ -16,8 +16,8 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-actions-concerns.md",
-    "references/persistence-db-readers-and-drivers.md",
-    "references/http-routes-definition.md"
+    "references/packages/http-actions-concerns.md",
+    "references/packages/persistence-db-readers-and-drivers.md",
+    "references/packages/http-routes-definition.md"
   ]
 }

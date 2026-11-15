@@ -19,6 +19,6 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/testing-codeception.md"
+    "references/packages/testing-codeception.md"
   ]
 }

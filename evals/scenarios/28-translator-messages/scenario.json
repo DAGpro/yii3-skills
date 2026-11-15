@@ -21,7 +21,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/http-i18n-translation.md",
-    "references/http-i18n-translation-api.md"
+    "references/packages/http-i18n-translation.md",
+    "references/packages/http-i18n-translation-api.md"
   ]
 }

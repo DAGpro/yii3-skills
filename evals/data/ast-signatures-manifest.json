@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "generated_at": "2026-11-10T16:21:50.434Z",
-    "source": "references/ (130 yiisoft/* package clones)",
-    "packages_indexed": 130,
+    "generated_at": "2026-11-15T02:27:13.958Z",
+    "source": "references/ (136 yiisoft/* package clones)",
+    "packages_indexed": 136,
     "packages": [
       {
         "package": "yiisoft/access",
@@ -302,6 +302,15 @@
         "remote": "https://github.com/yiisoft/db-pgsql.git"
       },
       {
+        "package": "yiisoft/_____",
+        "dir": "db-profiler",
+        "commit": "1271e08d23a7de86c0feff80649b0abcae71f320",
+        "commit_date": "2026-09-04T17:39:35+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-profiler.git"
+      },
+      {
         "package": "yiisoft/db-sqlite",
         "dir": "db-sqlite",
         "commit": "a958f3949ee9e630369d819c10bdcbbc0cb9f1d8",
@@ -500,6 +509,15 @@
         "remote": "https://github.com/yiisoft/json.git"
       },
       {
+        "package": "yiisoft/locale-middleware",
+        "dir": "locale-middleware",
+        "commit": "d1a86b5c007ae85c9e30a68f2ce92d9e01af30fd",
+        "commit_date": "2026-11-01T18:12:23+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/locale-middleware.git"
+      },
+      {
         "package": "yiisoft/log",
         "dir": "log",
         "commit": "aec9294a4b86f8d1321af0994913b0d1a0665cd8",
@@ -633,6 +651,15 @@
         "branch": "master",
         "nearest_tag": null,
         "remote": "https://github.com/yiisoft/network-utilities.git"
+      },
+      {
+        "package": "yiisoft/payments",
+        "dir": "payments",
+        "commit": "b8d662c0a29f46effecdef7face7f3eb18e7aa17",
+        "commit_date": "2026-09-04T17:42:36+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/payments.git"
       },
       {
         "package": "yiisoft/profiler",
@@ -824,6 +851,15 @@
         "remote": "https://github.com/yiisoft/router-fastroute.git"
       },
       {
+        "package": "yiisoft/scheduler",
+        "dir": "scheduler",
+        "commit": "2e8e2681bdb0da4ec4444741482c61c6e2e4c913",
+        "commit_date": "2026-11-02T11:57:05+01:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/scheduler.git"
+      },
+      {
         "package": "yiisoft/security",
         "dir": "security",
         "commit": "8a7e01792e6fd5ffe7901eb5e9a43391bb2ff3fe",
@@ -966,6 +1002,15 @@
         "branch": "master",
         "nearest_tag": null,
         "remote": "https://github.com/yiisoft/yii-auth-client.git"
+      },
+      {
+        "package": "yiisoft/yii-auth-session",
+        "dir": "yii-auth-session",
+        "commit": "7a5d82446aa71fb152dcd14cb09b04867cde5a8f",
+        "commit_date": "2026-09-10T18:38:14+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-auth-session.git"
       },
       {
         "package": "yiisoft/yii-bulma",
@@ -1112,6 +1157,15 @@
         "remote": "https://github.com/yiisoft/yii-runner-http.git"
       },
       {
+        "package": "yiisoft/yii-runner-rapira",
+        "dir": "yii-runner-rapira",
+        "commit": "ba22308ed2feba7eca75a51d2d03eef78eeb86b4",
+        "commit_date": "2026-11-11T01:59:04+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner-rapira.git"
+      },
+      {
         "package": "yiisoft/yii-runner-roadrunner",
         "dir": "yii-runner-roadrunner",
         "commit": "f34264211ced70ad16b35751883c7e32b66dd89e",
@@ -1205,6 +1259,8 @@
     "Yiisoft\\Config\\Modifier\\RecursiveMerge",
     "Yiisoft\\Config\\Modifier\\ReverseMerge",
     "Yiisoft\\Cookies\\CookieCollection",
+    "Yiisoft\\DataResponse\\DataResponse",
+    "Yiisoft\\DataResponse\\DataResponseFactoryInterface",
     "Yiisoft\\DataResponse\\ResponseFactory\\DataResponseFactoryInterface",
     "Yiisoft\\Data\\Cycle\\Reader\\EntityReader",
     "Yiisoft\\Data\\Cycle\\Writer\\EntityWriter",
@@ -1272,7 +1328,12 @@
     "Yiisoft\\NetworkUtilities\\DnsHelper",
     "Yiisoft\\NetworkUtilities\\IpHelper",
     "Yiisoft\\NetworkUtilities\\IpRanges",
+    "Yiisoft\\Payments\\Models\\PaymentIntent",
+    "Yiisoft\\Payments\\PaymentGatewayInterface",
+    "Yiisoft\\Payments\\Webhooks\\WebhookContext",
+    "Yiisoft\\Payments\\Webhooks\\WebhookProcessor",
     "Yiisoft\\PsrEmitter\\SapiEmitter",
+    "Yiisoft\\Queue\\Message\\GenericMessage",
     "Yiisoft\\Queue\\Message\\IdEnvelope",
     "Yiisoft\\Queue\\Message\\MessageInterface",
     "Yiisoft\\Queue\\Message\\bool|int|float|string|array|null",
@@ -1291,6 +1352,8 @@
     "Yiisoft\\Router\\Route",
     "Yiisoft\\Router\\Route\\Get",
     "Yiisoft\\Router\\UrlGeneratorInterface",
+    "Yiisoft\\Scheduler\\CronBuilder",
+    "Yiisoft\\Scheduler\\RecurringTask",
     "Yiisoft\\Security\\PasswordHasher",
     "Yiisoft\\Security\\Random",
     "Yiisoft\\Session\\Flash\\FlashInterface",
@@ -1343,9 +1406,9 @@
     "Yiisoft\\Yii\\Runner\\Console\\ConsoleApplicationRunner",
     "Yiisoft\\Yii\\Runner\\FrankenPHP\\FrankenPHPApplicationRunner",
     "Yiisoft\\Yii\\Runner\\Http\\HttpApplicationRunner",
+    "Yiisoft\\Yii\\Runner\\Rapira\\RapiraApplicationRunner",
     "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpApplicationRunner",
     "Yiisoft\\Yii\\Swagger\\Service\\SwaggerService",
-    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer",
     "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer",
     "Yiisoft\\Yii\\Widgets\\Alert",
     "Yiisoft\\Yii\\Widgets\\Block",
@@ -5986,6 +6049,67 @@
         }
       ]
     },
+    "Yiisoft\\Yii\\Widgets\\Alert::widget": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Yii\\Widgets\\Alert",
+      "definedIn": "Yiisoft\\Widget\\Widget",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "constructorArguments",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "config",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "theme",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Yii\\Widgets\\Alert::body": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Yii\\Widgets\\Alert",
+      "definedIn": "Yiisoft\\Yii\\Widgets\\Alert",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "value",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Yii\\Widgets\\Alert::class": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Yii\\Widgets\\Alert",
+      "definedIn": "Yiisoft\\Yii\\Widgets\\Alert",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "value",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
     "Yiisoft\\Html\\Tag\\Link::toCssFile": {
       "visibility": "public",
       "isStatic": true,
@@ -6104,67 +6228,6 @@
         {
           "name": "prefix",
           "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Yii\\Widgets\\Alert::widget": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 3,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Yii\\Widgets\\Alert",
-      "definedIn": "Yiisoft\\Widget\\Widget",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "constructorArguments",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "config",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "theme",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Yii\\Widgets\\Alert::class": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Yii\\Widgets\\Alert",
-      "definedIn": "Yiisoft\\Yii\\Widgets\\Alert",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "value",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Yii\\Widgets\\Alert::body": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Yii\\Widgets\\Alert",
-      "definedIn": "Yiisoft\\Yii\\Widgets\\Alert",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "value",
-          "hasDefault": false,
           "isVariadic": false
         }
       ]
@@ -6892,6 +6955,72 @@
         }
       ]
     },
+    "Yiisoft\\Form\\PureField\\Field::text": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 4,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Form\\Field\\Text",
+      "definedIn": "Yiisoft\\Form\\PureField\\Field",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "name",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "value",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "config",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "theme",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface::placeholder": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
+      "definedIn": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "placeholder",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Form\\Field\\Text::placeholder": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
+      "definedIn": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "placeholder",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
     "Yiisoft\\Html\\Html::form": {
       "visibility": "public",
       "isStatic": true,
@@ -7248,72 +7377,6 @@
         {
           "name": "url",
           "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Form\\PureField\\Field::text": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 4,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Form\\Field\\Text",
-      "definedIn": "Yiisoft\\Form\\PureField\\Field",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "name",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "value",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "config",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "theme",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface::placeholder": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
-      "definedIn": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "placeholder",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Form\\Field\\Text::placeholder": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
-      "definedIn": "Yiisoft\\Form\\Field\\Base\\Placeholder\\PlaceholderInterface",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "placeholder",
-          "hasDefault": false,
           "isVariadic": false
         }
       ]
@@ -7986,6 +8049,67 @@
         }
       ]
     },
+    "Yiisoft\\DataResponse\\DataResponseFactoryInterface::createResponse": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\DataResponse\\DataResponse",
+      "definedIn": "Yiisoft\\DataResponse\\DataResponseFactoryInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "data",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "code",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "reasonPhrase",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Payments\\PaymentGatewayInterface::createPaymentIntent": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Payments\\Models\\PaymentIntent",
+      "definedIn": "Yiisoft\\Payments\\PaymentGatewayInterface",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "intent",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Payments\\Webhooks\\WebhookProcessor::process": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Payments\\Webhooks\\WebhookContext",
+      "definedIn": "Yiisoft\\Payments\\Webhooks\\WebhookProcessor",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "input",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
     "Yiisoft\\Queue\\Message\\IdEnvelope::fromMessage": {
       "visibility": "public",
       "isStatic": true,
@@ -8115,6 +8239,205 @@
         }
       ]
     },
+    "Yiisoft\\Scheduler\\RecurringTask::cron": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\RecurringTask",
+      "definedIn": "Yiisoft\\Scheduler\\RecurringTask",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "expression",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "task",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "timezone",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::every": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\RecurringTask",
+      "definedIn": "Yiisoft\\Scheduler\\RecurringTask",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "interval",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "task",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Queue\\Message\\GenericMessage::fromPayload": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Queue\\Message\\GenericMessage",
+      "definedIn": "Yiisoft\\Queue\\Message\\GenericMessage",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "type",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "payload",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::daily": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\RecurringTask",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Scheduler\\CronBuilder::at": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\CronBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "time",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Scheduler\\CronBuilder::run": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\RecurringTask",
+      "definedIn": "Yiisoft\\Scheduler\\CronBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "task",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::everyFiveMinutes": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\RecurringTask",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Scheduler\\CronBuilder::between": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\CronBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "start",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "end",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::weekly": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\RecurringTask",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Scheduler\\CronBuilder::on": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 999,
+      "isVariadic": true,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\CronBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "days",
+          "hasDefault": false,
+          "isVariadic": true
+        }
+      ]
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::monthly": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\RecurringTask",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\Scheduler\\CronBuilder::onLastDayOfMonth": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Scheduler\\CronBuilder",
+      "definedIn": "Yiisoft\\Scheduler\\CronBuilder",
+      "isConstOrCase": false,
+      "params": []
+    },
     "Yiisoft\\Mutex\\MutexFactoryInterface::create": {
       "visibility": "public",
       "isStatic": false,
@@ -8186,6 +8509,17 @@
           "isVariadic": false
         }
       ]
+    },
+    "Yiisoft\\Yii\\Runner\\Rapira\\RapiraApplicationRunner::run": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Yii\\Runner\\Rapira\\RapiraApplicationRunner",
+      "isConstOrCase": false,
+      "params": []
     },
     "Yiisoft\\Yii\\Runner\\FrankenPHP\\FrankenPHPApplicationRunner::run": {
       "visibility": "public",
@@ -8709,50 +9043,6 @@
       "isConstOrCase": false,
       "params": []
     },
-    "Yiisoft\\ActiveRecord\\LazyLoadGuard::set": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\ActiveRecord\\LazyLoadGuard",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "mode",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "logger",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\ActiveRecord\\LazyLoadGuard::resetCounters": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\ActiveRecord\\LazyLoadGuard",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider::reset": {
-      "visibility": "public",
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider",
-      "isConstOrCase": false,
-      "params": []
-    },
     "Yiisoft\\ActiveRecord\\ActiveQuery::with": {
       "visibility": "public",
       "isStatic": false,
@@ -8845,6 +9135,50 @@
           "isVariadic": false
         }
       ]
+    },
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::set": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\ActiveRecord\\LazyLoadGuard",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "mode",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "logger",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::resetCounters": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\ActiveRecord\\LazyLoadGuard",
+      "isConstOrCase": false,
+      "params": []
+    },
+    "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider::reset": {
+      "visibility": "public",
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\ActiveRecord\\Event\\EventDispatcherProvider",
+      "isConstOrCase": false,
+      "params": []
     },
     "Yiisoft\\Cache\\Ttl::seconds": {
       "visibility": "public",
@@ -9105,28 +9439,6 @@
       "isConstOrCase": false,
       "params": []
     },
-    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::renderPartialAsString": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "view",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "parameters",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
     "Yiisoft\\View\\Cache\\CachedContent::cache": {
       "visibility": "public",
       "isStatic": false,
@@ -9315,99 +9627,6 @@
         }
       ]
     },
-    "Yiisoft\\Db\\Migration\\MigrationBuilder::insert": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "table",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "columns",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Migration\\MigrationBuilder::delete": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 3,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "table",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "condition",
-          "hasDefault": true,
-          "isVariadic": false
-        },
-        {
-          "name": "params",
-          "hasDefault": true,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Migration\\MigrationBuilder::dropIndex": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "table",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "name",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Db\\Migration\\MigrationBuilder::dropForeignKey": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 2,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "table",
-          "hasDefault": false,
-          "isVariadic": false
-        },
-        {
-          "name": "name",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
     "Yiisoft\\Db\\Migration\\MigrationBuilder::addColumn": {
       "visibility": "public",
       "isStatic": false,
@@ -9566,6 +9785,33 @@
         }
       ]
     },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::delete": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "condition",
+          "hasDefault": true,
+          "isVariadic": false
+        },
+        {
+          "name": "params",
+          "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
     "Yiisoft\\Db\\Migration\\MigrationBuilder::update": {
       "visibility": "public",
       "isStatic": false,
@@ -9599,6 +9845,72 @@
         {
           "name": "params",
           "hasDefault": true,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::insert": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "columns",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::dropIndex": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "name",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::dropForeignKey": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Db\\Migration\\MigrationBuilder",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "table",
+          "hasDefault": false,
+          "isVariadic": false
+        },
+        {
+          "name": "name",
+          "hasDefault": false,
           "isVariadic": false
         }
       ]
@@ -9663,51 +9975,6 @@
       "definedIn": "Symfony\\Component\\Console\\Application",
       "isConstOrCase": false,
       "params": []
-    },
-    "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::getEvents": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher",
-      "isConstOrCase": false,
-      "params": []
-    },
-    "Yiisoft\\Factory\\Factory::withDefinitions": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": "Yiisoft\\Factory\\Factory",
-      "definedIn": "Yiisoft\\Factory\\Factory",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "definitions",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
-    },
-    "Yiisoft\\Di\\Container::get": {
-      "visibility": "public",
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "isVariadic": false,
-      "returnType": null,
-      "definedIn": "Yiisoft\\Di\\Container",
-      "isConstOrCase": false,
-      "params": [
-        {
-          "name": "id",
-          "hasDefault": false,
-          "isVariadic": false
-        }
-      ]
     },
     "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::primaryKey": {
       "visibility": "public",
@@ -9848,6 +10115,17 @@
           "isVariadic": false
         }
       ]
+    },
+    "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::getEvents": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher",
+      "isConstOrCase": false,
+      "params": []
     },
     "Yiisoft\\Test\\Support\\EventDispatcher\\SimpleEventDispatcher::getEventClasses": {
       "visibility": "public",
@@ -10270,6 +10548,40 @@
       "params": [
         {
           "name": "length",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Factory\\Factory::withDefinitions": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": "Yiisoft\\Factory\\Factory",
+      "definedIn": "Yiisoft\\Factory\\Factory",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "definitions",
+          "hasDefault": false,
+          "isVariadic": false
+        }
+      ]
+    },
+    "Yiisoft\\Di\\Container::get": {
+      "visibility": "public",
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "isVariadic": false,
+      "returnType": null,
+      "definedIn": "Yiisoft\\Di\\Container",
+      "isConstOrCase": false,
+      "params": [
+        {
+          "name": "id",
           "hasDefault": false,
           "isVariadic": false
         }

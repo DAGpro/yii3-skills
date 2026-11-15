@@ -419,13 +419,13 @@ Details:
 > Never dispatch external side-effects (emails, SMS, webhooks, queue messages) **inside** an active database transaction.
 > If the transaction rolls back due to a subsequent query error or lock timeout, the email or queue job has already been sent!
 
-**Choosing a Post-Commit Delivery Mechanism** (follow `.ai-factory/ARCHITECTURE.md` / task execution mode):
+**Choosing a Post-Commit Delivery Mechanism** (follow `.ai-factory/ARCHITECTURE.md` and message criticality):
 
 | Delivery Mechanism | Guarantee & Cost | Choose when… | Notes |
 |---|---|---|---|
-| **1. Sync post-commit PSR-14** | Best-effort after DB commit; runs inline before response returns. | `Feature` defaults, local domain listeners, cache invalidation, fast best-effort mail/logging. | Dispatch `releaseEvents()` right after `$db->transaction()` returns. |
+| **1. Sync post-commit PSR-14** | Best-effort after DB commit; runs inline before response returns. | Standard side-effects, local domain listeners, cache invalidation, fast best-effort mail/logging. | Dispatch `releaseEvents()` right after `$db->transaction()` returns. |
 | **2. Post-commit queue push** (`yiisoft/queue`) | Asynchronous background worker with retries; small crash window between DB commit and broker push. | Slow I/O jobs (emails with attachments, PDF/CSV exports, notifications) where occasional missed push is acceptable. | Push to queue after commit or inside a post-commit listener ([Queue Guide](infra-queue-jobs.md)). |
-| **3. Transactional Outbox** | At-least-once across PHP/broker crashes; requires outbox table + mutex relay worker. | `Enterprise` / critical flows (payments, orders, webhooks) that cannot lose messages after commit. | Persist outbox rows inside `$db->transaction()` and relay asynchronously ([Outbox Guide](infra-transactional-outbox.md)). |
+| **3. Transactional Outbox** | At-least-once across PHP/broker crashes; requires outbox table + mutex relay worker. | Critical workflows (payments, orders, webhooks) that cannot lose messages after commit. | Persist outbox rows inside `$db->transaction()` and relay asynchronously ([Outbox Guide](infra-transactional-outbox.md)). |
 
 ### Why the Rule Holds: the `transaction()` API
 

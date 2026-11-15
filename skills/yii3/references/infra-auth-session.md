@@ -38,6 +38,9 @@
 
 The `Yiisoft\User\CurrentUser` service manages the user session, guest state, and authorization checks.
 
+> [!NOTE]
+> **Ecosystem evolution (`yiisoft/yii-auth-session`):** The upcoming dedicated session package `yiisoft/yii-auth-session` provides `Yiisoft\Yii\Auth\Session\AuthManager` with an identical API (`login()`, `logout()`, `withSession()`, `overrideIdentity()`). In production applications, `yiisoft/user` (`CurrentUser`) is the stable canonical service; if a project adopts `yiisoft/yii-auth-session`, `AuthManager` replaces `CurrentUser` as the stateful session manager.
+
 In `config/web/di/auth.php`, configure `CurrentUser` with session storage and timeouts:
 
 ```php

@@ -6,6 +6,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-11-15
+
+### Added
+- New reference guide `skills/yii3/references/infra-payments.md` covering `yiisoft/payments`: multi-gateway abstraction (Stripe, PayPal, YooKassa, Robokassa), PSR-17/18 client wiring, `PaymentIntent` lifecycle, and cryptographic webhook verification via `WebhookProcessor`.
+- 5 new AI Factory workflow injections in `injections/`: `aif.md`, `build-automation.md`, `ci.md`, `dockerize.md`, and `security-checklist.md`, bringing total workflow hooks to 13 registered in `extension.json`.
+- Ecosystem expansion with 3 new official packages: `yiisoft/scheduler`, `yiisoft/yii-runner-rapira`, and `yiisoft/payments`; references lockfile updated to 136 packages (`references/packages.lock.json`).
+- Pre-release and ecosystem notes in `references/README.md` for in-development packages `yiisoft/yii-auth-session`, `yiisoft/locale-middleware`, and `yiisoft/db-profiler`.
+- 226 AI Factory workflow contract tests in `scripts/test-aif-workflow.mjs`.
+
+### Changed
+- Standardized injection contract across all 13 workflow hooks: load-first SSOT pattern deferring directly to the `yii3` skill without environment-classification gating.
+- Updated API symbols and AST signature manifests to 136 packages (`792` classes, `347` signatures in `api-symbols-manifest.json`; `186` classes, `484` signatures in `ast-signatures-manifest.json`).
+- Updated reference guide library to 100 reference files (98 topic guides, 100% eval coverage across 69 scenarios).
+
+### Removed
+- Pruned non-runtime test packages `yiisoft/dummy-provider` and `yiisoft/psr-dummy-provider` from authoring references, lockfile, and package catalog.
+
 ## [0.5.0] — 2026-11-14
 
 ### Added
@@ -18,9 +35,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 - Compressed `skills/yii3/SKILL.md`: eliminated prose walls >300 chars, structured Mode Selection into a clean table, added 4th column `Audit Index` with all 11 split-indexes, and surfaced all 24 leaf guides in `Secondary / Variants`.
 - Synchronized single source of truth configuration and routing paths across all core guides.
 - Fixed 15 critical and 4 warning false-positive security scanner triggers in code samples.
-
-### Version
-- `0.4.0` → `0.5.0`
 
 ## [0.4.0] — 2026-11-11
 

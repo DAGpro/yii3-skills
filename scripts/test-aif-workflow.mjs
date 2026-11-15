@@ -3,7 +3,7 @@
 // Validates the integration between yii3-skills and AI Factory workflows:
 // 1. Injections Canonical Guard & Structure Contract (AGENTS.md §4.6)
 // 2. Stage 0 AI Factory Config & Path Resolution Contract (.ai-factory/config.yaml)
-// 3. Plan Phase Contract (aif-plan -> 6 canonical plan phases per execution mode)
+// 3. Plan Phase Contract (aif-plan -> 6 canonical plan phases)
 // 4. Implementation Bottom-Up & Mission State Contract (aif-implement -> stages 1-7, wiring gates)
 // 5. Verification & Handoff Contract (aif-verify -> aif-gate-result: blockers, affected_files)
 // 6. Canary / Mutation Tests (detecting unbound interfaces, unrouted actions, broken migrations)
@@ -130,7 +130,7 @@ const CANONICAL_PHASES = [
   'Phase 6 Wiring & Tests',
 ];
 
-function validatePlanArtifact(planText, { mode = 'Feature' } = {}) {
+function validatePlanArtifact(planText) {
   const missingPhases = [];
   for (const phase of CANONICAL_PHASES) {
     const num = phase.split(' ')[1];
@@ -223,24 +223,23 @@ console.log('\n4. Validating Execution Bottom-Up & Mission State Tracker Contrac
 
 function validateMissionState(transcript) {
   const hasMissionStateHeading = /###\s*Mission State/i.test(transcript);
-  const hasMode = /Mode:?\*{0,2}\s*(Patch|Feature|Enterprise)/i.test(transcript);
   const hasArchitecture = /Architecture:?\*{0,2}\s*[^\n\r]+/i.test(transcript);
-  const hasStageProgress = /Stage\s*1.*Migration/i.test(transcript) && /Stage\s*6.*Config/i.test(transcript);
+  const hasStageProgress = (/Stage\s*1.*Migration/i.test(transcript) && /Stage\s*6.*Config/i.test(transcript))
+    || (/1\s*\[Schema\s*&\s*Migration\]/i.test(transcript) && /5\s*\[Immediate\s*Wiring\]/i.test(transcript));
 
   // Semantic check: sequential bottom-up stage progression
-  const stageMatches = [...transcript.matchAll(/Stage\s+(\d+)\s+complete:/gi)].map((m) => Number(m[1]));
+  const stageMatches = [...transcript.matchAll(/(?:Stage\s+(\d+)\s+complete:|Step\s+(\d+)\s+complete:)/gi)].map((m) => Number(m[1] || m[2]));
   const isSequential = stageMatches.length > 0 && stageMatches.every((val, idx) => idx === 0 ? true : val > stageMatches[idx - 1]);
 
   // Semantic check: all completed stages must verify wiring gate
-  const completionLines = transcript.split('\n').filter((l) => /Stage\s+\d+\s+complete:/i.test(l));
+  const completionLines = transcript.split('\n').filter((l) => /(?:Stage|Step)\s+\d+\s+complete:/i.test(l));
   const allGatesPassed = completionLines.length > 0 && completionLines.every((l) => /Wiring gate:\s*pass/i.test(l));
 
-  return hasMissionStateHeading && hasMode && hasArchitecture && hasStageProgress && isSequential && allGatesPassed;
+  return hasMissionStateHeading && hasArchitecture && hasStageProgress && isSequential && allGatesPassed;
 }
 
 const mockTranscript = `
 ### Mission State
-- **Mode:** Feature
 - **Architecture:** .ai-factory/ARCHITECTURE.md
 - **Guides:** references/http-actions-core.md, references/persistence-db.md
 - **Stage Progress:**

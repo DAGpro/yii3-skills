@@ -2,12 +2,12 @@
 
 > **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
-> Concrete, end-to-end implementation recipes for the 7 primary Yii3 feature archetypes across execution modes (Patch, Feature, Enterprise) and architectural tiers (Pragmatic, Balanced, Strict).
+> Concrete, end-to-end implementation recipes for the 7 primary Yii3 feature archetypes across task scopes (surgical vs composite features) and architecture patterns (Explicit Architecture, Structured Modules, Layered Architecture).
 
 ## Table of Contents
 
 - [1. Feature Archetypes](#1-feature-archetypes)
-  - [Decomposition Intensity by Execution Mode & Architectural Tier](#decomposition-intensity-by-execution-mode--architectural-tier)
+  - [Decomposition by Task Scope & Architecture Pattern](#decomposition-by-task-scope--architecture-pattern)
   - [Archetype A: State-Changing Business Process (e.g., checkout, registration, booking, payment)](#archetype-a-state-changing-business-process-eg-checkout-registration-booking-payment)
   - [Archetype B: Read / Query / Data Listing (e.g., catalog, user profile, analytics report)](#archetype-b-read--query--data-listing-eg-catalog-user-profile-analytics-report)
   - [Archetype C: Async / Background Job (e.g., CSV export, batch sync, notifications)](#archetype-c-async--background-job-eg-csv-export-batch-sync-notifications)
@@ -18,47 +18,47 @@
 
 ## 1. Feature Archetypes
 
-When a feature request arrives, classify it into an archetype and align decomposition intensity with two independent axes: the active **Execution Mode** (`Patch`, `Feature`, `Enterprise`) and the project's **Architectural Tier** (`Pragmatic`, `Balanced`, `Strict` per `references/core-architecture-alignment.md`):
+When a feature request arrives, classify it into an archetype and align decomposition with the task scope (surgical task vs composite feature) and the project's **Architecture Pattern** (`Explicit Architecture`, `Structured Modules`, `Layered Architecture` per `references/core-architecture-alignment.md`):
 
-### Decomposition Intensity by Execution Mode & Architectural Tier
+### Decomposition by Task Scope & Architecture Pattern
 
-The workflow decouples the task's operational scope (**Execution Mode**) from the target codebase's architectural constraints (**Architectural Tier**). All 9 combinations are valid:
+The workflow aligns implementation depth with task scope and the target codebase's architectural constraints:
 
-| Execution Mode | Architectural Tier | Domain / Entity | Service / Handler | Repository Contract | Presentation (Action) |
+| Task Scope | Architecture Pattern | Domain / Entity | Service / Handler | Repository Contract | Presentation (Action) |
 |---|---|---|---|---|---|
-| **Patch** (`--mode=patch`) | Any (Pragmatic / Balanced / Strict) | Skipped | Skipped | Touched only | Surgical edit (touched files only; schema migrations skipped unless patch requires schema changes) |
-| **Feature** (default, ~80%) | **Pragmatic** (`layers`) | Active Record / DB model (optional POPO) | Application Service | Concrete Repository or Active Record model directly (consumed by Service) | Thin Action returning `ResponseInterface` (delegates to Service) |
-| **Feature** (default, ~80%) | **Balanced** (`structured`) | Module Entity / Rich Model | Feature Service or Use Case Handler | Module Repository (interfaces at module boundaries) | Thin Action returning `ResponseInterface` |
-| **Feature** (default, ~80%) | **Strict** (`explicit`) | Pure Entity + Value Objects | Use Case Handler (`*Command` + `*Handler`) | Pure Repository Interface + Infrastructure Implementation | Thin Action returning `ResponseInterface` |
-| **Enterprise** (`--mode=enterprise`) | **Pragmatic** (`layers`) | Validated Model / Entity | Application Service with atomic transactions & events | Explicit Repository | Thin Action returning `ResponseInterface` |
-| **Enterprise** (`--mode=enterprise`) | **Balanced** (`structured`) | Module Aggregate + Domain Events | Module Use Case Handler + transaction boundary | Module Repository Interface + Implementation | Thin Action returning `ResponseInterface` |
-| **Enterprise** (`--mode=enterprise`) | **Strict** (`explicit`) | Pure Aggregate Entity + Value Objects | Dedicated Use Case Handler (`*Command` + `*Handler`) + Domain Events | Explicit Repository Interface + DB Implementation | Thin Action returning `ResponseInterface` |
+| **Surgical Task** (1–3 files, bugfix, config/DI) | Any (Explicit / Structured / Layered) | Skipped | Skipped | Touched only | Surgical edit (touched files only; schema migrations skipped unless patch requires schema changes) |
+| **Composite Feature** (Standard) | **Layered Architecture** (`layers`) | Active Record / DB model (optional POPO) | Application Service | Concrete Repository or Active Record model directly (consumed by Service) | Thin Action returning `ResponseInterface` (delegates to Service) |
+| **Composite Feature** (Standard) | **Structured Modules** (`structured`) | Module Entity / Rich Model | Feature Service or Use Case Handler | Module Repository (interfaces at module boundaries) | Thin Action returning `ResponseInterface` |
+| **Composite Feature** (Standard) | **Explicit Architecture** (`explicit`) | Pure Entity + Value Objects | Use Case Handler (`*Command` + `*Handler`) | Pure Repository Interface + Infrastructure Implementation | Thin Action returning `ResponseInterface` |
+| **Mission-Critical Slice** | **Layered Architecture** (`layers`) | Validated Model / Entity | Application Service with atomic transactions & events | Explicit Repository | Thin Action returning `ResponseInterface` |
+| **Mission-Critical Slice** | **Structured Modules** (`structured`) | Module Aggregate + Domain Events | Module Use Case Handler + transaction boundary | Module Repository Interface + Implementation | Thin Action returning `ResponseInterface` |
+| **Mission-Critical Slice** | **Explicit Architecture** (`explicit`) | Pure Aggregate Entity + Value Objects | Dedicated Use Case Handler (`*Command` + `*Handler`) + Domain Events | Explicit Repository Interface + DB Implementation | Thin Action returning `ResponseInterface` |
 
-*Universal Invariants across all modes and tiers:*
+*Universal Invariants across all scopes and patterns:*
 - **Thin Actions:** Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero direct SQL, persistence, or transaction management in presentation.
 - **Transactions:** Handled strictly in Application Services or Use Case Handlers via `ConnectionInterface::transaction()`, never inside HTTP Actions.
-- **Patch Migrations:** In Patch Mode, schema migrations are skipped *only* when the patch does not require schema changes. If a bugfix or patch alters the database schema, a reversible migration (`up()` / `down()`) MUST be authored.
-- **Architectural Respect:** An Enterprise task in a Balanced project demands enterprise rigor (atomic transactions, event publishing, idempotency, comprehensive integration tests) while respecting the project's Balanced modular conventions without unilaterally rewriting the project into Strict Clean Architecture.
-- **Undetermined Project Tier (3-Step Fallback Protocol):**
-  1. **Explicit Architecture Artifact:** If `.ai-factory/ARCHITECTURE.md` (or `docs/architecture/`) exists, its declared pattern dictates the tier (`layers` → Pragmatic, `structured` → Balanced, `explicit` → Strict).
-  2. **Existing Codebase Inspection:** If no artifact exists, inspect 2–3 existing features in `src/` to classify the dominant style (`src/Models/` + `src/Services/` → Pragmatic; `src/[Module]/` → Balanced; `src/Domain/` + interfaces → Strict).
-  3. **Convention Fallback:** If the codebase is new, empty, or ambiguous, default to the **Pragmatic** tier (`layers`).
+- **Surgical Migrations:** Schema migrations are skipped *only* when the task does not require schema changes. If a bugfix or surgical task alters the database schema, a reversible migration (`up()` / `down()`) MUST be authored.
+- **Architectural Respect:** A mission-critical task in a Structured Modules project demands enterprise rigor (atomic transactions, event publishing, idempotency, comprehensive integration tests) while respecting the project's modular conventions without unilaterally rewriting the project into Explicit Clean Architecture.
+- **Undetermined Architecture Pattern (3-Step Fallback Protocol):**
+  1. **Explicit Architecture Artifact:** If `.ai-factory/ARCHITECTURE.md` (or `docs/architecture/`) exists, its declared pattern dictates the architecture (`layers` → Layered Architecture, `structured` → Structured Modules, `explicit` → Explicit Architecture).
+  2. **Existing Codebase Inspection:** If no artifact exists, inspect 2–3 existing features in `src/` to classify the dominant style (`src/Models/` + `src/Services/` → Layered; `src/[Module]/` → Structured Modules; `src/Domain/` + interfaces → Explicit).
+  3. **Convention Fallback:** If the codebase is new, empty, or ambiguous, default to **Layered Architecture** (`layers`).
 
 ### Archetype A: State-Changing Business Process (e.g., checkout, registration, booking, payment)
 Creates or modifies domain state and involves side-effects.
 
-**Artifact Graph by Execution Mode:**
-- **In Feature Mode (Canonical Default):**
+**Artifact Graph by Task Scope:**
+- **Standard Composite Feature:**
   1. **Persistence & Schema:** DB migration (`yiisoft/db-migration`) with reversible `down()`. Storage via concrete repository, Active Record model, or Cycle mapper.
   2. **Application / Business Logic:** Application Service (e.g. `OrderService::createOrder()`) or Use Case Handler wrapping multi-step persistence in `ConnectionInterface::transaction()`. Events dispatched strictly after commit.
   3. **Presentation / HTTP:** Typed Input DTO with `Yiisoft\Validator\Rule\*` attributes; thin single-action controller returning `ResponseInterface`.
   4. **Wiring & Tests:** Route per project routing style (`config/common/routes.php` default, [Routing Guide](http-routes-definition.md#choosing-how-to-route-http-requests)), DI bindings per project config style (`config/common/di/*.php` default, [Config Organization](core-config-tree.md#26-choosing-how-to-organize-application-configs)), unit and HTTP integration tests.
-- **In Enterprise Mode (Decomposition adapts to Tier; Strict baseline shown below):**
+- **Mission-Critical Slice (Decomposition adapts to Architecture Pattern; Explicit baseline shown below):**
   1. **Domain:** Pure Entity/Aggregate + Value Objects; PSR-14 Domain Events; pure `*RepositoryInterface`.
   2. **Infrastructure / Persistence:** DB migration; storage implementation of the repository interface (`Sql*Repository`).
   3. **Application / Use Case:** Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`); post-commit event listeners.
   4. **Presentation & Wiring:** Typed Input DTO; thin Action delegating to the Use Case Handler; full DI binding and Production Readiness Gate.
-- **In Patch Mode:** Touched stages only (1–3 files); skips domain aggregates; skips migrations only if no DB schema changes are required (author reversible migration if schema changes).
+- **Surgical Task:** Touched components only (1–3 files); skips domain aggregates; skips migrations only if no DB schema changes are required (author reversible migration if schema changes).
 
 **Standard Artifact Graph (Enterprise / Strict baseline):**
 1. **Domain:**

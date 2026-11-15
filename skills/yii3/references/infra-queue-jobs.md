@@ -15,7 +15,8 @@
 - [6. Distributed Concurrency & Mutex Locks (yiisoft/mutex)](#6-distributed-concurrency--mutex-locks-yiisoftmutex) — full reference in the [Queue Mutex & Distributed Concurrency Guide](infra-queue-mutex.md)
 - [7. Worker CLI Management & Memory Recycling](#7-worker-cli-management--memory-recycling)
 - [8. Multi-Queue Configuration & Broker Adapters](#8-multi-queue-configuration--broker-adapters) — full reference in the [Queue Broker Adapters Guide](infra-queue-brokers.md)
-- [9. Anti-Pattern Matrix](#9-anti-pattern-matrix)
+- [9. Scheduled & Recurring Tasks (`yiisoft/scheduler`)](#9-scheduled--recurring-tasks-yiisoftscheduler)
+- [10. Anti-Pattern Matrix](#10-anti-pattern-matrix)
 
 ---
 
@@ -761,10 +762,102 @@ systemctl enable --now yii-queue@{1..4}.service
 
 ---
 
-## 9. Anti-Pattern Matrix
+## 9. Scheduled & Recurring Tasks (`yiisoft/scheduler`)
+
+`yiisoft/scheduler` provides recurring task execution and cron-style scheduling within the Yii 3 ecosystem. Instead of spreading recurring schedules across disparate system crontabs or external tools, tasks are declared in application configuration and executed via a unified runner.
+
+```shell
+composer require yiisoft/scheduler yiisoft/mutex yiisoft/cache-file
+```
+
+### 9.1. Task Types & Configuration
+
+A recurring task can be configured as:
+1. **Console command:** A string naming a console command with optional arguments (e.g. `'report:daily'`, `'cache:warm'`).
+2. **Callable:** A PHP callable (such as a static method `[TokenStorage::class, 'purgeExpired']`). Callables receive `Yiisoft\Scheduler\TaskContext` directly (the DI container does not inject arbitrary arguments into closures defined in config).
+3. **Queue message:** An instance of `Yiisoft\Queue\Message\MessageInterface` (e.g. `GenericMessage::fromPayload('metrics.collect', [])`). When `yiisoft/queue` is installed, `QueueTaskHandler` automatically intercepts message tasks and pushes them to `QueueProducerInterface`.
+
+Tasks are registered in `config/params.php` under `'yiisoft/scheduler'` `tasks`:
+
+```php
+declare(strict_types=1);
+
+use App\Token\TokenStorage;
+use Yiisoft\Queue\Message\GenericMessage;
+use Yiisoft\Scheduler\RecurringTask;
+
+return [
+    'yiisoft/scheduler' => [
+        'tasks' => [
+            RecurringTask::cron('0 5 * * *', 'report:daily'),
+            RecurringTask::every('10 minutes', [TokenStorage::class, 'purgeExpired']),
+            RecurringTask::cron('*/5 * * * *', GenericMessage::fromPayload('metrics.collect', [])),
+        ],
+    ],
+];
+```
+
+### 9.2. Fluent Builder API (`CronBuilder`)
+
+`RecurringTask` provides a chainable, type-safe builder that compiles human-readable scheduling rules into cron expressions:
+
+```php
+use Yiisoft\Scheduler\RecurringTask;
+
+$tasks = [
+    RecurringTask::daily()->at('05:00')->run('report:daily'),
+    RecurringTask::everyFiveMinutes()->between('08:00', '17:00')->run('cache:warm'),
+    RecurringTask::weekly()->on('monday')->at('09:30')->run('report:weekly'),
+    RecurringTask::monthly()->onLastDayOfMonth()->at('23:00')->run('invoice:issue'),
+];
+```
+
+The fluent builder validates frequencies and intervals at configuration time:
+- Step frequencies: `everyMinute()`, `everyFiveMinutes()`, `everyTenMinutes()`, `hourly()`, `daily()`, `weekly()`, `monthly()`.
+- Modifiers: `at('05:00')`, `between('08:00', '17:00')`, `on('monday', 'thursday')`, `onLastDayOfMonth()`.
+- Terminal methods: `run($task)` returns `RecurringTask`, `toTrigger()` returns `TriggerInterface`, `getExpression()` returns string expression.
+
+### 9.3. Running Tasks: Cron Tick vs Daemon Worker
+
+Tasks can be executed in two operational modes:
+
+#### 1. System Cron (Single Tick)
+Run every minute from system cron:
+
+```shell
+* * * * * php yii schedule:run
+```
+
+`schedule:run` requires a stateful schedule: it checks which tasks are due, executes them, and records the checkpoint into a PSR-16 cache (`yiisoft/cache`). If the cache is missing or not configured, `schedule:run` terminates with an error.
+
+#### 2. Worker Daemon (`schedule:work`)
+Run as a continuous background daemon (e.g. managed by Supervisor or systemd):
+
+```shell
+php yii schedule:work
+```
+
+The daemon sleeps until the next scheduled task is due instead of polling on fixed intervals. On systems with `ext-pcntl`, it forks child processes per due task so multiple due tasks run in parallel. Use `--sequential` to force sequential execution or `--max-processes=N` to cap concurrency.
+
+#### 3. Listing Tasks
+Inspect all registered tasks and their next run times:
+
+```shell
+php yii schedule:list
+```
+
+### 9.4. Overlap Prevention via Mutex
+
+To prevent concurrent execution of the same long-running task across multiple nodes or overlapping intervals, `yiisoft/scheduler` integrates with `yiisoft/mutex`. When building schedules manually or using custom `Schedule` definitions, wrap tasks with mutex guards to ensure mutual exclusion across cluster workers.
+
+---
+
+## 10. Anti-Pattern Matrix
 
 | Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
 |---|---|---|
+| **Registering closures that capture DI services in `params.php`** | `config/params.php` is evaluated before the container is compiled and has no services. The callable receives only `TaskContext`. | Encapsulate complex logic in a console Command (`Symfony\Component\Console\Command\Command`) with constructor injection, or push a queue `MessageInterface` that a dedicated `HandlerInterface` processes. |
+| **Running `./yii schedule:run` without a PSR-16 cache** | `schedule:run` exits between runs and relies on persisted checkpoints to prevent duplicate runs and detect missed tasks. Without cache, it throws an error. | Install `yiisoft/cache` with a persistent store (`yiisoft/cache-file`, `yiisoft/cache-db`, or `yiisoft/cache-redis`). |
 | **Injecting `Yiisoft\Queue\QueueInterface`** | `QueueInterface` does not exist in Yii3. Pushing will fail with container/class not found errors. | Inject `QueueProducerInterface` for the default queue or `QueueProducerProviderInterface` for named queues. |
 | **Yii2 `JobInterface::execute($queue)`** | Merges data DTO with execution logic, pulls framework dependencies into payloads, breaks cross-language and microservice queues. | Separate into pure data message extending `Message` and handler implementing `HandlerInterface::handle(MessageInterface $message)`. |
 | **Calling `$message->getData()` or `$message->getHandlerName()`** | Phantom methods from legacy/unreleased drafts; will trigger Fatal Errors. | Use `$message->getPayload()` for payload data and `$message->getType()` for the message identifier. |

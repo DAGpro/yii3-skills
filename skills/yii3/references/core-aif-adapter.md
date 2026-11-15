@@ -23,14 +23,14 @@ The standard feature lifecycle follows a strict state-machine protocol:
 
 ### Role Binding (One Role per Invocation)
 
-Each skill invocation inside the automation loop executes **exactly the role of the calling `aif-*` workflow** — plan, implement, verify, fix, review, improve, roadmap, architecture. The role is detected from the invoking `aif-*` command or the loaded workflow injection. The matrix below is the authority for what that role may modify and must output; per-role duties are anchored in the matching workflow injection. Only the `aif-implement` role runs the full Mission Workflow (Stages 1–7) implementation path; `aif-plan`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, and `aif-architecture` execute only their scoped duties and hand off per the matrix. Invocations without an `aif-*` role signal do not enter this role-binding protocol; they route by operating context per §1 — AI Factory mode when a `.ai-factory/` directory is present, and the standalone fallback (`core-standalone-adapter.md`) only when neither an `aif-*` invocation nor a `.ai-factory/` directory exists.
+Each skill invocation inside the automation loop executes **exactly the role of the calling `aif-*` workflow** — plan, implement, verify, fix, review, improve, roadmap, architecture. The role is detected from the invoking `aif-*` command or the loaded workflow injection. The matrix below is the authority for what that role may modify and must output; per-role duties are anchored in the matching workflow injection. Only the `aif-implement` role runs the full Mission Workflow implementation path; `aif-plan`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, and `aif-architecture` execute only their scoped duties and hand off per the matrix. Invocations without an `aif-*` role signal do not enter this role-binding protocol; they route by operating context per §1 — AI Factory mode when a `.ai-factory/` directory is present, and the standalone fallback (`core-standalone-adapter.md`) only when neither an `aif-*` invocation nor a `.ai-factory/` directory exists.
 
 ### Workflow Responsibility & Boundary Matrix
 
 | Workflow | Role & Phase | Input Artifacts | Allowed Modifications | Output Artifacts | Next Handoff |
 |---|---|---|---|---|---|
 | **`aif-roadmap`** | Milestone sequencing & stack invariants | Project vision, requirements, package manifest | Roadmap file ONLY (`ROADMAP.md`) | Structured roadmap with stack invariants, driver choices, and architecture milestones | `/aif-architecture` or `/aif-plan` |
-| **`aif-architecture`** | Architectural guideline synthesis & tier alignment | Tech stack, project requirements, existing code | Architecture artifact ONLY (`paths.architecture`) | Canonical `ARCHITECTURE.md` defining directory structure, isolation tiers, and legacy strategies | `/aif-plan` |
+| **`aif-architecture`** | Architectural guideline synthesis & pattern alignment | Tech stack, project requirements, existing code | Architecture artifact ONLY (`paths.architecture`) | Canonical `ARCHITECTURE.md` defining directory structure, architecture patterns, and legacy strategies | `/aif-plan` |
 | **`aif-plan`** | Feature decomposition & planning | Prompt / user requirements, project architecture (`paths.architecture`) | Plan file ONLY (no application code) | Active plan artifact with 6 canonical phases + initial `### Execution State` | `/aif-implement` |
 | **`aif-implement`** | Bottom-up execution | Active plan artifact (`paths.plans`) | Application code (`src/`, `config/`, `migrations/`, `tests/`), task checkboxes `- [x]`, `### Execution State` | Fully wired feature code + updated plan state | `/aif-verify` |
 | **`aif-verify`** | Independent verification gate | Implemented code, test suite, active plan | **Code Read-Only:** Strictly forbidden to modify application code or fix bugs. Allowed to write gate results and update plan `### Execution State` | `aif-gate-result` (`blockers`, `affected_files`) + updated plan state (`COMPLETE` or `BLOCKED`) | `/aif-fix` (if blockers > 0) or complete |
@@ -98,7 +98,7 @@ paths:
 
 ### Architecture Artifact Authority (`/aif-architecture`)
 
-The architecture artifact produced by `/aif-architecture` (`paths.architecture` from `.ai-factory/config.yaml`, else `.ai-factory/ARCHITECTURE.md`) is the supreme structural authority: it fixes the Architectural Tier (`Pragmatic | Balanced | Strict`), the architecture pattern, module boundaries, and naming conventions; the skill never re-derives them. Execution Mode (`Patch | Feature | Enterprise`) and Architectural Tier are orthogonal — all 9 combinations are valid (mode × tier matrix: `references/core-feature-recipes.md` §1).
+The architecture artifact produced by `/aif-architecture` (`paths.architecture` from `.ai-factory/config.yaml`, else `.ai-factory/ARCHITECTURE.md`) is the supreme structural authority: it fixes the Architecture Pattern (`Explicit Architecture`, `Structured Modules`, `Layered Architecture`), module boundaries, and naming conventions; the skill never re-derives them. Architecture Patterns (`Explicit Architecture`, `Structured Modules`, `Layered Architecture`) govern component structure and placement across feature archetypes (recipes: `references/core-feature-archetypes.md` §1).
 
 ---
 
@@ -117,6 +117,7 @@ Across AI Factory workflows, independent agents run in separate conversational c
 
 ### 6.1. Handoff: `aif-plan` → `aif-implement` (Unambiguous Plan Specification)
 - **Concrete Target Paths:** Every task must specify the exact target file path (in ultra plans: in the phase's `Files to Change`) and architectural layer/role. Generic tasks without paths (e.g. "create controller and service") are strictly prohibited.
+- **Upstream-First Context Ordering:** If the feature spans multiple Bounded Contexts, tasks for the provider (upstream) context (its schema, repository, models, and public API in `src/<Module>/Api/`) must be scheduled and completed before tasks in consumer contexts. Cross-context communication must strictly use public APIs or PSR-14 events, explicitly forbidding cross-module SQL joins or internal model imports.
 - **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task & Intent Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/<topic>.md`. Tasks lacking an assigned guide are prohibited.
 - **Prior Dependency Installation:** Every missing capability from `references/package-catalog.md` must be planned as an explicit `composer require` task scheduled *before* any implementation tasks that import its namespace.
 - **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task (`config/**/di/*.php` default, or the project's active service provider), and every Action an explicit route wiring task (`config/**/routes.php` default, or the active `FileRouter` convention).
@@ -124,6 +125,7 @@ Across AI Factory workflows, independent agents run in separate conversational c
 
 ### 6.2. Handoff: `aif-implement` → `aif-verify` (Self-Contained Implementation Handoff)
 - **Mandatory Pre-Implementation Guide Read:** Before writing code for any task, the implementer must read the task's assigned `Guide: references/<topic>.md` (or resolve it from `references/INDEX.md` if missing) and verify API signatures in `vendor/yiisoft/<pkg>/src/`. Generating code without consulting the guide is strictly prohibited.
+- **Cross-Context Boundary Enforcement:** Code must interact with other modules strictly via `src/<Module>/Api/` or PSR-14 events. Direct queries against another module's database tables or internal model instantiations are strictly forbidden.
 - **Complete Artifact Inventory:** Every newly created or modified file must be listed in `### Execution State` under `Artifacts:` with its architectural role (e.g. `- src/Blog/PostAction.php (Presentation / Action)`). Never leave files unrecorded.
 - **Verified Wiring Gates:** Every per-step wiring gate must be explicitly verified and recorded (`DI binding: PASS`, `Routes / CLI: PASS`, `Events / Migrations: PASS`). Batching or deferring wiring is forbidden.
 - **Task Checkboxes:** All completed phase tasks must be marked `- [x]`.

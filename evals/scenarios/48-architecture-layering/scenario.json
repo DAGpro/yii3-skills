@@ -21,6 +21,7 @@
   ],
   "layer": "unit",
   "guides": [
-    "references/core-architecture-alignment.md"
+    "references/core-architecture-alignment.md",
+    "references/infra-payments.md"
   ]
 }

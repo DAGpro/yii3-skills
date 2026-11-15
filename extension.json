@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/lee-to/ai-factory/2.x/schemas/extension.schema.json",
   "name": "yii3-skills",
-  "version": "0.5.0",
-  "description": "AI Factory extension with the yii3 agent skill: stage-based Yii 3 development workflow (Patch/Feature/Enterprise modes, bottom-up stages, production readiness gate) grounded in official package sources with specialized topic guides and workflow injections.",
+  "version": "0.6.0",
+  "description": "AI Factory extension with the yii3 agent skill: idiomatic Yii 3 development workflow (top-down discovery, bottom-up assembly, production readiness gate) grounded in official package sources with specialized topic guides and workflow injections.",
   "injections": [
     {
       "target": "aif-plan",
@@ -43,6 +43,31 @@
       "target": "aif-architecture",
       "position": "append",
       "file": "./injections/architecture.md"
+    },
+    {
+      "target": "aif",
+      "position": "append",
+      "file": "./injections/aif.md"
+    },
+    {
+      "target": "aif-dockerize",
+      "position": "append",
+      "file": "./injections/dockerize.md"
+    },
+    {
+      "target": "aif-ci",
+      "position": "append",
+      "file": "./injections/ci.md"
+    },
+    {
+      "target": "aif-build-automation",
+      "position": "append",
+      "file": "./injections/build-automation.md"
+    },
+    {
+      "target": "aif-security-checklist",
+      "position": "append",
+      "file": "./injections/security-checklist.md"
     }
   ],
   "skills": [

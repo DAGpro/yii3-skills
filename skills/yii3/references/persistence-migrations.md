@@ -22,7 +22,7 @@ This topic is split into two focused guides — load the one that matches the ta
 
 ## Anti-Pattern Matrix (Module-Wide: Migrations)
 
-Audited at Stage 6 (Config Audit & Consolidation) and the Finale Code-to-Reference audit. The child guides carry no separate matrices — this is the single migrations module matrix.
+Audited during the Finale Code-to-Reference audit. The child guides carry no separate matrices — this is the single migrations module matrix.
 
 | Forbidden Anti-Pattern | Why it breaks Yii3 | Idiomatic Yii3 Solution |
 |---|---|---|

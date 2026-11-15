@@ -1,78 +1,123 @@
-# AI Factory Extension: Yii3 Skills
+# Yii 3 Agent Skill
 
-> Multi-agent skill package and [AI Factory](https://github.com/lee-to/ai-factory) extension for idiomatic **Yii 3** development (PHP 8.2+, `yiisoft/*` packages).
+> Production-ready Agent Skill and [AI Factory](https://github.com/lee-to/ai-factory) extension for idiomatic **Yii 3** development (PHP 8.2+, `yiisoft/*` packages).
 
-The **`yii3`** skill provides a rigorous, stage-based workflow for AI agents (Cursor, Claude Code, Windsurf, Devin) and AI Factory pipelines: mission bootstrap, bottom-up architectural implementation, and a production readiness gate.
+The **`yii3`** skill equips AI coding agents (**Cursor, Claude Code, Windsurf, OpenCode, Devin**) and automated **AI Factory** pipelines with deep, grounded knowledge of the modern Yii 3 ecosystem. It guides agents through requirement analysis, dependency discovery, clean bottom-up code assembly, and strict verification.
 
 ## Key Invariants
 
-- **Zero Yii 2 Hallucinations**: Strict ban on legacy constructs (`Yii::$app`, static facades, ActiveRecord event coupling). Enforces modern Yii 3 idioms: PSR-7/PSR-15/PSR-14, DI autowiring, strict immutability, hydrators, and input DTOs.
-- **Offline Source of Truth**: All 87 topic guides (89 reference files) are grounded against 130 official `yiisoft/*` packages. Static symbol, AST signature/arity, and manifest freshness checks (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`, `scripts/check-manifest-freshness.mjs`) run on every change.
-- **Strict Hierarchy of Truth**: Clear conflict resolution: **Installed API** (`vendor/yiisoft/`) → **Implementation Patterns** (skill guides) → **Project Conventions** (`ARCHITECTURE.md` or dominant `src/` layout). New code never forces guide conventions onto an established codebase.
+- **Zero Yii 2 Hallucinations**: Strict ban on legacy constructs (`Yii::$app`, static facades, ActiveRecord event coupling). Enforces modern Yii 3 idioms: PSR-7 / PSR-15 / PSR-14, DI autowiring, strict immutability, hydrators, and input DTOs.
+- **100% Grounded in Official Sources**: All patterns, signatures, and configuration recipes are verified directly against 136 official `yiisoft/*` package repositories.
+- **Respects Your Architecture**: Seamlessly adapts to your codebase layout (Explicit Clean Architecture, Structured Modules, or Layered Architecture) without imposing alien conventions.
 
 ## Installation
 
-Install via the AI Factory CLI:
+### In Any Agent Skills Host (Cursor, Claude Code, Windsurf)
+
+Install via the `skills` CLI:
+
+```bash
+npx skills add DAGpro/yii3-skills --skill yii3
+```
+
+Or clone directly into your project's agent configuration directory:
+
+```bash
+# For Cursor
+git clone https://github.com/DAGpro/yii3-skills.git .cursor/skills/yii3-skills
+
+# For Claude Code / OpenCode
+git clone https://github.com/DAGpro/yii3-skills.git .agents/skills/yii3-skills
+```
+
+### In AI Factory Projects
+
+Install via the AI Factory CLI to automatically hook into all project automation pipelines:
 
 ```bash
 ai-factory extension add https://github.com/DAGpro/yii3-skills.git
 ```
 
-Or install as an agent skill directly into any Agent Skills host (Cursor, Claude Code):
+## Usage & Examples
+
+### In AI Factory Workflows
+
+The extension hooks directly into your project's AI Factory automation loop without manual configuration:
 
 ```bash
-npx skills add DAGpro/yii3-skills --skill '*'
+# 1. Plan feature — decomposes into bottom-up tasks (Migration → Repo → Handler → Action DTO → DI Wiring)
+/aif-plan "Add Stripe payment checkout and webhook signature verification"
+
+# 2. Implement — builds idiomatic Yii 3 code with immediate DI and route wiring
+/aif-implement
+
+# 3. Verify — runs Yii 3 Chain Integrity audit (active routes, bound DI, reversible migrations, zero anti-patterns)
+/aif-verify
+
+# 4. Review — audits changes against Yii 3 anti-pattern matrices and security invariants
+/aif-review
 ```
 
-## Execution Modes
+### In Standalone Agent Chat (Cursor, Claude Code, Windsurf)
 
-The skill automatically selects an execution mode based on task scope, or respects the explicit `--mode=<patch|feature|enterprise>` parameter:
+Invoke the skill naturally in your interactive agent chat:
 
-| Mode | Trigger & Scope | Architectural Workflow | CLI Flag |
-|---|---|---|---|
-| **Patch** | Bug fixes, isolated changes (1–3 files), docs, typo/config fixes | Direct surgical edit + project checks; skips aggregate design and schema migrations (unless schema changes required) | `--mode=patch` |
-| **Feature** *(default)* | Standard business features, endpoints, console commands, domain logic (~80% of tasks) | Bottom-up stages: Migration & Schema → Domain/Model & Repository Boundary → Repository/Persistence → Use Case Handler & Events → Input DTO & Single-Action Handler → Wiring → Tests | `--mode=feature` |
-| **Enterprise** | High-throughput systems, event-driven pipelines, auth/security cores, multi-step transactions | Production-grade rigor: atomic transactions, event publishing, idempotency, complete Production Readiness Gate; decomposition adapts to Architectural Tier (Pragmatic / Balanced / Strict) | `--mode=enterprise` |
+```text
+"Create a Yii 3 REST API endpoint for user profile update with DTO validation and Cycle ORM."
+"Add an asynchronous queue job for email notifications using Transactional Outbox in Yii 3."
+"Generate a reversible database migration and repository for an Order aggregate."
+"Integrate Stripe payments and webhook signature verification using yiisoft/payments."
+"Review our DI configuration and route definitions against Yii 3 anti-pattern matrices."
+```
 
-## Integration Contexts
+## How It Works
 
-- **AI Factory (default)** — The skill acts as an AI Factory extension: it hooks into AI Factory automation pipelines via workflow injections (`injections/*.md`: `aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`, `aif-review`, `aif-improve`, `aif-roadmap`, `aif-architecture`). Findings merge directly into `aif-gate-result`.
-- **Standalone (fallback)** — When the target project does not use AI Factory (no `.ai-factory/` directory, no `aif-*` invocation), the skill is loaded directly into an agent (Claude Code, Cursor, Windsurf). It guides the agent start-to-finish: Stage 0 bootstrap → Mission Workflow → Finale with the Chain Integrity checklist.
+Rather than generating disconnected files or monolithic controllers, the skill guides agents through a disciplined two-phase workflow:
+
+1. **Top-Down Discovery (Trace Dependencies):**
+   - Identifies the entry point (Action, Command, Queue Job, Migration).
+   - Enforces context boundaries: cross-module communication occurs strictly via public APIs or PSR-14 events.
+   - Traces missing dependencies downward: Transport → Use Case → Repository Contract → Database Schema.
+
+2. **Bottom-Up Assembly (Assemble Code):**
+   - Assembles discovered components in reverse dependency order:
+     1. **Schema & Migration:** Reversible migrations with table prefixes (`{{%table}}`) and working `down()`.
+     2. **Persistence & Boundary:** Repository port interfaces and concrete implementations.
+     3. **Application & Domain:** Use cases with transaction management (`$db->transaction()`) and post-commit domain events.
+     4. **Transport & Entry Point:** Thin Actions returning PSR-7 `ResponseInterface` with validated DTOs.
+   - **Immediate Wiring:** DI definitions (`config/**/di/*.php`), routes (`routes.php`), or event listeners are wired immediately upon creating each class.
+
+*Universal Invariant:* Controller actions are strictly thin HTTP transport adapters returning `ResponseInterface`. Zero SQL, direct persistence, or transaction management in presentation.
+
+## Supported Stack & Subsystems
+
+Covers the complete official Yii 3 ecosystem (PHP 8.2+):
+
+- **HTTP & Routing:** FastRoute, URL generation, PSR-15 middleware pipeline, error handling (`ErrorCatcher`, `ExceptionResponder`), content negotiation, CORS, CSRF.
+- **Data & Persistence:** `yiisoft/db` (MySQL, PostgreSQL, SQLite), database migrations (`yiisoft/db-migration`), Active Record (`yiisoft/active-record`) or Cycle ORM (`cycle/*`), data providers, and paginators.
+- **Input & Validation:** `yiisoft/validator` (attribute-based rules), `yiisoft/hydrator` (type-safe DTO population), request body parsers.
+- **Security & Auth:** PSR-7/PSR-15 authentication (`CurrentUser`, session, JWT, OAuth2), RBAC access control (`yiisoft/rbac` with DB/PHP storage).
+- **Async & Infrastructure:** `yiisoft/queue` (DB, Redis, AMQP, Sync), `yiisoft/scheduler` (cron & background tasks), Transactional Outbox pattern with mutex-guarded relay workers.
+- **E-Commerce & Payments:** `yiisoft/payments` (multi-gateway abstraction for Stripe, PayPal, YooKassa, Robokassa; webhook verification).
+- **Views & Templating:** `yiisoft/view`, `yiisoft/yii-view-renderer`, Twig integration, Bootstrap 5 / Bulma widgets, asset bundles.
+- **Testing:** Unit, HTTP integration, database testing, console testing, mutation testing (Infection), PSR test doubles (PHPUnit 10/11, Codeception, Testo).
+- **Long-Running Runtimes:** RoadRunner and FrankenPHP workers with state resetters (`StateResetter`).
 
 ## What is Inside
 
-- **`skills/yii3/SKILL.md`** — Canonical skill entry point: Stage 0 bootstrap (scope-first — the skill applies to the task's Yii 3 / `yiisoft/*` scope, no environment classification; plus opt-in new project bootstrap), Mission Workflow (Stages 1–7), Finale checklist, core rules, and the task routing matrix.
-- **`skills/yii3/references/`** — 87 specialized topic guides (89 reference files total, including `INDEX.md` and `package-catalog.md`) covering DI, HTTP, persistence, auth & RBAC, queue, transactional outbox, mailer, testing, project bootstrap, and version-gated behavior notes.
-- **`injections/*.md`** — AI Factory workflow hooks anchoring workflow stages to the skill as the single source of truth.
-- **`evals/`** — Evaluation harness with 69 behavioral test scenarios (100% topic guide coverage — 87 of 87 guides bound, see [`evals/COVERAGE.md`](evals/COVERAGE.md)) plus the [`evals/runtime-harness/`](evals/runtime-harness/) L5 PHPUnit 11 integration suite.
-- **`scripts/`** — Automated quality gates: `validate.mjs` (manifest, frontmatter, injection structure, and link integrity), `check-symbols.mjs` (ground-truth symbol verification), `check-ast.mjs` (structural call and signature analysis), `check-manifest-freshness.mjs` (manifest provenance & upstream drift detection), `test-aif-workflow.mjs` (workflow contracts), `check-eval-coverage.mjs` (100% guide coverage gate), and `test-php-runtime.mjs` (L4/L5 PHPUnit runtime harness runner).
-
-## Quality Gates & Verification
-
-The skill's recommendations are backed by deterministic verification:
-
-- **Empirical Baseline (+36.3 pp overall, +34.4 pp on pure-code composites)**: Evaluated across paired test scenarios (single-run campaign, $n=1$, GLM-5.3-Flash) — with-skill agents improved from a 56.9% baseline to a 93.2% pass rate (+34.4 pp on complex code tasks; +100 pp on multi-agent protocol adherence). See [`evals/BASELINE.md`](evals/BASELINE.md).
-- **Symbol & Arity Grounding**: `node scripts/check-symbols.mjs` verifies 1,468 FQCN occurrences and 474 method call citations across guides against official package sources (indexing 766 unique FQCNs and 346 unique signatures across 130 packages in `evals/data/api-symbols-manifest.json`).
-- **AST PHP Code Grounding Analyzer**: `node scripts/check-ast.mjs` statically verifies 840 call arities (566 instance + 274 static) and 197 named parameter bindings across 716 documented PHP code blocks (89 files, 0 defects) against package AST signatures (`177` classes, `469` signatures in `evals/data/ast-signatures-manifest.json`).
-- **Manifest Freshness & Upstream Drift**: `node scripts/check-manifest-freshness.mjs` validates commit provenance and parity across both manifests (`130` packages) against local clones; `--upstream` additionally inspects remote drift against upstream `yiisoft/*` remotes.
-- **Automated Validation & Workflow Contracts**: `node scripts/validate.mjs` enforces frontmatter spec compliance, link integrity, and the injection structure contract; `node scripts/test-aif-workflow.mjs` verifies 88 AI Factory workflow contracts; `node evals/runner/selftest.mjs` checks all 69 eval scenarios.
-- **L5 PHPUnit Integration Harness**: `node scripts/test-php-runtime.mjs --strict` runs real Yii 3 DI container wiring, FastRoute routing, ValidatingHydrator validation, SQLite migrations, transactional outbox + mutex relay, sync queue idempotency, and `StateResetter` verification in CI (`php-runtime-gates` on PHP 8.2+ with Composer & `pdo_sqlite`).
-
-## Supported Stack
-
-- **PHP 8.2+** for generated code.
-- **Yii 3 Ecosystem**: Packages cataloged in [`skills/yii3/references/package-catalog.md`](skills/yii3/references/package-catalog.md) (Router, DI & Config, DB/Cycle ORM, Migrations, Validator, Hydrator, Data-Response, View & Widgets, Auth & RBAC, Mailer, Queue, Transactional Outbox, Cache, Mutex, Logging, Error Handling, Runners & Application templates `app` / `app-api` / `app-console`).
-- Opt-in new project bootstrap rules live in [`core-dependency-protocol.md`](skills/yii3/references/core-dependency-protocol.md), transactional outbox patterns in [`infra-transactional-outbox.md`](skills/yii3/references/infra-transactional-outbox.md), and version-specific nuances in [`core-version-notes.md`](skills/yii3/references/core-version-notes.md).
+- **`skills/yii3/SKILL.md`** — Core workflow contract, invariants, and the task routing matrix.
+- **`skills/yii3/references/`** — 100 specialized reference guides and recipes covering every subsystem and the runtime package catalog.
+- **`injections/`** — Automated workflow hooks for AI Factory projects.
 
 ## Known Limitations
 
-- **Not a Target-App Runtime**: The skill generates and reviews code; target project test suites, static analysis (Psalm/PHPStan), and migrations execute through the target project's own PHP/Composer toolchain (while CI verifies the reference `evals/runtime-harness/` integration stack on PHP 8.2+ & SQLite).
-- **External Dependencies**: Non-`yiisoft` packages (e.g. `symfony/console` attributes) and PHP language deprecations are verified against the target project's `composer.lock` and runtime PHP version, not the offline clones.
-- **Out of Scope**: Front-end build tooling (beyond `yiisoft/assets`), GraphQL, and application-level hardening beyond the provided auth, CSRF, and RBAC recipes.
+- **Code & Architecture Guidance Only**: The skill generates and audits code; your test suite, linters, and migrations execute through your project's PHP toolchain.
+- **External Dependencies**: Non-`yiisoft` packages and PHP deprecations are verified against your project's `composer.lock`, not offline clones.
+- **Out of Scope**: Front-end build tooling (beyond `yiisoft/assets`), GraphQL, and application-level infrastructure.
 
 ## Contributing
 
-Ground rules, offline clone setup, and the synchronization cascade are documented in [CONTRIBUTING.md](CONTRIBUTING.md); the full project constitution lives in [AGENTS.md](AGENTS.md).
+Guidelines for contributing, ground rules, and testing are documented in [CONTRIBUTING.md](CONTRIBUTING.md); the full constitution lives in [AGENTS.md](AGENTS.md).
 
 ## License
 

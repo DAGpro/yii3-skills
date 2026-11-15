@@ -16,12 +16,12 @@
 
 ### Choosing OpenAPI Schema Definition Strategy
 
-Yii 3 applications can document data schemas using three distinct approaches depending on architectural tier and separation-of-concerns requirements:
+Yii 3 applications can document data schemas using three distinct approaches depending on the project's architecture pattern and separation-of-concerns requirements:
 
 | Schema Strategy | Implementation | Choose when… | Trade-offs & Caveats |
 |---|---|---|---|
-| **1. Dual-Attributed DTO** *(Pragmatic Default)* | Single class combining `OpenApi\Attributes\Property` and `Yiisoft\Validator\Rule\*` on constructor-promoted properties. | Standard CRUD endpoints and REST APIs where public API schema exactly mirrors internal validation rules (Pragmatic / Balanced architectural tiers). | Eliminates duplicate field declarations. Single source of truth. Couples presentation/documentation attributes to DTO classes. |
-| **2. Decoupled OpenAPI Schema** *(Clean / Enterprise Architecture)* | Dedicated schema class under `App\Presentation\Api\Schema` with `#[OA\Schema]`, separate from Domain / Application DTOs. | Strict Clean Architecture, modular monoliths, or when the internal domain model differs from external API representations (e.g. hidden internal fields, versioned API transformations). | Strict separation of concerns: domain models stay pure PHP with zero OpenAPI dependencies. Requires mapping code between domain entities and API schemas. |
+| **1. Dual-Attributed DTO** *(Pragmatic Default)* | Single class combining `OpenApi\Attributes\Property` and `Yiisoft\Validator\Rule\*` on constructor-promoted properties. | Standard CRUD endpoints and REST APIs where public API schema exactly mirrors internal validation rules (Layered Architecture or Structured Modules patterns). | Eliminates duplicate field declarations. Single source of truth. Couples presentation/documentation attributes to DTO classes. |
+| **2. Decoupled OpenAPI Schema** *(Explicit / Enterprise Architecture)* | Dedicated schema class under `App\Presentation\Api\Schema` with `#[OA\Schema]`, separate from Domain / Application DTOs. | Explicit Architecture (Clean / Ports & Adapters), modular monoliths, or when the internal domain model differs from external API representations (e.g. hidden internal fields, versioned API transformations). | Strict separation of concerns: domain models stay pure PHP with zero OpenAPI dependencies. Requires mapping code between domain entities and API schemas. |
 | **3. Inline Schema Definition** | Anonymous schema defined directly inside `#[OA\JsonContent(...)]` on action methods. | Simple one-off responses (e.g. `['status' => 'ok']`), generic error envelopes (`ProblemDetails`), or standard pagination envelopes. | Quick to write; avoids creating dedicated PHP classes for trivial payloads. Not reusable across multiple endpoints. |
 
 Yii 3 applications achieve clean single-source-of-truth DTOs by pairing `OpenApi\Attributes` with `Yiisoft\Validator\Rule\*` attributes on constructor-promoted properties.

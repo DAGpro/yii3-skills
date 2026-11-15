@@ -72,6 +72,7 @@
 | `yiisoft/yii-runner-console` | Console application runner |
 | `yiisoft/yii-runner-frankenphp` | Runner for FrankenPHP (worker mode) |
 | `yiisoft/yii-runner-roadrunner` | Runner for RoadRunner |
+| `yiisoft/yii-runner-rapira` | Runner for Rapira embedded PHP server (Rust) |
 | `yiisoft/yii-console` | Console application infrastructure: commands, built-ins, symfony-event bridge |
 
 **Entry points:**
@@ -148,6 +149,7 @@ $cache->getOrSet('key', fn() => expensiveCalculation(), 3600);
 | `yiisoft/auth` | Authentication middleware with pluggable identity repositories |
 | `yiisoft/auth-jwt` | JWT-based authentication: token generation and validation |
 | `yiisoft/user` | User identity: current user state, login/logout persistence |
+| `yiisoft/yii-auth-session` | Session-based authentication manager, auto-login, remember-me |
 | `yiisoft/rbac` | Role-Based Access Control: roles, permissions, rule evaluation |
 | `yiisoft/rbac-db` | RBAC storage in database |
 | `yiisoft/rbac-php` | RBAC storage in PHP files |
@@ -251,6 +253,7 @@ $translator->translate('Hello, {name}!', ['name' => $user->getName()], 'app');
 | `yiisoft/yii-dev-tool` | Development utilities |
 | `yiisoft/yii-gii` | Code generator (models, CRUD, controllers) |
 | `yiisoft/profiler` | Performance profiler |
+| `yiisoft/db-profiler` | Database profiler for development and performance tracking |
 | `yiisoft/yii-sentry` | Sentry error monitoring integration |
 | `yiisoft/code-style` | PHP CS Fixer rules for Yiisoft packages |
 | `yiisoft/yii-swagger` | OpenAPI/Swagger JSON + UI for API documentation |
@@ -267,6 +270,7 @@ $translator->translate('Hello, {name}!', ['name' => $user->getName()], 'app');
 | `yiisoft/queue-amqp` | AMQP transport (RabbitMQ) |
 | `yiisoft/queue-db` | Database transport |
 | `yiisoft/queue-redis` | Redis transport |
+| `yiisoft/scheduler` | Recurring tasks, cron expressions, task runner daemon & tick command with overlap prevention |
 | `yiisoft/mutex` | Distributed locking abstraction |
 | `yiisoft/mutex-file` | File-based mutex driver |
 | `yiisoft/mutex-pdo-mysql` | MySQL PDO mutex driver |
@@ -330,6 +334,8 @@ Non-yiisoft test runners and harnesses (require-dev):
 | `yiisoft/network-utilities` | Network utilities (IP, URL, etc.) |
 | `yiisoft/classifier` | Filesystem traversal for class discovery |
 | `yiisoft/requirements` | PHP system requirements checker |
+| `yiisoft/payments` | Payment gateway interface and payment abstraction |
+| `yiisoft/locale-middleware` | PSR-15 locale extraction and redirect middleware |
 
 ---
 
@@ -372,6 +378,10 @@ Compatibility facts below are orientation-level.
 | `yiisoft/rate-limiter` | yiisoft/cache or cache-* storage for counters; sits in the middleware stack |
 | `yiisoft/yii-runner-http` | yii-http, error-handler, config; web entry point (§3) |
 | `yiisoft/yii-runner-console` | yii-console, config; console entry point (§3) |
+| `yiisoft/yii-runner-rapira` | yii-runner, di, config, rapira/contract (§3) |
+| `yiisoft/scheduler` | queue, mutex, cache, yii-console, psr/clock, psr/event-dispatcher (§13) |
+| `yiisoft/yii-auth-session` | auth, user, session, event-dispatcher (§7) |
+| `yiisoft/payments` | psr/http-client, psr/http-message, psr/log (§15) |
 
 ### 16.2 PHP version and PSR interop
 
@@ -409,7 +419,7 @@ Each abstraction needs **exactly one** primary driver/storage unless the table s
 | Mail transport | `yiisoft/mailer-symfony` (production) / file transport built into `yiisoft/mailer` (dev) |
 | CSS widget kit | `yiisoft/bootstrap5` **or** `yiisoft/yii-bulma` (both possible, pick a primary) |
 | Template engine | native PHP via `yiisoft/view` **or** Twig via `yiisoft/view-twig` + `yiisoft/yii-twig` |
-| App runner | `yiisoft/yii-runner-http` (web) and/or `yiisoft/yii-runner-console` (CLI); worker modes: `yiisoft/yii-runner-frankenphp` \| `yiisoft/yii-runner-roadrunner` |
+| App runner | `yiisoft/yii-runner-http` (web) and/or `yiisoft/yii-runner-console` (CLI); worker modes: `yiisoft/yii-runner-frankenphp` \| `yiisoft/yii-runner-roadrunner` \| `yiisoft/yii-runner-rapira` |
 
 Mismatch symptoms: Composer conflicts on the chosen driver, two competing services of the same
 family in DI, or an abstraction with no driver registered (fails at first use).
@@ -419,7 +429,7 @@ family in DI, or an abstraction with no driver registered (fails at first use).
 | Environment | Recommended set |
 |---|---|
 | Production web | web core (§ feature table) + one db driver + error-handler/log-target + session/csrf as needed |
-| Production workers | runner-frankenphp or runner-roadrunner + queue + mutex + log |
+| Production workers | runner-frankenphp or runner-roadrunner or runner-rapira + queue + scheduler + mutex + log |
 | CI / tests | `yiisoft/db-sqlite` for the database, `yiisoft/test-support`, one runner only — `phpunit/phpunit` (+ `yiisoft/yii-testing`, Codeception if the template uses it) **or** `testo/testo`, never both; optional mutation gate: `infection/infection` (+ `testo/bridge-infection` on the Testo path); `yiisoft/cache-file` or in-memory cache |
 | Local development | `yiisoft/yii-debug`, `yiisoft/yii-debug-viewer`, `yiisoft/yii-gii`, `yiisoft/code-style`, mailer file transport, `yiisoft/cache-file` |
 

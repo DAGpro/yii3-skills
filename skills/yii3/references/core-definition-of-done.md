@@ -3,7 +3,7 @@
 > **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 Finale extension for the `yii3` skill: the checks that run only when they earn their cost.
-Load this guide at the Finale for **Feature and Enterprise** tasks (Feature: §1–§2, `production readiness gate: n/a`; Enterprise: all sections including the Production Readiness Gate, §3). Patch-mode tasks stop at the Chain Integrity checklist in `SKILL.md` and skip this guide.
+Load this guide at the Finale for architecture and code compliance verification (§1–§2); run the Production Readiness Gate (§3) for production release readiness. Surgical tasks verify against the Chain Integrity checklist in `SKILL.md`.
 
 ---
 
@@ -39,7 +39,7 @@ In addition to technical compilation and DI wiring, every delivered feature is e
 | Dimension | Scope & Verification Invariants | Grounding / Source |
 |---|---|---|
 | **1. Functional Correctness** | All requested business invariants and user flows are implemented. Proper HTTP status codes (`200`, `201`, `400`, `404`, `422`) or console `ExitCode` (`OK`, `UNSPECIFIED_ERROR`) returned. Validation errors surfaced cleanly in response bodies. | Feature specification, `references/http-actions-core.md`, `references/infra-commands.md` |
-| **2. Architectural Correctness** | Presentation handlers follow the project's action/controller style (invokable `__invoke()`, PSR-15 `RequestHandlerInterface`, or plain constructor-DI controller methods per `references/http-actions-core.md` §1), return `ResponseInterface`, and remain strictly thin (zero SQL or direct persistence in actions). Domain isolation aligns with the project's `/aif-architecture` pattern: **Explicit Architecture (Strict)** mandates pure domain aggregates isolated from persistence and explicit repository interfaces; **Structured Modules (Balanced)** organizes code by domain modules, allows Active Record or concrete repositories, and introduces interfaces at module boundaries or for swappable components; **Layered Architecture (Pragmatic)** allows application services directly consuming concrete repositories or Active Record models. Across all three patterns: Presentation remains decoupled from persistence (zero direct SQL or persistence in actions). Execution mode adheres to task scope (`Patch` / `Feature` / `Enterprise`). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
+| **2. Architectural Correctness** | Presentation handlers follow the project's action/controller style (invokable `__invoke()`, PSR-15 `RequestHandlerInterface`, or plain constructor-DI controller methods per `references/http-actions-core.md` §1), return `ResponseInterface`, and remain strictly thin (zero SQL or direct persistence in actions). Domain isolation aligns with the project's `/aif-architecture` pattern: **Explicit Architecture (Strict)** mandates pure domain aggregates isolated from persistence and explicit repository interfaces; **Structured Modules (Balanced)** organizes code by domain modules, allows Active Record or concrete repositories, and introduces interfaces at module boundaries or for swappable components; **Layered Architecture (Pragmatic)** allows application services directly consuming concrete repositories or Active Record models. Across all three patterns: Presentation remains decoupled from persistence (zero direct SQL or persistence in actions). Placement strictly follows architecture source (`references/core-architecture-alignment.md`). | `references/core-feature-recipes.md`, `references/core-architecture-alignment.md` |
 | **3. API & Signature Correctness** | Every invoked method, constructor, and parameter type verified against installed package sources in `vendor/yiisoft/*/src/`. Zero deprecated Yii2 facades or static helpers (`Yii::$app`, `ActiveRecord::find()`). Version-gated syntax respected. | `references/core-version-notes.md`, Mandatory Signature Lookup Protocol |
 | **4. Integration & Wiring Correctness** | Every new interface has a DI binding (`config/**/di/*.php` default or active service provider). Actions are wired to routes (`config/**/routes.php` default or active `FileRouter` path). Commands registered in `config/console/params.php`. Domain events subscribed (`config/**/events.php` default or programmatic `ListenerCollection`). All packages declared in `composer.json`. | SKILL.md per-step wiring gates, `references/core-di-and-config.md` |
 | **5. Security & Safety** | Typed input DTOs validate all untrusted user data. Mutating HTML routes protected by `CsrfTokenMiddleware` preceded by `SessionMiddleware`. Route-level authentication and RBAC permissions (`CurrentUser::can()`) verified before execution. Views escape dynamic data via `Html::encode()`. | `references/http-validation-rules.md`, `references/http-state.md`, `references/infra-auth-and-rbac.md`, `references/http-views.md` |
@@ -131,7 +131,6 @@ Register shortcuts in `composer.json`:
 Bind the verification report to the Finale and extend it with added packages, changed config files, and the Production Readiness Gate status:
 
 ```
-Mode: <Patch | Feature | Enterprise>
 Architecture: <source>
 fixes applied: <list | none>
 tests: pass | fail | not run | blocked (<reason>) | n/a
@@ -151,4 +150,4 @@ All automated gates and check lines strictly adhere to one unified 5-state vocab
 | **`fail`** / `FAIL` | Check was executed and detected concrete failures or defects. |
 | **`not run`** / `NOT RUN` | Check was not executed (e.g. offline environment, test runner or `vendor/` not present). Never conflate with `fail` or `blocked`. |
 | **`blocked (<reason>)`** / `BLOCKED` | Check could not run due to an environmental or external dependency blocker (e.g. missing database container, network boundary). |
-| **`n/a`** / `N/A` | Check is not applicable to the current task scope (e.g. Production Readiness Gate on Patch- or Feature-mode tasks). |
+| **`n/a`** / `N/A` | Check is not applicable to the current task scope (e.g. Production Readiness Gate on surgical tasks). |

@@ -6,7 +6,7 @@ This folder holds local clones of the official `yiisoft/*` packages. It is the *
 
 ## Populating & updating the folder
 
-Exact commits and known releases for all 130 packages are pinned in [packages.lock.json](packages.lock.json) and managed via [scripts/sync-references.mjs](../scripts/sync-references.mjs):
+Exact commits and known releases for all 136 packages are pinned in [packages.lock.json](packages.lock.json) and managed via [scripts/sync-references.mjs](../scripts/sync-references.mjs):
 
 ```bash
 # 1. Populate missing clones or align existing clones to the pinned commits
@@ -50,3 +50,21 @@ Every guide claim — class names, method signatures, parameter and return types
 2. **Targeted search only** — resolve the package via [PACKAGES.md](../PACKAGES.md) first, then open specific paths (`router/src/...`). Never run unconstrained recursive searches across the whole folder.
 3. **No hallucination** — if an API cannot be confirmed in these sources, it must not be written into the guides.
 4. **Not a runtime dependency** — the skill ships nothing from here; deliverables reference `vendor/yiisoft/<pkg>/` of the target project, never this folder.
+
+---
+
+## Ecosystem Additions & Development Notes
+
+This offline reference library includes official packages incorporated to ground specialized guides:
+
+- **`yiisoft/scheduler`** — recurring tasks, cron expression builder, worker daemon (`schedule:work`), tick command (`schedule:run`), and overlap prevention via `yiisoft/mutex`. Grounded in `skills/yii3/references/infra-queue-jobs.md` §9.
+- **`yiisoft/yii-runner-rapira`** — application runner for Rapira embedded PHP server in Rust (PHP 8.4+). Grounded in `skills/yii3/references/infra-runners-and-runtimes.md` §5.1.
+- **`yiisoft/payments`** — unified payment gateway abstraction (`PaymentGatewayInterface`) with implementations for Stripe, PayPal (REST API v2), Robokassa, YooKassa, and webhook processing pipelines. Grounded in `skills/yii3/references/infra-payments.md`.
+
+### In-Development & Future Packages Note
+
+Some packages are tracked in `references/` for future ecosystem evolution:
+
+- **`yiisoft/yii-auth-session`** (In Development, `1.0.0-dev`): Dedicated session-based authentication package providing `Yiisoft\Yii\Auth\Session\AuthManager` (`login()`, `logout()`, `overrideIdentity()`, cookie auto-login). Represents the next-generation split/evolution of session auth alongside `yiisoft/user` (`CurrentUser`). Application guides currently recommend stable `yiisoft/user` (`CurrentUser`), while noting `AuthManager` for future migration.
+- **`yiisoft/locale-middleware`** (In Development skeleton): Currently an empty repository (`src/.gitkeep`). The production-ready PSR-15 locale middleware for Yii 3 is `Yiisoft\Yii\Middleware\Locale` from `yiisoft/yii-middleware` (grounded in `skills/yii3/references/http-i18n-storage-and-locale.md` §6.2). When `locale-middleware` releases its implementation, the locale guides will be updated accordingly.
+- **`yiisoft/db-profiler`** (In Development skeleton): Currently an empty repository (`src/.gitkeep`). Database execution profiling is grounded on `yiisoft/profiler` (`ProfilerInterface`).

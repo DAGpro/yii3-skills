@@ -4,9 +4,11 @@
 
 > Architectural decomposition rules, business capability inference, RBAC authorization, persistence strategy selection, vertical-slice vs layered placement, and chain integrity verification in Yii3 applications.
 
+## 1. Scope & Feature Archetypes
+
 This guide provides architectural decomposition rules and cross-cutting invariants. For concrete, step-by-step code recipes across the 7 feature archetypes, load the dedicated archetype guide:
 
-- [Feature Archetype Recipes](core-feature-archetypes.md) — Detailed implementation recipes for Archetypes A through G: state change, query listings, background jobs, HTML forms, CLI commands, REST CRUD, and file uploads (§1).
+- [Feature Archetype Recipes](core-feature-archetypes.md) — Detailed implementation recipes for Archetypes A through G: state change, query listings, background jobs, HTML forms, CLI commands, REST CRUD, and file uploads.
 
 ## 2. Business Capability Inference
 
@@ -112,20 +114,22 @@ Match the project's architecture style (the resolved architecture artifact, else
 3. Greenfield: Style 1 (vertical slice) is common in modern Yii3 apps; Style 2 suits larger teams with strict layer boundaries.
 
 ### Style 1: Vertical Slice (Feature-based, common in modern Yii3 apps)
-```
+```text
 src/
-  Order/
-    Checkout/
-      CheckoutAction.php       # Presentation / HTTP
-      CheckoutRequest.php      # Input DTO with rule attributes (#[Required], #[Length], ...)
-      CheckoutHandler.php      # Application Use Case
-      OrderCreatedEvent.php    # Domain Event
-      SendReceiptListener.php  # Event Listener
-    Domain/
-      Order.php                # Entity
+  [ContextName]/                 # Bounded Context (e.g. Sales, Identity)
+    Domain/                      # Pure POPO Domain & Ports (shared across slices)
+      Order.php                  # Entity / Aggregate Root
       OrderRepositoryInterface.php
-    Infrastructure/
-      SqlOrderRepository.php   # Persistence
+    Slices/                      # Vertical slices by entity
+      Order/
+        Checkout/                # Feature / Use-Case subfolder (high cohesion)
+          CheckoutAction.php     # Presentation / HTTP
+          CheckoutRequest.php    # Input DTO with rule attributes (#[Required], #[Length], ...)
+          CheckoutHandler.php    # Application Use Case
+          OrderCreatedEvent.php  # Domain Event
+          SendReceiptListener.php# Event Listener
+    Infrastructure/              # Context persistence adapters
+      SqlOrderRepository.php
 ```
 
 ### Style 2: Layered / Clean (Traditional)
@@ -156,15 +160,15 @@ src/
 
 ## 6. Chain Integrity Checklist (No Missing Links)
 
-Every feature implementation must satisfy these architectural tiers and integrity invariants:
+Every feature implementation must satisfy these scope and integrity invariants:
 
-### 6.1. Three-Tier Mode Intensity
+### 6.1. Task Scope & Decomposition Intensity
 
-| Mode | Applicable Scope | Graph Shape & Architecture | Mandatory Invariants |
+| Task Scope | Applicable Perimeter | Graph Shape & Architecture | Mandatory Invariants |
 |---|---|---|---|
-| **Patch** | Single route, config/DI edit, single bugfix, helper lookup. | Touched stages only. Domain layers and extended DoD skipped. | Per-step wiring gate for any touched interface/route/command. |
-| **Feature** (Default) | Standard business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). | Actions strictly thin (zero direct SQL/persistence). Domain abstractions collapse: Application Service / Use Case directly interacts with concrete repository without separate Domain Entity or Repository Interface pair (if project architecture permits). | Thin Actions, Input DTOs with validation rules, DB transactions in handlers, per-step wiring gates, unit/functional tests. |
-| **Enterprise** | State-changing business processes, state machines, multi-step transactions, async queues/events, auth/security, infrastructure slices. | Complete bottom-up graph: Aggregate Entity, Value Objects, Repository Interface + Implementation, Use Case Command & Handler, Domain Events, Input DTOs, Actions, Tests. | All per-step wiring gates, post-commit event dispatch, full Production Readiness Gate. |
+| **Surgical Task** | Single route, config/DI edit, single bugfix, helper lookup. | Touched components only. Domain layers and extended DoD skipped. | Immediate wiring gate for any touched interface/route/command. |
+| **Composite Feature** | Standard business feature or CRUD without complex domain invariants (admin dictionaries, lookup tables, settings toggles). | Actions strictly thin (zero direct SQL/persistence). Domain abstractions align with architecture pattern. | Thin Actions, Input DTOs with validation rules, DB transactions in handlers, immediate wiring gates, unit/functional tests. |
+| **Mission-Critical Slice** | State-changing business processes, state machines, multi-step transactions, async queues/events, auth/security, infrastructure slices. | Complete bottom-up graph: Entities/Value Objects, Repository Interface + Implementation, Use Case Handler, Domain Events, Input DTOs, Actions, Tests. | All immediate wiring gates, post-commit event dispatch, full Production Readiness Gate. |
 
 ### 6.2. Mission State Tracker Schema
 
@@ -172,24 +176,26 @@ Before writing code, establish and print the explicit Mission State:
 
 ```markdown
 ### Mission State
-- **Mode:** <Patch | Feature | Enterprise>
+- **Context:** Standalone
 - **Architecture:** <project source | convention fallback>
 - **Guides:** <primary guides to load>
-- **Stage Progress:**
-  - Stage 1 [Migration & Schema]: <pending | skipped — reason>
-  - Stage 2 [Domain / Model & Repository Boundary]: <pending | skipped — reason>
-  - Stage 3 [Repository / Persistence Implementation]: <pending | skipped — reason>
-  - Stage 4 [Use Case & Domain Events]: <pending | skipped — reason>
-  - Stage 5 [Input DTO & Action / Command]: <pending | skipped — reason>
-  - Stage 6 [Config Audit & Wiring Gate]: pending
-  - Stage 7 [Tests & Quality Gate]: pending
+- **Assembly Progress:**
+  - 1 [Schema & Migration]: <pending | complete | skipped — reason>
+  - 2 [Persistence & Boundary]: <pending | complete | skipped — reason>
+  - 3 [Application & Domain]: <pending | complete | skipped — reason>
+  - 4 [Transport & Entry Point]: <pending | complete | skipped — reason>
+  - 5 [Immediate Wiring]: <pending | complete | skipped — reason>
+- **Verification:**
+  - Linters / Static Analysis: <pending | pass | fail>
+  - Smoke / Tests: <pending | pass | fail | skipped>
+- **Blockers:** <none | issue description>
 ```
 
-As each stage completes, verify its per-step wiring gate immediately and record the transition (`Stage N complete: <artifacts> | Wiring gate: pass`).
+As each step completes, verify its per-step wiring gate immediately and record the transition (`Step N complete: <artifacts> | Wiring gate: pass`).
 
 ### 6.3. Chain Integrity Invariants
 
-- [ ] **Mission State complete:** All active stages in the Mission State tracker completed with passing wiring gates.
+- [ ] **Mission State complete:** All active assembly steps in the Mission State tracker completed with passing wiring gates.
 - [ ] **Data layer connected:** If entity persists state → Migration exists + Repository implements Interface.
 - [ ] **DI registered:** Every newly introduced interface has a binding per the project's config style (`config/common/di/*.php`, `config/web/di/*.php`, or a `ServiceProviderInterface` — see [Configuration Architecture & Parameters, §2.6](core-config-tree.md#26-choosing-how-to-organize-application-configs)).
 - [ ] **Route reachable:** Every newly created Action is mounted per the project's routing style (`config/common/routes.php` default — no `routes-web` group in canonical template — with correct HTTP method and typed parameter tokens `{id:\d+}`, or active `FileRouter` path; see [Routing Guide, §1](http-routes-definition.md#choosing-how-to-route-http-requests)).

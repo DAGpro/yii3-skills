@@ -42,10 +42,9 @@ Exit code 1 if any with-skill / manual run failed a required check (both runners
 
 ```
 scenarios/NN-slug/
-  scenario.json      id, title, mode (intent metadata — the skill execution tier the scenario
-                     exercises: feature | patch | enterprise; never read by the runner), tags,
-                     timeoutSec (agent spawn timeout, default 900), guides, layer,
-                     negativeMustFail (checks a bad sample must fail)
+  scenario.json      id, title, mode (intent metadata; never read by the runner), tags,
+  timeoutSec         agent spawn timeout (default 900), guides, layer,
+  negativeMustFail   checks a bad sample must fail
   prompt.md          verbatim user request
   fixture/           project state before the agent runs (copied to a temp dir)
   checks.mjs         deterministic checks: check(id, description, ctx => ok()/fail(evidence));
@@ -156,7 +155,7 @@ node evals/runner/run.mjs --changed main --runs 0                      # ... vs 
 node evals/runner/run.mjs --layer unit --runs 0                        # diagnostics layer only
 ```
 
-`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` validates the bindings across all 69 scenarios and reports live coverage — currently 87 of 87 topic guides bound (100%); run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
+`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` validates the bindings across all 69 scenarios and reports live coverage — currently 98 of 98 topic guides bound (100%); run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
 
 **Calibration policy.** The true difficulty of a scenario is its baseline pass-rate. A unit
 scenario whose baseline mean stays >= 80% (delta < ~10 pp) must be hardened (indirect prompt,

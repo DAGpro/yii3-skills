@@ -31,6 +31,7 @@
   - [3.6. Friendly Exception Console Rendering](#36-friendly-exception-console-rendering)
 - [4. RoadRunner Worker Runtime (`yiisoft/yii-runner-roadrunner`)](#4-roadrunner-worker-runtime-yiisoftyii-runner-roadrunner) — full reference in the [RoadRunner Worker Runtime Guide](infra-runtime-roadrunner.md)
 - [5. FrankenPHP Worker Runtime (`yiisoft/yii-runner-frankenphp`)](#5-frankenphp-worker-runtime-yiisoftyii-runner-frankenphp) — full reference in the [FrankenPHP Worker Runtime Guide](infra-runtime-frankenphp.md)
+- [5.1. Rapira Worker Runtime (`yiisoft/yii-runner-rapira`)](#51-rapira-worker-runtime-yiisoftyii-runner-rapira)
 - [6. Long-Running Worker Safety & StateResetter](#6-long-running-worker-safety--stateresetter) — full reference in the [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md)
 - [7. Runtime Comparison Matrix](#7-runtime-comparison-matrix)
 - [8. Anti-Patterns & Common Traps](#8-anti-patterns--common-traps)
@@ -577,6 +578,91 @@ When an unhandled exception implements `Yiisoft\FriendlyException\FriendlyExcept
 
 ---
 
+## 5.1. Rapira Worker Runtime (`yiisoft/yii-runner-rapira`)
+
+[Rapira](https://rapira.rs/) is a high-performance PHP application server written in Rust with PHP embedded directly into the server process.
+
+```shell
+composer require yiisoft/yii-runner-rapira rapira/contract
+```
+
+> [!NOTE]
+> The Rapira runner requires PHP 8.4 or higher.
+
+### Architecture & Modes
+
+Rapira executes PHP through an embedded runtime and supports three pool modes configured in `rapira.toml`:
+1. **`worker` mode:** Persistent in-memory worker loop where the DI container and application are booted once, processing multiple HTTP requests sequentially without re-booting (highest throughput).
+2. **`fpm` mode:** Process-per-request execution matching classic PHP-FPM semantics.
+3. **`static` mode:** Static file serving directly from Rust.
+
+`Yiisoft\Yii\Runner\Rapira\RapiraApplicationRunner` automatically detects the configured mode from the server environment and executes the appropriate pipeline.
+
+### `worker.php` Entry Point
+
+In the application root, create `worker.php`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Environment;
+use Psr\Log\LogLevel;
+use Yiisoft\ErrorHandler\ErrorHandler;
+use Yiisoft\ErrorHandler\Renderer\PlainTextRenderer;
+use Yiisoft\Log\Logger;
+use Yiisoft\Log\StreamTarget;
+use Yiisoft\Yii\Runner\Rapira\RapiraApplicationRunner;
+
+$root = __DIR__;
+
+require_once $root . '/src/bootstrap.php';
+
+$runner = new RapiraApplicationRunner(
+    rootPath: $root,
+    debug: Environment::appDebug(),
+    checkEvents: Environment::appDebug(),
+    environment: Environment::appEnv(),
+    temporaryErrorHandler: new ErrorHandler(
+        new Logger(
+            [
+                (new StreamTarget())->setLevels([
+                    LogLevel::EMERGENCY,
+                    LogLevel::ERROR,
+                    LogLevel::WARNING,
+                ]),
+            ],
+        ),
+        new PlainTextRenderer(),
+    ),
+);
+$runner->run();
+```
+
+### `rapira.toml` Server Configuration
+
+Create `rapira.toml` in the application root:
+
+```toml
+[http]
+listen = "127.0.0.1:8000"
+
+[http.pool]
+entrypoint = "worker.php"
+mode = "worker"
+```
+
+Start the Rapira server:
+
+```shell
+rapira serve rapira.toml
+```
+
+In persistent worker mode, state reset between requests is mandatory (`StateResetter::reset()`), exactly like RoadRunner and FrankenPHP (see [§6](#6-long-running-worker-safety--stateresetter)).
+
+---
+
 ## 6. Long-Running Worker Safety & StateResetter
 
 > **For the complete reference on long-running worker state safety** — the state bleeding and memory accumulation problem, the `StateResetter::class` definition trap, idiomatic per-service `'reset'` declarations, the ground-truth catalog of built-in package resetters, and `Closure::bindTo` scope binding — **see the** [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md).
@@ -589,20 +675,20 @@ When an unhandled exception implements `Yiisoft\FriendlyException\FriendlyExcept
 
 > Full worker-runtime references: [RoadRunner Worker Runtime Guide](infra-runtime-roadrunner.md) · [FrankenPHP Worker Runtime Guide](infra-runtime-frankenphp.md). The mandatory state reset for worker runtimes is owned by the [Long-Running Worker Safety & StateResetter Guide](infra-state-resetter.md).
 
-| Feature / Metric | Classic SAPI (`yii-runner-http`) | [RoadRunner](infra-runtime-roadrunner.md) (`yii-runner-roadrunner`) | [FrankenPHP](infra-runtime-frankenphp.md) (`yii-runner-frankenphp`) | Console (`yii-runner-console`) |
-|:---|:---|:---|:---|:---|
-| **Process Model** | Process per request (forked worker) | Go process daemon + persistent PHP workers | Caddy web server + embedded PHP threads (CGO) | Short-lived CLI command process |
-| **Framework Boot Overhead** | ~15–30 ms on every request | **0 ms** (pre-booted in memory) | **0 ms** (pre-booted in memory) | Full boot once per CLI execution |
-| **Request Latency** | 20–50 ms | **0.5–2 ms** | **0.3–1.5 ms** | N/A |
-| **Throughput (req/sec)** | Baseline (1x) | 5x – 10x | 6x – 12x | N/A |
-| **`ApplicationStartup` Event** | Every HTTP request | **Once** on worker process launch | **Once** on worker thread boot | Once per CLI invocation |
-| **`ApplicationShutdown` Event** | Every HTTP request | **Once** on worker recycling | **Once** on worker recycling | Once on command exit |
-| **State Reset Requirement** | None (OS reclaims memory) | **Mandatory** (`StateResetter::reset()`) | **Mandatory** (`StateResetter::reset()`) | None |
-| **In-Memory Functional Testing** | `$runner->runAndGetResponse()` | Custom `$runner->withPsr7Worker()` | `$runner->runAndGetResponse()` | `ConsoleBufferedOutput::fetch()` |
-| **Worker Recycling Mechanism** | Native (PHP-FPM `pm.max_requests`) | `.rr.yaml` (`max_jobs: 1000`) | Env variable (`MAX_REQUESTS=500`) | N/A |
-| **Binary Protocol Safety** | Standard HTTP headers/echo | `ini_set('display_errors', 'stderr')` | Protected via CGO API | Standard terminal streams |
-| **Scoped Request Access** | Superglobals / RequestProvider | `yiisoft/request-provider` | `yiisoft/request-provider` | `ArgvInput` |
-| **Local Dev Experience** | Built-in CLI server bypass | Hot reload (`debug: true` or `./rr reset`) | Hot reload (`watch` directive in Caddyfile) | Instant execution on save |
+| Feature / Metric | Classic SAPI (`yii-runner-http`) | [RoadRunner](infra-runtime-roadrunner.md) (`yii-runner-roadrunner`) | [FrankenPHP](infra-runtime-frankenphp.md) (`yii-runner-frankenphp`) | Rapira (`yii-runner-rapira`) | Console (`yii-runner-console`) |
+|:---|:---|:---|:---|:---|:---|
+| **Process Model** | Process per request (forked worker) | Go process daemon + persistent PHP workers | Caddy web server + embedded PHP threads (CGO) | Rust application server + embedded PHP runtime | Short-lived CLI command process |
+| **Framework Boot Overhead** | ~15–30 ms on every request | **0 ms** (pre-booted in memory) | **0 ms** (pre-booted in memory) | **0 ms** (pre-booted in memory) | Full boot once per CLI execution |
+| **Request Latency** | 20–50 ms | **0.5–2 ms** | **0.3–1.5 ms** | **0.3–1.5 ms** | N/A |
+| **Throughput (req/sec)** | Baseline (1x) | 5x – 10x | 6x – 12x | 6x – 12x | N/A |
+| **`ApplicationStartup` Event** | Every HTTP request | **Once** on worker process launch | **Once** on worker thread boot | **Once** on worker process launch | Once per CLI invocation |
+| **`ApplicationShutdown` Event** | Every HTTP request | **Once** on worker recycling | **Once** on worker recycling | **Once** on worker process exit | Once on command exit |
+| **State Reset Requirement** | None (OS reclaims memory) | **Mandatory** (`StateResetter::reset()`) | **Mandatory** (`StateResetter::reset()`) | **Mandatory** (`StateResetter::reset()`) | None |
+| **In-Memory Functional Testing** | `$runner->runAndGetResponse()` | Custom `$runner->withPsr7Worker()` | `$runner->runAndGetResponse()` | Custom runner execution | `ConsoleBufferedOutput::fetch()` |
+| **Worker Recycling Mechanism** | Native (PHP-FPM `pm.max_requests`) | `.rr.yaml` (`max_jobs: 1000`) | Env variable (`MAX_REQUESTS=500`) | `rapira.toml` worker recycling | N/A |
+| **Binary Protocol Safety** | Standard HTTP headers/echo | `ini_set('display_errors', 'stderr')` | Protected via CGO API | Embedded Rust engine | Standard terminal streams |
+| **Scoped Request Access** | Superglobals / RequestProvider | `yiisoft/request-provider` | `yiisoft/request-provider` | `yiisoft/request-provider` | `ArgvInput` |
+| **Local Dev Experience** | Built-in CLI server bypass | Hot reload (`debug: true` or `./rr reset`) | Hot reload (`watch` directive in Caddyfile) | Hot reload (`rapira serve`) | Instant execution on save |
 
 ---
 

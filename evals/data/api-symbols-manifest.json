@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "generated_at": "2026-11-10T16:21:12.126Z",
-    "source": "references/ (130 yiisoft/* package clones)",
-    "packages_indexed": 130,
+    "generated_at": "2026-11-15T02:26:44.860Z",
+    "source": "references/ (136 yiisoft/* package clones)",
+    "packages_indexed": 136,
     "packages": [
       {
         "package": "yiisoft/access",
@@ -302,6 +302,15 @@
         "remote": "https://github.com/yiisoft/db-pgsql.git"
       },
       {
+        "package": "yiisoft/_____",
+        "dir": "db-profiler",
+        "commit": "1271e08d23a7de86c0feff80649b0abcae71f320",
+        "commit_date": "2026-09-04T17:39:35+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/db-profiler.git"
+      },
+      {
         "package": "yiisoft/db-sqlite",
         "dir": "db-sqlite",
         "commit": "a958f3949ee9e630369d819c10bdcbbc0cb9f1d8",
@@ -500,6 +509,15 @@
         "remote": "https://github.com/yiisoft/json.git"
       },
       {
+        "package": "yiisoft/locale-middleware",
+        "dir": "locale-middleware",
+        "commit": "d1a86b5c007ae85c9e30a68f2ce92d9e01af30fd",
+        "commit_date": "2026-11-01T18:12:23+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/locale-middleware.git"
+      },
+      {
         "package": "yiisoft/log",
         "dir": "log",
         "commit": "aec9294a4b86f8d1321af0994913b0d1a0665cd8",
@@ -633,6 +651,15 @@
         "branch": "master",
         "nearest_tag": null,
         "remote": "https://github.com/yiisoft/network-utilities.git"
+      },
+      {
+        "package": "yiisoft/payments",
+        "dir": "payments",
+        "commit": "b8d662c0a29f46effecdef7face7f3eb18e7aa17",
+        "commit_date": "2026-09-04T17:42:36+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/payments.git"
       },
       {
         "package": "yiisoft/profiler",
@@ -824,6 +851,15 @@
         "remote": "https://github.com/yiisoft/router-fastroute.git"
       },
       {
+        "package": "yiisoft/scheduler",
+        "dir": "scheduler",
+        "commit": "2e8e2681bdb0da4ec4444741482c61c6e2e4c913",
+        "commit_date": "2026-11-02T11:57:05+01:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/scheduler.git"
+      },
+      {
         "package": "yiisoft/security",
         "dir": "security",
         "commit": "8a7e01792e6fd5ffe7901eb5e9a43391bb2ff3fe",
@@ -968,6 +1004,15 @@
         "remote": "https://github.com/yiisoft/yii-auth-client.git"
       },
       {
+        "package": "yiisoft/yii-auth-session",
+        "dir": "yii-auth-session",
+        "commit": "7a5d82446aa71fb152dcd14cb09b04867cde5a8f",
+        "commit_date": "2026-09-10T18:38:14+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-auth-session.git"
+      },
+      {
         "package": "yiisoft/yii-bulma",
         "dir": "yii-bulma",
         "commit": "f128a7b90e9c084b3ee86f3996e072c206604835",
@@ -1110,6 +1155,15 @@
         "branch": "master",
         "nearest_tag": null,
         "remote": "https://github.com/yiisoft/yii-runner-http.git"
+      },
+      {
+        "package": "yiisoft/yii-runner-rapira",
+        "dir": "yii-runner-rapira",
+        "commit": "ba22308ed2feba7eca75a51d2d03eef78eeb86b4",
+        "commit_date": "2026-11-11T01:59:04+03:00",
+        "branch": "master",
+        "nearest_tag": null,
+        "remote": "https://github.com/yiisoft/yii-runner-rapira.git"
       },
       {
         "package": "yiisoft/yii-runner-roadrunner",
@@ -1294,6 +1348,7 @@
     "Yiisoft\\DataResponse\\Middleware\\XmlDataResponseMiddleware",
     "Yiisoft\\DataResponse\\ResponseFactory",
     "Yiisoft\\DataResponse\\ResponseFactory\\DataResponseFactoryInterface",
+    "Yiisoft\\DataResponse\\ResponseFactory\\JsonResponseFactory",
     "Yiisoft\\Data\\Cycle\\Reader\\EntityReader",
     "Yiisoft\\Data\\Cycle\\Writer\\EntityWriter",
     "Yiisoft\\Data\\Db\\QueryDataReader",
@@ -1546,6 +1601,21 @@
     "Yiisoft\\NetworkUtilities\\DnsHelper",
     "Yiisoft\\NetworkUtilities\\IpHelper",
     "Yiisoft\\NetworkUtilities\\IpRanges",
+    "Yiisoft\\Payments",
+    "Yiisoft\\Payments\\Gateways",
+    "Yiisoft\\Payments\\Gateways\\AbstractGateway",
+    "Yiisoft\\Payments\\Gateways\\PayPalGateway",
+    "Yiisoft\\Payments\\Gateways\\RobokassaGateway",
+    "Yiisoft\\Payments\\Gateways\\StripeGateway",
+    "Yiisoft\\Payments\\Gateways\\YooKassaGateway",
+    "Yiisoft\\Payments\\Models",
+    "Yiisoft\\Payments\\Models\\Customer",
+    "Yiisoft\\Payments\\Models\\PaymentIntent",
+    "Yiisoft\\Payments\\Models\\PaymentMethod",
+    "Yiisoft\\Payments\\PaymentGatewayInterface",
+    "Yiisoft\\Payments\\Webhooks\\WebhookContext",
+    "Yiisoft\\Payments\\Webhooks\\WebhookInput",
+    "Yiisoft\\Payments\\Webhooks\\WebhookProcessor",
     "Yiisoft\\Profiler\\Profiler",
     "Yiisoft\\Profiler\\ProfilerInterface",
     "Yiisoft\\Profiler\\Target\\FileTarget",
@@ -1655,6 +1725,11 @@
     "Yiisoft\\Router\\Route\\Put",
     "Yiisoft\\Router\\UrlGeneratorInterface",
     "Yiisoft\\Router\\UrlMatcherInterface",
+    "Yiisoft\\Scheduler\\CronBuilder",
+    "Yiisoft\\Scheduler\\RecurringTask",
+    "Yiisoft\\Scheduler\\Schedule",
+    "Yiisoft\\Scheduler\\Scheduler",
+    "Yiisoft\\Scheduler\\TaskContext",
     "Yiisoft\\Security\\Crypt",
     "Yiisoft\\Security\\Mac",
     "Yiisoft\\Security\\PasswordHasher",
@@ -1829,6 +1904,9 @@
     "Yiisoft\\Yii\\AuthClient\\Collection",
     "Yiisoft\\Yii\\AuthClient\\OAuth2",
     "Yiisoft\\Yii\\AuthClient\\Widget\\AuthChoice",
+    "Yiisoft\\Yii\\Auth\\Session\\AuthManager",
+    "Yiisoft\\Yii\\Auth\\Session\\Authenticator",
+    "Yiisoft\\Yii\\Auth\\Session\\AuthenticatorWithRedirectToAuthUrl",
     "Yiisoft\\Yii\\Bulma",
     "Yiisoft\\Yii\\Bulma\\Asset\\DropdownAsset",
     "Yiisoft\\Yii\\Bulma\\Asset\\NavBarAsset",
@@ -1910,6 +1988,8 @@
     "Yiisoft\\Yii\\Runner\\FrankenPHP\\RequestFactory",
     "Yiisoft\\Yii\\Runner\\Http\\Exception\\HeadersHaveBeenSentException",
     "Yiisoft\\Yii\\Runner\\Http\\HttpApplicationRunner",
+    "Yiisoft\\Yii\\Runner\\Rapira\\ExchangeEmitter",
+    "Yiisoft\\Yii\\Runner\\Rapira\\RapiraApplicationRunner",
     "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerGrpcApplicationRunner",
     "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpApplicationRunner",
     "Yiisoft\\Yii\\Runner\\RoadRunner\\RoadRunnerHttpWorker",
@@ -2029,12 +2109,6 @@
       "totalCount": 0,
       "returnType": "void"
     },
-    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareDispatcher::withMiddlewares": {
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "returnType": "self"
-    },
     "Yiisoft\\Injector\\Injector::__construct": {
       "isStatic": false,
       "requiredCount": 0,
@@ -2101,11 +2175,11 @@
       "totalCount": 1,
       "returnType": "mixed"
     },
-    "Yiisoft\\EventDispatcher\\Provider\\ListenerCollection::add": {
+    "Yiisoft\\Yii\\Event\\ListenerConfigurationChecker::check": {
       "isStatic": false,
       "requiredCount": 1,
-      "totalCount": null,
-      "returnType": "self"
+      "totalCount": 1,
+      "returnType": "void"
     },
     "Yiisoft\\Db\\Connection\\ConnectionInterface::transaction": {
       "isStatic": false,
@@ -2149,6 +2223,12 @@
       "totalCount": 0,
       "returnType": "void"
     },
+    "Yiisoft\\EventDispatcher\\Provider\\ListenerCollection::add": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": null,
+      "returnType": "self"
+    },
     "Yiisoft\\Yii\\Event\\ListenerCollectionFactory::create": {
       "isStatic": false,
       "requiredCount": 1,
@@ -2160,18 +2240,6 @@
       "requiredCount": 0,
       "totalCount": 3,
       "returnType": "static"
-    },
-    "Yiisoft\\Db\\Query\\Query::each": {
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "returnType": "DataReaderInterface"
-    },
-    "Yiisoft\\Db\\Query\\Query::batch": {
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 1,
-      "returnType": "BatchQueryResultInterface"
     },
     "Yiisoft\\Security\\Random::string": {
       "isStatic": true,
@@ -2910,17 +2978,17 @@
       "totalCount": 0,
       "returnType": "array"
     },
+    "Yiisoft\\Middleware\\Dispatcher\\MiddlewareDispatcher::withMiddlewares": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 1,
+      "returnType": "self"
+    },
     "Yiisoft\\Middleware\\Dispatcher\\MiddlewareFactory::create": {
       "isStatic": false,
       "requiredCount": 1,
       "totalCount": 1,
       "returnType": "MiddlewareInterface"
-    },
-    "Yiisoft\\Router\\Group::withCors": {
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "returnType": "self"
     },
     "Yiisoft\\Yii\\Swagger\\Action\\SwaggerJson::withPaths": {
       "isStatic": false,
@@ -3078,29 +3146,11 @@
       "totalCount": 4,
       "returnType": "Text"
     },
-    "Yiisoft\\FormModel\\Field::submitButton": {
-      "isStatic": true,
+    "Yiisoft\\Widget\\Widget::render": {
+      "isStatic": false,
       "requiredCount": 0,
-      "totalCount": 3,
-      "returnType": "SubmitButton"
-    },
-    "Yiisoft\\FormModel\\Field::radioList": {
-      "isStatic": true,
-      "requiredCount": 2,
-      "totalCount": 4,
-      "returnType": "RadioList"
-    },
-    "Yiisoft\\FormModel\\Field::resetButton": {
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 3,
-      "returnType": "ResetButton"
-    },
-    "Yiisoft\\FormModel\\Field::telephone": {
-      "isStatic": true,
-      "requiredCount": 2,
-      "totalCount": 4,
-      "returnType": "Telephone"
+      "totalCount": 0,
+      "returnType": "string"
     },
     "Yiisoft\\Bootstrap5\\Alert::widget": {
       "isStatic": true,
@@ -3150,6 +3200,30 @@
       "totalCount": 2,
       "returnType": "ResponseInterface"
     },
+    "Yiisoft\\Html\\Html::tag": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 3,
+      "returnType": "CustomTag"
+    },
+    "Yiisoft\\Html\\Html::div": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 2,
+      "returnType": "Div"
+    },
+    "Yiisoft\\Yii\\Widgets\\Alert::widget": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "static"
+    },
+    "Yiisoft\\Html\\Html::textInput": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 3,
+      "returnType": "Input"
+    },
     "Yiisoft\\Html\\Html::meta": {
       "isStatic": true,
       "requiredCount": 0,
@@ -3192,23 +3266,11 @@
       "totalCount": 1,
       "returnType": "string"
     },
-    "Yiisoft\\Html\\Html::div": {
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 2,
-      "returnType": "Div"
-    },
     "Yiisoft\\Html\\Html::span": {
       "isStatic": true,
       "requiredCount": 0,
       "totalCount": 2,
       "returnType": "Span"
-    },
-    "Yiisoft\\Html\\Html::tag": {
-      "isStatic": true,
-      "requiredCount": 1,
-      "totalCount": 3,
-      "returnType": "CustomTag"
     },
     "Yiisoft\\Html\\NoEncode::string": {
       "isStatic": true,
@@ -3312,12 +3374,6 @@
       "totalCount": 0,
       "returnType": "string"
     },
-    "Yiisoft\\Widget\\Widget::render": {
-      "isStatic": false,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "returnType": "string"
-    },
     "Yiisoft\\Html\\Html::openTag": {
       "isStatic": true,
       "requiredCount": 1,
@@ -3372,17 +3428,17 @@
       "totalCount": 3,
       "returnType": "static"
     },
-    "Yiisoft\\Yii\\Widgets\\Alert::widget": {
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 3,
-      "returnType": "static"
-    },
     "Yiisoft\\Yii\\Widgets\\Dropdown::widget": {
       "isStatic": true,
       "requiredCount": 0,
       "totalCount": 3,
       "returnType": "static"
+    },
+    "Yiisoft\\Form\\PureField\\Field::text": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 4,
+      "returnType": "Text"
     },
     "Yiisoft\\Auth\\Jwt\\TokenFactoryInterface::create": {
       "isStatic": false,
@@ -3421,12 +3477,6 @@
       "returnType": "string"
     },
     "Yiisoft\\ErrorHandler\\ErrorHandler::renderThrowableAndTerminate": {
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 1,
-      "returnType": "void"
-    },
-    "Yiisoft\\Yii\\Event\\ListenerConfigurationChecker::check": {
       "isStatic": false,
       "requiredCount": 1,
       "totalCount": 1,
@@ -3654,6 +3704,48 @@
       "totalCount": 1,
       "returnType": "static"
     },
+    "Yiisoft\\Queue\\Message\\GenericMessage::fromPayload": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "static"
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::cron": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "self"
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::every": {
+      "isStatic": true,
+      "requiredCount": 2,
+      "totalCount": 2,
+      "returnType": "self"
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::daily": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "CronBuilder"
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::everyFiveMinutes": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "CronBuilder"
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::weekly": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "CronBuilder"
+    },
+    "Yiisoft\\Scheduler\\RecurringTask::monthly": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
+      "returnType": "CronBuilder"
+    },
     "Yiisoft\\Mutex\\Synchronizer::execute": {
       "isStatic": false,
       "requiredCount": 2,
@@ -3774,30 +3866,6 @@
       "totalCount": 1,
       "returnType": "ColumnInterface"
     },
-    "Yiisoft\\ActiveRecord\\LazyLoadGuard::set": {
-      "isStatic": true,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "returnType": "void"
-    },
-    "Yiisoft\\ActiveRecord\\LazyLoadGuard::resetCounters": {
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "returnType": "void"
-    },
-    "Yiisoft\\ActiveRecord\\LazyLoadGuard::reset": {
-      "isStatic": true,
-      "requiredCount": 0,
-      "totalCount": 0,
-      "returnType": "void"
-    },
-    "Yiisoft\\Db\\Query\\Query::where": {
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "returnType": "static"
-    },
     "Yiisoft\\Hydrator\\HydratorInterface::create": {
       "isStatic": false,
       "requiredCount": 1,
@@ -3827,6 +3895,12 @@
       "requiredCount": 0,
       "totalCount": 2,
       "returnType": "ActiveRecordInterface|array|null"
+    },
+    "Yiisoft\\Db\\Query\\Query::where": {
+      "isStatic": false,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "static"
     },
     "Yiisoft\\ActiveRecord\\ActiveQuery::__construct": {
       "isStatic": false,
@@ -3864,10 +3938,22 @@
       "totalCount": 0,
       "returnType": "Generator"
     },
-    "Yiisoft\\ActiveRecord\\ActiveRecord::save": {
-      "isStatic": false,
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::set": {
+      "isStatic": true,
+      "requiredCount": 1,
+      "totalCount": 2,
+      "returnType": "void"
+    },
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::resetCounters": {
+      "isStatic": true,
       "requiredCount": 0,
-      "totalCount": 1,
+      "totalCount": 0,
+      "returnType": "void"
+    },
+    "Yiisoft\\ActiveRecord\\LazyLoadGuard::reset": {
+      "isStatic": true,
+      "requiredCount": 0,
+      "totalCount": 0,
       "returnType": "void"
     },
     "Yiisoft\\Cache\\Db\\DbSchemaManager::ensureTable": {
@@ -3906,13 +3992,7 @@
       "totalCount": 0,
       "returnType": "void"
     },
-    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::renderPartialAsString": {
-      "isStatic": false,
-      "requiredCount": 1,
-      "totalCount": 2,
-      "returnType": "string"
-    },
-    "Yiisoft\\Yii\\View\\Renderer\\ViewRenderer::renderAsString": {
+    "Yiisoft\\Yii\\View\\Renderer\\WebViewRenderer::renderAsString": {
       "isStatic": false,
       "requiredCount": 1,
       "totalCount": 2,
@@ -3929,6 +4009,12 @@
       "requiredCount": 0,
       "totalCount": 0,
       "returnType": "array|object|null"
+    },
+    "Yiisoft\\Db\\Query\\Query::batch": {
+      "isStatic": false,
+      "requiredCount": 0,
+      "totalCount": 1,
+      "returnType": "BatchQueryResultInterface"
     },
     "Yiisoft\\Data\\Reader\\Sort::any": {
       "isStatic": true,
@@ -3947,6 +4033,12 @@
       "requiredCount": 0,
       "totalCount": 0,
       "returnType": null
+    },
+    "Yiisoft\\Db\\Migration\\MigrationBuilder::insertBatch": {
+      "isStatic": false,
+      "requiredCount": 2,
+      "totalCount": 3,
+      "returnType": "void"
     },
     "Yiisoft\\Db\\Migration\\Service\\MigrationService::makeRevertibleMigration": {
       "isStatic": false,
@@ -3976,12 +4068,6 @@
       "isStatic": false,
       "requiredCount": 5,
       "totalCount": 7,
-      "returnType": "void"
-    },
-    "Yiisoft\\Db\\Migration\\MigrationBuilder::insertBatch": {
-      "isStatic": false,
-      "requiredCount": 2,
-      "totalCount": 3,
       "returnType": "void"
     },
     "Yiisoft\\Db\\Schema\\Column\\ColumnBuilder::primaryKey": {

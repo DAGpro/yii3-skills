@@ -9,8 +9,8 @@
 ### Core & Architecture
 - `references/core-architecture-alignment.md` — vendor boundaries, layer placement, composition root wiring
 - `references/core-definition-of-done.md` — architecture checks, Production Readiness Gate, report format
-- `references/core-feature-recipes.md` — split index: decomposition intensity, placement, capability inference, RBAC, persistence strategy, chain integrity
-- `references/core-feature-archetypes.md` — concrete recipes for 7 feature archetypes: state change, query listings, background jobs, HTML forms, CLI, REST CRUD, file upload
+- `references/core-feature-recipes.md` — capability inference, RBAC, persistence strategy, placement, chain integrity
+- `references/core-feature-archetypes.md` — concrete recipes for 7 feature archetypes: state change, query listings, background jobs, HTML forms, CLI, REST CRUD, file upload; decomposition by task scope and architecture pattern
 - `references/core-dependency-protocol.md` — check, install, wire, learn a package
 - `references/package-catalog.md` — packages, capability keys, driver choices
 - `references/core-utilities.md` — ArrayHelper, StringHelper, Inflector, Json
@@ -25,7 +25,7 @@
 - `references/core-events-reference.md` — framework events catalog, signatures reference, testing
 - `references/core-version-notes.md` — version-gated behavior catalog with `composer.lock` verification
 - `references/core-aif-adapter.md` — AI Factory extension mode (default): workflow lifecycle, durable execution state, cross-session coordination
-- `references/core-standalone-adapter.md` — standalone fallback mode: plan resolution, architecture tier self-derivation, Mission State durability, interactive protocol, self-verification loop, final report contract
+- `references/core-standalone-adapter.md` — standalone fallback mode: plan resolution, architecture pattern self-derivation, Mission State durability, interactive protocol, self-verification loop, final report contract
 
 ### HTTP & Presentation
 - `references/http-routes.md` — split index: worker-environment caveats, anti-pattern matrix, related guides
@@ -98,6 +98,7 @@
 - `references/infra-mailer.md` — email composition, sending, templating, testing
 - `references/infra-mailer-transports.md` — transports & DSN
 - `references/infra-mailer-async-queue.md` — async queue sending
+- `references/infra-payments.md` — unified payment gateway abstraction (Stripe, PayPal, YooKassa, Robokassa), payment intents, PSR-15 webhooks
 - `references/infra-logging.md` — PSR-3 injection, targets, context providers
 - `references/infra-error-handling.md` — split index: anti-pattern matrix, related guides
 - `references/infra-error-handling-web.md` — ErrorCatcher, exception mapping, renderers, friendly/user exceptions

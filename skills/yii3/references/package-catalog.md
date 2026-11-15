@@ -10,7 +10,7 @@
 
 ## Table of Contents
 - [1. Capability Quick-Lookup Matrix](#1-capability-quick-lookup-matrix)
-- [2. Architectural Layer Distribution (11 Extended Packages)](#2-architectural-layer-distribution-11-extended-packages)
+- [2. Architectural Layer Distribution (15 Extended Packages)](#2-architectural-layer-distribution-15-extended-packages)
 - [3. Driver & Storage Selection Rules (Pick Exactly ONE per Family)](#3-driver--storage-selection-rules-pick-exactly-one-per-family)
 - [4. Minimal Package Sets per Feature Archetype](#4-minimal-package-sets-per-feature-archetype)
   - [4.1. Web Core & Routing](#41-web-core--routing)
@@ -22,6 +22,7 @@
   - [4.7. Async Jobs & Queue](#47-async-jobs--queue)
   - [4.8. HTML Web Form with Widgets](#48-html-web-form-with-widgets)
   - [4.9. High-Performance Workers & OAuth](#49-high-performance-workers--oauth)
+  - [4.10. Payment Gateways & Webhooks](#410-payment-gateways--webhooks)
 - [5. Package Verification Rules](#5-package-verification-rules)
 
 ---
@@ -34,7 +35,7 @@
 | `file-router` | Convention File Routing | `yiisoft/file-router` | — | `FileRouter` (PSR-15 middleware mapping URL paths to controller action classes by convention) |
 | `http` | HTTP App & Dispatcher | `yiisoft/yii-http`, `yiisoft/yii-runner-http`, `yiisoft/middleware-dispatcher`, `yiisoft/http`, `yiisoft/psr-emitter` | — | `Application`, `MiddlewareDispatcher`, `Method`, `Status`, `Header`, `SapiEmitter` |
 | `emitter` | Response Emitting (SAPI) | `yiisoft/psr-emitter` | — | `SapiEmitter`, `EmitterInterface`, `EmitterMiddleware` (sends PSR-7 responses via standard SAPI headers and echo) |
-| `runners` | Application Runners & Workers | `yiisoft/yii-runner`, `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console` | `yiisoft/yii-runner-roadrunner` (RoadRunner) \| `yiisoft/yii-runner-frankenphp` (FrankenPHP) | `RoadRunnerHttpApplicationRunner`, `RoadRunnerHttpWorker`, `FrankenPHPApplicationRunner`, `RequestFactory` |
+| `runners` | Application Runners & Workers | `yiisoft/yii-runner`, `yiisoft/yii-runner-http`, `yiisoft/yii-runner-console` | `yiisoft/yii-runner-roadrunner` (RoadRunner) \| `yiisoft/yii-runner-frankenphp` (FrankenPHP) \| `yiisoft/yii-runner-rapira` (Rapira) | `RoadRunnerHttpApplicationRunner`, `RoadRunnerHttpWorker`, `FrankenPHPApplicationRunner`, `RapiraApplicationRunner`, `RequestFactory` |
 | `app-templates` | Installable Application Templates | `yiisoft/app`, `yiisoft/app-api`, `yiisoft/app-console` | web (`yiisoft/app`) \| API (`yiisoft/app-api`) \| console (`yiisoft/app-console`) — pick ONE as the project skeleton (`composer create-project`); `yiisoft/requirements` is the standalone system requirements checker for verifying the target PHP environment | Canonical config/layout structure the guides assume (`config/configuration.php` scopes, `public/index.php`, `./yii` entry points) |
 | `di` | Dependency Injection | `yiisoft/di`, `yiisoft/definitions`, `yiisoft/injector`, `yiisoft/factory`, `yiisoft/proxy` | — | `Container`, `Injector`, `Reference`, `DynamicReference`, `ProxyManager` |
 | `config` | Configuration Plugin | `yiisoft/config` | — | `Config`, `ConfigInterface`, `extra.config-plugin` |
@@ -58,7 +59,7 @@
 | `session` | Session Handling | `yiisoft/session` | — | `SessionInterface`, `SessionMiddleware`, `FlashInterface` |
 | `cookies` | Cookie Management | `yiisoft/cookies` (plus `psr/clock` only if the app injects a custom `ClockInterface` into `Cookie`) | — | `Cookie`, `CookieCollection` |
 | `csrf` | CSRF Protection | `yiisoft/csrf` | — | `CsrfTokenMiddleware`, `CsrfHeaderMiddleware`, `CsrfTokenCookieMiddleware`, `CsrfTokenInterface` |
-| `auth` | Authentication Core | `yiisoft/auth`, `yiisoft/user` | `yiisoft/auth-jwt` (API tokens) \| `yiisoft/yii-auth-client` (OAuth2/OIDC) \| session auth | `IdentityInterface`, `IdentityRepositoryInterface`, `CurrentUser` |
+| `auth` | Authentication Core | `yiisoft/auth`, `yiisoft/user` | `yiisoft/auth-jwt` (API tokens) \| `yiisoft/yii-auth-client` (OAuth2/OIDC) \| `yiisoft/yii-auth-session` (session auth) | `IdentityInterface`, `IdentityRepositoryInterface`, `CurrentUser`, `AuthManager` |
 | `auth-client` | External OAuth / Social Auth | `yiisoft/yii-auth-client` | OAuth 1.0/2.0 \| OpenID Connect (Google, GitHub, Facebook, etc.) | `AuthClientInterface`, `OAuth2`, `Collection`, `AuthAction`, `AuthChoice` |
 | `rbac` | Role-Based Access | `yiisoft/rbac` | `yiisoft/rbac-db` \| `yiisoft/rbac-php` \| `yiisoft/rbac-cycle-db` | `ManagerInterface`, `Permission`, `Role`, `RuleInterface` |
 | `access` | Access Checking | `yiisoft/access` | — | `AccessCheckerInterface` |
@@ -69,6 +70,7 @@
 | `events` | Event Dispatching (PSR-14) | `psr/event-dispatcher`, `yiisoft/event-dispatcher`, `yiisoft/yii-event` | — | `EventDispatcherInterface`, `ListenerProviderInterface` |
 | `console` | CLI Application | `yiisoft/yii-console`, `yiisoft/yii-runner-console`, `symfony/console` | (Symfony Console bridge) | `Application`, `ExitCode`, `config/console/params.php` |
 | `queue` | Background Queue | `yiisoft/queue` | `yiisoft/queue-db` \| `yiisoft/queue-redis` \| `yiisoft/queue-amqp` | `QueueProducerInterface`, `QueueConsumerInterface`, `MessageInterface`, `HandlerInterface` |
+| `scheduler` | Recurring & Cron Tasks | `yiisoft/scheduler` | (uses `yiisoft/mutex` for overlap locking, PSR-16 cache for checkpoints, `yiisoft/queue` for queue tasks) | `Scheduler`, `Schedule`, `RecurringTask`, `CronBuilder`, `TaskContext`, `ScheduleProviderInterface` |
 | `mutex` | Distributed Locks | `yiisoft/mutex` | `yiisoft/mutex-file` \| `yiisoft/mutex-pdo-mysql` \| `yiisoft/mutex-pdo-pgsql` \| `yiisoft/mutex-pdo-oracle` \| `yiisoft/mutex-redis` | `MutexInterface`, `MutexFactoryInterface` |
 | `mail` | Email Sending | `yiisoft/mailer` | `yiisoft/mailer-symfony` (Symfony transport) | `MailerInterface`, `MessageInterface` |
 | `rate-limit` | Rate Limiting | `yiisoft/rate-limiter` | (uses cache backend) | `CounterInterface`, `LimitRequestsMiddleware` |
@@ -86,12 +88,15 @@
 | `classifier` | Filesystem Class Discovery | `yiisoft/classifier` | — | `Classifier` (discovers classes by attribute, interface, or parent without reflection autoloading overhead) |
 | `network` | Network & IP Utilities | `yiisoft/network-utilities` | — | `IpHelper`, `DnsHelper`, `IpRanges` (IPv4/IPv6 validation, CIDR ranges, subnet matching, DNS lookups) |
 | `var-dumper` | Variable Inspection & Dump | `yiisoft/var-dumper` | — | `VarDumper`, `EchoHandler`, `StreamHandler`, `ClosureExporter` (syntax-highlighted dumping, export, and closure serialization) |
+| `payments` | Payment Gateway Contracts | `yiisoft/payments` | — | `PaymentGatewayInterface` |
+
+> **In-Development Packages Note:** Packages `yiisoft/locale-middleware` and `yiisoft/db-profiler` are in-development skeletons tracked in `references/` for future ecosystem evolution (see `references/README.md`).
 
 ---
 
-## 2. Architectural Layer Distribution (11 Extended Packages)
+## 2. Architectural Layer Distribution (15 Extended Packages)
 
-Detailed architectural breakdown of the 11 specialized packages incorporated from the ecosystem index:
+Detailed architectural breakdown of the 15 specialized packages incorporated from the ecosystem index:
 
 | Architectural Layer | Package | Primary Concern & Purpose | Key Classes & Interfaces | Placement per Architecture Pattern |
 |---|---|---|---|---|
@@ -100,8 +105,12 @@ Detailed architectural breakdown of the 11 specialized packages incorporated fro
 | **HTTP & Presentation** | `yiisoft/proxy-middleware` | PSR-15 middleware resolving client IP, host, and protocol behind reverse proxies and CDNs (RFC 7239 `Forwarded` and `X-Forwarded-*`) | `Yiisoft\ProxyMiddleware\TrustedHostsNetworkResolver`, `Yiisoft\ProxyMiddleware\TrustedHeaderProtocolResolver`, `Yiisoft\ProxyMiddleware\IpValidator` | `Middleware/` or `Presentation/` |
 | **HTTP & Presentation** | `yiisoft/psr-emitter` | SAPI response emitter transmitting PSR-7 HTTP responses to the client using standard PHP headers and chunked body output buffering | `Yiisoft\PsrEmitter\SapiEmitter`, `Yiisoft\PsrEmitter\EmitterInterface`, `Yiisoft\PsrEmitter\EmitterMiddleware` | Composition Root / HTTP entry point (`public/index.php`) |
 | **Security & Auth** | `yiisoft/yii-auth-client` | External authentication via OAuth 1.0/2.0 and OpenID Connect (Google, GitHub, Facebook, etc.) with PSR-15 `AuthAction` and `AuthChoice` widget | `Yiisoft\Yii\AuthClient\AuthClientInterface`, `Yiisoft\Yii\AuthClient\OAuth2`, `Yiisoft\Yii\AuthClient\Collection`, `Yiisoft\Yii\AuthClient\AuthAction`, `Yiisoft\Yii\AuthClient\Widget\AuthChoice` | `Middleware/`, `Controllers/` (boundary) + `Application/` (ports) |
+| **Security & Auth** | `yiisoft/yii-auth-session` | Session-based authentication manager handling user logins/logouts, guest identities, request attribute identity extraction, and cookie auto-login | `Yiisoft\Yii\Auth\Session\AuthManager`, `Yiisoft\Yii\Auth\Session\Authenticator`, `Yiisoft\Yii\Auth\Session\AuthenticatorWithRedirectToAuthUrl` | `Application/` (ports) / `Infrastructure/Auth/` |
+| **Infrastructure & Payments** | `yiisoft/payments` | Unified payment gateway abstraction (Stripe, PayPal, YooKassa, Robokassa), payment intents, and PSR-15 webhook processing with signature verification | `Yiisoft\Payments\PaymentGatewayInterface`, `Yiisoft\Payments\Models\PaymentIntent`, `Yiisoft\Payments\Webhooks\WebhookProcessor` | `Infrastructure/Payments/` or `Application/` |
 | **Runtime & Workers** | `yiisoft/yii-runner-roadrunner` | Application runner for RoadRunner high-performance daemon server supporting HTTP worker loops, gRPC, and Temporal workflows with state reset | `Yiisoft\Yii\Runner\RoadRunner\RoadRunnerHttpApplicationRunner`, `Yiisoft\Yii\Runner\RoadRunner\RoadRunnerHttpWorker`, `Yiisoft\Yii\Runner\RoadRunner\RoadRunnerGrpcApplicationRunner` | Entry points (`worker.php`, root execution) |
 | **Runtime & Workers** | `yiisoft/yii-runner-frankenphp` | Application runner for FrankenPHP Caddy-based server in worker mode (`frankenphp_handle_request`) with in-memory state reset and garbage collection | `Yiisoft\Yii\Runner\FrankenPHP\FrankenPHPApplicationRunner`, `Yiisoft\Yii\Runner\FrankenPHP\RequestFactory` | Entry points (`worker.php`, `public/index.php`) |
+| **Runtime & Workers** | `yiisoft/yii-runner-rapira` | Application runner for Rapira embedded PHP server (Rust) supporting persistent worker, FPM-like, and static modes with state reset | `Yiisoft\Yii\Runner\Rapira\RapiraApplicationRunner`, `Yiisoft\Yii\Runner\Rapira\ExchangeEmitter` | Entry points (`worker.php`, root execution) |
+| **Infrastructure & Async** | `yiisoft/scheduler` | Recurring task runner and cron scheduling engine supporting console commands, callables, and queue jobs with mutex-backed overlap prevention and cache checkpoints | `Yiisoft\Scheduler\Scheduler`, `Yiisoft\Scheduler\Schedule`, `Yiisoft\Scheduler\RecurringTask`, `Yiisoft\Scheduler\CronBuilder` | `Infrastructure/` / Console commands & cron execution |
 | **DevTools & Profiling** | `yiisoft/profiler` | High-performance execution profiler measuring execution time and memory deltas between code checkpoints with pluggable storage targets | `Yiisoft\Profiler\Profiler`, `Yiisoft\Profiler\ProfilerInterface`, `Yiisoft\Profiler\Target\TargetInterface`, `Yiisoft\Profiler\Target\FileTarget`, `Yiisoft\Profiler\Target\LogTarget` | `Infrastructure/` (ports wired to app services / `require-dev`) |
 | **Utilities & Discovery** | `yiisoft/classifier` | Filesystem class discovery tool locating classes by PHP 8 attributes, interfaces, or parent inheritance without autoloading reflection overhead | `Yiisoft\Classifier\Classifier` | `Infrastructure/` / Console command discovery |
 | **Utilities & Discovery** | `yiisoft/network-utilities` | Network and IP manipulation utilities providing IPv4/IPv6 validation, CIDR subnet matching, IP range aliases, and DNS lookups | `Yiisoft\NetworkUtilities\IpHelper`, `Yiisoft\NetworkUtilities\DnsHelper`, `Yiisoft\NetworkUtilities\IpRanges` | `Infrastructure/Utils/` or shared library |
@@ -117,7 +126,7 @@ Every target application must pick a consistent storage driver for each infrastr
 |---|---|---|
 | **Database Driver** | `yiisoft/db-mysql`<br>`yiisoft/db-pgsql`<br>`yiisoft/db-sqlite`<br>`yiisoft/db-mssql`<br>`yiisoft/db-oracle` | Check `.env`, `docker-compose.yml`, or existing connection config. In CI/testing, `yiisoft/db-sqlite` is preferred. |
 | **Persistence Paradigm** | `yiisoft/db` + `yiisoft/active-record`<br>OR `yiisoft/yii-cycle` + `cycle/orm` | Check existing repositories: if `ActiveRecord` is used, stay with Active Record. If Cycle entities are present, stay with Cycle. Never mix for the same entities. |
-| **App Runner / Worker** | `yiisoft/yii-runner-http` (standard web)<br>`yiisoft/yii-runner-console` (CLI)<br>`yiisoft/yii-runner-roadrunner` (RoadRunner worker)<br>`yiisoft/yii-runner-frankenphp` (FrankenPHP worker) | Select based on hosting/runtime environment: standard PHP-FPM uses `runner-http`, persistent daemon runtimes use `runner-roadrunner` or `runner-frankenphp`. |
+| **App Runner / Worker** | `yiisoft/yii-runner-http` (standard web)<br>`yiisoft/yii-runner-console` (CLI)<br>`yiisoft/yii-runner-roadrunner` (RoadRunner worker)<br>`yiisoft/yii-runner-frankenphp` (FrankenPHP worker)<br>`yiisoft/yii-runner-rapira` (Rapira worker, PHP 8.4+) | Select based on hosting/runtime environment: standard PHP-FPM uses `runner-http`, persistent daemon runtimes use `runner-roadrunner`, `runner-frankenphp`, or `runner-rapira`. |
 | **Cache Storage** | `yiisoft/cache-file`<br>`yiisoft/cache-redis`<br>`yiisoft/cache-db`<br>`yiisoft/cache-apcu`<br>`yiisoft/cache-memcached`<br>`yiisoft/cache-wincache` | Default for simple web apps is `yiisoft/cache-file`. For distributed/cloud, use `yiisoft/cache-redis`. |
 | **Queue Transport** | `yiisoft/queue-db`<br>`yiisoft/queue-redis`<br>`yiisoft/queue-amqp` | If project already has DB without extra infra, use `queue-db`. For high-throughput async, use `queue-redis` or `queue-amqp`. |
 | **Mutex Driver** | `yiisoft/mutex-file`<br>`yiisoft/mutex-pdo-mysql`<br>`yiisoft/mutex-pdo-pgsql`<br>`yiisoft/mutex-pdo-oracle`<br>`yiisoft/mutex-redis` | Match the project's primary database or Redis instance. |
@@ -174,7 +183,11 @@ composer require yiisoft/user yiisoft/auth yiisoft/session yiisoft/security yiis
 
 ### 4.7. Async Jobs & Queue
 ```bash
+# Queue processing:
 composer require yiisoft/queue yiisoft/queue-db yiisoft/mutex yiisoft/mutex-pdo-mysql
+
+# Recurring Tasks & Cron Scheduler:
+composer require yiisoft/scheduler yiisoft/mutex yiisoft/cache-file
 ```
 
 > **Transactional Outbox Composition:** Enterprise outbox delivery composes existing ecosystem packages (`yiisoft/db`, `yiisoft/db-migration`, `yiisoft/json`, `yiisoft/mutex`, `yiisoft/queue`, `yiisoft/yii-console`) — see the [Transactional Outbox Guide](infra-transactional-outbox.md). There is no standalone `yiisoft/outbox` package.
@@ -193,8 +206,19 @@ composer require yiisoft/yii-runner-roadrunner
 # FrankenPHP Worker:
 composer require yiisoft/yii-runner-frankenphp
 
+# Rapira Worker (PHP 8.4+):
+composer require yiisoft/yii-runner-rapira rapira/contract
+
 # OAuth2 / Social Authentication:
 composer require yiisoft/yii-auth-client yiisoft/user yiisoft/session
+
+# Session-Based Authentication:
+composer require yiisoft/yii-auth-session yiisoft/auth yiisoft/session
+```
+
+### 4.10. Payment Gateways & Webhooks
+```bash
+composer require yiisoft/payments
 ```
 
 ---
@@ -242,5 +266,7 @@ Packages below are prescribed or used by topic guides but are not part of the yi
 | `roave/infection-static-analysis-plugin` | Static-analysis-filtered mutation testing | testing-infection |
 | `codeception/module-asserts`, `module-cli`, `module-rest`, `module-phpbrowser`, `lib-innerbrowser` | Codeception suites (REST module requires `module-phpbrowser` + `lib-innerbrowser` and a live served application) | testing-codeception |
 | `httpsoft/http-message` | PSR-7 message and factory implementations (`ServerRequest`, `ServerRequestFactory`, `ResponseFactory`) used to build in-memory test requests and responses | testing-http, http-middlewares |
+| `rapira/contract` | Contract interfaces for Rapira embedded PHP server | infra-runners-and-runtimes |
+| `dragonmantank/cron-expression` | Cron expression evaluation engine behind `yiisoft/scheduler` | infra-queue-jobs |
 | `phpstan/phpstan`, `vimeo/psalm` | Static analysis linters (allowed `require-dev` per Dependency Protocol §3.2) | core-dependency-protocol |
 

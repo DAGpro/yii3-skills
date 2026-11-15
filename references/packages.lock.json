@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-12T18:25:05.912Z",
-  "packages_count": 130,
+  "generated_at": "2026-11-15T02:17:17.463Z",
+  "packages_count": 136,
   "packages": {
     "access": {
       "package": "yiisoft/access",
@@ -300,6 +300,15 @@
       "tag": null,
       "release": "2.0.1"
     },
+    "db-profiler": {
+      "package": "yiisoft/_____",
+      "remote": "https://github.com/yiisoft/db-profiler.git",
+      "branch": "master",
+      "commit": "1271e08d23a7de86c0feff80649b0abcae71f320",
+      "commit_date": "2026-09-04T17:39:35+03:00",
+      "tag": null,
+      "release": null
+    },
     "db-sqlite": {
       "package": "yiisoft/db-sqlite",
       "remote": "https://github.com/yiisoft/db-sqlite.git",
@@ -498,6 +507,15 @@
       "tag": null,
       "release": "1.1.0"
     },
+    "locale-middleware": {
+      "package": "yiisoft/locale-middleware",
+      "remote": "https://github.com/yiisoft/locale-middleware.git",
+      "branch": "master",
+      "commit": "d1a86b5c007ae85c9e30a68f2ce92d9e01af30fd",
+      "commit_date": "2026-11-01T18:12:23+03:00",
+      "tag": null,
+      "release": null
+    },
     "log": {
       "package": "yiisoft/log",
       "remote": "https://github.com/yiisoft/log.git",
@@ -632,6 +650,15 @@
       "commit_date": "2026-08-09T17:41:05+03:00",
       "tag": null,
       "release": "1.2.1"
+    },
+    "payments": {
+      "package": "yiisoft/payments",
+      "remote": "https://github.com/yiisoft/payments.git",
+      "branch": "master",
+      "commit": "b8d662c0a29f46effecdef7face7f3eb18e7aa17",
+      "commit_date": "2026-09-04T17:42:36+03:00",
+      "tag": null,
+      "release": null
     },
     "profiler": {
       "package": "yiisoft/profiler",
@@ -822,6 +849,15 @@
       "tag": null,
       "release": "4.0.3"
     },
+    "scheduler": {
+      "package": "yiisoft/scheduler",
+      "remote": "https://github.com/yiisoft/scheduler.git",
+      "branch": "master",
+      "commit": "2e8e2681bdb0da4ec4444741482c61c6e2e4c913",
+      "commit_date": "2026-11-02T11:57:05+01:00",
+      "tag": null,
+      "release": null
+    },
     "security": {
       "package": "yiisoft/security",
       "remote": "https://github.com/yiisoft/security.git",
@@ -963,6 +999,15 @@
       "branch": "master",
       "commit": "915f4f51d72ac8f55e553aff86de00da947d0789",
       "commit_date": "2026-10-15T01:45:58+03:00",
+      "tag": null,
+      "release": null
+    },
+    "yii-auth-session": {
+      "package": "yiisoft/yii-auth-session",
+      "remote": "https://github.com/yiisoft/yii-auth-session.git",
+      "branch": "master",
+      "commit": "7a5d82446aa71fb152dcd14cb09b04867cde5a8f",
+      "commit_date": "2026-09-10T18:38:14+03:00",
       "tag": null,
       "release": null
     },
@@ -1109,6 +1154,15 @@
       "commit_date": "2026-09-04T17:46:16+03:00",
       "tag": null,
       "release": "3.2.1"
+    },
+    "yii-runner-rapira": {
+      "package": "yiisoft/yii-runner-rapira",
+      "remote": "https://github.com/yiisoft/yii-runner-rapira.git",
+      "branch": "master",
+      "commit": "ba22308ed2feba7eca75a51d2d03eef78eeb86b4",
+      "commit_date": "2026-11-11T01:59:04+03:00",
+      "tag": null,
+      "release": null
     },
     "yii-runner-roadrunner": {
       "package": "yiisoft/yii-runner-roadrunner",

@@ -7,10 +7,10 @@
 
 | Metric | Value | Scope |
 |---|---|---|
-| **Total Reference Files** | 99 | All reference documents in `skills/yii3/references/` |
+| **Total Reference Files** | 100 | All reference documents in `skills/yii3/references/` |
 | **Catalogs & Navigation Indexes** | 2 | `INDEX.md`, `package-catalog.md` |
-| **Evaluated Topic Guides** | 97 | Concrete architectural and implementation reference guides |
-| **Covered Topic Guides** | 97 (100.0%) | Verified by >= 1 dedicated eval scenario with positive & negative samples |
+| **Evaluated Topic Guides** | 98 | Concrete architectural and implementation reference guides |
+| **Covered Topic Guides** | 98 (100.0%) | Verified by >= 1 dedicated eval scenario with positive & negative samples |
 | **Unbound Topic Guides** | 0 (0.0%) | Full coverage achieved across all evaluated topic guides |
 | **Total Eval Scenarios** | 69 | Deterministic test fixtures with full check-suites and mutation canaries |
 
@@ -84,6 +84,7 @@
 | `references/infra-mailer-async-queue.md` | [31](scenarios/31-composite-mail-queue) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-mailer-transports.md` | [14](scenarios/14-mailer-notification) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-mailer.md` | [14](scenarios/14-mailer-notification) | unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/infra-payments.md` | [48](scenarios/48-architecture-layering) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-queue-brokers.md` | [15](scenarios/15-queue-job) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-queue-jobs.md` | [15](scenarios/15-queue-job), [31](scenarios/31-composite-mail-queue), [67](scenarios/67-transactional-outbox) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/infra-queue-mutex.md` | [35](scenarios/35-console-command-mutex), [67](scenarios/67-transactional-outbox) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
@@ -121,7 +122,7 @@
 
 ## 3. Unbound Guides Gap Analysis (100% Coverage Achieved)
 
-All **97** evaluated topic guides (across **99** reference files) have **100.0% coverage** across **69** eval scenarios (`0` unbound guides). Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–69`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:
+All **98** evaluated topic guides (across **100** reference files) have **100.0% coverage** across **69** eval scenarios (`0` unbound guides). Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–69`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:
 
 | # | Scenario | Layer | Bound Guides | Status |
 |---|---|---|---|---|

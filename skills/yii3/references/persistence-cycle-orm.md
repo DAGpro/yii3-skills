@@ -43,10 +43,10 @@ Cycle ORM implements the **Data Mapper** pattern. Unlike Active Record:
 
 ### 1.2. Architecture Layout & Entity Mapping Options
 
-| Entity Option | Active Tier(s) | Structure | Notes |
+| Entity Option | Active Pattern(s) | Structure | Notes |
 |---|---|---|---|
-| **1. Annotated Entities (`cycle/annotated`)** *(default)* | **Pragmatic**, **Balanced**, pragmatic **DDD** | POPO entities annotated with `#[Entity]` / `#[Column]` directly in `Domain/Model/` (zero Cycle base class or DB connection). | Minimal config; pair with compiled schema provider in production (`FromFilesSchemaProvider`). |
-| **2. Pure POPO Entities + Schema Provider** | **Strict** (`explicit*`, vendor-free Domain) | Plain POPO entities in `Domain/` with zero `Cycle\*` attributes; table/column mapping defined in schema config/providers under `Infrastructure/`. | Preserves zero vendor imports in `Domain/` (`core-architecture-alignment.md` §2.1). |
+| **1. Annotated Entities (`cycle/annotated`)** *(default)* | **Layered**, **Structured Modules**, pragmatic **DDD** | POPO entities annotated with `#[Entity]` / `#[Column]` directly in `Domain/Model/` (zero Cycle base class or DB connection). | Minimal config; pair with compiled schema provider in production (`FromFilesSchemaProvider`). |
+| **2. Pure POPO Entities + Schema Provider** | **Explicit Architecture** (`explicit*`, vendor-free Domain) | Plain POPO entities in `Domain/` with zero `Cycle\*` attributes; table/column mapping defined in schema config/providers under `Infrastructure/`. | Preserves zero vendor imports in `Domain/` (`core-architecture-alignment.md` §2.1). |
 
 **Attributed Clean Architecture Reference Layout:**
 

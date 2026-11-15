@@ -10,11 +10,11 @@ This guide is the authority for **project conventions** (layout, layer placement
 ---
 
 ## Table of Contents
-- [1. Pattern-Aware Strictness Tiers](#1-pattern-aware-strictness-tiers)
+- [1. Pattern-Aware Boundary Isolation](#1-pattern-aware-boundary-isolation)
 - [2. Vendor Policy per Architecture Pattern](#2-vendor-policy-per-architecture-pattern)
-  - [2.1. Strict Tier: Explicit Architecture (Clean / Ports & Adapters)](#21-strict-tier-explicit-architecture-clean--ports--adapters)
-  - [2.2. Balanced Tier: Structured Modules](#22-balanced-tier-structured-modules)
-  - [2.3. Pragmatic Tier: Layered Architecture](#23-pragmatic-tier-layered-architecture)
+  - [2.1. Explicit Architecture (Clean / Ports & Adapters)](#21-explicit-architecture-clean--ports--adapters)
+  - [2.2. Structured Modules](#22-structured-modules)
+  - [2.3. Layered Architecture](#23-layered-architecture)
 - [3. Universal Invariants (All Patterns)](#3-universal-invariants-all-patterns)
   - [3.1. The Presentation Exception](#31-the-presentation-exception)
   - [3.2. Presentation Isolation from Persistence](#32-presentation-isolation-from-persistence)
@@ -24,36 +24,36 @@ This guide is the authority for **project conventions** (layout, layer placement
   - [3.6. Pre-existing Code & Starter Scaffolding Policy](#36-pre-existing-code--starter-scaffolding-policy)
 - [4. Package Placement Matrix by Pattern](#4-package-placement-matrix-by-pattern)
 - [5. Quality Gate Checklist](#5-quality-gate-checklist)
-- [6. Stage-by-Tier Execution Matrix](#6-stage-by-tier-execution-matrix)
-  - [Repository & Persistence Patterns Across Architectural Tiers](#repository--persistence-patterns-across-architectural-tiers)
+- [6. Stage-by-Pattern Execution Matrix](#6-stage-by-pattern-execution-matrix)
+  - [Repository & Persistence Patterns Across Architecture Patterns](#repository--persistence-patterns-across-architecture-patterns)
 
 ---
 
-## 1. Pattern-Aware Strictness Tiers
+## 1. Pattern-Aware Boundary Isolation
 
 Architecture patterns vary in the degree of formal decoupling they require between application code and framework libraries. Imposing strict hexagonal isolation on a simple CRUD application causes over-engineering, while allowing ActiveRecord to leak into a DDD domain breaks aggregate purity.
 
-The architecture types defined by the `/aif-architecture` workflow map directly to three vendor isolation tiers in modern Yii 3:
+The architecture types defined by the `/aif-architecture` workflow map directly to three vendor boundary isolation strategies in modern Yii 3:
 
-| `/aif-architecture` Pattern Type | CLI Arguments / Aliases | Yii 3 Isolation Tier | Core Invariants |
+| `/aif-architecture` Pattern Type | CLI Arguments / Aliases | Boundary Isolation Level | Core Invariants |
 |---|---|---|---|
-| **Explicit Architecture** | `explicit`, `explicit-layers`, `explicit-vertical`, `explicit-flat` (aliases: `clean`, `ddd`, `vertical`) | **Strict Tier** | Pure POPO Domain; mandatory port interfaces; vendor packages strictly in Infrastructure. |
-| **Structured Modules** | `structured`, `structured-layers`, `structured-vertical` (alias: `monolith`) | **Balanced Tier** | Feature modules (`src/<Module>/`); rich models (ActiveRecord permitted); services orchestrate without direct SQL; interfaces at boundaries. |
-| **Layered Architecture** | `layers` | **Pragmatic Tier** | Horizontal layers (`src/Controllers/`, `src/Services/`, `src/Models/`, `src/Repositories/`); downward flow; concrete injection. |
+| **Explicit Architecture** | `explicit`, `explicit-layers`, `explicit-vertical`, `explicit-flat` (aliases: `clean`, `ddd`, `vertical`) | Pure Domain Isolation | Pure POPO Domain; mandatory port interfaces; vendor packages strictly in Infrastructure. |
+| **Structured Modules** | `structured`, `structured-layers`, `structured-vertical` (alias: `monolith`) | Module Boundary Encapsulation | Feature modules (`src/<Module>/`); rich models (ActiveRecord permitted); services orchestrate without direct SQL; interfaces at boundaries. |
+| **Layered Architecture** | `layers` | Layered Downward Flow | Horizontal layers (`src/Controllers/`, `src/Services/`, `src/Models/`, `src/Repositories/`); downward flow; concrete injection. |
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│ STRICT TIER: Explicit Architecture (Clean / Hexagonal)                 │
+│ EXPLICIT ARCHITECTURE (Clean / Hexagonal)                              │
 │ - Pure POPO Domain (Zero vendor dependencies)                          │
 │ - Mandatory Port interfaces in Domain / Application                    │
 │ - Vendor packages (DB, Cache, Queue) strictly in Infrastructure        │
 ├────────────────────────────────────────────────────────────────────────┤
-│ BALANCED TIER: Structured Modules                                      │
+│ STRUCTURED MODULES (Feature Modules)                                   │
 │ - Feature modules with rich models (ActiveRecord permitted)            │
 │ - Services orchestrate use cases without direct SQL queries            │
 │ - Port interfaces encouraged for external APIs, optional for repos    │
 ├────────────────────────────────────────────────────────────────────────┤
-│ PRAGMATIC TIER: Layered Architecture (Classic MVC / Rapid CRUD)        │
+│ LAYERED ARCHITECTURE (Classic MVC / Rapid CRUD)                        │
 │ - Models inherit from Yiisoft\ActiveRecord\ActiveRecord                │
 │ - Direct injection of concrete Repositories / Services                 │
 │ - Downward dependency flow: Controllers -> Services -> Repositories    │
@@ -64,15 +64,16 @@ The architecture types defined by the `/aif-architecture` workflow map directly 
 
 ## 2. Vendor Policy per Architecture Pattern
 
-### 2.1. Strict Tier: Explicit Architecture (Clean / Ports & Adapters)
+### 2.1. Explicit Architecture (Clean / Ports & Adapters)
 Corresponds to `/aif-architecture explicit` (`explicit-layers`, `explicit-vertical`, `explicit-flat`). Used when domain logic is complex and business rules must remain completely independent of frameworks, databases, and UI delivery mechanisms.
 
 - **Domain Layer:** Pure PHP objects (POPOs), domain events, and port interfaces (`UserRepositoryInterface`). Must **never** import `yiisoft/db`, `yiisoft/active-record`, `yiisoft/yii-cycle`, `yiisoft/view`, or PSR HTTP classes.
 - **Application Layer:** Use-case handlers (`RegisterUserHandler`) inject abstract port interfaces. Must **never** import concrete database adapters or vendor drivers.
 - **Infrastructure Layer:** Outbound vendor adapters live exclusively here (`DbUserRepository implements UserRepositoryInterface`). This is where `yiisoft/db`, database drivers, cache drivers, and queue transports reside.
 - **Presentation Layer:** Inbound transport adapter directly consuming vendor routing and HTTP (see [Presentation Exception](#31-the-presentation-exception)).
+- **Vertical Slice Subfolder Grouping Rule:** When using vertical slices (including `explicit-flat`), avoid flat-dumping dozens of thin actions, DTOs, and handlers into the root entity folder. Because modern Yii 3 mandates Single-Action classes and dedicated DTOs/handlers, group each use case into its own cohesive feature subfolder inside the slice (`src/<Context>/<Entity>/<FeatureName>/` containing `<FeatureName>Action.php`, `<FeatureName>Dto.php`, `<FeatureName>Handler.php`) per [Feature Recipes, §5 Style 1](core-feature-recipes.md#style-1-vertical-slice-feature-based-common-in-modern-yii3-apps).
 
-### 2.2. Balanced Tier: Structured Modules
+### 2.2. Structured Modules
 Corresponds to `/aif-architecture structured` (`structured-layers`, `structured-vertical`). Used for growing monoliths organized into feature modules (e.g., `Catalog`, `Billing`, `Identity`).
 
 - **Models (`[Module]/Models/`):** Rich domain models encapsulating business rules and state transitions. May inherit from `Yiisoft\ActiveRecord\ActiveRecord` or use Cycle ORM entity attributes (`#[Entity]`) directly without needing a separate port interface.
@@ -80,7 +81,7 @@ Corresponds to `/aif-architecture structured` (`structured-layers`, `structured-
 - **Repositories (`[Module]/Repositories/`):** Encapsulate complex queries and data mapping. May be injected directly as concrete classes without mandatory interface extraction.
 - **Module Boundary:** Modules communicate via public services or events, never accessing another module's internal tables directly.
 
-### 2.3. Pragmatic Tier: Layered Architecture
+### 2.3. Layered Architecture
 Corresponds to `/aif-architecture layers`. Used for straightforward CRUD applications, administrative utilities, or prototypes where velocity is prioritized over strict formal decoupling.
 
 - **Models (`src/Models/`):** Data structures, DTOs, and Active Record models (`Yiisoft\ActiveRecord\ActiveRecord`). Vendor persistence annotations and methods live directly on the models.
@@ -126,9 +127,9 @@ A project must avoid competing framework implementations for the same responsibi
 
 In Yii 3 architectures, **Application Service** and **Use Case Handler** are two structural representations of the same Application Layer:
 
-- **Explicit Architecture (Strict):** Prefers single-responsibility **Use Case Handlers** (`CreateUserHandler`, `CheckoutHandler`) where each business action or command is isolated into its own class. This guarantees strict CQRS compliance and decoupled domain port dependencies.
-- **Structured Modules (Balanced) & Layered (Pragmatic):** Cohesive **Application Services** (`UserService`, `CatalogService` grouping related entity workflows) or Use Case Handlers are equally valid. In the Standard decomposition tier, application services may directly consume concrete repositories when domain aggregate abstractions collapse.
-- **Presentation Layer Boundary Invariant:** Regardless of architectural pattern or tier, HTTP Actions (`*Action`) and Console Commands (`*Command`) belong strictly to the **Presentation Layer**. They orchestrate transport concerns (request parsing, typed DTO validation, status code mapping, response wrapping, or CLI formatting) and delegate to the Application Layer. **Presentation never acts as an Application Service and must never absorb database persistence, raw SQL, or transaction boundaries.**
+- **Explicit Architecture:** Prefers single-responsibility **Use Case Handlers** (`CreateUserHandler`, `CheckoutHandler`) where each business action or command is isolated into its own class. This guarantees strict CQRS compliance and decoupled domain port dependencies.
+- **Structured Modules & Layered Architecture:** Cohesive **Application Services** (`UserService`, `CatalogService` grouping related entity workflows) or Use Case Handlers are equally valid. In standard feature decomposition, application services may directly consume concrete repositories when domain aggregate abstractions collapse.
+- **Presentation Layer Boundary Invariant:** Regardless of architectural pattern or isolation level, HTTP Actions (`*Action`) and Console Commands (`*Command`) belong strictly to the **Presentation Layer**. They orchestrate transport concerns (request parsing, typed DTO validation, status code mapping, response wrapping, or CLI formatting) and delegate to the Application Layer. **Presentation never acts as an Application Service and must never absorb database persistence, raw SQL, or transaction boundaries.**
 
 ### 3.6. Pre-existing Code & Starter Scaffolding Policy
 
@@ -170,7 +171,7 @@ In `ARCHITECTURE.md`, pre-existing code that differs from the target pattern is 
 
 ## 4. Package Placement Matrix by Pattern
 
-| Package Category | Explicit Architecture (Strict) | Structured Modules (Balanced) | Layered (Pragmatic) |
+| Package Category | Explicit Architecture | Structured Modules | Layered Architecture |
 |---|---|---|---|
 | **Persistence & ORM**<br>(`db`, `active-record`, `data-db`, `yii-cycle`) | Strictly **Infrastructure** (implements Domain ports) | **Repositories** or inside **Models** (ActiveRecord) | **Repositories** and **Models** (ActiveRecord) |
 | **Domain Contracts & Rules**<br>(Pure entities, ports, events) | Strictly **Domain** (zero vendor dependencies) | **Models** (rich domain logic, vendor ORM permitted) | **Models** and **Services** (shared data structures) |
@@ -194,22 +195,21 @@ When reviewing code (`aif-review`) or verifying changes (`aif-verify`), apply ch
 
 ---
 
-## 6. Stage-by-Tier Execution Matrix
+## 6. Stage-by-Pattern Execution Matrix
 
-| Mission Stage | Pragmatic Tier (`layers`) | Balanced Tier (`structured*`) | Strict Tier (`explicit*`) |
+| Assembly Step | Layered Architecture (`layers`) | Structured Modules (`structured*`) | Explicit Architecture (`explicit*`) |
 |---|---|---|---|
-| **Stage 1 — Migration & Schema** | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` |
-| **Stage 2 — Domain / Model & Repository Boundary** | Validated Model / Entity (POPO, Active Record, or Cycle entity); repository only when needed (no mandatory port interface) | Module Entity / Rich Model (Active Record / Cycle permitted); module-boundary interfaces | Pure Aggregate + Value Objects (zero vendor imports); PSR-14 domain events; explicit `*RepositoryInterface` |
-| **Stage 3 — Repository / Persistence Implementation** | Concrete Repository (`yiisoft/db`) or Active Record finder/query methods directly (if Active Record handles persistence directly, mark Stage 3 skipped or satisfied by model) | Module Repository or Active Record / Cycle mapper | Infrastructure adapter implementing `*RepositoryInterface` (`Sql*Repository`) |
-| **Stage 4 — Use Case Handler & Events** | Cohesive Application Service orchestrating transactions & persistence | Module Service or Use Case Handler + transaction boundary | Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`) + post-commit PSR-14 events |
-| **Stage 5 — Input DTO & Action / Command** | Typed Input DTO + thin Action delegating to Application Service | Typed Input DTO + thin Action delegating to Module Service / Use Case | Typed Input DTO + thin Action delegating to Use Case Handler |
-| **Stage 6 — Config Audit & Wiring Gate** | Root `config/` (DI, routes, console commands, events) | Root `config/` (or module config) | Root `config/` (port interface bindings, routes, commands, events) |
-| **Stage 7 — Tests** | Unit tests (Service) + functional/HTTP tests | Module unit & functional tests | Domain/Use Case unit tests + adapter integration + HTTP tests |
+| **1. Schema & Migration** | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` | `yiisoft/db-migration` (or `cycle/migrations`) with reversible `down()` |
+| **2. Persistence & Boundary** | Validated Model / Entity (POPO, Active Record, or Cycle entity); repository only when needed (no mandatory port interface) | Module Entity / Rich Model (Active Record / Cycle permitted); module-boundary interfaces | Pure Aggregate + Value Objects (zero vendor imports); PSR-14 domain events; explicit `*RepositoryInterface` + `Sql*Repository` adapter |
+| **3. Application & Domain** | Cohesive Application Service orchestrating transactions & persistence | Module Service or Use Case Handler + transaction boundary | Dedicated single-responsibility Use Case Handler (`*Command` + `*Handler`) + post-commit PSR-14 events |
+| **4. Transport & Entry Point** | Typed Input DTO + thin Action delegating to Application Service | Typed Input DTO + thin Action delegating to Module Service / Use Case | Typed Input DTO + thin Action delegating to Use Case Handler |
+| **5. Immediate Wiring** | Root `config/` (DI, routes, console commands, events) | Root `config/` (or module config) | Root `config/` (port interface bindings, routes, commands, events) |
+| **Finale — Tests & DoD** | Unit tests (Service) + functional/HTTP tests | Module unit & functional tests | Domain/Use Case unit tests + adapter integration + HTTP tests |
 
-### Repository & Persistence Patterns Across Architectural Tiers
+### Repository & Persistence Patterns Across Architecture Patterns
 
-| Architecture Tier | Active Record Pattern | Cycle ORM Pattern | DBAL Query Builder Pattern |
+| Architecture Pattern | Active Record Pattern | Cycle ORM Pattern | DBAL Query Builder Pattern |
 |---|---|---|---|
-| **Pragmatic Tier** (`layers`) | Rich `UserRecord extends ActiveRecord` in `src/Models/` with static finders (`RepositoryTrait`) or concrete `UserRepository` (no interface). | Annotated `User` entity (`#[Entity]`) in `src/Models/` with concrete `UserRepository` injecting `EntityManagerInterface`. | Concrete `UserRepository` in `src/Repositories/` using `Query` and returning associative arrays or DTOs. |
-| **Balanced Tier** (`structured*`) | Module model in `src/<Module>/Models/UserRecord.php`. Encapsulated in module `UserRepository` without cross-module leakage. | Module entity in `src/<Module>/Entities/User.php` with `#[Entity]`. Persistence handled by module service/repository. | Module persistence adapter in `src/<Module>/Infrastructure/DbUserRepository.php`. |
-| **Strict Tier** (`explicit*`) | Pure POPO `Domain\Model\User` + `Domain\Repository\UserRepositoryInterface`. Adapter `ArUserRepository` in `Infrastructure/` maps to/from `UserRecord`. | Pure POPO `User` in `Domain/` with external compiled schema in `Infrastructure/` (or pure annotated entity if attributes allowed). | Pure POPO `Domain\Model\User` + `UserRepositoryInterface`. Adapter `DbUserRepository` in `Infrastructure/` hydrates via `HydratorInterface`. |
+| **Layered Architecture** (`layers`) | Rich `UserRecord extends ActiveRecord` in `src/Models/` with static finders (`RepositoryTrait`) or concrete `UserRepository` (no interface). | Annotated `User` entity (`#[Entity]`) in `src/Models/` with concrete `UserRepository` injecting `EntityManagerInterface`. | Concrete `UserRepository` in `src/Repositories/` using `Query` and returning associative arrays or DTOs. |
+| **Structured Modules** (`structured*`) | Module model in `src/<Module>/Models/UserRecord.php`. Encapsulated in module `UserRepository` without cross-module leakage. | Module entity in `src/<Module>/Entities/User.php` with `#[Entity]`. Persistence handled by module service/repository. | Module persistence adapter in `src/<Module>/Infrastructure/DbUserRepository.php`. |
+| **Explicit Architecture** (`explicit*`) | Pure POPO `Domain\Model\User` + `Domain\Repository\UserRepositoryInterface`. Adapter `ArUserRepository` in `Infrastructure/` maps to/from `UserRecord`. | Pure POPO `User` in `Domain/` with external compiled schema in `Infrastructure/` (or pure annotated entity if attributes allowed). | Pure POPO `Domain\Model\User` + `UserRepositoryInterface`. Adapter `DbUserRepository` in `Infrastructure/` hydrates via `HydratorInterface`. |

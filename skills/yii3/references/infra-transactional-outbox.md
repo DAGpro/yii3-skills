@@ -22,12 +22,12 @@
 
 Calling `QueueProducerInterface::push()` or `EventDispatcherInterface::dispatch()` inside an open `$db->transaction()` creates race conditions and phantom side effects if the transaction rolls back. However, even **post-commit dispatch** has a crash window: if the database commit succeeds and the process crashes, restarts, or hits a broker network timeout before `push()` completes, the domain state is committed while the message is lost forever (**dual-write failure**).
 
-Select the reliability tier intentionally based on Execution Mode (`Patch | Feature | Enterprise`):
+Select the reliability strategy intentionally based on task requirements and message criticality:
 
 | Strategy | Guarantee | When to Use |
 |---|---|---|
-| **Post-Commit Dispatch** ([Events Design §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)) | Best-effort after DB commit; zero extra table/worker overhead | **Feature Mode** defaults: non-critical emails, cache warming, UI activity feeds, local analytics |
-| **Transactional Outbox** *(this guide)* | **At-least-once delivery** + zero lost messages across DB commit / broker crashes | **Enterprise Mode**: payments, orders, inventory reservations, webhooks, audit streams, inter-service integration events |
+| **Post-Commit Dispatch** ([Events Design §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)) | Best-effort after DB commit; zero extra table/worker overhead | Standard side-effects: non-critical emails, cache warming, UI activity feeds, local analytics |
+| **Transactional Outbox** *(this guide)* | **At-least-once delivery** + zero lost messages across DB commit / broker crashes | Mission-critical workflows: payments, orders, inventory reservations, webhooks, audit streams, inter-service integration events |
 
 > [!NOTE]
 > Yii 3 has no separate `yiisoft/outbox` package. The outbox pattern composes standard first-party components already in the ecosystem: `yiisoft/db` (atomic transaction + `Query` / `CommandInterface`), `yiisoft/db-migration` (reversible schema), `yiisoft/json` (`Json::encode()` / `Json::decode()`), `yiisoft/mutex` (single-flight relay locking), `yiisoft/queue` (downstream worker dispatch), and `yiisoft/yii-console` (`./yii` relay runner).

@@ -27,14 +27,14 @@
 
 ### 1.1. Architecture Placement & Boundary Separation
 
-Match Active Record placement to the project's **Architectural Tier** (`core-architecture-alignment.md` §1–§2): continue the existing `src/` style on feature/patch tasks, and never inject or query Active Record models inside HTTP Presentation Actions or View templates (`core-architecture-alignment.md` §3.2).
+Match Active Record placement to the project's **Architecture Pattern** (`core-architecture-alignment.md` §1–§2): continue the existing `src/` style on feature/patch tasks, and never inject or query Active Record models inside HTTP Presentation Actions or View templates (`core-architecture-alignment.md` §3.2).
 
-| Placement Option | Active Tier(s) | Structure & Flow | Trade-offs |
+| Placement Option | Active Pattern(s) | Structure & Flow | Trade-offs |
 |---|---|---|---|
-| **Option A — Schema Adapter + POPO Entity** | **Strict** (`explicit*`) | `UserRecord extends ActiveRecord` in `Infrastructure/Persistence/ActiveRecord/` + `ArUserRepository implements UserRepositoryInterface` + `Hydrator` reconstituting pure POPO `User`. | Pure vendor-free Domain with repository ports; higher mapping boilerplate (§1.2–§1.3). |
-| **Option B — Rich Active Record Model** | **Balanced** (`structured*`) & **Pragmatic** (`layers`) | `User extends ActiveRecord` lives as a rich Model (optionally with `RepositoryTrait` finders or a concrete repository for complex queries), consumed directly by Application Services. | Zero duplicate POPO mapping; binds Domain model directly to `yiisoft/active-record`. |
+| **Option A — Schema Adapter + POPO Entity** | **Explicit Architecture** (`explicit*`) | `UserRecord extends ActiveRecord` in `Infrastructure/Persistence/ActiveRecord/` + `ArUserRepository implements UserRepositoryInterface` + `Hydrator` reconstituting pure POPO `User`. | Pure vendor-free Domain with repository ports; higher mapping boilerplate (§1.2–§1.3). |
+| **Option B — Rich Active Record Model** | **Structured Modules** (`structured*`) & **Layered** (`layers`) | `User extends ActiveRecord` lives as a rich Model (optionally with `RepositoryTrait` finders or a concrete repository for complex queries), consumed directly by Application Services. | Zero duplicate POPO mapping; binds Domain model directly to `yiisoft/active-record`. |
 
-**Option A Reference Layout (`Strict` / `explicit` tier):**
+**Option A Reference Layout (Explicit Architecture):**
 
 ```text
 src/

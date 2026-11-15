@@ -7,10 +7,10 @@ Thanks for your interest in contributing! This repository is an [AI Factory](htt
 | Path | What it is |
 |---|---|
 | `skills/yii3/` | The `yii3` skill: `SKILL.md` entry point + `references/` topic guides (incl. `package-catalog.md`) |
-| `injections/` | AI Factory workflow hooks: `plan`, `improve`, `implement`, `verify`, `fix`, `review`, `roadmap`, `architecture` |
+| `injections/` | 13 AI Factory workflow hooks: `plan`, `improve`, `implement`, `verify`, `fix`, `review`, `roadmap`, `architecture`, `aif`, `build-automation`, `ci`, `dockerize`, `security-checklist` |
 | `extension.json` | Extension manifest registering skills and injections |
 | `PACKAGES.md` | Navigation index over the offline reference library |
-| `references/` | 130 offline clones of `yiisoft/*` packages — authoring-only, **strictly read-only**; clones are git-ignored, populate locally per [`references/README.md`](references/README.md) |
+| `references/` | 136 offline clones of `yiisoft/*` packages — authoring-only, **strictly read-only**; clones are git-ignored, populate locally per [`references/README.md`](references/README.md) |
 | `scripts/validate.mjs` | Extension quality gate — run before every PR |
 | `evals/` | Behavior tests for the skill: fixture scenarios + agent runner, see [`evals/README.md`](evals/README.md); `evals/results/` is git-ignored |
 | `AGENTS.md` | Project constitution — read it first; it is binding and wins on any conflict with this file |
@@ -42,10 +42,10 @@ Run the local quality gates:
 # 1. Extension integrity, manifest, frontmatter, injection structure, purity, and link consistency
 node scripts/validate.mjs
 
-# 2. AI Factory workflow integration contracts (88 contract tests)
+# 2. AI Factory workflow integration contracts (226 contract tests)
 node scripts/test-aif-workflow.mjs
 
-# 3. Topic guide coverage across eval scenarios (100% across 87 topic guides / 89 files)
+# 3. Topic guide coverage across eval scenarios (100% across 98 topic guides / 100 reference files)
 node scripts/check-eval-coverage.mjs
 
 # 4. Ground-truth symbol, method signature, and parameter arity check
@@ -71,11 +71,11 @@ The gate checks manifest integrity, `SKILL.md` frontmatter (including the descri
 
 ### 2. Workflow contract tests (`scripts/test-aif-workflow.mjs`)
 
-Validates all 88 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
+Validates all 226 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
 
 ### 3. Topic guide coverage (`scripts/check-eval-coverage.mjs` & `scripts/generate-coverage-matrix.mjs`)
 
-Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (`100.0%` coverage across 87 topic guides / 69 scenarios) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
+Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (`100.0%` coverage across 98 topic guides / 69 scenarios) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
 
 ### 4. Symbol & AST signature checks (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`, `scripts/check-manifest-freshness.mjs`)
 
@@ -116,8 +116,8 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 ## PR checklist
 
 - [ ] `node scripts/validate.mjs` — 0 errors, 0 warnings (or justified in the PR description).
-- [ ] `node scripts/test-aif-workflow.mjs` — 88 passed, 0 failed.
-- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (87/87 topic guides, 69 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
+- [ ] `node scripts/test-aif-workflow.mjs` — 226 passed, 0 failed.
+- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (98/98 topic guides, 69 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
 - [ ] `node scripts/check-symbols.mjs` and `node scripts/check-ast.mjs` — 0 unconfirmed symbols, arities, or AST defects (run with `--manifest-mode` if `references/` is not populated).
 - [ ] `node scripts/check-manifest-freshness.mjs` — manifest provenance and parity check passes (`--strict` if `references/` is populated).
 - [ ] `node evals/runner/selftest.mjs` — 69/69 OK (`--runtime` and `node scripts/test-php-runtime.mjs --strict` pass on PHP 8.2+ / CI `php-runtime-gates`).

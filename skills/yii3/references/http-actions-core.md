@@ -22,7 +22,7 @@
 2. **Choosing Action Handler Shape (follow project style; pick one pattern per module/app):**
    | Handler Shape | Signature / Form | Choose when… | Notes |
    |---|---|---|---|
-   | **1. Single-action invokable** *(default)* | `__invoke(ServerRequestInterface $request): ResponseInterface` | Focused endpoint per class (`Feature`/`Enterprise` slices, Clean Architecture). | Supports `yiisoft/input-http` parameter resolution and clean constructor DI. |
+   | **1. Single-action invokable** *(default)* | `__invoke(ServerRequestInterface $request): ResponseInterface` | Single-purpose action per class, recommended for focused HTTP endpoints. | Supports `yiisoft/input-http` parameter resolution and clean constructor DI. |
    | **2. PSR-15 `RequestHandlerInterface`** | `handle(ServerRequestInterface $request): ResponseInterface` | Strict framework-neutral PSR-15 contract with zero magic parameter resolution. | Fixed signature (`$request` only); resolve input manually via `$request`, `CurrentRoute`, `HydratorInterface`. |
    | **3. Plain multi-action controller** | `[UserController::class, 'view']` (or `FileRouter`) | Projects organizing cohesive CRUD methods into one class or using `FileRouter`. | Still a plain POPO with constructor DI (no framework base `Controller` class); every method must return `ResponseInterface`. |
    - Actions are mapped to HTTP endpoints via route definitions or `FileRouter`. For routing strategy and syntax, see [Routing Guide](http-routes-definition.md#choosing-how-to-route-http-requests).
@@ -32,13 +32,13 @@
      - Extract request parameters, route arguments (`CurrentRoute`), query params, headers, cookies, and parsed body.
      - Hydrate and validate input DTOs (`HydratorInterface`, `ValidatorInterface`, `yiisoft/input-http`) or Form Models (`FormHydrator`).
      - Check current user state and permissions (`Yiisoft\User\CurrentUser`).
-     - Invoke an Application Use Case, Command Handler, or Service.
+     - Invoke business operations (repositories, services, or handler contracts).
      - Build and return PSR-7 responses (`DataResponseFactoryInterface`, self-contained `JsonResponseFactory`/`XmlResponseFactory`/`ContentNegotiatorResponseFactory`, `WebViewRenderer`, `DownloadResponseFactory`, PSR-17 `ResponseFactoryInterface` redirects). The legacy `ViewRenderer` is `@deprecated`.
    - **Strictly Forbidden in Actions (Anti-Patterns):**
-     - ❌ Direct SQL queries, Query Builder, or ActiveRecord / Cycle persistence calls (delegate to Application Use Cases or Application Services).
-     - ❌ Database transaction management (`$db->transaction()` belongs in Use Cases / Unit of Work).
+     - ❌ Direct SQL queries, Query Builder, or ActiveRecord / Cycle persistence calls (delegate to domain/business operations or repositories).
+     - ❌ Database transaction management (`$db->transaction()` belongs in the business/persistence layer).
      - ❌ Business logic, domain rules, password hashing, or token cryptography.
-     - ❌ Sending emails or pushing queue jobs directly (delegate to Use Cases or PSR-14 Event Listeners).
+     - ❌ Sending emails or pushing queue jobs directly (delegate to business layer or PSR-14 event listeners).
 
 ---
 
@@ -75,12 +75,19 @@
 
 Use `CurrentRoute` to retrieve path parameters defined in route patterns (e.g. `/users/{id:\d+}`). Use `UrlGeneratorInterface` to generate absolute or relative URLs for redirects, and create redirect responses using PSR-17 `ResponseFactoryInterface` with `Status::FOUND` (302) or `Status::SEE_OTHER` (303).
 
+> [!NOTE]
+> **Action Placement & Dependencies:** File placement, namespaces, and business dependencies follow the project's Architecture Pattern (`core-architecture-alignment.md` §6):
+> - In **Layered Architecture**, actions live in `src/Action/` or `src/Controller/` and delegate to services or repositories (`src/Repository/`).
+> - In **Structured Modules**, actions live in `src/<Module>/Action/` and delegate to module services or repositories.
+> - In **Explicit Architecture**, actions live in `src/Presentation/Action/` and delegate to application use cases or domain contracts.
+> This guide focuses strictly on HTTP request/response handling and Yii3 routing/response APIs.
+
 ```php
 declare(strict_types=1);
 
-namespace App\Presentation\Action\User;
+namespace App\Action;
 
-use App\Application\User\GetUserUseCase;
+use App\Model\User;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -90,6 +97,11 @@ use Yiisoft\Http\Status;
 use Yiisoft\Router\CurrentRoute;
 use Yiisoft\Router\UrlGeneratorInterface;
 
+interface UserFinderInterface
+{
+    public function findById(int $id): ?User;
+}
+
 final readonly class ViewUserAction
 {
     public function __construct(
@@ -97,7 +109,7 @@ final readonly class ViewUserAction
         private UrlGeneratorInterface $urlGenerator,
         private ResponseFactoryInterface $responseFactory,
         private DataResponseFactoryInterface $dataResponseFactory,
-        private GetUserUseCase $getUserUseCase,
+        private UserFinderInterface $users,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -113,7 +125,7 @@ final readonly class ViewUserAction
                 ->withHeader(Header::LOCATION, $fallbackUrl);
         }
 
-        $user = $this->getUserUseCase->findById((int) $id);
+        $user = $this->users->findById((int) $id);
         if ($user === null) {
             return $this->dataResponseFactory->createResponse(
                 ['error' => 'User not found.'],

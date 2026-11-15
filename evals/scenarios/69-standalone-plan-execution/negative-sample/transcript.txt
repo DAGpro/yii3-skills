@@ -1,5 +1,4 @@
 ### Mission State
-- **Mode:** Feature
 - **Context:** AI Factory extension — aif-implement
 - **Architecture:** .ai-factory/ARCHITECTURE.md
 

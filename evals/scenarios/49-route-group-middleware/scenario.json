@@ -1,6 +1,6 @@
 {
   "id": "49-route-group-middleware",
-  "title": "Full mode: route groups - admin routes under a /admin Group with group-level middleware, deprecated Group::create() banned",
+  "title": "Route groups - admin routes under a /admin Group with group-level middleware, deprecated Group::create() banned",
   "mode": "feature",
   "tags": [
     "full",

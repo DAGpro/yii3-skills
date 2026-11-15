@@ -2,14 +2,14 @@
 
 > **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
-> Clean Architecture boundaries, repository implementation, domain entity reconstitution with `yiisoft/hydrator`, model definitions, typed properties, lifecycle events, mutations, and optimistic locking in Yii3 Active Record.
+> Active Record model definitions, typed properties, lifecycle events, mutations, optimistic locking, repository encapsulation, and hydration in Yii3 Active Record.
 
 ## Table of Contents
 
-- [1. Clean Architecture Persistence with Active Record](#1-clean-architecture-persistence-with-active-record)
-  - [1.1. Architecture Placement & Boundary Separation](#11-architecture-placement--boundary-separation)
+- [1. Active Record Repository & Boundary Patterns](#1-active-record-repository--boundary-patterns)
+  - [1.1. Architecture Placement & Boundary Options](#11-architecture-placement--boundary-options)
   - [1.2. Active Record Repository Implementation (`ArUserRepository.php`)](#12-active-record-repository-implementation-aruserrepositoryphp)
-  - [1.3. Clean Domain Entity Reconstitution with `yiisoft/hydrator`](#13-clean-domain-entity-reconstitution-with-yiisofthydrator)
+  - [1.3. Domain Entity Reconstitution with `yiisoft/hydrator`](#13-domain-entity-reconstitution-with-yiisofthydrator)
 - [2. Active Record Model Definition](#2-active-record-model-definition)
   - [2.1. The Constructor-Less Rule & Connection Resolution](#21-the-constructor-less-rule--connection-resolution)
   - [2.2. Table Name Method Contract (Non-Static Rule) & Typed Properties](#22-table-name-method-contract-non-static-rule--typed-properties)
@@ -23,33 +23,19 @@
   - [4.5. Optimistic Concurrency Control (`OptimisticLockInterface`)](#45-optimistic-concurrency-control-optimisticlockinterface)
   - [4.6. Explicit Transaction Demarcation](#46-explicit-transaction-demarcation)
 
-## 1. Clean Architecture Persistence with Active Record
+## 1. Active Record Repository & Boundary Patterns
 
-### 1.1. Architecture Placement & Boundary Separation
+### 1.1. Architecture Placement & Boundary Options
 
-Match Active Record placement to the project's **Architecture Pattern** (`core-architecture-alignment.md` §1–§2): continue the existing `src/` style on feature/patch tasks, and never inject or query Active Record models inside HTTP Presentation Actions or View templates (`core-architecture-alignment.md` §3.2).
+Match Active Record placement to the project's **Architecture Pattern** (`core-architecture-alignment.md` §1–§2): continue the existing `src/` style on ongoing project tasks, and never inject or query Active Record models inside HTTP Presentation Actions or View templates (`core-architecture-alignment.md` §3.2).
 
-| Placement Option | Active Pattern(s) | Structure & Flow | Trade-offs |
+| Boundary Option | Active Pattern(s) | Structure & Flow | Trade-offs |
 |---|---|---|---|
-| **Option A — Schema Adapter + POPO Entity** | **Explicit Architecture** (`explicit*`) | `UserRecord extends ActiveRecord` in `Infrastructure/Persistence/ActiveRecord/` + `ArUserRepository implements UserRepositoryInterface` + `Hydrator` reconstituting pure POPO `User`. | Pure vendor-free Domain with repository ports; higher mapping boilerplate (§1.2–§1.3). |
-| **Option B — Rich Active Record Model** | **Structured Modules** (`structured*`) & **Layered** (`layers`) | `User extends ActiveRecord` lives as a rich Model (optionally with `RepositoryTrait` finders or a concrete repository for complex queries), consumed directly by Application Services. | Zero duplicate POPO mapping; binds Domain model directly to `yiisoft/active-record`. |
+| **Option A — Schema Adapter + POPO Entity** | **Explicit Architecture** (`explicit*`) | `UserRecord extends ActiveRecord` + `ArUserRepository implements UserRepositoryInterface` + `Hydrator` reconstituting pure POPO `User`. | Pure vendor-free Domain with repository ports; higher mapping boilerplate (§1.2–§1.3). |
+| **Option B — Rich Active Record Model** | **Structured Modules** (`structured*`) & **Layered** (`layers`) | `User extends ActiveRecord` lives as a Model (optionally with `RepositoryTrait` finders or a concrete repository for complex queries), consumed by Application Services. | Zero duplicate POPO mapping; binds Model directly to `yiisoft/active-record`. |
 
-**Option A Reference Layout (Explicit Architecture):**
-
-```text
-src/
-├── Domain/
-│   ├── Model/
-│   │   ├── User.php                    # Pure Domain Entity (immutable, business logic)
-│   │   └── UserId.php                  # Domain Value Object
-│   └── Repository/
-│       └── UserRepositoryInterface.php # Pure Domain repository contract
-└── Infrastructure/
-    └── Persistence/
-        └── ActiveRecord/
-            ├── UserRecord.php          # Schema model mapped to {{%user}}
-            └── ArUserRepository.php    # Infrastructure adapter implementing UserRepositoryInterface
-```
+> [!NOTE]
+> **Architecture Placement:** For full directory structure across Layered (`src/Models/`), Structured Modules (`src/<Module>/Models/`), and Explicit architectures, see [Architecture Alignment Guide, §6](core-architecture-alignment.md#6-step-by-pattern-execution-matrix). This guide focuses on model definitions and repository encapsulation.
 
 ### 1.2. Active Record Repository Implementation (`ArUserRepository.php`)
 
@@ -133,7 +119,7 @@ final readonly class ArUserRepository implements UserRepositoryInterface
 }
 ```
 
-### 1.3. Clean Domain Entity Reconstitution with `yiisoft/hydrator`
+### 1.3. Domain Entity Reconstitution with `yiisoft/hydrator`
 
 To eliminate manual getter-to-constructor boilerplate in `toDomain()`, integrate `Yiisoft\Hydrator\HydratorInterface`. The Active Record model exports its current column values via `$record->propertyValues()`, and the hydrator populates the immutable domain entity:
 

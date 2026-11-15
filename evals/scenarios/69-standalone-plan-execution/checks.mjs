@@ -64,8 +64,8 @@ export default [
       : fail(`${p.path} does not bind Psr\\SimpleCache\\CacheInterface to FileCache::class`);
   }),
 
-  check('report-block', 'Final report carries the DoD §4 fields (Mode, Architecture, fixes applied, tests, static analysis, packages added, config files changed, production readiness gate)', ({ transcript }) => {
-    const fields = ['Mode', 'Architecture', 'fixes applied', 'tests', 'static analysis', 'packages added', 'config files changed', 'production readiness gate'];
+  check('report-block', 'Final report carries the DoD §4 fields (Architecture, fixes applied, tests, static analysis, packages added, config files changed, production readiness gate)', ({ transcript }) => {
+    const fields = ['Architecture', 'fixes applied', 'tests', 'static analysis', 'packages added', 'config files changed', 'production readiness gate'];
     const missing = fields.filter((f) => !new RegExp(f.replace(/ /g, '\\s+'), 'i').test(transcript));
     return missing.length ? fail(`report fields missing: ${missing.join(', ')}`) : ok();
   }),

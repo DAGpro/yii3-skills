@@ -6,12 +6,10 @@
 
 ## Table of Contents
 
-- [1. Clean Architecture Persistence with `yiisoft/db`](#1-clean-architecture-persistence-with-yiisoftdb)
-  - [1.1. Domain Value Object (`src/Domain/Model/UserId.php`)](#11-domain-value-object-srcdomainmodeluseridphp)
-  - [1.2. Pure Domain Entity (`src/Domain/Model/User.php`)](#12-pure-domain-entity-srcdomainmodeluserphp)
-  - [1.3. Domain Repository Contract (`src/Domain/Repository/UserRepositoryInterface.php`)](#13-domain-repository-contract-srcdomainrepositoryuserrepositoryinterfacephp)
-  - [1.4. Low-Level Database Repository (`src/Infrastructure/Persistence/Db/DbUserRepository.php`)](#14-low-level-database-repository-srcinfrastructurepersistencedbdbuserrepositoryphp)
-  - [1.5. Hydration via `yiisoft/hydrator` & Nested Value Objects](#15-hydration-via-yiisofthydrator--nested-value-objects)
+- [1. Repository Implementation with `yiisoft/db`](#1-repository-implementation-with-yiisoftdb)
+  - [1.1. Model / Entity Class (`User.php`)](#11-model--entity-class-userphp)
+  - [1.2. Repository Implementation (`UserRepository.php`)](#12-repository-implementation-userrepositoryphp)
+  - [1.3. Hydration via `yiisoft/hydrator` & Nested Objects](#13-hydration-via-yiisofthydrator--nested-objects)
 - [2. Connection, Commands & Mutations (`CommandInterface`)](#2-connection-commands--mutations-commandinterface)
   - [2.1. Parameterized Queries & Table Prefix Syntax](#21-parameterized-queries--table-prefix-syntax)
   - [2.2. Atomic Mutations: Insert, Update, Delete & Batch Insert](#22-atomic-mutations-insert-update-delete--batch-insert)
@@ -27,64 +25,39 @@
   - [4.3. Isolation Levels & Post-Commit Event Rule](#43-isolation-levels--post-commit-event-rule)
   - [4.4. Deadlock Retries & Serialization Failures (`SerializationFailureException`)](#44-deadlock-retries--serialization-failures-serializationfailureexception)
 
-## 1. Clean Architecture Persistence with `yiisoft/db`
+## 1. Repository Implementation with `yiisoft/db`
 
-In Yii3 Clean Architecture, business rules and domain logic are decoupled from persistence engines. Persistence details belong strictly in the **Infrastructure Layer**:
+A database repository encapsulates SQL queries, table mutations, and row hydration using `Yiisoft\Db\Connection\ConnectionInterface` and `Yiisoft\Db\Query\Query`.
 
-```text
-src/
-├── Domain/
-│   ├── Model/
-│   │   ├── User.php                    # Pure PHP Domain Entity (no ORM or DB coupling)
-│   │   └── UserId.php                  # Domain Value Object (UUID / ULID / typed scalar)
-│   └── Repository/
-│       └── UserRepositoryInterface.php # Domain contract for persistence operations
-├── Application/
-│   └── UseCase/
-│       └── User/
-│           └── CreateUserUseCase.php   # Coordinates repository & transactions
-└── Infrastructure/
-    └── Persistence/
-        └── Db/
-            └── DbUserRepository.php    # Implements interface via yiisoft/db Query Builder
-```
+> [!NOTE]
+> **Architecture Placement:** Where repository classes and model files live in your project depends on the project's Architecture Pattern (`core-architecture-alignment.md` §6):
+> - **Layered Architecture:** Concrete repository in `src/Repository/UserRepository.php` (no separate interface required unless testing doubles demand it).
+> - **Structured Modules:** Module repository in `src/<Module>/UserRepository.php` (or `src/<Module>/Infrastructure/DbUserRepository.php`).
+> - **Explicit Architecture:** Pure contract in `src/Domain/Repository/UserRepositoryInterface.php` and DB adapter in `src/Infrastructure/Persistence/Db/DbUserRepository.php`.
+> This guide focuses strictly on class-level implementation and query mechanics.
 
-### 1.1. Domain Value Object (`src/Domain/Model/UserId.php`)
+### 1.1. Model / Entity Class (`User.php`)
+
+A plain PHP class representing the record or entity:
 
 ```php
 declare(strict_types=1);
 
-namespace App\Domain\Model;
-
-use Stringable;
-
-final readonly class UserId implements Stringable
-{
-    public function __construct(public string $value) {}
-    public function __toString(): string { return $this->value; }
-}
-```
-
-### 1.2. Pure Domain Entity (`src/Domain/Model/User.php`)
-
-```php
-declare(strict_types=1);
-
-namespace App\Domain\Model;
+namespace App\Model;
 
 use DateTimeImmutable;
 
 final class User
 {
     public function __construct(
-        private UserId $id,
+        private string $id,
         private string $name,
         private string $email,
         private ?DateTimeImmutable $createdAt = null,
         private ?DateTimeImmutable $updatedAt = null,
     ) {}
 
-    public function getId(): UserId { return $this->id; }
+    public function getId(): string { return $this->id; }
     public function getName(): string { return $this->name; }
     public function getEmail(): string { return $this->email; }
     public function getCreatedAt(): ?DateTimeImmutable { return $this->createdAt; }
@@ -104,54 +77,32 @@ final class User
 }
 ```
 
-> [!NOTE]
-> The example intentionally omits domain-event recording (`recordEvent()` / `releaseEvents()` members on the aggregate). That pattern — including the mandatory post-commit dispatch rule — is owned by the [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule).
+### 1.2. Repository Implementation (`UserRepository.php`)
 
-### 1.3. Domain Repository Contract (`src/Domain/Repository/UserRepositoryInterface.php`)
-
-```php
-declare(strict_types=1);
-
-namespace App\Domain\Repository;
-
-use App\Domain\Model\User;
-use App\Domain\Model\UserId;
-
-interface UserRepositoryInterface
-{
-    public function findById(UserId $id): ?User;
-    public function findByEmail(string $email): ?User;
-    public function save(User $user): void;
-    public function delete(User $user): void;
-}
-```
-
-### 1.4. Low-Level Database Repository (`src/Infrastructure/Persistence/Db/DbUserRepository.php`)
+The repository injects `ConnectionInterface` and provides query and mutation methods:
 
 ```php
 declare(strict_types=1);
 
-namespace App\Infrastructure\Persistence\Db;
+namespace App\Repository;
 
-use App\Domain\Model\User;
-use App\Domain\Model\UserId;
-use App\Domain\Repository\UserRepositoryInterface;
+use App\Model\User;
 use DateTimeImmutable;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Query\Query;
 
-final readonly class DbUserRepository implements UserRepositoryInterface
+final readonly class UserRepository
 {
     public function __construct(
         private ConnectionInterface $db,
     ) {}
 
-    public function findById(UserId $id): ?User
+    public function findById(string $id): ?User
     {
         /** @var array<string, mixed>|null $row */
         $row = (new Query($this->db))
             ->from('{{%user}}')
-            ->where(['id' => $id->value])
+            ->where(['id' => $id])
             ->one();
 
         return $row !== null ? $this->hydrate($row) : null;
@@ -171,14 +122,13 @@ final readonly class DbUserRepository implements UserRepositoryInterface
     public function save(User $user): void
     {
         $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
-        $id = $user->getId()->value;
 
         // Atomic upsert avoids concurrency race conditions
         $this->db->createCommand()
             ->upsert(
                 table: '{{%user}}',
                 insertColumns: [
-                    'id' => $id,
+                    'id' => $user->getId(),
                     'name' => $user->getName(),
                     'email' => $user->getEmail(),
                     'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s') ?? $now,
@@ -193,10 +143,10 @@ final readonly class DbUserRepository implements UserRepositoryInterface
             ->execute();
     }
 
-    public function delete(User $user): void
+    public function delete(string $id): void
     {
         $this->db->createCommand()
-            ->delete(table: '{{%user}}', condition: ['id' => $user->getId()->value])
+            ->delete(table: '{{%user}}', condition: ['id' => $id])
             ->execute();
     }
 
@@ -206,7 +156,7 @@ final readonly class DbUserRepository implements UserRepositoryInterface
     private function hydrate(array $row): User
     {
         return new User(
-            id: new UserId((string) $row['id']),
+            id: (string) $row['id'],
             name: (string) $row['name'],
             email: (string) $row['email'],
             createdAt: isset($row['created_at']) && is_string($row['created_at'])
@@ -220,35 +170,32 @@ final readonly class DbUserRepository implements UserRepositoryInterface
 }
 ```
 
-### 1.5. Hydration via `yiisoft/hydrator` & Nested Value Objects
+### 1.3. Hydration via `yiisoft/hydrator` & Nested Objects
 
-`yiisoft/hydrator` instantiates objects via constructor reflection and populates properties. To keep Domain Entities clean of framework dependencies, use `Yiisoft\Hydrator\ArrayData` with column mapping in the Infrastructure layer:
+`yiisoft/hydrator` instantiates objects via constructor reflection and populates properties. Use `HydratorInterface` to eliminate manual mapping:
 
 ```php
 declare(strict_types=1);
 
-namespace App\Infrastructure\Persistence\Db;
+namespace App\Repository;
 
-use App\Domain\Model\User;
-use App\Domain\Model\UserId;
-use App\Domain\Repository\UserRepositoryInterface;
+use App\Model\User;
 use DateTimeImmutable;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Query\Query;
-use Yiisoft\Hydrator\ArrayData;
 use Yiisoft\Hydrator\HydratorInterface;
 
-final readonly class HydratedDbUserRepository implements UserRepositoryInterface
+final readonly class HydratedUserRepository
 {
     public function __construct(
         private ConnectionInterface $db,
         private HydratorInterface $hydrator,
     ) {}
 
-    public function findById(UserId $id): ?User
+    public function findById(string $id): ?User
     {
         /** @var array<string, mixed>|null $row */
-        $row = (new Query($this->db))->from('{{%user}}')->where(['id' => $id->value])->one();
+        $row = (new Query($this->db))->from('{{%user}}')->where(['id' => $id])->one();
         return $row !== null ? $this->hydrateRow($row) : null;
     }
 
@@ -266,7 +213,7 @@ final readonly class HydratedDbUserRepository implements UserRepositoryInterface
             ->upsert(
                 table: '{{%user}}',
                 insertColumns: [
-                    'id' => $user->getId()->value,
+                    'id' => $user->getId(),
                     'name' => $user->getName(),
                     'email' => $user->getEmail(),
                     'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s') ?? $now,
@@ -281,10 +228,10 @@ final readonly class HydratedDbUserRepository implements UserRepositoryInterface
             ->execute();
     }
 
-    public function delete(User $user): void
+    public function delete(string $id): void
     {
         $this->db->createCommand()
-            ->delete(table: '{{%user}}', condition: ['id' => $user->getId()->value])
+            ->delete(table: '{{%user}}', condition: ['id' => $id])
             ->execute();
     }
 
@@ -293,9 +240,8 @@ final readonly class HydratedDbUserRepository implements UserRepositoryInterface
      */
     private function hydrateRow(array $row): User
     {
-        // 1. Prepare typed value objects / dates
         $data = [
-            'id' => new UserId((string) $row['id']),
+            'id' => (string) $row['id'],
             'name' => (string) $row['name'],
             'email' => (string) $row['email'],
             'createdAt' => isset($row['created_at']) && is_string($row['created_at'])
@@ -306,7 +252,6 @@ final readonly class HydratedDbUserRepository implements UserRepositoryInterface
                 : null,
         ];
 
-        // 2. Hydrate pure entity instance
         return $this->hydrator->create(User::class, $data);
     }
 }
@@ -317,7 +262,7 @@ final readonly class HydratedDbUserRepository implements UserRepositoryInterface
 > - When hydrating DTOs or models that accept framework attributes, use canonical attribute `#[Data('column_name')]` (`Yiisoft\Hydrator\Attribute\Parameter\Data`) to map database columns to properties or constructor arguments.
 > - Use `#[SkipHydration]` (`Yiisoft\Hydrator\Attribute\SkipHydration`) to ignore internal buffers like `$recordedEvents`.
 > - **Anti-Hallucination Invariant:** Attributes `#[DataParam]`, `#[Map]`, and `#[MapInput]` do **NOT** exist in `yiisoft/hydrator`.
-> - `Yiisoft\Hydrator\TypeCaster\HydratorTypeCaster` automatically cascades hydration into nested objects when the corresponding data key contains an array. For converting scalar strings into Value Objects (e.g. `string` $\to$ `UserId`), provide pre-instantiated instances in `$data` or register a custom `TypeCasterInterface` in the application container.
+> - `Yiisoft\Hydrator\TypeCaster\HydratorTypeCaster` automatically cascades hydration into nested objects when the corresponding data key contains an array. For converting scalar strings into Value Objects, provide pre-instantiated instances in `$data` or register a custom `TypeCasterInterface` in the application container.
 
 ---
 

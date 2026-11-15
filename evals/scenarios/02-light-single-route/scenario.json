@@ -1,6 +1,6 @@
 {
   "id": "02-light-single-route",
-  "title": "Single-route feature: Light mode, no full decomposition",
+  "title": "Single-route feature: surgical addition, no full decomposition",
   "mode": "patch",
   "tags": [
     "light",

@@ -2,7 +2,7 @@
 
 > **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
-> Part of the [Events & Listeners Guide](core-events-and-listeners.md) split — design rules, configuration, the post-commit rule, and the anti-pattern matrix live in the parent and [core-events-design.md](core-events-design.md).
+> Part of the [Events & Listeners Guide](core-events-and-listeners.md) split — design rules, configuration, the post-commit rule, and the anti-pattern matrix live in the parent and [Event Design Rules](core-events-design.md).
 
 ## Table of Contents
 

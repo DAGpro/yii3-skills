@@ -19,6 +19,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 - Standardized injection contract across all 13 workflow hooks: load-first SSOT pattern deferring directly to the `yii3` skill without environment-classification gating.
 - Updated API symbols and AST signature manifests to 136 packages (`792` classes, `347` signatures in `api-symbols-manifest.json`; `186` classes, `484` signatures in `ast-signatures-manifest.json`).
 - Updated reference guide library to 100 reference files (98 topic guides, 100% eval coverage across 69 scenarios).
+- Decoupled leaf reference guides from imposed architecture layers (Clean/Layered), enforcing neutral component contracts and deferring folder layouts strictly to `core-architecture-alignment.md`.
+- Eliminated residual execution mode markers (Feature/Patch/Enterprise) across eval scenarios, tests, and guides.
 
 ### Removed
 - Pruned non-runtime test packages `yiisoft/dummy-provider` and `yiisoft/psr-dummy-provider` from authoring references, lockfile, and package catalog.

@@ -2,11 +2,11 @@
 
 > **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
-> Complete guide to `yiisoft/active-record` in modern Yii3 applications, including Clean Architecture separation, hydrator reconstitution, model definitions, query engine, relations, and Anti-Pattern verification.
+> Complete guide to `yiisoft/active-record` in modern Yii3 applications, including model definitions, repository encapsulation, hydrator reconstitution, query engine, relations, and Anti-Pattern verification.
 
 This topic is split into focused guides — load the one that matches the task:
 
-- [Active Record Models & Lifecycle](persistence-active-record-model.md) — Clean Architecture boundary separation, AR repository implementation, hydrator reconstitution, model definition, typed properties, lifecycle events, mutations, and optimistic locking (§1, §2, §4).
+- [Active Record Models & Lifecycle](persistence-active-record-model.md) — AR repository implementation, hydrator reconstitution, model definition, typed properties, lifecycle events, mutations, and optimistic locking (§1, §2, §4).
 - [Active Record Queries, Pagination & Signatures](persistence-active-record-queries.md) — `ActiveQuery` mechanics, single-argument constructor rule, strict where guards, stream processing, grid pagination & sorting (`QueryDataReader`), and PHP 8 signature reference (§3, §6, §7).
 - [Active Record Relations & Eager Loading](persistence-active-record-relations.md) — `relationQuery`, `hasOne`/`hasMany`, pivot tables via `viaTable`, eager loading, and N+1 query prevention (§5).
 
@@ -22,7 +22,7 @@ Active Record relations in Yii 3 are decoupled from magic getters and require ex
 
 > [!IMPORTANT]
 > For the complete, dedicated guide covering relation syntax, nested eager loading, junction tables, `LazyLoadGuard` runtime mechanics, and anti-patterns, see the companion guide:
-> **[`persistence-active-record-relations.md`](persistence-active-record-relations.md)**.
+> **[Active Record Relations & Optimization](persistence-active-record-relations.md)**.
 
 ---
 

@@ -1,4 +1,3 @@
-Mode: Feature
 Architecture: existing src/ layout (App\Blog\*), 2 similar features checked
 fixes applied: none
 tests: pass

@@ -26,7 +26,7 @@ The workflow aligns implementation depth with task scope and the target codebase
 
 | Task Scope | Architecture Pattern | Domain / Entity | Service / Handler | Repository Contract | Presentation (Action) |
 |---|---|---|---|---|---|
-| **Surgical Task** (1–3 files, bugfix, config/DI) | Any (Explicit / Structured / Layered) | Skipped | Skipped | Touched only | Surgical edit (touched files only; schema migrations skipped unless patch requires schema changes) |
+| **Surgical Task** (1–3 files, bugfix, config/DI) | Any (Explicit / Structured / Layered) | Skipped | Skipped | Touched only | Surgical edit (touched files only; schema migrations skipped unless surgical task requires schema changes) |
 | **Composite Feature** (Standard) | **Layered Architecture** (`layers`) | Active Record / DB model (optional POPO) | Application Service | Concrete Repository or Active Record model directly (consumed by Service) | Thin Action returning `ResponseInterface` (delegates to Service) |
 | **Composite Feature** (Standard) | **Structured Modules** (`structured`) | Module Entity / Rich Model | Feature Service or Use Case Handler | Module Repository (interfaces at module boundaries) | Thin Action returning `ResponseInterface` |
 | **Composite Feature** (Standard) | **Explicit Architecture** (`explicit`) | Pure Entity + Value Objects | Use Case Handler (`*Command` + `*Handler`) | Pure Repository Interface + Infrastructure Implementation | Thin Action returning `ResponseInterface` |
@@ -38,7 +38,7 @@ The workflow aligns implementation depth with task scope and the target codebase
 - **Thin Actions:** Actions strictly remain thin HTTP transport adapters returning `ResponseInterface`; zero direct SQL, persistence, or transaction management in presentation.
 - **Transactions:** Handled strictly in Application Services or Use Case Handlers via `ConnectionInterface::transaction()`, never inside HTTP Actions.
 - **Surgical Migrations:** Schema migrations are skipped *only* when the task does not require schema changes. If a bugfix or surgical task alters the database schema, a reversible migration (`up()` / `down()`) MUST be authored.
-- **Architectural Respect:** A mission-critical task in a Structured Modules project demands enterprise rigor (atomic transactions, event publishing, idempotency, comprehensive integration tests) while respecting the project's modular conventions without unilaterally rewriting the project into Explicit Clean Architecture.
+- **Architectural Respect:** A mission-critical task in a Structured Modules project demands enterprise rigor (atomic transactions, event publishing, idempotency, comprehensive integration tests) while respecting the project's modular conventions without unilaterally rewriting the project into Explicit Architecture.
 - **Undetermined Architecture Pattern (3-Step Fallback Protocol):**
   1. **Explicit Architecture Artifact:** If `.ai-factory/ARCHITECTURE.md` (or `docs/architecture/`) exists, its declared pattern dictates the architecture (`layers` → Layered Architecture, `structured` → Structured Modules, `explicit` → Explicit Architecture).
   2. **Existing Codebase Inspection:** If no artifact exists, inspect 2–3 existing features in `src/` to classify the dominant style (`src/Models/` + `src/Services/` → Layered; `src/[Module]/` → Structured Modules; `src/Domain/` + interfaces → Explicit).
@@ -60,7 +60,7 @@ Creates or modifies domain state and involves side-effects.
   4. **Presentation & Wiring:** Typed Input DTO; thin Action delegating to the Use Case Handler; full DI binding and Production Readiness Gate.
 - **Surgical Task:** Touched components only (1–3 files); skips domain aggregates; skips migrations only if no DB schema changes are required (author reversible migration if schema changes).
 
-**Standard Artifact Graph (Enterprise / Strict baseline):**
+**Standard Artifact Graph (Mission-Critical / Explicit baseline):**
 1. **Domain:**
    - **Entity / Aggregate / Value Objects:** Domain state and invariants (POPO or mapped entity).
    - **Domain Events:** PSR-14 event classes (e.g., `UserRegisteredEvent`, `OrderCreatedEvent`).

@@ -349,7 +349,7 @@ The `Yiisoft\User\CurrentUser` service manages the user session, guest state, an
 
 > [!IMPORTANT]
 > For the complete reference on stateful session authentication — login/logout actions, `CookieLoginMiddleware` pipeline ordering, CSRF protection, rate limiting, and PSR-14 authentication events — see the companion guide:
-> **[`infra-auth-session.md`](infra-auth-session.md)**.
+> **[Stateful Web Session Authentication](infra-auth-session.md)**.
 
 ---
 

@@ -1,7 +1,7 @@
 # Yii3 Testing: Ready-Made PSR Test Doubles (`yiisoft/test-support`)
 
 > **Package:** `yiisoft/test-support` (PHP 8.2+)  
-> **Complements:** [`testing-core.md`](testing-core.md) (Architecture, PHPUnit 10/11, Mocking), [`testing-http.md`](testing-http.md), [`core-events-reference.md`](core-events-reference.md)
+> **Complements:** [Testing Core](testing-core.md) (Architecture, PHPUnit 10/11, Mocking), [Functional HTTP Testing](testing-http.md), [Events Reference](core-events-reference.md)
 
 ---
 

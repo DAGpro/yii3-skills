@@ -1,6 +1,6 @@
 ## Yii3 support (from yii3-skills)
 
-Load the `yii3` skill (`SKILL.md`) and plan against its "Mission Workflow" section — the skill is the single source of stage contracts, wiring gates, and dependency ordering:
+Load the `yii3` skill (`SKILL.md`) and plan against its "Mission Workflow" section — the skill is the single source of assembly contracts, wiring gates, and dependency ordering:
 
 Operating context: this `aif-*` workflow runs the skill in its default AI Factory extension mode (contract: `references/core-aif-adapter.md`); the standalone fallback contract (`references/core-standalone-adapter.md`) is out of scope here.
 

@@ -1,4 +1,3 @@
-Mode: Enterprise
 Architecture: Layered Architecture (src/)
 Implemented atomic Transactional Outbox end-to-end:
 - Reversible migrations M250115120000CreateOutboxMessagesTable and M250115120500CreateProcessedMessagesTable

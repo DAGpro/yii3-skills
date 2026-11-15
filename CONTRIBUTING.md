@@ -42,7 +42,7 @@ Run the local quality gates:
 # 1. Extension integrity, manifest, frontmatter, injection structure, purity, and link consistency
 node scripts/validate.mjs
 
-# 2. AI Factory workflow integration contracts (226 contract tests)
+# 2. AI Factory workflow integration contracts (227 contract tests)
 node scripts/test-aif-workflow.mjs
 
 # 3. Topic guide coverage across eval scenarios (100% across 98 topic guides / 100 reference files)
@@ -71,7 +71,7 @@ The gate checks manifest integrity, `SKILL.md` frontmatter (including the descri
 
 ### 2. Workflow contract tests (`scripts/test-aif-workflow.mjs`)
 
-Validates all 226 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
+Validates all 227 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
 
 ### 3. Topic guide coverage (`scripts/check-eval-coverage.mjs` & `scripts/generate-coverage-matrix.mjs`)
 
@@ -116,7 +116,7 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 ## PR checklist
 
 - [ ] `node scripts/validate.mjs` — 0 errors, 0 warnings (or justified in the PR description).
-- [ ] `node scripts/test-aif-workflow.mjs` — 226 passed, 0 failed.
+- [ ] `node scripts/test-aif-workflow.mjs` — 227 passed, 0 failed.
 - [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (98/98 topic guides, 69 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
 - [ ] `node scripts/check-symbols.mjs` and `node scripts/check-ast.mjs` — 0 unconfirmed symbols, arities, or AST defects (run with `--manifest-mode` if `references/` is not populated).
 - [ ] `node scripts/check-manifest-freshness.mjs` — manifest provenance and parity check passes (`--strict` if `references/` is populated).

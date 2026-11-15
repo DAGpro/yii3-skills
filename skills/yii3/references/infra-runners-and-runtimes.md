@@ -522,7 +522,7 @@ return [
 
 ### 3.4. Semantic Exit Codes (`ExitCode`)
 
-`Yiisoft\Yii\Console\ExitCode` defines 17 standard semantic status codes based on FreeBSD's `sysexits(3)`. For the full constant table (sysexits names and recommended usage), see [Commands Guide, §6](infra-commands.md). Runtime descriptions are available via `ExitCode::getReason(int $code): string` (e.g. `getReason(ExitCode::NOINPUT)` returns `'Input file not found or unreadable'`).
+`Yiisoft\Yii\Console\ExitCode` defines 17 standard semantic status codes based on FreeBSD's `sysexits(3)`. For the full constant table (sysexits names and recommended usage), see [Commands Guide, §6](infra-commands-execution.md#6-standard-exit-codes-yiisoftyiiconsoleexitcode). Runtime descriptions are available via `ExitCode::getReason(int $code): string` (e.g. `getReason(ExitCode::NOINPUT)` returns `'Input file not found or unreadable'`).
 
 ---
 

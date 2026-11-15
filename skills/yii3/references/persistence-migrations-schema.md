@@ -187,24 +187,23 @@ final class M261022120000CreateUserTable implements RevertibleMigrationInterface
 
 ### 2.2. Directory & Namespace Structure
 
-Application migrations are modern PSR-4 classes located in your application namespace:
+Application migrations are modern PSR-4 classes located in your application namespace (e.g. `App\Migration` in `src/Migration/`):
 
 ```text
 src/
-└── Infrastructure/
-    └── Migration/
-        ├── M261022120000CreateUserTable.php
-        ├── M261022130000CreateOrderTable.php
-        └── M261022140000AddPhoneToUserTable.php
+└── Migration/
+    ├── M261022120000CreateUserTable.php
+    ├── M261022130000CreateOrderTable.php
+    └── M261022140000AddPhoneToUserTable.php
 ```
 
 Configure `config/params.php` to register this namespace:
 ```php
 'yiisoft/db-migration' => [
-    'newMigrationNamespace' => 'App\\Infrastructure\\Migration',
+    'newMigrationNamespace' => 'App\\Migration',
     'newMigrationPath' => '',
     'sourceNamespaces' => [
-        'App\\Infrastructure\\Migration',
+        'App\\Migration',
     ],
 ],
 ```
@@ -222,7 +221,7 @@ Obtain the column builder via `$b->columnBuilder()`. This method resolves to the
 ```php
 declare(strict_types=1);
 
-namespace App\Infrastructure\Migration;
+namespace App\Migration;
 
 use Yiisoft\Db\Constant\IndexType;
 use Yiisoft\Db\Migration\MigrationBuilder;

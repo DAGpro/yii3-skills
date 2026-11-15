@@ -4,25 +4,25 @@
 
 > Practical guide for low-level database operations, explicit Query Builder queries, atomic transactions, memory-safe data streaming, and paginated data readers using `yiisoft/db` and `yiisoft/data-db`.
 >
-> Persistence details belong strictly to the Infrastructure Layer; Domain Entities and Application Use Cases must never execute raw database operations directly.
+> Persistence details should remain isolated from business logic; keep database operations within dedicated repositories or data mappers.
 
 This topic is split into two focused guides — load the one that matches the task:
 
-- [Connection, Query Builder & Transactions](persistence-db-connection-and-queries.md) — clean-architecture persistence, `CommandInterface` mutations, Query Builder, transaction boundaries & isolation (§1–§4).
+- [Connection, Query Builder & Transactions](persistence-db-connection-and-queries.md) — repository implementation, `CommandInterface` mutations, Query Builder, transaction boundaries & isolation (§1–§4).
 - [Data Readers, Pagination & Drivers](persistence-db-readers-and-drivers.md) — `yiisoft/data-db` readers, `OffsetPaginator`/`KeysetPaginator`, driver packages & DSN, PHP 8 named-arguments reference (§5–§7).
 
 Read this file for the anti-pattern matrix (§8) and related guides (§9).
 
 ### Choosing Your Persistence Paradigm: Active Record vs Cycle ORM vs DBAL Query Builder
 
-- **Feature / patch work:** Never mix persistence engines within the same bounded context. Inspect `composer.json` and follow the active engine (`yiisoft/active-record`, `cycle/orm`, or raw `yiisoft/db`).
-- **New project / `/aif-architecture`:** Choose strictly one primary persistence paradigm based on domain complexity and operational runtime:
+- **Existing codebase (features and fixes):** Never mix persistence engines within the same bounded context. Inspect `composer.json` and follow the active engine (`yiisoft/active-record`, `cycle/orm`, or raw `yiisoft/db`).
+- **New project bootstrap:** Choose strictly one primary persistence paradigm based on domain complexity and operational runtime:
 
 | Persistence Strategy | Primary Packages | Architectural Sweet Spot | Choose when… | Trade-offs & Caveats |
 |---|---|---|---|---|
 | **1. Active Record** | `yiisoft/active-record`<br>`yiisoft/db` | **Pragmatic** (`layers`) & **Balanced** (`structured*`) | Standard web apps, rapid CRUD, admin panels, teams transitioning from Yii 2/Laravel, where entity models closely match database tables. | Coupling between DB schema and model; no Unit of Work (each `save()` executes SQL immediately); higher memory than DBAL; requires `LazyLoadGuard` to avoid N+1 queries. |
 | **2. Cycle ORM Data Mapper** | `cycle/orm`<br>`cycle/annotated`<br>`yiisoft/yii-cycle`<br>`yiisoft/data-cycle` | **Strict** (`explicit*`) & **Balanced** (`structured*`) | Complex business domains, strict DDD (pure POPO entities), rich object graphs, multi-entity atomic transactions via Unit of Work. | Higher conceptual complexity; uses external `cycle/*` ecosystem; requires compiled schema in production (`php yii cycle:schema:php`); **mandatory** `$entityManager->clean()` in long-running workers (RoadRunner/FrankenPHP) to prevent heap leaks. |
-| **3. Raw DBAL & Query Builder** | `yiisoft/db`<br>`yiisoft/data-db`<br>`yiisoft/hydrator` | **Strict** (`explicit*`) or **High-Throughput Services** | High-performance APIs, microservices, read-heavy reporting/dashboards, CQRS read-sides, or batch data ingestion pipelines. | Maximum execution speed and minimal memory footprint; zero ORM overhead; requires explicit manual SQL mapping or `yiisoft/hydrator` boilerplate; no automatic relationship resolution. |
+| **3. Raw DBAL & Query Builder** | `yiisoft/db`<br>`yiisoft/data-db`<br>`yiisoft/hydrator` | **Strict** (`explicit*`) or **High-Throughput Services** | High-performance APIs, microservices, read-heavy reporting/dashboards, or batch data ingestion pipelines. | Maximum execution speed and minimal memory footprint; zero ORM overhead; requires explicit manual SQL mapping or `yiisoft/hydrator` boilerplate; no automatic relationship resolution. |
 
 ### Query Engines Comparison: Hydration, Performance & Memory
 
@@ -55,7 +55,7 @@ Read this file for the anti-pattern matrix (§8) and related guides (§9).
 | ❌ **Using unsupported SQLite isolation levels** | SQLite driver only supports `SERIALIZABLE` and `READ_UNCOMMITTED`. Other levels throw `NotSupportedException`. | Restrict SQLite transactions to `TransactionInterface::SERIALIZABLE` or `READ_UNCOMMITTED`. |
 | ❌ **Calling `getLastInsertId()` without sequence in Postgres/Oracle** | PostgreSQL and Oracle require sequence names. Calling without one throws `InvalidArgumentException`. | Retrieve sequence from `$tableSchema->getSequenceName()` and pass to `$db->getLastInsertId($seq)`. |
 | ❌ **Dispatching events/queues inside `$db->transaction()`** | If transaction rolls back, side effects (emails, messages) cannot be revoked. | Collect domain events on the aggregate and dispatch strictly post-commit — see [Events & Listeners Guide, §5](core-events-design.md#5-mandatory-post-commit-event-dispatching-rule). |
-| ❌ **Executing DB queries inside HTTP Actions** | Violates architecture boundaries, making actions un-testable and tightly coupled to SQL. | Inject Domain Repositories or Application Use Cases into Action constructors. |
+| ❌ **Executing DB queries inside HTTP Actions** | Couples HTTP transport directly to SQL, making actions brittle and difficult to test. | Inject repository or query interfaces into Action constructors. |
 | ❌ **Raw SQL concatenation (`WHERE id = ' . $id`)** | Severe SQL injection vulnerability. | Always use parameter binding (`[':id' => $id]`) or Query Builder condition arrays (`['id' => $id]`). |
 | ❌ **Hardcoding table names as plain strings `'user'`** | Prevents automatic table prefixing (`tbl_user`) and schema quoting. | Always use table prefix brackets: `'{{%user}}'`. Wrap column identifiers in `[[column]]`. |
 | ❌ **Multi-table mutations without a transaction** | Partial failure leaves the database in an inconsistent or orphaned state. | Always wrap multi-repository updates in `$db->transaction(...)`. |
@@ -68,6 +68,6 @@ Read this file for the anti-pattern matrix (§8) and related guides (§9).
 - [Cycle ORM Persistence Guide](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
 - [Database Migrations Guide](persistence-migrations.md) — Schema DDL, ColumnBuilder, foreign keys, and migration CLI commands.
 - [Testing Database Guide](testing-database.md) — Ephemeral in-memory SQLite, test fixtures, and transactional rollbacks.
-- [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories inside Use Cases and Presentation Actions.
+- [Actions & Controllers Guide](http-actions-and-controllers.md) — Consuming repositories and data queries in HTTP actions.
 - [Caching Guide](persistence-caching.md) — Application-level PSR-16 caching (`getOrSet()`), stampede prevention, and tag-based invalidation.
 - [Events & Listeners Guide](core-events-and-listeners.md) — Domain events, the aggregate event-recording pattern, and the post-commit dispatch rule.

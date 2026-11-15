@@ -1,6 +1,6 @@
 {
   "id": "12-docs-only-task",
-  "title": "Docs-only request in a Yii3 app: Patch mode, no framework machinery",
+  "title": "Docs-only request in a Yii3 app: documentation update, no framework machinery",
   "mode": "patch",
   "tags": [
     "negative-trigger",

@@ -548,7 +548,7 @@ $safe = Json::htmlEncode($payload);
 
 Following the architectural taxonomy in [Architecture Alignment Guide](core-architecture-alignment.md):
 
-| Layer | Packages | Clean Architecture Placement & Invariants |
+| Layer | Packages | Architecture Placement & Invariants |
 |---|---|---|
 | **Cross-Cutting Contracts** | `friendly-exception` | Domain, Application, and Infrastructure layers. Interfaces and custom domain exceptions can implement `FriendlyExceptionInterface` without coupling to framework runtimes. |
 | **Infrastructure / Utilities** | `arrays`, `strings`, `json`, `network-utilities` | `Infrastructure/Utils/` or shared helper libraries. Pure static functions and value objects. Directly callable from DTO mappers, repositories, and infrastructure adapters. |

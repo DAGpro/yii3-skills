@@ -1,6 +1,6 @@
 {
   "id": "20-action-shape",
-  "title": "Full mode: JSON endpoint action - final readonly invokable class, CurrentRoute route args, data-response factory",
+  "title": "JSON endpoint action - final readonly invokable class, CurrentRoute route args, data-response factory",
   "mode": "feature",
   "tags": [
     "full",

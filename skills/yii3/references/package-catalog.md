@@ -90,7 +90,7 @@
 | `var-dumper` | Variable Inspection & Dump | `yiisoft/var-dumper` | — | `VarDumper`, `EchoHandler`, `StreamHandler`, `ClosureExporter` (syntax-highlighted dumping, export, and closure serialization) |
 | `payments` | Payment Gateway Contracts | `yiisoft/payments` | — | `PaymentGatewayInterface` |
 
-> **In-Development Packages Note:** Packages `yiisoft/locale-middleware` and `yiisoft/db-profiler` are in-development skeletons tracked in `references/` for future ecosystem evolution (see `references/README.md`).
+> **In-Development Packages Note:** Packages `yiisoft/locale-middleware` and `yiisoft/db-profiler` are in-development ecosystem packages tracked for future evolution.
 
 ---
 

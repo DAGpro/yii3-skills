@@ -61,16 +61,16 @@ Application Shutdown
 Operating System Process Exit ($exitCode)
 ```
 
-### Layer Responsibilities
+### Command Responsibilities
 
-| Permitted in Commands (Presentation) | Strictly Forbidden in Commands (Domain Leaks) |
+| Permitted in Commands | Strictly Forbidden in Commands |
 |---|---|
 | Parse CLI arguments, options, and environmental flags | ❌ Direct SQL queries, Cycle ORM or persistence layer calls |
 | Interactive user confirmation and question prompts (`confirm()`, `QuestionHelper`) | ❌ Database transaction management (`$db->transaction()`) |
 | Syntax validation and argument type coercion | ❌ Business rules, domain invariants, core calculations |
 | Formatted tables, status banners, verbosity-scoped output | ❌ Calling `exit()` or `die()` directly (skips events & runners) |
-| Invoking Application Use Cases / CQRS Command Handlers | ❌ Direct `echo`, `print`, or raw unbuffered terminal writes |
-| Translating domain exceptions into friendly CLI error messages | ❌ Hardcoding raw magic integers as exit codes (e.g. `return 1;`) |
+| Invoking business operations, services, or handler contracts | ❌ Direct `echo`, `print`, or raw unbuffered terminal writes |
+| Translating exceptions into user-friendly CLI error messages | ❌ Hardcoding raw magic integers as exit codes (e.g. `return 1;`) |
 
 ### Console Lifecycle Events
 
@@ -84,7 +84,7 @@ Listeners are registered in the `events-console` configuration group. Create an 
 // config/common/events.php
 declare(strict_types=1);
 
-use App\Application\Console\AuditTrailListener;
+use App\Listener\AuditTrailListener;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Yiisoft\Yii\Console\Event\ApplicationShutdown;
@@ -123,98 +123,17 @@ Yii3 console commands extend `Symfony\Component\Console\Command\Command`. All de
 > **Mandatory Parent Constructor Call:**
 > In Symfony Console and Yii3, command constructors **must** invoke `parent::__construct()`. Every command across the official `yiisoft/*` packages follows this rule (per Symfony Console documentation, skipping the call leaves the command definition, helper set, and input definition uninitialized).
 
-### Zero-Shot Compilable Domain & Use Case Companion Classes
+> [!NOTE]
+> **Command Placement & Delegation:** File placement and namespace follow the project's Architecture Pattern (`core-architecture-alignment.md` §6) — e.g. `App\Command\User` in Layered, `App\User\Command` in Structured Modules, `App\Presentation\Console\Command` in Explicit. Commands delegate business logic to injected services or domain operations.
 
-To ensure clean architecture and testability, commands delegate all business logic to dedicated application handlers:
-
-```php
-declare(strict_types=1);
-
-namespace App\Domain\User\Exception;
-
-use RuntimeException;
-
-final class UserAlreadyExistsException extends RuntimeException
-{
-}
-```
+### Complete Compilable Command Example
 
 ```php
 declare(strict_types=1);
 
-namespace App\Application\UseCase\User\Create;
+namespace App\Command;
 
-final readonly class CreateUserDto
-{
-    public function __construct(
-        public string $email,
-        public string $name,
-        public string $role = 'user',
-        public bool $sendWelcome = true,
-    ) {
-    }
-}
-```
-
-```php
-declare(strict_types=1);
-
-namespace App\Application\UseCase\User\Create;
-
-final readonly class CreateUserResult
-{
-    public function __construct(
-        private string $id,
-        private string $name,
-    ) {
-    }
-
-    public function getId(): string
-    {
-        return $this->id;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-}
-```
-
-```php
-declare(strict_types=1);
-
-namespace App\Application\UseCase\User\Create;
-
-use App\Domain\User\Exception\UserAlreadyExistsException;
-
-final class CreateUserHandler
-{
-    public function handle(CreateUserDto $dto): CreateUserResult
-    {
-        if ($dto->email === 'existing@example.com') {
-            throw new UserAlreadyExistsException('User with this email already exists.');
-        }
-
-        // Domain logic, persistence, and event dispatching belong here
-        return new CreateUserResult(
-            id: 'usr_' . bin2hex(random_bytes(8)),
-            name: $dto->name,
-        );
-    }
-}
-```
-
-### Zero-Shot Compilable Command Example
-
-```php
-declare(strict_types=1);
-
-namespace App\Presentation\Console\Command;
-
-use App\Application\UseCase\User\Create\CreateUserDto;
-use App\Application\UseCase\User\Create\CreateUserHandler;
-use App\Domain\User\Exception\UserAlreadyExistsException;
+use DomainException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Completion\CompletionInput;
@@ -225,8 +144,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
-use Yiisoft\FriendlyException\FriendlyExceptionInterface;
 use Yiisoft\Yii\Console\ExitCode;
+
+interface UserCreatorInterface
+{
+    public function create(string $email, string $name, string $role, bool $sendWelcome): string;
+}
 
 #[AsCommand(
     name: 'user:create',
@@ -235,7 +158,7 @@ use Yiisoft\Yii\Console\ExitCode;
 final class CreateUserCommand extends Command
 {
     public function __construct(
-        private readonly CreateUserHandler $handler,
+        private readonly UserCreatorInterface $userCreator,
     ) {
         parent::__construct();
     }
@@ -294,30 +217,28 @@ final class CreateUserCommand extends Command
         $io->title('Provisioning User Account');
         $io->writeln(sprintf('Email: <info>%s</info> | Name: <info>%s</info> | Role: %s', $email, $name, $role));
 
-        // Basic syntax/input verification before invoking application domain
+        // Basic syntax/input verification before invoking business logic
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $io->error(sprintf('Invalid email format: "%s".', $email));
             return ExitCode::DATAERR;
         }
 
         try {
-            $dto = new CreateUserDto(
+            $userId = $this->userCreator->create(
                 email: $email,
                 name: $name,
                 role: $role,
                 sendWelcome: $sendWelcome,
             );
 
-            $result = $this->handler->handle($dto);
-
             $io->success(sprintf(
                 'User "%s" created successfully (ID: %s).',
-                $result->getName(),
-                $result->getId(),
+                $name,
+                $userId,
             ));
 
             return ExitCode::OK;
-        } catch (UserAlreadyExistsException $e) {
+        } catch (DomainException $e) {
             $io->error($e->getMessage());
             return ExitCode::DATAERR;
         } catch (FriendlyExceptionInterface $e) {
@@ -447,10 +368,10 @@ Commands are configured under the `'yiisoft/yii-console' => ['commands' => [...]
 ```php
 declare(strict_types=1);
 
-use App\Presentation\Console\Command\CleanCacheCommand;
-use App\Presentation\Console\Command\CreateUserCommand;
-use App\Presentation\Console\Command\ListUsersCommand;
-use App\Presentation\Console\Command\SecretSyncCommand;
+use App\Command\CleanCacheCommand;
+use App\Command\CreateUserCommand;
+use App\Command\ListUsersCommand;
+use App\Command\SecretSyncCommand;
 
 return [
     'yiisoft/yii-console' => [

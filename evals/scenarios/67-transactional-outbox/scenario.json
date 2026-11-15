@@ -1,6 +1,6 @@
 {
   "id": "67-transactional-outbox",
-  "title": "Enterprise mode: Transactional Outbox — atomic DB + outbox write, mutex-guarded relay command, and idempotent consumer",
+  "title": "Transactional Outbox — atomic DB + outbox write, mutex-guarded relay command, and idempotent consumer",
   "mode": "enterprise",
   "tags": [
     "enterprise",

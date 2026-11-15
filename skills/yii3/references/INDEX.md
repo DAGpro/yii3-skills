@@ -66,7 +66,7 @@
 - `references/persistence-db-connection-and-queries.md` — Connection, Command, Query Builder, transactions
 - `references/persistence-db-readers-and-drivers.md` — pagination & data readers, drivers & DSN, signatures
 - `references/persistence-active-record.md` — split index: Active Record architecture, anti-pattern matrix, model & query guide catalog
-- `references/persistence-active-record-model.md` — Clean Architecture AR repository, hydrator reconstitution, model definition, typed properties, lifecycle events, mutations
+- `references/persistence-active-record-model.md` — AR repository implementation, hydrator reconstitution, model definition, typed properties, lifecycle events, mutations
 - `references/persistence-active-record-queries.md` — ActiveQuery engine, strict where guards, stream processing, grid pagination, sorting, AR testing
 - `references/persistence-active-record-relations.md` — relationQuery, hasOne/hasMany, viaTable, eager loading, LazyLoadGuard
 - `references/persistence-cycle-orm.md` — Cycle ORM data mapper, entities, relations, behaviors, unit of work

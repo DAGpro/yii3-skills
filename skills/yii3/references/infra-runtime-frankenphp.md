@@ -174,7 +174,7 @@ composer require yiisoft/request-provider
 ```
 
 ```php
-namespace App\Service;
+namespace App\Logger;
 
 use Yiisoft\RequestProvider\RequestProviderInterface;
 

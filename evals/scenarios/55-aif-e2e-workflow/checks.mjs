@@ -14,10 +14,8 @@ export default [
 
   check('mission-state-tracker', 'Mission State tracker printed before implementation', ({ transcript }) => {
     const hasTracker = /###\s*Mission State/i.test(transcript);
-    const hasMode = /Mode:?\*{0,2}\s*(Patch|Feature|Enterprise)/i.test(transcript);
     const hasArch = /Architecture:?\*{0,2}\s*[^\n\r]+/i.test(transcript);
     if (!hasTracker) return fail('missing ### Mission State');
-    if (!hasMode) return fail('missing Mode in tracker');
     if (!hasArch) return fail('missing Architecture in tracker');
     return ok();
   }),

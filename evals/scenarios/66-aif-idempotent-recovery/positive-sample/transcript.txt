@@ -1,5 +1,4 @@
 Architecture: Pragmatic
-Mode: Feature
 
 1. Resumed implementation of the interrupted order cancellation feature.
 2. Verified that Migration `M20261109120000_CreateOrderTable.php` and `OrderRepositoryInterface` are already implemented and bound in `config/common/di/order.php`. Skipped redundant migration and DI duplicate.

@@ -16,7 +16,6 @@
   - [2.1. PHPUnit (PHPUnit 10 and 11)](#21-phpunit-phpunit-10-and-11)
 - [3. Ready-Made PSR Test Doubles (`yiisoft/test-support`)](#3-ready-made-psr-test-doubles-yiisofttest-support)
 - [4. Mocking Strategies, PHPUnit 10/11 Rules & AI Pitfalls](#4-mocking-strategies-phpunit-1011-rules--ai-pitfalls)
-  - [Choosing Test Doubling Implementation](#choosing-test-doubling-implementation)
   - [4.1. Core Philosophy: What to Mock vs. What NOT to Mock](#41-core-philosophy-what-to-mock-vs-what-not-to-mock)
   - [4.2. Common AI Model Hallucinations in PHPUnit 10/11 (Dead APIs)](#42-common-ai-model-hallucinations-in-phpunit-1011-dead-apis)
   - [4.3. Idiomatic PHPUnit 10/11 Mocking Patterns](#43-idiomatic-phpunit-1011-mocking-patterns)
@@ -41,18 +40,18 @@ Yii3 applications are structured around clean boundaries, explicit dependency in
    /--------\  Integration Tests (`yiisoft/db-sqlite`, `yiisoft/db-migration`, Console Commands)
   /          \ Verify SQL queries, transactions, migrations, cache adapters, and CLI commands
  /------------\
-/  Unit Tests  \ Pure Domain Entities, Value Objects, Use Cases, Handlers, Validators
+/  Unit Tests  \ Domain models, business logic, handlers, validators
 ---------------- Zero framework overhead; mock dependencies or use `yiisoft/test-support` doubles
 ```
 
-### Layer Responsibilities
+### Test Suite Scopes & Layers
 
 | Test Layer | Target Components | Tools & Dependencies | Speed | Guide Reference |
 |---|---|---|---|---|
-| **Unit** | Domain entities, Value Objects, Application Use Cases, Validators, Formatters | `phpunit/phpunit`, `yiisoft/test-support`, `yiisoft/validator`, `yiisoft/factory` | Sub-millisecond | This guide (`testing-core.md`) |
-| **Console Integration** | Console commands, CLI input/output, ExitCode constants, interactive prompts | `Symfony\Component\Console\Tester\CommandTester`, `yiisoft/yii-console` | Fast | [`testing-console.md`](testing-console.md) |
-| **Database Integration** | Repositories, Migrations, Database queries, Cache stores | `yiisoft/db-sqlite`, `yiisoft/db-migration` | Fast (in-memory SQLite) | [`testing-database.md`](testing-database.md) |
-| **Functional HTTP** | End-to-end HTTP pipeline, routing, middleware stacks, request handlers | `yiisoft/yii-testing`, `yiisoft/yii-runner-http`, `codeception/codeception` | Moderate (in-memory HTTP runner) | [`testing-http.md`](testing-http.md) |
+| **Unit** | Domain models, entities, services, validators, formatters | `phpunit/phpunit`, `yiisoft/test-support`, `yiisoft/validator`, `yiisoft/factory` | Sub-millisecond | This guide (`testing-core.md`) |
+| **Console Integration** | Console commands, CLI input/output, ExitCode constants, interactive prompts | `Symfony\Component\Console\Tester\CommandTester`, `yiisoft/yii-console` | Fast | [Console Testing](testing-console.md) |
+| **Database Integration** | Repositories, Migrations, Database queries, Cache stores | `yiisoft/db-sqlite`, `yiisoft/db-migration` | Fast (in-memory SQLite) | [Database Testing](testing-database.md) |
+| **Functional HTTP** | End-to-end HTTP pipeline, routing, middleware stacks, request handlers | `yiisoft/yii-testing`, `yiisoft/yii-runner-http`, `codeception/codeception` | Moderate (in-memory HTTP runner) | [Functional HTTP Testing](testing-http.md) |
 
 ---
 
@@ -224,7 +223,7 @@ Rather than writing complex mock configurations or fragile anonymous classes for
 
 > [!IMPORTANT]
 > For complete code examples, assertions, trapping nuances, and recipes for each test double, see the dedicated companion guide:
-> **[`testing-psr-doubles.md`](testing-psr-doubles.md)**.
+> **[PSR Test Doubles Guide](testing-psr-doubles.md)**.
 
 ---
 
@@ -498,13 +497,13 @@ Below is a master reference of exact parameter names and signatures for key test
 ---
 
 ## 9. Related Guides
-- [`testing-psr-doubles.md`](testing-psr-doubles.md) — Ready-made PSR test doubles from `yiisoft/test-support` (EventDispatcher, Logger, SimpleCache, Clock, Container, Stream).
-- [`testing-testo.md`](testing-testo.md) — Alternative Testo runner, the exclusive runner rule (PHPUnit XOR Testo), and Mockery integration via `php-testo/bridge-mockery`.
-- [`testing-codeception.md`](testing-codeception.md) — Alternative Codeception 5 framework: actors, Cests, and REST-module API testing.
-- [`testing-infection.md`](testing-infection.md) — Optional Infection mutation-testing quality gate layered on top of the runner.
-- [`testing-console.md`](testing-console.md) — Console command testing with `CommandTester`, exit codes, prompts, and autocompletion.
-- [`http-validation-custom-rules.md`](http-validation-custom-rules.md) — Custom validation rules, RuleHandlerInterface, and isolated unit testing.
-- [`testing-http.md`](testing-http.md) — Functional HTTP testing, middleware pipelines, endpoints, sessions, and `ResponseAccessor`.
-- [`testing-database.md`](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
-- [`infra-commands.md`](infra-commands.md) — Console command definition, input arguments/options, and execution lifecycle.
-- [`core-events-and-listeners.md`](core-events-and-listeners.md) — PSR-14 event architecture and domain event testing.
+- [PSR Test Doubles](testing-psr-doubles.md) — Ready-made PSR test doubles from `yiisoft/test-support` (EventDispatcher, Logger, SimpleCache, Clock, Container, Stream).
+- [Testo Runner](testing-testo.md) — Alternative Testo runner, the exclusive runner rule (PHPUnit XOR Testo), and Mockery integration via `php-testo/bridge-mockery`.
+- [Codeception](testing-codeception.md) — Alternative Codeception 5 framework: actors, Cests, and REST-module API testing.
+- [Infection Mutation Testing](testing-infection.md) — Optional Infection mutation-testing quality gate layered on top of the runner.
+- [Console Testing](testing-console.md) — Console command testing with `CommandTester`, exit codes, prompts, and autocompletion.
+- [Validation Custom Rules](http-validation-custom-rules.md) — Custom validation rules, RuleHandlerInterface, and isolated unit testing.
+- [Functional HTTP Testing](testing-http.md) — Functional HTTP testing, middleware pipelines, endpoints, sessions, and `ResponseAccessor`.
+- [Database Testing](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
+- [Console Commands](infra-commands.md) — Console command definition, input arguments/options, and execution lifecycle.
+- [Events & Listeners](core-events-and-listeners.md) — PSR-14 event architecture and domain event testing.

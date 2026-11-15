@@ -190,7 +190,7 @@ const mockFeaturePlan = `
 - [ ] Task 6.2: Action test
 `;
 
-const missingFeature = validatePlanArtifact(mockFeaturePlan, { mode: 'Feature' });
+const missingFeature = validatePlanArtifact(mockFeaturePlan);
 assert(missingFeature.length === 0, 'Feature plan preserves 6 phases with pragmatic service/repository separation');
 
 // Canary: reject plans collapsing use cases directly into action controllers
@@ -210,7 +210,7 @@ const mockInvalidActionPlan = `
 `;
 let invalidActionCaught = false;
 try {
-  validatePlanArtifact(mockInvalidActionPlan, { mode: 'Feature' });
+  validatePlanArtifact(mockInvalidActionPlan);
 } catch {
   invalidActionCaught = true;
 }
@@ -759,8 +759,6 @@ function parseVerificationStatuses(reportText) {
 }
 
 const mockReport = `
-Mode: Full
-Decomposition: Full
 Architecture: .ai-factory/ARCHITECTURE.md
 fixes applied: none
 tests: not run (offline environment)

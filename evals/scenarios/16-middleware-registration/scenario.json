@@ -1,6 +1,6 @@
 {
   "id": "16-middleware-registration",
-  "title": "Full mode: custom PSR-15 middleware - request id header, global stack registration gate",
+  "title": "Custom PSR-15 middleware - request id header, global stack registration gate",
   "mode": "feature",
   "tags": [
     "full",

@@ -1,6 +1,6 @@
 {
   "id": "17-event-listener-config",
-  "title": "Full mode: PSR-14 domain event - listener wiring via the events config group gate",
+  "title": "PSR-14 domain event - listener wiring via the events config group gate",
   "mode": "feature",
   "tags": [
     "full",

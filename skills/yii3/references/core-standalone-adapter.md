@@ -10,14 +10,14 @@
 In standalone mode the skill is the entire pipeline: one agent plans, implements, verifies, and reports, with no external orchestrator:
 
 - **User:** owns decisions, task scoping, and requirements; the skill interacts with the user directly (interactive-first).
-- **Yii3 Skill (`yii3`):** Single source of truth (SSOT) for Yii 3 framework architecture, bottom-up stage progression, per-step wiring gates, signature lookup protocols, and Definition of Done gates — and additionally owns plan resolution, self-verification, and the final report.
+- **Yii3 Skill (`yii3`):** Single source of truth (SSOT) for Yii 3 framework architecture, bottom-up assembly progression, per-step wiring gates, signature lookup protocols, and Definition of Done gates — and additionally owns plan resolution, self-verification, and the final report.
 - **No workflow injections:** the `injections/*.md` hooks are not loaded; the skill never emits AI Factory artifacts (`aif-gate-result` blocks, mandatory `### Execution State` carriers, `HANDOFF_MODE=1` semantics).
 
 ---
 
 ## 2. Standalone Lifecycle Protocol
 
-`resolve task → Stage 0 bootstrap → Mission Workflow (bottom-up assembly) → self-verification (Finale) ⇄ fix → final report`
+`resolve task → Discovery & Bootstrap (SKILL.md §1) → Mission Workflow (bottom-up assembly) → self-verification (Finale) ⇄ fix → final report`
 
 ### Self-Verification Discipline (replaces the external `aif-verify` gate)
 
@@ -36,7 +36,7 @@ On blockers: diagnose in the Stage 0 item 3(c) root-cause order (DI & config →
 
 ## 3. Durable State Contract (`### Mission State` & resolved plans)
 
-- **Primary state carrier:** the `### Mission State` tracker printed at Stage 0 and updated as assembly progresses:
+- **Primary state carrier:** the `### Mission State` tracker printed at Discovery and updated as assembly progresses:
 
 ```markdown
 ### Mission State
@@ -61,7 +61,7 @@ On blockers: diagnose in the Stage 0 item 3(c) root-cause order (DI & config →
 ### Resume Protocol for Subsequent Sessions
 
 1. **Locate the plan** per §4, or ask the user for the task scope if none resolves.
-2. **Inspect state:** parse `### Execution State` (if present) or the conversation's `### Mission State`; identify the last completed stage, created artifacts, and pending wiring gates.
+2. **Inspect state:** parse `### Execution State` (if present) or the conversation's `### Mission State`; identify the last completed assembly step, created artifacts, and pending wiring gates.
 3. **Verify file existence:** validate listed artifacts actually exist on disk before progressing.
 4. **Advance state:** continue bottom-up, updating checkboxes `- [x]` and the state tracker upon landing each per-step wiring gate.
 
@@ -103,7 +103,7 @@ Standalone runs interactively unless the caller is headless:
 
 ## 6. Output & Handoff Contract (No `aif-gate-result`)
 
-The task concludes at the Finale with the `references/core-definition-of-done.md` §4 report block: `Mode`, `Architecture`, `fixes applied`, `tests` (`pass | fail | not run | blocked (<reason>) | n/a`), `static analysis`, `packages added`, `config files changed`, `production readiness gate`.
+The task concludes at the Finale with the `references/core-definition-of-done.md` §4 report block: `Architecture`, `fixes applied`, `tests` (`pass | fail | not run | blocked (<reason>) | n/a`), `static analysis`, `packages added`, `config files changed`, `production readiness gate`.
 
 - **Findings format:** blockers and warnings are structured prose items with file paths and severity (blocking defect / convention drift / advisory). No fenced `aif-gate-result` JSON block — that block belongs exclusively to AI Factory extension mode.
 - **Unverified APIs:** any `yiisoft/*` API used without a verified installed signature (no `vendor/`, offline) is listed in the report as "not verified against sources" — advisory, never silently ignored.

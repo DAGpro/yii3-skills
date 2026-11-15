@@ -1,6 +1,6 @@
 {
   "id": "23-composite-html-action",
-  "title": "Full mode: composite HTML action - edit page combining view render, form hydration, file upload, flash, 404 and session/CSRF middleware ordering",
+  "title": "Composite HTML action - edit page combining view render, form hydration, file upload, flash, 404 and session/CSRF middleware ordering",
   "mode": "feature",
   "tags": [
     "full",

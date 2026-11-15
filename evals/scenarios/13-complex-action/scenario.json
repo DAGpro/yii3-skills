@@ -1,6 +1,6 @@
 {
   "id": "13-complex-action",
-  "title": "Full mode: complex action - typed input DTO via input-http, validator attributes",
+  "title": "Complex action - typed input DTO via input-http, validator attributes",
   "mode": "feature",
   "tags": [
     "full",

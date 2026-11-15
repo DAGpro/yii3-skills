@@ -508,13 +508,13 @@ The full test-double example — stream inspection, pointer/rewind semantics, an
 ---
 
 ## 10. Related Guides
-- [`testing-core.md`](testing-core.md) — Test architecture, PHPUnit runner, PSR test doubles, mocking rules, and unit testing.
-- [`testing-testo.md`](testing-testo.md) — Alternative Testo runner and the exclusive runner rule (PHPUnit XOR Testo).
-- [`testing-codeception.md`](testing-codeception.md) — Alternative Codeception 5 framework: actors, Cests, and REST-module API testing (owner of §7's moved material).
-- [`testing-infection.md`](testing-infection.md) — Optional Infection mutation-testing quality gate layered on top of the runner.
-- [`testing-console.md`](testing-console.md) — Console command testing with `CommandTester`, exit codes, prompts, and autocompletion.
-- [`testing-database.md`](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
-- [`http-middlewares.md`](http-middlewares.md) — PSR-15 middleware pipeline and official middleware catalog.
-- [`http-state.md`](http-state.md) — Sessions, cookies, CSRF protection, and flash messages.
-- [`http-actions-and-controllers.md`](http-actions-and-controllers.md) — Action design, request DTO hydration, and response formatting.
-- [`http-routes.md`](http-routes.md) — FastRoute routing syntax, route groups, and route middleware dispatching.
+- [Testing Core](testing-core.md) — Test architecture, PHPUnit runner, PSR test doubles, mocking rules, and unit testing.
+- [Testo Runner](testing-testo.md) — Alternative Testo runner and the exclusive runner rule (PHPUnit XOR Testo).
+- [Codeception](testing-codeception.md) — Alternative Codeception 5 framework: actors, Cests, and REST-module API testing (owner of §7's moved material).
+- [Infection Mutation Testing](testing-infection.md) — Optional Infection mutation-testing quality gate layered on top of the runner.
+- [Console Testing](testing-console.md) — Console command testing with `CommandTester`, exit codes, prompts, and autocompletion.
+- [Database Testing](testing-database.md) — Ephemeral in-memory SQLite, migrations, transactions, and repository testing.
+- [PSR-15 Middlewares](http-middlewares.md) — PSR-15 middleware pipeline and official middleware catalog.
+- [State & Sessions](http-state.md) — Sessions, cookies, CSRF protection, and flash messages.
+- [Actions & Controllers](http-actions-and-controllers.md) — Action design, request DTO hydration, and response formatting.
+- [Routes & Routing](http-routes.md) — FastRoute routing syntax, route groups, and route middleware dispatching.

@@ -3,7 +3,7 @@
 > **Grounding:** APIs in `vendor/yiisoft/<pkg>/src/`, patterns in this guide, conventions in architecture artifact (SKILL.md Core rule 2).
 
 > Architectural contract governing where third-party vendor code (`yiisoft/*`, PSR implementations, database drivers) lives in a Yii 3 application.  
-> Adjusts boundary strictness proportionally to the project's chosen architecture pattern across AI Factory workflows (`aif-plan`, `aif-implement`, `aif-verify`, `aif-fix`).
+> Adjusts boundary strictness proportionally to the project's chosen architecture pattern across implementation, review, and verification workflows.
 
 This guide is the authority for **project conventions** (layout, layer placement, composition-root location) — row 3 of the source-of-truth split in SKILL.md Core rule 2. When the project's existing layout or naming differs from the pattern described here and violates no correctness rule, new code continues the project's style and records the divergence; correctness violations (e.g. database access inside presentation) are always fixed per the Universal Invariants in §3.
 
@@ -24,7 +24,7 @@ This guide is the authority for **project conventions** (layout, layer placement
   - [3.6. Pre-existing Code & Starter Scaffolding Policy](#36-pre-existing-code--starter-scaffolding-policy)
 - [4. Package Placement Matrix by Pattern](#4-package-placement-matrix-by-pattern)
 - [5. Quality Gate Checklist](#5-quality-gate-checklist)
-- [6. Stage-by-Pattern Execution Matrix](#6-stage-by-pattern-execution-matrix)
+- [6. Step-by-Pattern Execution Matrix](#6-step-by-pattern-execution-matrix)
   - [Repository & Persistence Patterns Across Architecture Patterns](#repository--persistence-patterns-across-architecture-patterns)
 
 ---
@@ -33,9 +33,9 @@ This guide is the authority for **project conventions** (layout, layer placement
 
 Architecture patterns vary in the degree of formal decoupling they require between application code and framework libraries. Imposing strict hexagonal isolation on a simple CRUD application causes over-engineering, while allowing ActiveRecord to leak into a DDD domain breaks aggregate purity.
 
-The architecture types defined by the `/aif-architecture` workflow map directly to three vendor boundary isolation strategies in modern Yii 3:
+The three canonical architecture patterns map directly to three vendor boundary isolation strategies in modern Yii 3:
 
-| `/aif-architecture` Pattern Type | CLI Arguments / Aliases | Boundary Isolation Level | Core Invariants |
+| Architecture Pattern | Pattern Aliases | Boundary Isolation Level | Core Invariants |
 |---|---|---|---|
 | **Explicit Architecture** | `explicit`, `explicit-layers`, `explicit-vertical`, `explicit-flat` (aliases: `clean`, `ddd`, `vertical`) | Pure Domain Isolation | Pure POPO Domain; mandatory port interfaces; vendor packages strictly in Infrastructure. |
 | **Structured Modules** | `structured`, `structured-layers`, `structured-vertical` (alias: `monolith`) | Module Boundary Encapsulation | Feature modules (`src/<Module>/`); rich models (ActiveRecord permitted); services orchestrate without direct SQL; interfaces at boundaries. |
@@ -65,7 +65,7 @@ The architecture types defined by the `/aif-architecture` workflow map directly 
 ## 2. Vendor Policy per Architecture Pattern
 
 ### 2.1. Explicit Architecture (Clean / Ports & Adapters)
-Corresponds to `/aif-architecture explicit` (`explicit-layers`, `explicit-vertical`, `explicit-flat`). Used when domain logic is complex and business rules must remain completely independent of frameworks, databases, and UI delivery mechanisms.
+Corresponds to pattern alias `explicit` (`explicit-layers`, `explicit-vertical`, `explicit-flat`). Used when domain logic is complex and business rules must remain completely independent of frameworks, databases, and UI delivery mechanisms.
 
 - **Domain Layer:** Pure PHP objects (POPOs), domain events, and port interfaces (`UserRepositoryInterface`). Must **never** import `yiisoft/db`, `yiisoft/active-record`, `yiisoft/yii-cycle`, `yiisoft/view`, or PSR HTTP classes.
 - **Application Layer:** Use-case handlers (`RegisterUserHandler`) inject abstract port interfaces. Must **never** import concrete database adapters or vendor drivers.
@@ -74,7 +74,7 @@ Corresponds to `/aif-architecture explicit` (`explicit-layers`, `explicit-vertic
 - **Vertical Slice Subfolder Grouping Rule:** When using vertical slices (including `explicit-flat`), avoid flat-dumping dozens of thin actions, DTOs, and handlers into the root entity folder. Because modern Yii 3 mandates Single-Action classes and dedicated DTOs/handlers, group each use case into its own cohesive feature subfolder inside the slice (`src/<Context>/<Entity>/<FeatureName>/` containing `<FeatureName>Action.php`, `<FeatureName>Dto.php`, `<FeatureName>Handler.php`) per [Feature Recipes, §5 Style 1](core-feature-recipes.md#style-1-vertical-slice-feature-based-common-in-modern-yii3-apps).
 
 ### 2.2. Structured Modules
-Corresponds to `/aif-architecture structured` (`structured-layers`, `structured-vertical`). Used for growing monoliths organized into feature modules (e.g., `Catalog`, `Billing`, `Identity`).
+Corresponds to pattern alias `structured` (`structured-layers`, `structured-vertical`). Used for growing monoliths organized into feature modules (e.g., `Catalog`, `Billing`, `Identity`).
 
 - **Models (`[Module]/Models/`):** Rich domain models encapsulating business rules and state transitions. May inherit from `Yiisoft\ActiveRecord\ActiveRecord` or use Cycle ORM entity attributes (`#[Entity]`) directly without needing a separate port interface.
 - **Services (`[Module]/Services/`):** Application services that orchestrate use cases (fetching entities, calling model methods, persisting). Services do not construct raw SQL queries; they delegate data access to models or repositories.
@@ -82,7 +82,7 @@ Corresponds to `/aif-architecture structured` (`structured-layers`, `structured-
 - **Module Boundary:** Modules communicate via public services or events, never accessing another module's internal tables directly.
 
 ### 2.3. Layered Architecture
-Corresponds to `/aif-architecture layers`. Used for straightforward CRUD applications, administrative utilities, or prototypes where velocity is prioritized over strict formal decoupling.
+Corresponds to pattern alias `layers`. Used for straightforward CRUD applications, administrative utilities, or prototypes where velocity is prioritized over strict formal decoupling.
 
 - **Models (`src/Models/`):** Data structures, DTOs, and Active Record models (`Yiisoft\ActiveRecord\ActiveRecord`). Vendor persistence annotations and methods live directly on the models.
 - **Services (`src/Services/`):** Business logic and transactional orchestration. Services interact directly with Active Record models or repositories. Port interfaces are not required.
@@ -133,9 +133,9 @@ In Yii 3 architectures, **Application Service** and **Use Case Handler** are two
 
 ### 3.6. Pre-existing Code & Starter Scaffolding Policy
 
-When generating or evaluating `.ai-factory/ARCHITECTURE.md`, the document establishes the authoritative **target architecture** for all business features. Existing files (whether from starter templates such as `yiisoft/app*` or pre-existing project code) must not distort this target architecture.
+When generating or evaluating the project's architecture artifact (`.ai-factory/ARCHITECTURE.md` or `docs/architecture/`), the document establishes the authoritative **target architecture** for all business features. Existing files (whether from starter templates such as `yiisoft/app*` or pre-existing project code) must not distort this target architecture.
 
-Starter templates (`yiisoft/app`, `yiisoft/app-api`, `yiisoft/app-console`) provide baseline scaffolding typically arranged by transport (`src/Web/`, `src/Api/`, `src/Console/`) with basic entry points (e.g., `Index.php`, `SiteController.php`, view layouts, error handlers). When applying `aif-architecture`, the model MUST NOT confuse these transport directories with Bounded Contexts or business modules, and MUST present clear architectural strategies for handling them.
+Starter templates (`yiisoft/app`, `yiisoft/app-api`, `yiisoft/app-console`) provide baseline scaffolding typically arranged by transport (`src/Web/`, `src/Api/`, `src/Console/`) with basic entry points (e.g., `Index.php`, `SiteController.php`, view layouts, error handlers). When analyzing or generating project architecture (`aif-architecture` or standalone), the model MUST NOT confuse these transport directories with Bounded Contexts or business modules, and MUST present clear architectural strategies for handling them.
 
 In `ARCHITECTURE.md`, pre-existing code that differs from the target pattern is explicitly qualified under one of four strategies:
 
@@ -185,7 +185,7 @@ In `ARCHITECTURE.md`, pre-existing code that differs from the target pattern is 
 
 ## 5. Quality Gate Checklist
 
-When reviewing code (`aif-review`) or verifying changes (`aif-verify`), apply checks according to the active pattern:
+When reviewing code or verifying changes (`aif-review`, `aif-verify`, or standalone self-verification), apply checks according to the active pattern:
 
 - [ ] **Presentation is DB-free (All patterns):** Confirm controllers and view templates contain zero database queries or direct `ConnectionInterface` calls.
 - [ ] **Presentation leverages native transport (All patterns):** Ensure HTTP actions use `yiisoft/input-http`, `WebViewRenderer`, `DataResponseFactoryInterface` (including self-contained `JsonResponseFactory`), or PSR-17 `ResponseFactoryInterface` directly without redundant custom wrappers.
@@ -195,7 +195,7 @@ When reviewing code (`aif-review`) or verifying changes (`aif-verify`), apply ch
 
 ---
 
-## 6. Stage-by-Pattern Execution Matrix
+## 6. Step-by-Pattern Execution Matrix
 
 | Assembly Step | Layered Architecture (`layers`) | Structured Modules (`structured*`) | Explicit Architecture (`explicit*`) |
 |---|---|---|---|

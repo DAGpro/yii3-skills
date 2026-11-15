@@ -4,14 +4,14 @@
 
 > Practical guide for Cycle ORM Data Mapper persistence, PHP 8 entity attributes (`cycle/annotated`), Unit of Work (`cycle/orm`), DBAL & connection management (`cycle/database`), CLI schema migrations (`cycle/migrations`, `cycle/schema-migrations-generator`), Yii3 DI bridge (`yiisoft/yii-cycle`), paginated data readers and batch writers (`yiisoft/data-cycle`), entity behaviors (`cycle/entity-behavior`), and RBAC storage integration (`yiisoft/rbac-cycle-db`).
 >
-> Persistence details belong strictly to the Infrastructure Layer; Cycle ORM entities can serve as Domain Entities (POPO) or be mapped through dedicated Infrastructure Repositories.
+> Cycle ORM implements the Data Mapper pattern, decoupling PHP entities from database connections, SQL queries, and persistence state.
 
 ---
 
 ## Table of Contents
-- [1. Data Mapper Architecture & Clean Boundaries](#1-data-mapper-architecture--clean-boundaries)
+- [1. Cycle ORM Data Mapper Concepts](#1-cycle-orm-data-mapper-concepts)
   - [1.1. Data Mapper vs Active Record](#11-data-mapper-vs-active-record)
-  - [1.2. Architecture Layout & Entity Mapping Options](#12-architecture-layout--entity-mapping-options)
+  - [1.2. Entity Mapping Options](#12-entity-mapping-options)
 - [2. Entity Definition with PHP 8 Attributes (`cycle/annotated`)](#2-entity-definition-with-php-8-attributes-cycleannotated)
   - [2.1. Basic Entity & Column Types](#21-basic-entity--column-types)
   - [2.2. Relational Attributes (`HasOne`, `HasMany`, `BelongsTo`, `ManyToMany`) & Collection Factories](#22-relational-attributes-hasone-hasmany-belongsto-manytomany--collection-factories)
@@ -32,39 +32,28 @@
 
 ---
 
-## 1. Data Mapper Architecture & Clean Boundaries
+## 1. Cycle ORM Data Mapper Concepts
 
 ### 1.1. Data Mapper vs Active Record
 
 Cycle ORM implements the **Data Mapper** pattern. Unlike Active Record:
 - **No Database Coupling in Entities:** Entities do not extend framework base classes and have no awareness of database connections, SQL queries, or persistence state.
 - **Unit of Work:** Mutations are staged in memory via `EntityManagerInterface::persist()` or `EntityManagerInterface::delete()` and executed atomically when `run()` is called.
-- **Pure Domain Entities:** Domain entities can be annotated directly with PHP 8 attributes (`#[Entity]`, `#[Column]`) or kept completely pure using custom schema providers (e.g., compiled PHP or XML/YAML mapping definitions).
+- **POPO Entities:** Entities can be annotated directly with PHP 8 attributes (`#[Entity]`, `#[Column]`) or mapped using external schema providers.
 
-### 1.2. Architecture Layout & Entity Mapping Options
+### 1.2. Entity Mapping Options
 
 | Entity Option | Active Pattern(s) | Structure | Notes |
 |---|---|---|---|
-| **1. Annotated Entities (`cycle/annotated`)** *(default)* | **Layered**, **Structured Modules**, pragmatic **DDD** | POPO entities annotated with `#[Entity]` / `#[Column]` directly in `Domain/Model/` (zero Cycle base class or DB connection). | Minimal config; pair with compiled schema provider in production (`FromFilesSchemaProvider`). |
-| **2. Pure POPO Entities + Schema Provider** | **Explicit Architecture** (`explicit*`, vendor-free Domain) | Plain POPO entities in `Domain/` with zero `Cycle\*` attributes; table/column mapping defined in schema config/providers under `Infrastructure/`. | Preserves zero vendor imports in `Domain/` (`core-architecture-alignment.md` §2.1). |
+| **1. Annotated Entities (`cycle/annotated`)** *(default)* | **Layered**, **Structured Modules**, pragmatic **DDD** | POPO entities annotated with `#[Entity]` / `#[Column]` (zero Cycle base class or DB connection). | Minimal config; pair with compiled schema provider in production (`FromFilesSchemaProvider`). |
+| **2. Pure POPO Entities + Schema Provider** | **Explicit Architecture** (`explicit*`, vendor-free Domain) | Plain POPO entities with zero `Cycle\*` attributes; table/column mapping defined in schema config/providers under infrastructure. | Preserves zero vendor imports in pure domain layers (`core-architecture-alignment.md` §2.1). |
 
-**Attributed Clean Architecture Reference Layout:**
-
-```text
-src/
-├── Domain/
-│   ├── Model/
-│   │   ├── User.php                    # Domain Entity (annotated with Cycle #[Entity])
-│   │   ├── Order.php                   # Relational Domain Entity
-│   │   └── UserId.php                  # Value Object (Identifier)
-│   └── Repository/
-│       └── UserRepositoryInterface.php # Pure Domain Repository contract
-└── Infrastructure/
-    └── Persistence/
-        └── Cycle/
-            ├── CycleUserRepository.php # Implements UserRepositoryInterface via Cycle ORM
-            └── CycleUserGridQuery.php  # HTTP Grid query via Yiisoft\Data\Cycle\Reader\EntityReader
-```
+> [!NOTE]
+> **Architecture Placement:** File placement follows the project's Architecture Pattern (`core-architecture-alignment.md` §6):
+> - In **Layered Architecture**, place entities in `src/Entity/` or `src/Models/` and repositories in `src/Repository/`.
+> - In **Structured Modules**, place inside the module (e.g. `src/<Module>/Entity/` and `src/<Module>/Repository/`).
+> - In **Explicit Architecture**, place pure entities in `src/Domain/Model/` and Cycle persistence adapters in `src/Infrastructure/Persistence/Cycle/`.
+> This guide focuses on entity definitions, relationships, repositories, and Unit of Work mechanics.
 
 ---
 
@@ -531,7 +520,7 @@ Cycle ORM integrates with Yii 3 through `yiisoft/yii-cycle`, providing database 
 
 > [!IMPORTANT]
 > For the complete configuration guides, driver snippets, migration skeletons, CLI command reference table, and RBAC wiring code, see the companion guide:
-> **[`persistence-cycle-schema-and-cli.md`](persistence-cycle-schema-and-cli.md)**.
+> **[Cycle Schema & CLI Guide](persistence-cycle-schema-and-cli.md)**.
 
 ---
 

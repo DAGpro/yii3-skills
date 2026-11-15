@@ -1,6 +1,6 @@
 {
   "id": "15-queue-job",
-  "title": "Full mode: queued digest job - typed message DTO, QueueProducerInterface push, yiisoft/queue params + broker wiring",
+  "title": "Queued digest job - typed message DTO, QueueProducerInterface push, yiisoft/queue params + broker wiring",
   "mode": "feature",
   "tags": [
     "full",

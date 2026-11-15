@@ -4,7 +4,7 @@
 
 > Practical guide for stateful session-based web authentication in Yii3: `CurrentUser` service configuration, login/logout lifecycles, session ID regeneration (anti-fixation), web authenticator (`WebAuth`), remember-me cookies (`CookieLogin`), CSRF form protection, rate limiting, and PSR-14 authentication events.
 >
-> Complements [`infra-auth-and-rbac.md`](infra-auth-and-rbac.md) (identity models, password hashing, RBAC permissions, and middleware route protection).
+> Complements [Auth & RBAC Architecture](infra-auth-and-rbac.md) (identity models, password hashing, RBAC permissions, and middleware route protection).
 
 ---
 
@@ -190,7 +190,7 @@ return [
 
 `Yiisoft\Auth\Middleware\Authentication` inspects credentials and places the authenticated `IdentityInterface` into the request attribute `Yiisoft\Auth\Middleware\Authentication::class`. However, it does not mutate `CurrentUser`.
 
-`Yiisoft\User\Login\LoginMiddleware` bridges this gap: if `CurrentUser::isGuest()` is true, it reads the `Authentication::class` request attribute and automatically calls `$currentUser->login($identity)`. The pair is attached to route groups as `Authentication::class` followed by `LoginMiddleware::class` — see [`infra-auth-and-rbac.md`](infra-auth-and-rbac.md) §7.1 for the complete route-wiring example.
+`Yiisoft\User\Login\LoginMiddleware` bridges this gap: if `CurrentUser::isGuest()` is true, it reads the `Authentication::class` request attribute and automatically calls `$currentUser->login($identity)`. The pair is attached to route groups as `Authentication::class` followed by `LoginMiddleware::class` — see [Auth & RBAC Architecture](infra-auth-and-rbac.md) §7.1 for the complete route-wiring example.
 
 ---
 
@@ -253,7 +253,7 @@ CurrentUser::class => [
 ],
 ```
 
-All official packages (`yiisoft/user`, `yiisoft/session`, `yiisoft/router`, etc.) contribute their own `'reset'` callbacks automatically — see the ground-truth catalog in [infra-state-resetter.md](infra-state-resetter.md), section 4. No application-level registration is required.
+All official packages (`yiisoft/user`, `yiisoft/session`, `yiisoft/router`, etc.) contribute their own `'reset'` callbacks automatically — see the ground-truth catalog in [StateResetter & Worker Safety](infra-state-resetter.md), section 4. No application-level registration is required.
 
 > [!CAUTION]
 > **Never define or override `StateResetter::class` in application DI configuration.** An app-level definition is treated as a full override and silently disables every built-in package resetter — identity, session, route, and view state then leak across worker requests. Internal mechanics and full analysis: [Long-Running Worker Safety & StateResetter Guide, §2](infra-state-resetter.md#2-the-stateresetterclass-definition-trap).

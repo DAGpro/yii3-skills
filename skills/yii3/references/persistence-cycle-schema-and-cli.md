@@ -4,7 +4,7 @@
 
 > Practical guide for Cycle ORM Yii3 integration via `yiisoft/yii-cycle`: DBAL driver configuration, multi-provider schema pipeline, production compilation caching, Cycle migrations (`cycle/migrations`, `cycle/schema-migrations-generator`), CLI commands reference, and RBAC storage integration (`yiisoft/rbac-cycle-db`).
 >
-> Complements the core data modeling guide: [`persistence-cycle-orm.md`](persistence-cycle-orm.md) (entities, relations, behaviors, unit of work, and data readers).
+> Complements the core data modeling guide: [Cycle ORM Guide](persistence-cycle-orm.md) (entities, relations, behaviors, unit of work, and data readers).
 
 ---
 

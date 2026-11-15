@@ -1,6 +1,6 @@
 {
   "id": "29-functional-test",
-  "title": "Full mode: functional test suite set up on yiisoft/yii-testing - in-memory FunctionalTestCase test for GET /api/status, never raw HTTP against a live server",
+  "title": "Functional test suite set up on yiisoft/yii-testing - in-memory FunctionalTestCase test for GET /api/status, never raw HTTP against a live server",
   "mode": "feature",
   "tags": [
     "full",

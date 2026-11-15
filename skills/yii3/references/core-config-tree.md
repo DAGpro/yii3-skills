@@ -244,8 +244,8 @@ Full constructor signature (`Yiisoft\Config\Config`):
 
 `yiisoft/config` and `yiisoft/di` support multiple config layouts. To prevent style drift, separate **when** a choice is made from **how** it is executed:
 
-- **Feature / patch work:** Do **not** invent or mix config styles. Follow `.ai-factory/ARCHITECTURE.md` or the existing `config/` layout (default when unconfigured: `config/*/di/*.php`).
-- **New project / `/aif-architecture`:** Choose one primary DI wiring style (and config map layout) and record it in `ARCHITECTURE.md`:
+- **Existing codebase (features and fixes):** Do **not** invent or mix config styles. Follow the project architecture guidelines or the existing `config/` layout (default when unconfigured: `config/*/di/*.php`).
+- **New project bootstrap:** Choose one primary DI wiring style (and config map layout) and record it in the project architecture guidelines:
 
 | DI Wiring Style | Structure | Choose when… | Notes |
 |---|---|---|---|

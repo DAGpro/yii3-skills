@@ -387,10 +387,10 @@ final class SqliteUserRepositoryTest extends DatabaseTestCase
 ---
 
 ## 10. Related Guides
-- [`testing-core.md`](testing-core.md) — Testing architecture, test runners (PHPUnit, Testo), and PSR test doubles.
-- [`testing-http.md`](testing-http.md) — Functional HTTP testing, middleware pipelines, and endpoints.
-- [`persistence-migrations.md`](persistence-migrations.md) — Database schema DDL migrations, column types, and indexing.
-- [`persistence-db.md`](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
-- [`persistence-active-record.md`](persistence-active-record.md) — Active Record models, relations, lifecycle, and LazyLoadGuard.
-- [`persistence-cycle-orm.md`](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
-- [`core-di-and-config.md`](core-di-and-config.md) — Environment configuration and container definitions for `test`.
+- [Testing Core](testing-core.md) — Testing architecture, test runners (PHPUnit, Testo), and PSR test doubles.
+- [Functional HTTP Testing](testing-http.md) — Functional HTTP testing, middleware pipelines, and endpoints.
+- [Database Migrations](persistence-migrations.md) — Database schema DDL migrations, column types, and indexing.
+- [Database Connection & Queries](persistence-db.md) — Low-level `yiisoft/db` Connection, Query Builder, Transactions, and Data Readers.
+- [Active Record](persistence-active-record.md) — Active Record models, relations, lifecycle, and LazyLoadGuard.
+- [Cycle ORM](persistence-cycle-orm.md) — Clean Data Mapper persistence with Cycle ORM (`#[Entity]`, `EntityReader`).
+- [DI & Configuration](core-di-and-config.md) — Environment configuration and container definitions for `test`.

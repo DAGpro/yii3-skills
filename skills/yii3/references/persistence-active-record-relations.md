@@ -1,7 +1,7 @@
 # Yii3 Persistence: Active Record Relations, Eager Loading & N+1 Prevention
 
 > **Package:** `yiisoft/active-record` (PHP 8.2+)  
-> **Complements:** [`persistence-active-record.md`](persistence-active-record.md) (Core Models, Repositories & Mutations), [`persistence-db-connection-and-queries.md`](persistence-db-connection-and-queries.md), [`infra-state-resetter.md`](infra-state-resetter.md)
+> **Complements:** [Active Record Core](persistence-active-record.md) (Core Models, Repositories & Mutations), [DB Connection & Queries](persistence-db-connection-and-queries.md), [StateResetter](infra-state-resetter.md)
 
 ---
 
@@ -14,7 +14,6 @@
   - [2.2. Magic Relations Trait Alternative (`MagicRelationsTrait`)](#22-magic-relations-trait-alternative-magicrelationstrait)
 - [3. Link Syntax for `hasOne` and `hasMany`](#3-link-syntax-for-hasone-and-hasmany)
 - [4. Many-to-Many via `via()` and `viaTable()`](#4-many-to-many-via-via-and-viatable)
-  - [Choosing Many-to-Many: via() vs viaTable()](#choosing-many-to-many-via-vs-viatable)
   - [4.1. Intermediate Active Record Model (`via()`)](#41-intermediate-active-record-model-via)
   - [4.2. Direct Junction Table (`viaTable()`)](#42-direct-junction-table-viatable)
 - [5. Filtering & Sorting Relations with `joinWith()`](#5-filtering--sorting-relations-with-joinwith)

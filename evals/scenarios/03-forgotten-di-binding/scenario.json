@@ -1,6 +1,6 @@
 {
   "id": "03-forgotten-di-binding",
-  "title": "Patch mode: view counter - a new interface must be bound in DI",
+  "title": "View counter - a new interface must be bound in DI",
   "mode": "patch",
   "tags": [
     "light",

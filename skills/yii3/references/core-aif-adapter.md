@@ -10,7 +10,7 @@
 This is the `yii3` skill's **default operating mode** (AI Factory extension): whenever the target project runs AI Factory — an invoking `aif-*` workflow or a present `.ai-factory/` directory — the skill operates as a specialized domain engine embedded within broader multi-agent workflows. Only when neither signal is present (no `.ai-factory/` directory AND no `aif-*` invocation) does the skill fall back to standalone operation (plans via root `PLAN.md` / `docs/plans/`, concluded at the Finale without AI Factory handoff artifacts — see SKILL.md, "Operating Context Routing"). The repository and runtime separation of concerns:
 
 - **AI Factory Workflows (`aif-*`):** Own high-level project automation, task scheduling, plan artifact durability, and cross-agent invocation loops.
-- **Yii3 Skill (`yii3`):** Single source of truth (SSOT) for Yii 3 framework architecture, bottom-up stage progression, per-step wiring gates, signature lookup protocols, and Definition of Done gates.
+- **Yii3 Skill (`yii3`):** Single source of truth (SSOT) for Yii 3 framework architecture, bottom-up assembly progression, per-step wiring gates, signature lookup protocols, and Definition of Done gates.
 - **Injections (`injections/*.md`):** Lightweight activation hooks that inject Yii 3-specific duties into standard AI Factory workflows without duplicating framework rules.
 
 ---
@@ -76,9 +76,9 @@ Every active plan must maintain an explicit execution state block at the end of 
 When an agent (`aif-implement`, `aif-verify`, `aif-fix`) resumes work on an existing task:
 
 1. **Locate Active Plan:** Read the active plan from the configured location (`paths.plans`).
-2. **Inspect Execution State:** Parse `### Execution State` to identify the last completed stage, created artifacts, and pending wiring gates.
+2. **Inspect Execution State:** Parse `### Execution State` to identify the last completed step, created artifacts, and pending wiring gates.
 3. **Verify File Existence:** Validate that listed artifacts actually exist on disk before progressing.
-4. **Advance State:** Progress to `Next Stage`, update checkboxes `- [x]`, and refresh `### Execution State` upon landing each stage's per-step wiring gate.
+4. **Advance State:** Progress to `Next Stage`, update checkboxes `- [x]`, and refresh `### Execution State` upon landing each step's wiring gate.
 
 ---
 
@@ -121,7 +121,7 @@ Across AI Factory workflows, independent agents run in separate conversational c
 - **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task & Intent Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/<topic>.md`. Tasks lacking an assigned guide are prohibited.
 - **Prior Dependency Installation:** Every missing capability from `references/package-catalog.md` must be planned as an explicit `composer require` task scheduled *before* any implementation tasks that import its namespace.
 - **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task (`config/**/di/*.php` default, or the project's active service provider), and every Action an explicit route wiring task (`config/**/routes.php` default, or the active `FileRouter` convention).
-- **Initialized Execution State:** The plan must conclude with an initialized `### Execution State` block template setting `Stage 1` as pending and all wiring gates as `PENDING`.
+- **Initialized Execution State:** The plan must conclude with an initialized `### Execution State` block template setting `Stage 1` (or `Step 1`) as pending and all wiring gates as `PENDING`.
 
 ### 6.2. Handoff: `aif-implement` → `aif-verify` (Self-Contained Implementation Handoff)
 - **Mandatory Pre-Implementation Guide Read:** Before writing code for any task, the implementer must read the task's assigned `Guide: references/<topic>.md` (or resolve it from `references/INDEX.md` if missing) and verify API signatures in `vendor/yiisoft/<pkg>/src/`. Generating code without consulting the guide is strictly prohibited.

@@ -31,7 +31,7 @@ use Yiisoft\Db\Migration\Service\Generate\CreateService;
 return [
     'yiisoft/db-migration' => [
         // Target namespace for newly generated migrations
-        'newMigrationNamespace' => 'App\\Infrastructure\\Migration',
+        'newMigrationNamespace' => 'App\\Migration',
 
         // Path MUST be left empty when namespaced migrations are used!
         'newMigrationPath' => '',
@@ -41,7 +41,7 @@ return [
 
         // Application namespaces scanned for migrations
         'sourceNamespaces' => [
-            'App\\Infrastructure\\Migration',
+            'App\\Migration',
         ],
 
         // Concrete directory paths scanned for vendor migrations (non-namespaced)
@@ -54,9 +54,9 @@ return [
         'databases' => [
             'analytics' => [
                 'db' => 'db.analytics', // DI container service ID
-                'newMigrationNamespace' => 'App\\Infrastructure\\Migration\\Analytics',
+                'newMigrationNamespace' => 'App\\Migration\\Analytics',
                 'sourceNamespaces' => [
-                    'App\\Infrastructure\\Migration\\Analytics',
+                    'App\\Migration\\Analytics',
                 ],
             ],
         ],
@@ -185,7 +185,7 @@ Running `--command=junction --and=<table2>` automatically generates:
 ./yii migrate:up --limit=3
 
 # Apply only from a specific namespace
-./yii migrate:up --namespace=App\\Infrastructure\\Migration
+./yii migrate:up --namespace=App\\Migration
 
 # Apply to a specific named database
 ./yii migrate:up --db=analytics

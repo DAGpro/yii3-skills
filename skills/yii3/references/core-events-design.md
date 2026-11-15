@@ -419,7 +419,7 @@ Details:
 > Never dispatch external side-effects (emails, SMS, webhooks, queue messages) **inside** an active database transaction.
 > If the transaction rolls back due to a subsequent query error or lock timeout, the email or queue job has already been sent!
 
-**Choosing a Post-Commit Delivery Mechanism** (follow `.ai-factory/ARCHITECTURE.md` and message criticality):
+**Choosing a Post-Commit Delivery Mechanism** (follow project architecture guidelines and message criticality):
 
 | Delivery Mechanism | Guarantee & Cost | Choose when… | Notes |
 |---|---|---|---|
@@ -566,6 +566,6 @@ Post-commit dispatch prevents dispatching events for rolled-back transactions, b
 | **1. Synchronous In-Memory (PSR-14)** | Immediate, inline during execution | No boundary (runs inside or outside transaction) | High (delays HTTP response) | Vulnerable: exception rolls back transaction or leaves ghost side-effects; unrecoverable process crash | Pure in-memory mutations, logging, metric increments, domain event subscribers modifying memory state. |
 | **2. Post-Commit In-Memory (`releaseEvents()`)** | Synchronous, strictly after `$db->transaction()` commit | Strong boundary: never fires if transaction fails/rolls back | High (delays HTTP response) | Partial: no ghost events on rollback, but process crash before dispatch loses events | Sending notifications or cache flushes when queue infrastructure is absent and side-effects are fast. |
 | **3. Asynchronous Queue Job (`yiisoft/queue`)** | Deferred background execution via worker CLI | Separate: message pushed to broker, processed detached | Negligible (sub-millisecond `$producer->push()`) | High: broker durability, automatic retries (`ExponentialDelayMiddleware`), memory isolation | Long-running operations: external API webhooks, bulk PDF rendering, email dispatching via `yiisoft/mailer`. |
-| **4. Transactional Outbox Pattern** | Asynchronous, 2-phase: DB table -> relay worker -> broker | Absolute: outbox row committed atomically in same SQL transaction | Minimal (local DB insert in existing transaction) | Highest: guaranteed at-least-once delivery across broker outages, network partitions, and process crashes | Enterprise, audit-critical events, financial transactions, multi-system integration. See [`infra-transactional-outbox.md`](infra-transactional-outbox.md). |
+| **4. Transactional Outbox Pattern** | Asynchronous, 2-phase: DB table -> relay worker -> broker | Absolute: outbox row committed atomically in same SQL transaction | Minimal (local DB insert in existing transaction) | Highest: guaranteed at-least-once delivery across broker outages, network partitions, and process crashes | Enterprise, audit-critical events, financial transactions, multi-system integration. See [Transactional Outbox](infra-transactional-outbox.md). |
 
 ---

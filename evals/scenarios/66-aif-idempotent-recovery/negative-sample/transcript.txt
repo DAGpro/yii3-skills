@@ -1,5 +1,3 @@
-Mode: Feature
-
 Created migration, bound DI, and registered routes.
 
 ```aif-gate-result

@@ -33,8 +33,8 @@ Routing in Yii3 connects incoming PSR-7 HTTP requests (`Method` + `URI path`) to
 
 ### Choosing How to Route HTTP Requests
 
-- **Feature / patch work:** Do **not** invent or mix routing styles next to an active router without architectural intent. Follow `.ai-factory/ARCHITECTURE.md` or the existing route/middleware stack (default when unconfigured: explicit route tables).
-- **New project / `/aif-architecture`:** Pick one primary routing mechanism (or explicit `Router` + `FileRouter` fallback) and record it:
+- **Existing codebase (features and fixes):** Do **not** invent or mix routing styles next to an active router without architectural intent. Follow the project architecture guidelines or the existing route/middleware stack (default when unconfigured: explicit route tables).
+- **New project bootstrap:** Pick one primary routing mechanism (or explicit `Router` + `FileRouter` fallback) and record it in the project architecture guidelines:
 
 | Routing Strategy | Package & Entry Point | Choose when… | Notes |
 |---|---|---|---|
@@ -571,7 +571,7 @@ Yii 3 does **not** push matched route arguments into PSR-7 request attributes (`
 |---|---|---|---|
 | **1. Injected `CurrentRoute` Service** *(Standard / Flexible)* | Constructor or method injection: `CurrentRoute $currentRoute`<br>`$id = $currentRoute->getArgument('id');` | Standard controllers, PSR-15 `RequestHandlerInterface`, middlewares, or when route metadata (`getName()`, `getPattern()`, `getUri()`, `getMethods()`) is required alongside arguments. | Returns `?string` (safe; missing argument returns `null` or default). In persistent worker modes (RoadRunner/Swoole), never cache argument values in singleton properties. |
 | **2. Method Parameter Attribute `#[RouteArgument]`** *(Thin Invokable Actions)* | Action parameter decoration: `public function __invoke(#[RouteArgument('id')] int $id)` | Single-action invokable controllers where clean signatures and automatic scalar type casting (`int`, `string`) are preferred. | Requires `HydratorAttributeParametersResolver` in `CompositeParametersResolver`. Fails if parameter has no default and argument is missing. Does **not** work with `RequestHandlerInterface` or `FileRouter`. |
-| **3. DTO Property Attribute `#[RouteArgument]`** *(Unified CQRS / Command Models)* | DTO constructor property: `public function __construct(#[RouteArgument('id')] public int $id, #[FromBody] ...)` | Complex mutation endpoints (PUT/PATCH/POST) where path parameters, query parameters, and body payloads should be unified and validated in a single typed DTO. | Cleanest encapsulation for Application Use Cases. Hydrated via `HydratorInterface::create(Dto::class, $data)` or `RequestInputParametersResolver`. |
+| **3. DTO Property Attribute `#[RouteArgument]`** *(Unified Input Models)* | DTO constructor property: `public function __construct(#[RouteArgument('id')] public int $id, #[FromBody] ...)` | Complex mutation endpoints (PUT/PATCH/POST) where path parameters, query parameters, and body payloads should be unified and validated in a single typed DTO. | Cleanest encapsulation for unified input DTOs. Hydrated via `HydratorInterface::create(Dto::class, $data)` or `RequestInputParametersResolver`. |
 | **4. Raw PSR-7 Attributes (Anti-Pattern / Trap)** | ❌ `$request->getAttribute('id')` | **Never** for route arguments in standard `yiisoft/router`. | Returns `null`. `Router` middleware populates `CurrentRoute`, not request attributes. Only custom middlewares push data to `$request->getAttribute()`. |
 
 ### 4.1. The Injected `CurrentRoute` Service

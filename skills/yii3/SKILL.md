@@ -22,20 +22,20 @@ metadata:
 
 ## Operating Context Routing
 
-- **AI Factory extension (default):** `aif-*` invocation or `.ai-factory/` exists → load [`references/core-aif-adapter.md`](references/core-aif-adapter.md).
-- **Standalone fallback:** No AI Factory detected → load [`references/core-standalone-adapter.md`](references/core-standalone-adapter.md).
+- **AI Factory extension (default):** `aif-*` invocation or `.ai-factory/` exists → load [`core-aif-adapter.md`](references/core-aif-adapter.md).
+- **Standalone fallback:** No AI Factory detected → load [`core-standalone-adapter.md`](references/core-standalone-adapter.md).
 
 ## Stage 0 — Mission Bootstrap
 
 Run first on every invocation:
 - **Scope:** Apply this skill to the extent the task touches Yii 3 / `yiisoft/*` packages (zero-Yii3 tasks: note non-applicability briefly and follow project conventions).
-1. **Package Check:** Check `composer.json` + `composer.lock` against [`references/package-catalog.md`](references/package-catalog.md) (skip items already resolved by caller).
-2. **Stack Invariants:** Strictly one DB driver, persistence branch (Active Record xor Cycle), queue/cache/mutex driver, RBAC storage, and test runner per [`references/package-catalog.md`](references/package-catalog.md) §3 ("Pick Exactly ONE per Family").
+1. **Package Check:** Check `composer.json` + `composer.lock` against [`package-catalog.md`](references/package-catalog.md) (skip items already resolved by caller).
+2. **Stack Invariants:** Strictly one DB driver, persistence branch (Active Record xor Cycle), queue/cache/mutex driver, RBAC storage, and test runner per [`package-catalog.md`](references/package-catalog.md) §3 ("Pick Exactly ONE per Family").
 3. **Lifecycle Position:**
    - (a) Plan task: resolve active plan per adapter §4 and execute its contract.
    - (b) Standalone feature: execute Mission Workflow.
    - (c) Bug / diagnostics: root-cause order: `DI & configuration → input hydration & validation → routing & middleware → signatures in vendor/yiisoft/<pkg>/src` (no Yii2 workarounds).
-4. **Signature Grounding:** Verify >1-arg constructors and methods in `vendor/yiisoft/<pkg>/src` (`core-version-notes.md`).
+4. **Signature Grounding:** Verify >1-arg constructors and methods in `vendor/yiisoft/<pkg>/src` ([`core-version-notes.md`](references/core-version-notes.md)).
 5. **Progress Tracking:** Track execution state per active adapter §3 (`### Execution State` in AI Factory plan; `### Mission State` in Standalone).
 
 ## Mission Workflow
@@ -49,9 +49,9 @@ Every Yii 3 implementation executes in two phases:
 
 ### 2. Bottom-Up Assembly (Assemble Code)
 Assemble components strictly in dependency order so no class references missing symbols:
-1. **Schema & Migration:** Tables, indexes, FKs (`yiisoft/db-migration`) implementing `RevertibleMigrationInterface` with working `down()` and table prefix `{{%table}}` ([`references/persistence-migrations.md`](references/persistence-migrations.md)).
-2. **Persistence & Boundary:** Repository port interface and concrete storage implementation ([`core-architecture-alignment.md §6`](references/core-architecture-alignment.md#6-stage-by-pattern-execution-matrix)).
-3. **Application & Domain:** Use case handler with `$db->transaction()` and post-commit events ([`core-events-design.md §5`](references/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)) or Transactional Outbox ([`references/infra-transactional-outbox.md`](references/infra-transactional-outbox.md)).
+1. **Schema & Migration:** Tables, indexes, FKs (`yiisoft/db-migration`) implementing `RevertibleMigrationInterface` with working `down()` and table prefix `{{%table}}` ([`persistence-migrations.md`](references/persistence-migrations.md)).
+2. **Persistence & Boundary:** Repository port interface and concrete storage implementation ([`core-architecture-alignment.md §6`](references/core-architecture-alignment.md#6-step-by-pattern-execution-matrix)).
+3. **Application & Domain:** Use case handler with `$db->transaction()` and post-commit events ([`core-events-design.md §5`](references/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)) or Transactional Outbox ([`infra-transactional-outbox.md`](references/infra-transactional-outbox.md)).
 4. **Transport & Entry Point:** Thin Action returning PSR-7 `ResponseInterface` with typed DTO (`yiisoft/validator` attributes `#[Required]`) or CLI Command (`SymfonyStyle`, `ExitCode`).
 5. **Immediate Wiring:** Wire DI binding (`config/**/di/*.php` default, or service provider per [`core-config-tree.md`](references/core-config-tree.md#26-choosing-how-to-organize-application-configs)), route (`config/**/routes.php` default, or `FileRouter` per [`http-routes-definition.md`](references/http-routes-definition.md#choosing-how-to-route-http-requests)), command (`config/console/params.php`), or event (`config/**/events.php`) immediately upon creating each class.
 *(Assemble only the discovered missing dependencies: surgical tasks implement only missing components and their wiring; composite features assemble bottom-up from step 1).*
@@ -59,20 +59,20 @@ Assemble components strictly in dependency order so no class references missing 
 ## Framework Invariants
 
 - **Presentation Isolation:** Actions and commands are thin transport adapters. **Zero SQL, direct persistence, or transactions in presentation.**
-- **Category B Manual DI:** Pure libraries (`yiisoft/db-*`, cache, RBAC) mandate manual DI in `config/**/di/*.php` ([`references/core-dependency-protocol.md`](references/core-dependency-protocol.md)); Category A packages configure via `.merge-plan.php`.
+- **Category B Manual DI:** Pure libraries (`yiisoft/db-*`, cache, RBAC) mandate manual DI in `config/**/di/*.php` ([`core-dependency-protocol.md`](references/core-dependency-protocol.md)); Category A packages configure via `.merge-plan.php`.
 - **Post-Commit Dispatch:** External side-effects dispatch after `$db->transaction()` commit ([`core-events-design.md §5`](references/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)).
-- **Worker Safety:** Register `'reset'` in DI (`StateResetter` provider) for stateful singletons under RoadRunner/FrankenPHP ([`references/infra-state-resetter.md`](references/infra-state-resetter.md)).
+- **Worker Safety:** Register `'reset'` in DI (`StateResetter` provider) for stateful singletons under RoadRunner/FrankenPHP ([`infra-state-resetter.md`](references/infra-state-resetter.md)).
 - **Test Scope Discipline:** In AI Factory (`aif-implement`), write tests ONLY if explicitly scheduled in plan tasks. In Standalone, execute project test runner.
 
 ## Finale — Definition of Done
 
 Run after code assembly:
-1. **Project Checks:** Linters, `composer cs-fix`, Psalm/PHPStan, Rector; verify used packages are in `composer.json` ([`references/package-catalog.md`](references/package-catalog.md) §5).
-2. **Chain Integrity Audit** *(blocking)*: All routes active, all interfaces bound in DI, commands registered, no cross-module SQL, migrations have reversible `down()`, zero violations against Audit Index Anti-Pattern Matrices ([`references/core-definition-of-done.md`](references/core-definition-of-done.md) §1).
-3. **Runtime Smoke:** `./yii list` and HTTP boot cleanly without exceptions ([`references/infra-runners-and-runtimes.md`](references/infra-runners-and-runtimes.md)).
+1. **Project Checks:** Linters, `composer cs-fix`, Psalm/PHPStan, Rector; verify used packages are in `composer.json` ([`package-catalog.md`](references/package-catalog.md) §5).
+2. **Chain Integrity Audit** *(blocking)*: All routes active, all interfaces bound in DI, commands registered, no cross-module SQL, migrations have reversible `down()`, zero violations against Audit Index Anti-Pattern Matrices ([`core-definition-of-done.md`](references/core-definition-of-done.md) §1).
+3. **Runtime Smoke:** `./yii list` and HTTP boot cleanly without exceptions ([`infra-runners-and-runtimes.md`](references/infra-runners-and-runtimes.md)).
 4. **Operating Context Handoff:**
-   - **AI Factory:** Delegate verification to `aif-verify` per [`references/core-aif-adapter.md`](references/core-aif-adapter.md) (Code-Read-Only gate, machine-readable ````aif-gate-result````, defects routed to `/aif-fix`).
-   - **Standalone:** Self-verification audit per [`references/core-standalone-adapter.md`](references/core-standalone-adapter.md) §2. Fix defects within blocker perimeter, emit final report block ([`references/core-definition-of-done.md`](references/core-definition-of-done.md) §4).
+   - **AI Factory:** Delegate verification to `aif-verify` per [`core-aif-adapter.md`](references/core-aif-adapter.md) (Code-Read-Only gate, machine-readable ````aif-gate-result````, defects routed to `/aif-fix`).
+   - **Standalone:** Self-verification audit per [`core-standalone-adapter.md`](references/core-standalone-adapter.md) §2. Fix defects within blocker perimeter, emit final report block ([`core-definition-of-done.md`](references/core-definition-of-done.md) §4).
 
 ## Core rules
 
@@ -116,4 +116,4 @@ Load primary leaf guides directly for implementation, secondary guides for adapt
 
 ## References (read on demand)
 
-Load targeted topic guides via the Task & Intent Routing Matrix above. The complete categorized catalog is in [`references/INDEX.md`](references/INDEX.md).
+Load targeted topic guides via the Task & Intent Routing Matrix above. The complete categorized catalog is in [`INDEX.md`](references/INDEX.md).

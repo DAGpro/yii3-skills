@@ -98,7 +98,7 @@ Because page lifecycle methods echo CDATA placeholder markers (`<![CDATA[YII-BLO
 **Executing Void Methods with `{% do %}`:**
 ```twig
 {# Transfer published assets and set page metadata without unwanted string output #}
-{% do assetManager.register('App\\Presentation\\Asset\\AppAsset') %}
+{% do assetManager.register('App\\Asset\\AppAsset') %}
 {% do this.addCssFiles(assetManager.getCssFiles()) %}
 {% do this.addJsFiles(assetManager.getJsFiles()) %}
 {% do this.setTitle('Products Catalog') %}

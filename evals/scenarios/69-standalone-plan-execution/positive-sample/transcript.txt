@@ -1,5 +1,4 @@
 ### Mission State
-- **Mode:** Patch
 - **Context:** Standalone
 - **Architecture:** convention fallback — dominant App\Blog structured-module layout of src/ (no docs/architecture/ artifact present)
 - **Touched Stages:** Stage 6 (Config Audit & Wiring Gate)
@@ -21,7 +20,6 @@ Findings: none blocking. Advisory: no vendor/ in this environment — the FileCa
 reference is not verified against installed sources ("not verified against sources"); re-verify
 after composer install.
 
-Mode: Patch
 Architecture: convention fallback — App\Blog structured modules
 fixes applied: none
 tests: not run (offline fixture, no vendor/)

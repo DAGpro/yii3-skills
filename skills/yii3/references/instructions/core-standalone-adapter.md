@@ -98,6 +98,7 @@ Standalone runs interactively unless the caller is headless:
 
 - **Interactive (default):** ambiguous decisions (architecture choice, dependency addition, destructive operations, convention conflicts with correctness or security implications) are asked; each decision and its reason is recorded in the final report.
 - **Headless / autonomous runner (no user available):** mirror the AI Factory non-interactive discipline — prefer what the target project already uses (dominant convention in `src/`); if ambiguous, default to the official `yiisoft/*` recommendation; if a mandatory decision cannot be resolved, stop with an explicit `blocked` report per `references/instructions/core-dependency-protocol.md` instead of guessing or stalling.
+- **Subagent Delegation:** When delegating tasks to subagents (`invoke_subagent` or worker pools), the agent enforces the Subagent Delegation & Context Preservation Protocol ([`core-aif-adapter.md §7`](core-aif-adapter.md#7-subagent-delegation--context-preservation-protocol)): primes the subagent with the `yii3` skill, attaches governing guides, bounds the file perimeter, and audits subagent artifacts against Definition of Done before integrating.
 
 ---
 

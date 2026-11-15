@@ -24,7 +24,7 @@
 - `references/packages/core-events-design.md` — PSR-14 architecture, event/listener design, config, post-commit rule
 - `references/packages/core-events-reference.md` — framework events catalog, signatures reference, testing
 - `references/instructions/core-version-notes.md` — version-gated behavior catalog with `composer.lock` verification
-- `references/instructions/core-aif-adapter.md` — AI Factory extension mode (default): workflow lifecycle, durable execution state, cross-session coordination
+- `references/instructions/core-aif-adapter.md` — AI Factory extension mode (default): workflow lifecycle, durable execution state, cross-session coordination, subagent delegation protocol
 - `references/instructions/core-standalone-adapter.md` — standalone fallback mode: plan resolution, architecture pattern self-derivation, Mission State durability, interactive protocol, self-verification loop, final report contract
 
 ### HTTP & Presentation

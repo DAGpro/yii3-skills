@@ -6,6 +6,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-11-15
+
+### Added
+- Subagent Delegation & Context Preservation Protocol (`references/instructions/core-aif-adapter.md` §7): formalizes isolation risk prevention, 4 mandatory delegation anchors (skill loading directive, architecture pattern & target paths, governing topic guides, signature grounding & invariants), canonical delegation prompt template, and parent receipt & verification gate.
+- Subagent Delegation rule in standalone fallback mode (`references/instructions/core-standalone-adapter.md` §5).
+- `Subagent Context Preservation` and `Root-Cause Analysis` invariants in `SKILL.md` (Framework Invariants), anchored to `core-aif-adapter.md` and `core-architecture-alignment.md §6`.
+
+### Changed
+- Synchronized `references/INDEX.md` inventory with subagent delegation capability.
+- Formatted relative link syntax in `references/instructions/core-dependency-protocol.md`.
+
+### Removed
+- Pruned hallucinated reference to non-existent `core-aif-verification.md` from `references/INDEX.md`.
+
+## [0.7.0] — 2026-11-15
+
+### Changed
+- Restructured reference guide library: organized meta-architecture instructions and protocols into `references/instructions/` and subsystem/package guides into `references/packages/`.
+- Updated relative paths and anchor links across all 100 reference guides, `SKILL.md`, and `INDEX.md`.
+- Synchronized 13 AI Factory workflow injections and 69 benchmark eval scenarios with restructured directory paths.
+- Adapted quality gate validators (`validate.mjs`, `check-symbols.mjs`, `check-ast.mjs`, `check-eval-coverage.mjs`).
+
 ## [0.6.0] — 2026-11-15
 
 ### Added

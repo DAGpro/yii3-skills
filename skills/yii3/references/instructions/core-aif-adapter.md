@@ -173,4 +173,69 @@ Across AI Factory workflows, independent agents run in separate conversational c
 - **Scope Compliance:** Corrective edits must target the files identified in `blockers[].file` within the `affected_files` perimeter without introducing unrelated changes or new architectural mechanisms.
 - **State Reconciliation:** Clear resolved defects from `Open Issues`, confirm wiring gates remain `PASS`, set `Status: PENDING_VERIFICATION`, and hand off cleanly to `/aif-verify`.
 
+---
+
+## 7. Subagent Delegation & Context Preservation Protocol
+
+When an agent delegates scoped sub-tasks to child agents (via subagent invocation, parallel worker pools, or specialized research/review subagents), subagents execute in **fresh or isolated conversation contexts**. Without deliberate context injection, a subagent loses the parent's constraints and defaults to pre-trained parametric memory (generating legacy Yii 2 patterns, static facades, or database queries inside presentation actions).
+
+### 7.1. Context Bleed & Isolation Risks
+
+| Risk / Failure Mode | Root Cause in Subagent | Prevention Rule |
+|---|---|---|
+| **Yii 2 Regression** | Subagent lacks Yii 3 awareness; hallucinates `Yii::$app`, `ActiveRecord::find()`, behaviors. | Explicit skill loading directive (`Load the yii3 skill`) + `Yii3 is not Yii2` invariant in brief. |
+| **Presentation Pollution** | Subagent writes raw SQL or injects `ConnectionInterface` directly into Action/Command. | Explicit Presentation Isolation rule in brief; Action must return PSR-7 `ResponseInterface`. |
+| **Architecture Divergence** | Subagent creates classes in wrong directories or invents new architectural layers. | Explicitly pass active Architecture Pattern (`Explicit`, `Structured`, `Layered`) and target file paths. |
+| **Unconfirmed Signatures** | Subagent guesses constructor arguments or method names. | Mandatory instruction to inspect `vendor/yiisoft/<pkg>/src/` for all signatures. |
+| **Unregistered Wiring** | Subagent creates classes but neglects DI, route, command, or event registration. | Explicit requirement to include or report immediate wiring definitions. |
+
+### 7.2. Mandatory Delegation Brief Elements
+
+Every prompt or assignment brief delegating work to a subagent **MUST** explicitly incorporate the following 4 anchors:
+
+1. **Skill Loading Directive:**
+   Instruct the subagent to load and adhere to the skill:
+   `"You are working on a modern Yii 3 (PHP 8.2+, yiisoft/* packages) project. Load and strictly adhere to the 'yii3' skill."`
+2. **Architecture Pattern & Target Paths:**
+   Specify the project's active architecture pattern (`Explicit Architecture`, `Structured Modules`, or `Layered Architecture` from `paths.architecture`) and the exact bounded file paths the subagent is authorized to touch:
+   `"Architecture Pattern: <Pattern>. Target file(s): <exact paths>. Do NOT touch vendor/ or config/.merge-plan.php."`
+3. **Governing Topic Guides:**
+   Attach the specific topic guides governing the assigned slice from `references/packages/`:
+   `"Read and follow governing guide(s): references/packages/<guide-name>.md."`
+4. **Mandatory Signature Grounding & Invariants:**
+   State the core invariants explicitly:
+   `"Ground all API signatures in vendor/yiisoft/<package>/src/. Presentation classes must remain thin (zero direct SQL or persistence in actions/commands). Dependencies via constructor DI only (no Yii::$app, no static facades)."`
+
+### 7.3. Canonical Subagent Delegation Prompt Template
+
+Use this canonical template when spawning or messaging subagents for Yii 3 tasks:
+
+````markdown
+You are implementing a scoped task for a Yii 3 application.
+Load and strictly adhere to the 'yii3' skill.
+
+Project Architecture: [Explicit Architecture | Structured Modules | Layered Architecture]
+Governing Guide(s): references/packages/[guide-name].md
+Assigned Task: [Precise description of the task and expected deliverables]
+
+Target File(s) to Create / Modify:
+- [path/to/File.php] ([Architectural Role / Layer])
+
+Mandatory Yii 3 Invariants:
+1. Yii3 is NOT Yii2: zero Yii::$app, no static facades, constructor DI everywhere.
+2. Presentation Isolation: actions and commands are thin HTTP/CLI transport adapters. Zero direct SQL, persistence, or transactions in presentation.
+3. Signature Grounding: inspect vendor/yiisoft/[package]/src/ to verify all class names, method signatures, and parameter types before writing code.
+4. Immediate Wiring: provide the exact DI binding (config/**/di/*.php) and route/command registration for any created class.
+5. Post-Commit Rule: never dispatch domain events or queue jobs with external side effects inside an open database transaction.
+````
+
+### 7.4. Receipt & Quality Verification Gate
+
+The parent agent retains full responsibility for the task outcome and must never accept subagent artifacts blindly:
+
+1. **Perimeter Audit:** Verify that the subagent modified only the authorized target files and did not alter `config/.merge-plan.php` or `vendor/`.
+2. **Anti-Pattern Gate:** Audit the subagent's code against the governing guide's `## Anti-Pattern Matrix` (e.g. no direct SQL in action, no uncommitted event dispatch).
+3. **AST & Signature Compliance:** Verify that all invoked methods and parameter types match the installed package sources in `vendor/yiisoft/<pkg>/src/`.
+4. **State Reconciliation:** Upon successful audit, integrate the created artifacts into the active plan's `### Execution State` (or `### Mission State`), record passing wiring gates, and advance the workflow. If defects are found, reject the output and issue a scoped fix prompt or re-assign to `/aif-fix`.
+
 

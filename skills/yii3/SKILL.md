@@ -15,7 +15,7 @@ description: >-
 license: MIT
 metadata:
   author: Yii 3 AI Factory Team
-  version: 0.7.0
+  version: 0.8.0
 ---
 
 # Yii3 development
@@ -63,6 +63,8 @@ Assemble components strictly in dependency order so no class references missing 
 - **Post-Commit Dispatch:** External side-effects dispatch after `$db->transaction()` commit ([`core-events-design.md §5`](references/packages/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)).
 - **Worker Safety:** Register `'reset'` in DI (`StateResetter` provider) for stateful singletons under RoadRunner/FrankenPHP ([`infra-state-resetter.md`](references/packages/infra-state-resetter.md)).
 - **Test Scope Discipline:** In AI Factory (`aif-implement`), write tests ONLY if explicitly scheduled in plan tasks. In Standalone, execute project test runner.
+- **Subagent Context Preservation:** When delegating tasks to subagents, the delegation prompt MUST mandate loading the `yii3` skill, explicitly specify the architecture pattern, assign governing topic guides (`references/<topic>.md`), and enforce signature verification in `vendor/yiisoft/` ([`core-aif-adapter.md §7`](references/instructions/core-aif-adapter.md#7-subagent-delegation--context-preservation-protocol)).
+- **Root-Cause Analysis:** When addressing bugs in user-visible behavior (UI, console, or external APIs), the root-cause analysis MUST trace upstream through all affected layers: Presentation → Use Case → Repository → Query → Schema ([`core-architecture-alignment.md §6`](references/instructions/core-architecture-alignment.md#6-step-by-pattern-execution-matrix)).
 
 ## Finale — Definition of Done
 

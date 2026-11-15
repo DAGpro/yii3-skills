@@ -20,7 +20,7 @@ Load this guide at the Finale for architecture and code compliance verification 
 
 Before sign-off, every newly created or modified artifact MUST be audited against its governing topic guide in `references/`:
 
-1. **Resolve Governing Guide:** Identify the specific topic guide (`references/<topic>.md`) governing the artifact via the active plan, the Task & Intent Routing Matrix in `SKILL.md`, or `references/INDEX.md` (e.g. actions → `http-actions-core.md`, middlewares → `http-middlewares.md`, DI → `core-di-and-config.md`, queue → `infra-queue-jobs.md`, events → `core-events-and-listeners.md`, migrations → `persistence-migrations.md`).
+1. **Resolve Governing Guide:** Identify the specific topic guide (`references/packages/<guide-name>.md` or `references/instructions/<guide-name>.md`) governing the artifact via the active plan, the Task & Intent Routing Matrix in `SKILL.md`, or `references/INDEX.md` (e.g. actions → `references/packages/http-actions-core.md`, middlewares → `references/packages/http-middlewares.md`, DI → `references/packages/core-di-and-config.md`, queue → `references/packages/infra-queue-jobs.md`, events → `references/packages/core-events-and-listeners.md`, migrations → `references/packages/persistence-migrations.md`).
 2. **Anti-Pattern Audit [BLOCKER]:** Inspect the `## Anti-Pattern Matrix` (or `## Anti-Patterns & Common Traps`) in that governing guide. Every forbidden pattern is a hard failure (`[BLOCKER]`). If the code reproduces any forbidden pattern from that guide's matrix, verification fails.
 3. **Core Invariants [BLOCKER]:**
    - **Thin Actions:** zero direct SQL, persistence, `$db->transaction()`, hashing, or notifications; strictly return `Psr\Http\Message\ResponseInterface`; input via typed DTO + validator.

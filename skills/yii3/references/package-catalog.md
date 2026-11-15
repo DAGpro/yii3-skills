@@ -10,7 +10,7 @@
 
 ## Table of Contents
 - [1. Capability Quick-Lookup Matrix](#1-capability-quick-lookup-matrix)
-- [2. Architectural Layer Distribution (15 Extended Packages)](#2-architectural-layer-distribution-15-extended-packages)
+- [2. Architectural Layer Distribution](#2-architectural-layer-distribution)
 - [3. Driver & Storage Selection Rules (Pick Exactly ONE per Family)](#3-driver--storage-selection-rules-pick-exactly-one-per-family)
 - [4. Minimal Package Sets per Feature Archetype](#4-minimal-package-sets-per-feature-archetype)
   - [4.1. Web Core & Routing](#41-web-core--routing)
@@ -94,9 +94,9 @@
 
 ---
 
-## 2. Architectural Layer Distribution (15 Extended Packages)
+## 2. Architectural Layer Distribution
 
-Detailed architectural breakdown of the 15 specialized packages incorporated from the ecosystem index:
+Detailed architectural breakdown of specialized packages incorporated from the ecosystem index:
 
 | Architectural Layer | Package | Primary Concern & Purpose | Key Classes & Interfaces | Placement per Architecture Pattern |
 |---|---|---|---|---|

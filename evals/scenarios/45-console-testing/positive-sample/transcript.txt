@@ -1,6 +1,6 @@
 Mode: Full
 Architecture: App\Console\PurgeCacheCommand (#[AsCommand] cache:purge, constructor takes the cache dir path); tests follow the console-testing guide
-guide: skills/yii3/references/testing-console.md §2-§4 - Symfony CommandTester in-process execution, ExitCode::* assertions, getDisplay(true) line-ending normalization
+guide: skills/yii3/references/packages/testing-console.md §2-§4 - Symfony CommandTester in-process execution, ExitCode::* assertions, getDisplay(true) line-ending normalization
 test: tests/Console/PurgeCacheCommandTest.php - success path executes the command in-process via new CommandTester($command) + $tester->execute([]), asserts ExitCode::OK and the "Cache purged." output; failure path (missing storage directory) asserts ExitCode::UNAVAILABLE and the error line
 normalization: every output assertion goes through getDisplay(true) so \r\n vs \n cannot flake on Windows CI
 isolation: the command runs against a temp cache directory - no shell-outs, no live yii entrypoint, no real cache touched

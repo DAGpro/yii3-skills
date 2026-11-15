@@ -1,0 +1,29 @@
+{
+  "id": "70-subagent-delegation",
+  "title": "Subagent delegation brief generation and execution receipt verification under isolated context",
+  "mode": "feature",
+  "tags": [
+    "subagent",
+    "delegation",
+    "receipt",
+    "context-isolation",
+    "ai-factory",
+    "wiring",
+    "thin-action"
+  ],
+  "timeoutSec": 1200,
+  "negativeMustFail": [
+    "context-readiness-checked",
+    "delegation-brief-anchors",
+    "receipt-structured",
+    "action-thin-presentation",
+    "aif-gate-result-emitted"
+  ],
+  "layer": "composite",
+  "guides": [
+    "SKILL.md",
+    "references/instructions/core-aif-adapter.md",
+    "references/packages/http-actions-core.md",
+    "references/packages/core-di-and-config.md"
+  ]
+}

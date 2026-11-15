@@ -16,7 +16,7 @@ The repository serves as both an **AI Factory Extension** and an **Agent Skills*
 
 > - **Its sole purpose is Documentation, Rules & Knowledge Distribution:** providing structured guidelines, conventions, recipes, and workflow injections (skills, topic guides, workflow hooks, and package catalogs) for AI agents.
 
-> - The code in `references/` (136 cloned `yiisoft/*` packages, git-ignored) is strictly an offline reference library to study and extract ground-truth signatures and patterns from.
+> - The code in `references/` (cloned `yiisoft/*` packages, git-ignored) is strictly an offline reference library to study and extract ground-truth signatures and patterns from.
 
 ---
 
@@ -64,7 +64,7 @@ The repository is strictly divided into **Distributable Deliverables** and **Int
 | Layer | Directories / Artifacts | Role in This Repository | Role in Target Project |
 | :--- | :--- | :--- | :--- |
 | **Deliverables (Product)** | Skills (`skills/`), workflow injections (`injections/`), manifests (`extension.json`) | Core product being authored and maintained | Installed and actively executed by agents (runtime package catalog: `skills/yii3/references/package-catalog.md`) |
-| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark scenarios (69 test cases + `evals/runtime-harness/` L5 PHPUnit suite), ground-truth symbol and arity verification, manifest freshness checks, workflow contract tests | Not distributed to target applications |
+| **Evaluation & Quality Gates** | Evals (`evals/`), quality gate scripts (`scripts/`) | Behavioral benchmark test suite (unit and composite scenarios + `evals/runtime-harness/` L5 PHPUnit suite), ground-truth symbol and arity verification, manifest freshness checks, workflow contract tests | Not distributed to target applications |
 | **Authoring References** | `references/` (`README.md`, `packages.lock.json`), `PACKAGES.md` | Offline source-of-truth metadata and package navigation index telling agents which packages to study per task | Clones and `PACKAGES.md` are not used by target agents |
 | **Guidelines & Standards** | `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md` | Developer constitution, contribution standards, and project documentation | Not distributed to end-user applications |
 
@@ -75,7 +75,7 @@ yii3-skills/
 │       ├── SKILL.md      # Entry point (YAML frontmatter + Task Routing Matrix + TOC)
 │       └── references/   # Specialized topic guides (instructions/ and packages/) and package-catalog.md
 ├── injections/           # [DELIVERABLE] AI Factory workflow hooks (plan, implement, verify...)
-├── evals/                # [Internal Quality Tooling] 69 benchmark test scenarios, L5 runtime-harness, runner, and baseline metrics
+├── evals/                # [Internal Quality Tooling] Behavioral benchmark test suite, L5 runtime-harness, runner, and baseline metrics
 ├── scripts/              # [Internal Dev Tooling] Quality gates (validate.mjs, check-symbols.mjs, check-ast.mjs, check-manifest-freshness.mjs, test-aif-workflow.mjs)
 ├── references/           # [Authoring Only] Offline catalog metadata (README.md, packages.lock.json)
 ├── AGENTS.md             # [Internal Dev Tooling, tracked] This developer constitution
@@ -140,7 +140,7 @@ Agents **MUST NOT** rely on pre-trained parametric memory, assumptions, or gener
 
 ### 4.3. References Directory Safety & Search Discipline
 
-- **Strictly Read-Only:** The `references/` directory (136 cloned packages) is strictly read-only authoring reference material. Agents must **NEVER** edit, delete, move, or stage (`git add`) any files within `references/`.
+- **Strictly Read-Only:** The `references/` directory (cloned official `yiisoft/*` packages) is strictly read-only authoring reference material. Agents must **NEVER** edit, delete, move, or stage (`git add`) any files within `references/`.
 
 - **Targeted Search:** Never run unconstrained recursive searches across the entire `references/` folder. Resolve the relevant package names via `PACKAGES.md` first, then always target specific packages (e.g., `references/router/...`) to avoid context overflow and timeouts.
 
@@ -154,7 +154,7 @@ All distributable deliverables (skill entry points, topic guides, workflow hooks
 
 - The `description` field must not exceed **1024 characters** and must include explicit trigger keywords (`Use when user says "..."`).
 
-- Internal cross-references inside skill files must use relative paths (e.g., `references/<topic>.md`) for universal cross-platform compatibility.
+- Internal cross-references inside skill files must use relative paths (e.g., `references/packages/<topic>.md` or `references/instructions/<topic>.md`) for universal cross-platform compatibility.
 
 ### 4.6. Injection Structure Contract
 

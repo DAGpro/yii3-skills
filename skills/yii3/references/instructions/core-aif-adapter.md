@@ -118,13 +118,13 @@ Across AI Factory workflows, independent agents run in separate conversational c
 ### 6.1. Handoff: `aif-plan` → `aif-implement` (Unambiguous Plan Specification)
 - **Concrete Target Paths:** Every task must specify the exact target file path (in ultra plans: in the phase's `Files to Change`) and architectural layer/role. Generic tasks without paths (e.g. "create controller and service") are strictly prohibited.
 - **Upstream-First Context Ordering:** If the feature spans multiple Bounded Contexts, tasks for the provider (upstream) context (its schema, repository, models, and public API in `src/<Module>/Api/`) must be scheduled and completed before tasks in consumer contexts. Cross-context communication must strictly use public APIs or PSR-14 events, explicitly forbidding cross-module SQL joins or internal model imports.
-- **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task & Intent Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/<topic>.md`. Tasks lacking an assigned guide are prohibited.
+- **Explicit Topic Guide Attachment:** For each task, the planner must map the requirement to the Task & Intent Routing Matrix in SKILL.md or the topic index in `references/INDEX.md` and attach the exact guide path: `Guide: references/packages/<guide-name>.md` (or `references/instructions/<guide-name>.md`). Tasks lacking an assigned guide are prohibited.
 - **Prior Dependency Installation:** Every missing capability from `references/package-catalog.md` must be planned as an explicit `composer require` task scheduled *before* any implementation tasks that import its namespace.
 - **Explicit Wiring Tasks:** Every planned interface must have an explicit DI registration task (`config/**/di/*.php` default, or the project's active service provider), and every Action an explicit route wiring task (`config/**/routes.php` default, or the active `FileRouter` convention).
 - **Initialized Execution State:** The plan must conclude with an initialized `### Execution State` block template setting `Stage 1` (or `Step 1`) as pending and all wiring gates as `PENDING`.
 
 ### 6.2. Handoff: `aif-implement` → `aif-verify` (Self-Contained Implementation Handoff)
-- **Mandatory Pre-Implementation Guide Read:** Before writing code for any task, the implementer must read the task's assigned `Guide: references/<topic>.md` (or resolve it from `references/INDEX.md` if missing) and verify API signatures in `vendor/yiisoft/<pkg>/src/`. Generating code without consulting the guide is strictly prohibited.
+- **Mandatory Pre-Implementation Guide Read:** Before writing code for any task, the implementer must read the task's assigned `Guide: references/packages/<guide-name>.md` (or resolve it from `references/INDEX.md` if missing) and verify API signatures in `vendor/yiisoft/<pkg>/src/`. Generating code without consulting the guide is strictly prohibited.
 - **Cross-Context Boundary Enforcement:** Code must interact with other modules strictly via `src/<Module>/Api/` or PSR-14 events. Direct queries against another module's database tables or internal model instantiations are strictly forbidden.
 - **Complete Artifact Inventory:** Every newly created or modified file must be listed in `### Execution State` under `Artifacts:` with its architectural role (e.g. `- src/Blog/PostAction.php (Presentation / Action)`). Never leave files unrecorded.
 - **Verified Wiring Gates:** Every per-step wiring gate must be explicitly verified and recorded (`DI binding: PASS`, `Routes / CLI: PASS`, `Events / Migrations: PASS`). Batching or deferring wiring is forbidden.
@@ -189,9 +189,17 @@ When an agent delegates scoped sub-tasks to child agents (via subagent invocatio
 | **Unconfirmed Signatures** | Subagent guesses constructor arguments or method names. | Mandatory instruction to inspect `vendor/yiisoft/<pkg>/src/` for all signatures. |
 | **Unregistered Wiring** | Subagent creates classes but neglects DI, route, command, or event registration. | Explicit requirement to include or report immediate wiring definitions. |
 
-### 7.2. Mandatory Delegation Brief Elements
+### 7.2. Context Readiness Gate
 
-Every prompt or assignment brief delegating work to a subagent **MUST** explicitly incorporate the following 4 anchors:
+Before spawning or messaging a child agent, the parent agent MUST evaluate the subagent's runtime execution environment:
+
+1. **Condition A — Shared Workspace & Skill Access:** The subagent has access to the repository filesystem and can read the skill package (`references/`) and `vendor/yiisoft/`. The parent passes relative paths: `"Load the 'yii3' skill; read and adhere to references/packages/<guide-name>.md"`.
+2. **Condition B — Isolated / Ephemeral Sandbox:** The subagent runs in a separate or restricted context lacking access to the parent's skill repository or `vendor/`. The parent agent **MUST inline** the relevant rules, exact FQCN signatures, DI syntax, and Anti-Pattern constraints directly into the delegation brief.
+3. **Condition C — Ambiguous Context / Low-Capability Environment:** If the child environment cannot guarantee adherence to modern Yii 3 invariants and cannot receive sufficient inline context, delegation is prohibited: execute the task within the parent conversation or report `Status: BLOCKED`.
+
+### 7.3. Mandatory Delegation Brief Elements
+
+Every prompt or assignment brief delegating work to a subagent **MUST** explicitly incorporate the following 5 anchors:
 
 1. **Skill Loading Directive:**
    Instruct the subagent to load and adhere to the skill:
@@ -205,8 +213,10 @@ Every prompt or assignment brief delegating work to a subagent **MUST** explicit
 4. **Mandatory Signature Grounding & Invariants:**
    State the core invariants explicitly:
    `"Ground all API signatures in vendor/yiisoft/<package>/src/. Presentation classes must remain thin (zero direct SQL or persistence in actions/commands). Dependencies via constructor DI only (no Yii::$app, no static facades)."`
+5. **Required Subagent Execution Receipt:**
+   Mandate that the subagent conclude its response with the structured `### Subagent Execution Receipt` block defined in §7.5.
 
-### 7.3. Canonical Subagent Delegation Prompt Template
+### 7.4. Canonical Subagent Delegation Prompt Template
 
 Use this canonical template when spawning or messaging subagents for Yii 3 tasks:
 
@@ -227,15 +237,44 @@ Mandatory Yii 3 Invariants:
 3. Signature Grounding: inspect vendor/yiisoft/[package]/src/ to verify all class names, method signatures, and parameter types before writing code.
 4. Immediate Wiring: provide the exact DI binding (config/**/di/*.php) and route/command registration for any created class.
 5. Post-Commit Rule: never dispatch domain events or queue jobs with external side effects inside an open database transaction.
+
+Output Contract:
+Conclude your implementation with the exact structured block:
+### Subagent Execution Receipt
+- **Status:** [COMPLETE | BLOCKED]
+- **Target Files Modified:** [list of relative file paths]
+- **Verified API Signatures:** [list of FQCN::method() verified against vendor/yiisoft/*/src/]
+- **Verified Wiring Gates:** DI: [PASS | NA], Routes/CLI: [PASS | NA], Events/Migrations: [PASS | NA]
+- **Open Issues / Residual Assumptions:** [None | description]
 ````
 
-### 7.4. Receipt & Quality Verification Gate
+### 7.5. Structured Subagent Execution Receipt Schema
+
+Subagents must return their execution summary using this machine-verifiable format:
+
+````markdown
+### Subagent Execution Receipt
+- **Status:** COMPLETE
+- **Task ID:** task-04-action-implementation
+- **Target Files Modified:**
+  - src/Blog/Comment/CreateCommentAction.php (Presentation / Action)
+  - config/common/routes.php (Transport Wiring)
+- **Governing Guides Consulted:** references/packages/http-actions-core.md, references/packages/http-forms-and-hydration.md
+- **Verified API Signatures:**
+  - Yiisoft\DataResponse\DataResponseFactoryInterface::createResponse()
+  - Yiisoft\Hydrator\Validator\ValidatingHydrator::create()
+- **Verified Wiring Gates:** DI: PASS, Routes/CLI: PASS, Events/Migrations: NA
+- **Open Issues / Residual Assumptions:** None
+````
+
+### 7.6. Receipt & Quality Verification Gate
 
 The parent agent retains full responsibility for the task outcome and must never accept subagent artifacts blindly:
 
-1. **Perimeter Audit:** Verify that the subagent modified only the authorized target files and did not alter `config/.merge-plan.php` or `vendor/`.
-2. **Anti-Pattern Gate:** Audit the subagent's code against the governing guide's `## Anti-Pattern Matrix` (e.g. no direct SQL in action, no uncommitted event dispatch).
-3. **AST & Signature Compliance:** Verify that all invoked methods and parameter types match the installed package sources in `vendor/yiisoft/<pkg>/src/`.
-4. **State Reconciliation:** Upon successful audit, integrate the created artifacts into the active plan's `### Execution State` (or `### Mission State`), record passing wiring gates, and advance the workflow. If defects are found, reject the output and issue a scoped fix prompt or re-assign to `/aif-fix`.
+1. **Receipt Verification:** Confirm the presence and completeness of the `### Subagent Execution Receipt`. If missing or incomplete, mandate re-submission before proceeding.
+2. **Perimeter Audit:** Verify that the subagent modified only the authorized target files and did not alter `config/.merge-plan.php` or `vendor/`.
+3. **Anti-Pattern Gate:** Audit the subagent's code against the governing guide's `## Anti-Pattern Matrix` (e.g. no direct SQL in action, no uncommitted event dispatch).
+4. **AST & Signature Compliance:** Verify that all invoked methods and parameter types match the installed package sources in `vendor/yiisoft/<pkg>/src/`.
+5. **State Reconciliation:** Upon successful audit, integrate the created artifacts into the active plan's `### Execution State` (or `### Mission State`), record passing wiring gates, and advance the workflow. If defects are found, reject the output and issue a scoped fix prompt or re-assign to `/aif-fix`.
 
 

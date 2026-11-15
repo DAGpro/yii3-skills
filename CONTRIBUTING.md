@@ -10,7 +10,7 @@ Thanks for your interest in contributing! This repository is an [AI Factory](htt
 | `injections/` | 13 AI Factory workflow hooks: `plan`, `improve`, `implement`, `verify`, `fix`, `review`, `roadmap`, `architecture`, `aif`, `build-automation`, `ci`, `dockerize`, `security-checklist` |
 | `extension.json` | Extension manifest registering skills and injections |
 | `PACKAGES.md` | Navigation index over the offline reference library |
-| `references/` | 136 offline clones of `yiisoft/*` packages — authoring-only, **strictly read-only**; clones are git-ignored, populate locally per [`references/README.md`](references/README.md) |
+| `references/` | Offline clones of official `yiisoft/*` packages — authoring-only, **strictly read-only**; clones are git-ignored, populate locally per [`references/README.md`](references/README.md) |
 | `scripts/validate.mjs` | Extension quality gate — run before every PR |
 | `evals/` | Behavior tests for the skill: fixture scenarios + agent runner, see [`evals/README.md`](evals/README.md); `evals/results/` is git-ignored |
 | `AGENTS.md` | Project constitution — read it first; it is binding and wins on any conflict with this file |
@@ -42,10 +42,10 @@ Run the local quality gates:
 # 1. Extension integrity, manifest, frontmatter, injection structure, purity, and link consistency
 node scripts/validate.mjs
 
-# 2. AI Factory workflow integration contracts (227 contract tests)
+# 2. AI Factory workflow integration contracts
 node scripts/test-aif-workflow.mjs
 
-# 3. Topic guide coverage across eval scenarios (100% across 98 topic guides / 100 reference files)
+# 3. Topic guide coverage across eval scenarios
 node scripts/check-eval-coverage.mjs
 
 # 4. Ground-truth symbol, method signature, and parameter arity check
@@ -57,7 +57,7 @@ node scripts/check-ast.mjs
 # 6. Manifest provenance & cross-manifest parity check (use --upstream for remote drift checks)
 node scripts/check-manifest-freshness.mjs --strict --max-age-days 30
 
-# 7. Behavioral evaluation checks (all 69 scenario checks; add --runtime when PHP 8.2+ is installed)
+# 7. Behavioral evaluation checks (all scenario checks; add --runtime when PHP 8.2+ is installed)
 node evals/runner/selftest.mjs
 
 # 8. Judge unit self-test & L5 Yii 3 PHPUnit runtime harness (skips locally without PHP; strict in CI)
@@ -71,11 +71,11 @@ The gate checks manifest integrity, `SKILL.md` frontmatter (including the descri
 
 ### 2. Workflow contract tests (`scripts/test-aif-workflow.mjs`)
 
-Validates all 227 integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
+Validates integration contracts between the `yii3` skill and AI Factory workflows (`injections/*.md`): injection skill deference (`AGENTS.md` §4.6), path resolution, 6-phase decomposition, durable `### Execution State`, and verify handoff.
 
 ### 3. Topic guide coverage (`scripts/check-eval-coverage.mjs` & `scripts/generate-coverage-matrix.mjs`)
 
-Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (`100.0%` coverage across 98 topic guides / 69 scenarios) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
+Ensures every non-index topic guide under `skills/yii3/references/` is bound to at least one scenario under `evals/scenarios/` (100.0% coverage) and that `evals/COVERAGE.md` stays in sync (`node scripts/generate-coverage-matrix.mjs`).
 
 ### 4. Symbol & AST signature checks (`scripts/check-symbols.mjs`, `scripts/check-ast.mjs`, `scripts/check-manifest-freshness.mjs`)
 
@@ -92,7 +92,7 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 
 ### 5. Eval harness & L5 PHPUnit runtime (`evals/runner/selftest.mjs`, `scripts/test-php-runtime.mjs`)
 
-`evals/runner/selftest.mjs` validates all 69 behavioral test scenarios: confirms scenario JSON schemas, guide bindings, positive/negative sample checks, and delimiter state machines (`--runtime` adds `php -l` and `composer validate` checks when PHP is available).
+`evals/runner/selftest.mjs` validates all behavioral test scenarios: confirms scenario JSON schemas, guide bindings, positive/negative sample checks, and delimiter state machines (`--runtime` adds `php -l` and `composer validate` checks when PHP is available).
 
 `evals/runtime-harness/` provides a real L5 Yii 3 + SQLite + PHPUnit 11 integration suite (DI container, FastRoute routing, `ValidatingHydrator`, DB migrations, transactional outbox + mutex relay, sync queue, and `StateResetter`). Run `node scripts/test-php-runtime.mjs` locally (skips cleanly if PHP/Composer/`pdo_sqlite` is absent) or `node scripts/test-php-runtime.mjs --strict` in PHP 8.2+ environments (enforced in CI `php-runtime-gates`).
 
@@ -116,11 +116,11 @@ Populate the clones first ([references/README.md](references/README.md)); withou
 ## PR checklist
 
 - [ ] `node scripts/validate.mjs` — 0 errors, 0 warnings (or justified in the PR description).
-- [ ] `node scripts/test-aif-workflow.mjs` — 227 passed, 0 failed.
-- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage (98/98 topic guides, 69 scenarios); `evals/COVERAGE.md` regenerated if guides/scenarios changed.
+- [ ] `node scripts/test-aif-workflow.mjs` — all integration contracts pass (0 failed).
+- [ ] `node scripts/check-eval-coverage.mjs` — 100.0% topic guide coverage; `evals/COVERAGE.md` regenerated if guides/scenarios changed.
 - [ ] `node scripts/check-symbols.mjs` and `node scripts/check-ast.mjs` — 0 unconfirmed symbols, arities, or AST defects (run with `--manifest-mode` if `references/` is not populated).
 - [ ] `node scripts/check-manifest-freshness.mjs` — manifest provenance and parity check passes (`--strict` if `references/` is populated).
-- [ ] `node evals/runner/selftest.mjs` — 69/69 OK (`--runtime` and `node scripts/test-php-runtime.mjs --strict` pass on PHP 8.2+ / CI `php-runtime-gates`).
+- [ ] `node evals/runner/selftest.mjs` — all scenarios OK (`--runtime` and `node scripts/test-php-runtime.mjs --strict` pass on PHP 8.2+ / CI `php-runtime-gates`).
 - [ ] `node evals/runner/judge.mjs --selftest` — PASS.
 - [ ] Every new/quoted API claim was inspected in `references/<pkg>/src/` or `vendor/yiisoft/<pkg>/src/`.
 - [ ] Synchronization cascade touched: SKILL.md routing/inventory, package-catalog, injections, coverage matrix, and manifests (when applicable).

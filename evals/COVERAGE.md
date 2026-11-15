@@ -12,15 +12,15 @@
 | **Evaluated Topic Guides** | 98 | Concrete architectural and implementation reference guides |
 | **Covered Topic Guides** | 98 (100.0%) | Verified by >= 1 dedicated eval scenario with positive & negative samples |
 | **Unbound Topic Guides** | 0 (0.0%) | Full coverage achieved across all evaluated topic guides |
-| **Total Eval Scenarios** | 69 | Deterministic test fixtures with full check-suites and mutation canaries |
+| **Total Eval Scenarios** | 70 | Deterministic test fixtures with full check-suites and mutation canaries |
 
 ## 2. Complete Verification Matrix
 
 | Topic Guide | Governing Scenario(s) | Layer | Positive Sample | Negative Sample | Runtime Verification | Status |
 |---|---|---|---|---|---|---|
-| `SKILL.md` (Core Entry Point) | [01](scenarios/01-full-add-comment), [02](scenarios/02-light-single-route), [04](scenarios/04-not-yii3-project), [05](scenarios/05-legacy-drift), [06](scenarios/06-convention-conflict), [08](scenarios/08-no-vendor-flag), [10](scenarios/10-yii2-trap), [12](scenarios/12-docs-only-task), [54](scenarios/54-yiisoft-library), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [68](scenarios/68-new-project-bootstrap), [69](scenarios/69-standalone-plan-execution) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
+| `SKILL.md` (Core Entry Point) | [01](scenarios/01-full-add-comment), [02](scenarios/02-light-single-route), [04](scenarios/04-not-yii3-project), [05](scenarios/05-legacy-drift), [06](scenarios/06-convention-conflict), [08](scenarios/08-no-vendor-flag), [10](scenarios/10-yii2-trap), [12](scenarios/12-docs-only-task), [54](scenarios/54-yiisoft-library), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [68](scenarios/68-new-project-bootstrap), [69](scenarios/69-standalone-plan-execution), [70](scenarios/70-subagent-delegation) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/INDEX.md` | — | — | — | — | — | Catalog Index |
-| `references/instructions/core-aif-adapter.md` | [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery) | composite | Yes | Yes | php-lint, composer | **Covered** |
+| `references/instructions/core-aif-adapter.md` | [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [70](scenarios/70-subagent-delegation) | composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/instructions/core-architecture-alignment.md` | [48](scenarios/48-architecture-layering), [55](scenarios/55-aif-e2e-workflow) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
 | `references/instructions/core-definition-of-done.md` | [01](scenarios/01-full-add-comment), [55](scenarios/55-aif-e2e-workflow), [56](scenarios/56-qa-rector-cs-fixer), [69](scenarios/69-standalone-plan-execution) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/instructions/core-dependency-protocol.md` | [08](scenarios/08-no-vendor-flag), [56](scenarios/56-qa-rector-cs-fixer), [68](scenarios/68-new-project-bootstrap) | unit | Yes | Yes | php-lint, composer | **Covered** |
@@ -30,7 +30,7 @@
 | `references/instructions/core-version-notes.md` | [01](scenarios/01-full-add-comment), [09](scenarios/09-outdated-api), [56](scenarios/56-qa-rector-cs-fixer) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/package-catalog.md` | — | — | — | — | — | Catalog Index |
 | `references/packages/core-config-tree.md` | [55](scenarios/55-aif-e2e-workflow) | composite | Yes | Yes | php-lint, composer | **Covered** |
-| `references/packages/core-di-and-config.md` | [01](scenarios/01-full-add-comment), [03](scenarios/03-forgotten-di-binding), [07](scenarios/07-second-mechanism), [11](scenarios/11-console-command), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [69](scenarios/69-standalone-plan-execution) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/packages/core-di-and-config.md` | [01](scenarios/01-full-add-comment), [03](scenarios/03-forgotten-di-binding), [07](scenarios/07-second-mechanism), [11](scenarios/11-console-command), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [69](scenarios/69-standalone-plan-execution), [70](scenarios/70-subagent-delegation) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/core-di-container.md` | [03](scenarios/03-forgotten-di-binding) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/core-di-definitions.md` | [03](scenarios/03-forgotten-di-binding), [69](scenarios/69-standalone-plan-execution) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/core-events-and-listeners.md` | [51](scenarios/51-domain-event-listener) | unit | Yes | Yes | php-lint, composer | **Covered** |
@@ -41,7 +41,7 @@
 | `references/packages/core-utilities.md` | [46](scenarios/46-json-safe-encoding) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/http-actions-and-controllers.md` | [20](scenarios/20-action-shape), [21](scenarios/21-controller-to-action) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/http-actions-concerns.md` | [22](scenarios/22-action-pagination), [23](scenarios/23-composite-html-action) | unit, composite | Yes | Yes | php-lint, composer | **Covered** |
-| `references/packages/http-actions-core.md` | [01](scenarios/01-full-add-comment), [02](scenarios/02-light-single-route), [03](scenarios/03-forgotten-di-binding), [05](scenarios/05-legacy-drift), [13](scenarios/13-complex-action), [20](scenarios/20-action-shape), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
+| `references/packages/http-actions-core.md` | [01](scenarios/01-full-add-comment), [02](scenarios/02-light-single-route), [03](scenarios/03-forgotten-di-binding), [05](scenarios/05-legacy-drift), [13](scenarios/13-complex-action), [20](scenarios/20-action-shape), [55](scenarios/55-aif-e2e-workflow), [66](scenarios/66-aif-idempotent-recovery), [70](scenarios/70-subagent-delegation) | composite, unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/http-cache-etag.md` | [40](scenarios/40-etag-conditional-get) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/http-dataview-widgets.md` | [42](scenarios/42-dataview-listing) | unit | Yes | Yes | php-lint, composer | **Covered** |
 | `references/packages/http-file-handling.md` | [23](scenarios/23-composite-html-action) | composite | Yes | Yes | php-lint, composer | **Covered** |
@@ -122,7 +122,7 @@
 
 ## 3. Unbound Guides Gap Analysis (100% Coverage Achieved)
 
-All **98** evaluated topic guides (across **100** reference files) have **100.0% coverage** across **69** eval scenarios (`0` unbound guides). Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–69`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:
+All **98** evaluated topic guides (across **100** reference files) have **100.0% coverage** across **70** eval scenarios (`0` unbound guides). Roadmap P3 scenarios (`58–65`) and post-audit expansion scenarios (`66–70`) close all specialized runtime, UI, workflow, outbox, and bootstrap gaps:
 
 | # | Scenario | Layer | Bound Guides | Status |
 |---|---|---|---|---|
@@ -138,6 +138,7 @@ All **98** evaluated topic guides (across **100** reference files) have **100.0%
 | 10 | [67-transactional-outbox](scenarios/67-transactional-outbox) | composite | `references/packages/infra-transactional-outbox.md`, `references/packages/core-events-design.md`, `references/packages/infra-queue-jobs.md`, `references/packages/infra-queue-mutex.md` | **Covered** |
 | 11 | [68-new-project-bootstrap](scenarios/68-new-project-bootstrap) | unit | `SKILL.md`, `references/instructions/core-dependency-protocol.md` | **Covered** |
 | 12 | [69-standalone-plan-execution](scenarios/69-standalone-plan-execution) | unit | `references/instructions/core-standalone-adapter.md`, `SKILL.md`, `references/packages/core-di-and-config.md`, `references/packages/core-di-definitions.md`, `references/instructions/core-definition-of-done.md` | **Covered** |
+| 13 | [70-subagent-delegation](scenarios/70-subagent-delegation) | composite | `SKILL.md`, `references/instructions/core-aif-adapter.md`, `references/packages/http-actions-core.md`, `references/packages/core-di-and-config.md` | **Covered** |
 
 ## 4. Verification Command
 

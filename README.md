@@ -7,8 +7,9 @@ The **`yii3`** skill equips AI coding agents (**Cursor, Claude Code, Windsurf, O
 ## Key Invariants
 
 - **Zero Yii 2 Hallucinations**: Strict ban on legacy constructs (`Yii::$app`, static facades, ActiveRecord event coupling). Enforces modern Yii 3 idioms: PSR-7 / PSR-15 / PSR-14, DI autowiring, strict immutability, hydrators, and input DTOs.
-- **100% Grounded in Official Sources**: All patterns, signatures, and configuration recipes are verified directly against 136 official `yiisoft/*` package repositories.
+- **Grounded in Official Sources**: API guidance is grounded in versioned official YiiSoft source snapshots. Covered symbols and signatures are validated against provenance-tracked manifests; installed project sources in `vendor/` remain the ultimate runtime authority.
 - **Respects Your Architecture**: Seamlessly adapts to your codebase layout (Explicit Clean Architecture, Structured Modules, or Layered Architecture) without imposing alien conventions.
+- **Subagent Context Preservation (Protocol 2.0)**: Context Readiness Gates, structured execution receipts (`### Subagent Execution Receipt`), and multi-tier parent verification ensure zero context degradation during multi-agent delegation.
 
 ## Installation
 
@@ -106,7 +107,7 @@ Covers the complete official Yii 3 ecosystem (PHP 8.2+):
 ## What is Inside
 
 - **`skills/yii3/SKILL.md`** — Core workflow contract, invariants, and the task routing matrix.
-- **`skills/yii3/references/`** — 100 specialized reference guides (structured into `instructions/` for architectural rules and `packages/` for component recipes) and the runtime package catalog.
+- **`skills/yii3/references/`** — Comprehensive reference library (structured into `instructions/` for architectural rules and `packages/` for component recipes) and the runtime package catalog.
 - **`injections/`** — Automated workflow hooks for AI Factory projects.
 
 ## Known Limitations

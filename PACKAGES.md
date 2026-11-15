@@ -445,7 +445,7 @@ phantom list below before adding them to `composer require`:
 
 ## 17. Architectural Layering
 
-> **Canonical full copy:** `skills/yii3/references/core-architecture-alignment.md` —
+> **Canonical full copy:** `skills/yii3/references/instructions/core-architecture-alignment.md` —
 > §2 "Vendor Policy per Architecture Pattern" and §4 "Package Placement Matrix by Pattern" —
 > edit there and keep this stub pointing to it.
 > The deliverable reference carries: pattern → folder structure (Layered; Structured Modules;

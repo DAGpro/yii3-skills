@@ -1,6 +1,6 @@
 # evals: behavior tests for the `yii3` skill
 
-Draft eval system. A scenario = fixture project + prompt + result checks.
+Behavioral evaluation harness for the `yii3` skill. A scenario = fixture project + prompt + result checks.
 The harness is agent-independent: it grades a work dir; how the work dir got
 solved is outside its concern (any AI agent, chat agent, human — all equal).
 
@@ -141,7 +141,7 @@ same reason. run.mjs also snapshots the source repo's git state around every spa
 
 Every `scenario.json` declares two extra fields:
 
-- `"guides"` — `skills/yii3/` paths (e.g. `references/http-state.md`, `SKILL.md`) whose contracts
+- `"guides"` — `skills/yii3/` paths (e.g. `references/packages/http-state.md`, `SKILL.md`) whose contracts
   the scenario grades. Editing a guide should re-trigger the scenarios bound to it.
 - `"layer"` — `unit` (single-gate diagnostics, cheap, run first) or `composite` (multi-gate
   integration anchor covering a whole archetype, run last; headline delta comes from these).
@@ -149,13 +149,13 @@ Every `scenario.json` declares two extra fields:
 Selection (units always run before composites; `--runs 0` prints the selection without spawning):
 
 ```bash
-node evals/runner/run.mjs --guides references/http-state.md --runs 0   # scenarios bound to a guide
+node evals/runner/run.mjs --guides references/packages/http-state.md --runs 0   # scenarios bound to a guide
 node evals/runner/run.mjs --changed --runs 0                           # scenarios bound to guides changed vs HEAD
 node evals/runner/run.mjs --changed main --runs 0                      # ... vs another git ref
 node evals/runner/run.mjs --layer unit --runs 0                        # diagnostics layer only
 ```
 
-`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` validates the bindings across all 69 scenarios and reports live coverage — currently 98 of 98 topic guides bound (100%); run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
+`selftest.mjs` validates the binding: every scenario must declare guides and every bound file must exist (`node scripts/check-eval-coverage.mjs` validates the bindings and reports live coverage; run `node scripts/generate-coverage-matrix.mjs` to regenerate [`evals/COVERAGE.md`](COVERAGE.md)).
 
 **Calibration policy.** The true difficulty of a scenario is its baseline pass-rate. A unit
 scenario whose baseline mean stays >= 80% (delta < ~10 pp) must be hardened (indirect prompt,
@@ -164,7 +164,7 @@ Headline metric of the suite = delta on composite scenarios; unit scenarios are 
 
 ## Calibration & campaigns (audit P2/P3 protocol)
 
-1. **Baseline measurement (all 69).** Solve every scenario without the skill (the chat-run
+1. **Baseline measurement.** Solve every scenario without the skill (the chat-run
    protocol above, one run per scenario to start), grade with
    `evaluate.mjs --scenario <id> --work <dir> --mode baseline-manual-chat`, then apply the
    policy mechanically: `node evals/audit/calibration.mjs --results <dir> --mode baseline-manual-chat`
@@ -193,7 +193,7 @@ node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-0
 # Require PHPUnit execution to pass (fail if PHP, vendor/, phpunit binary, or config is missing)
 EVAL_REQUIRE_PHPUNIT=1 node evals/runner/evaluate.mjs --scenario 01-full-add-comment --work /tmp/work-01 --runtime
 
-# Validate syntax across all scenario samples (69 scenarios)
+# Validate syntax across all scenario samples
 node evals/runner/selftest.mjs --runtime
 
 # Run the standalone L5 Yii 3 PHPUnit integration harness (skips locally without PHP; use --strict in PHP 8.2+ / CI)

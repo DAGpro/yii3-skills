@@ -4,7 +4,19 @@ All notable changes to the `yii3-skills` AI Factory extension and its `yii3` ski
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/) — pre-1.0, minor = contract/behavior changes. The version lives in [`extension.json`](extension.json); every release is tagged `v<version>`.
 
-## [Unreleased]
+## [0.9.0] — 2026-11-15
+
+### Added
+- Subagent Protocol 2.0 (`core-aif-adapter.md` §7): Context Readiness Gate (§7.2) and structured `### Subagent Execution Receipt` schema (§7.5).
+- New composite eval scenario `70-subagent-delegation` testing Context Readiness evaluation, brief generation with mandatory anchors, receipt validation, and clean verify handoff.
+- Scope & Progressive Context Disclosure rule in `SKILL.md` for surgical patch/bugfix tasks.
+
+### Changed
+- Unified all topic guide references to strictly use `references/packages/<guide-name>.md` or `references/instructions/<guide-name>.md` across `SKILL.md`, `core-aif-adapter.md`, `core-definition-of-done.md`, all 13 `injections/*.md`, `PACKAGES.md`, `evals/README.md`, and eval scenario positive sample transcripts.
+- Hardened `scripts/test-aif-workflow.mjs` with strict assertion disallowing flat `references/<file>.md` guide paths in injections; expanded contract suite to 321 assertions.
+- Refined `SKILL.md` Root-Cause Analysis from rigid linear chain to adaptive call-graph upstream traversal from symptom locus.
+- Refined Grounding statement in `README.md` to reflect verified provenance manifests vs installed runtime sources.
+- Updated topic guide eval coverage to 100.0% (98/98 guides covered across 70 scenarios) in `evals/COVERAGE.md`.
 
 ## [0.8.0] — 2026-11-15
 

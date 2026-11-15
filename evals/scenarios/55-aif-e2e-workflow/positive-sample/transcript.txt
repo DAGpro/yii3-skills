@@ -9,7 +9,7 @@ Detected AI Factory configuration in .ai-factory/config.yaml:
 
 ### Mission State
 - **Architecture:** .ai-factory/ARCHITECTURE.md
-- **Guides:** references/http-actions-core.md, references/persistence-db.md, references/core-events-design.md
+- **Guides:** references/packages/http-actions-core.md, references/packages/persistence-db.md, references/packages/core-events-design.md
 - **Stage Progress:**
   - Stage 1 [Migration & Schema]: pending
   - Stage 2 [Domain / Model & Repository Boundary]: pending

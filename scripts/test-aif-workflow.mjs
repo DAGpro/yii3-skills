@@ -47,6 +47,12 @@ for (const inj of manifest.injections) {
   // Verify all references/*.md paths resolve physically to skills/yii3/references/
   const refMatches = text.match(/references\/(?:(?:instructions|packages)\/)?[a-zA-Z0-9_\-\.]+\.md/g) || [];
   for (const ref of refMatches) {
+    if (ref !== 'references/INDEX.md' && ref !== 'references/package-catalog.md') {
+      assert(
+        ref.startsWith('references/instructions/') || ref.startsWith('references/packages/'),
+        `${inj.file} reference "${ref}" must reside in references/instructions/ or references/packages/`
+      );
+    }
     const targetFile = join(root, 'skills', 'yii3', ref);
     assert(existsSync(targetFile), `${inj.file} reference ${ref} must exist at ${targetFile}`);
   }
@@ -241,7 +247,7 @@ function validateMissionState(transcript) {
 const mockTranscript = `
 ### Mission State
 - **Architecture:** .ai-factory/ARCHITECTURE.md
-- **Guides:** references/http-actions-core.md, references/persistence-db.md
+- **Guides:** references/packages/http-actions-core.md, references/packages/persistence-db.md
 - **Stage Progress:**
   - Stage 1 [Migration & Schema]: pending
   - Stage 2 [Domain / Model & Repository Boundary]: pending

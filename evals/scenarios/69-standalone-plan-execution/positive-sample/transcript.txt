@@ -15,7 +15,7 @@ Stage 6 complete: config/common/di/cache.php | Wiring gate: pass
 Self-verification (Finale audit, read-only pass):
 - Chain Integrity: resolved plan task completed; DI binding landed in config/common/di/cache.php;
   no vendor/ or config/.merge-plan.php edits; no route/console/event wiring required by the task.
-- Code-to-Reference: governing guide references/core-di-and-config.md — zero Anti-Pattern Matrix matches.
+- Code-to-Reference: governing guide references/packages/core-di-and-config.md — zero Anti-Pattern Matrix matches.
 Findings: none blocking. Advisory: no vendor/ in this environment — the FileCache class-string
 reference is not verified against installed sources ("not verified against sources"); re-verify
 after composer install.

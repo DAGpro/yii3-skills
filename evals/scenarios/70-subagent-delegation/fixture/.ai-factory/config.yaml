@@ -1,0 +1,4 @@
+paths:
+  plans: .ai-factory/plans
+  architecture: .ai-factory/ARCHITECTURE.md
+  rules_file: .ai-factory/rules/yii3.md

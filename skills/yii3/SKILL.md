@@ -15,7 +15,7 @@ description: >-
 license: MIT
 metadata:
   author: Yii 3 AI Factory Team
-  version: 0.8.0
+  version: 0.9.0
 ---
 
 # Yii3 development
@@ -28,7 +28,7 @@ metadata:
 ## Stage 0 — Mission Bootstrap
 
 Run first on every invocation:
-- **Scope:** Apply this skill to the extent the task touches Yii 3 / `yiisoft/*` packages (zero-Yii3 tasks: note non-applicability briefly and follow project conventions).
+- **Scope & Progressive Disclosure:** Apply this skill to the extent the task touches Yii 3 / `yiisoft/*` packages (zero-Yii3 tasks: note non-applicability briefly and follow project conventions). For surgical tasks (single bug fix, patch, DI binding, migration), load only `SKILL.md` and the governing guide from `references/packages/`; full architectural instructions (`references/instructions/core-*.md`) are required only for multi-layer planning, feature decomposition, or bootstrapping.
 1. **Package Check:** Check `composer.json` + `composer.lock` against [`package-catalog.md`](references/package-catalog.md) (skip items already resolved by caller).
 2. **Stack Invariants:** Strictly one DB driver, persistence branch (Active Record xor Cycle), queue/cache/mutex driver, RBAC storage, and test runner per [`package-catalog.md`](references/package-catalog.md) §3 ("Pick Exactly ONE per Family").
 3. **Lifecycle Position:**
@@ -63,8 +63,8 @@ Assemble components strictly in dependency order so no class references missing 
 - **Post-Commit Dispatch:** External side-effects dispatch after `$db->transaction()` commit ([`core-events-design.md §5`](references/packages/core-events-design.md#5-mandatory-post-commit-event-dispatching-rule)).
 - **Worker Safety:** Register `'reset'` in DI (`StateResetter` provider) for stateful singletons under RoadRunner/FrankenPHP ([`infra-state-resetter.md`](references/packages/infra-state-resetter.md)).
 - **Test Scope Discipline:** In AI Factory (`aif-implement`), write tests ONLY if explicitly scheduled in plan tasks. In Standalone, execute project test runner.
-- **Subagent Context Preservation:** When delegating tasks to subagents, the delegation prompt MUST mandate loading the `yii3` skill, explicitly specify the architecture pattern, assign governing topic guides (`references/<topic>.md`), and enforce signature verification in `vendor/yiisoft/` ([`core-aif-adapter.md §7`](references/instructions/core-aif-adapter.md#7-subagent-delegation--context-preservation-protocol)).
-- **Root-Cause Analysis:** When addressing bugs in user-visible behavior (UI, console, or external APIs), the root-cause analysis MUST trace upstream through all affected layers: Presentation → Use Case → Repository → Query → Schema ([`core-architecture-alignment.md §6`](references/instructions/core-architecture-alignment.md#6-step-by-pattern-execution-matrix)).
+- **Subagent Context Preservation:** When delegating tasks to subagents, the delegation prompt MUST enforce the Context Readiness Gate, mandate loading the `yii3` skill, explicitly specify the architecture pattern, assign governing topic guides (`references/packages/<guide-name>.md`), and require the structured Subagent Execution Receipt ([`core-aif-adapter.md §7`](references/instructions/core-aif-adapter.md#7-subagent-delegation--context-preservation-protocol)).
+- **Adaptive Root-Cause Analysis:** When addressing bugs or defects, trace upstream along the call graph from the symptom's entry point (e.g. Action/Worker → Hydration/Validation → Use Case/Handler → Repository/Query → Schema/Driver) and stop as soon as the defect is confirmed with concrete evidence. Do not force an exhaustive schema trace when the fault lies in middleware, transport, serialization, or worker state.
 
 ## Finale — Definition of Done
 
